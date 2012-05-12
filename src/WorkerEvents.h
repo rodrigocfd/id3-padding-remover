@@ -10,5 +10,5 @@ typedef struct WorkerFiles_ {
 } WorkerFiles;
 
 void Worker_onInitDialog(HWND hDialog, LPARAM lp);
-void Worker_onFileDone();
+void Worker_onFileDone  ();
 void Worker_onFileFailed(WPARAM wp, LPARAM lp);
