@@ -1,3 +1,7 @@
+/**
+* Some thread wrapper routines, to work with both sync and asynchronous threads,
+* taking care of the all the required setup and cleanup.
+*/
 
 #include <Windows.h>
 

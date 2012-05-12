@@ -1,3 +1,6 @@
+/**
+* Handles a memory-mapped file.
+*/
 
 #include <Windows.h>
 

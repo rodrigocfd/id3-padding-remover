@@ -1,3 +1,6 @@
+/**
+* Program entry-point.
+*/
 
 #include <Windows.h>
 #include <crtdbg.h>

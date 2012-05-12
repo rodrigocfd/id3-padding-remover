@@ -1,3 +1,6 @@
+/**
+* Shorthand routines for font manipulation.
+*/
 
 #include <Windows.h>
 

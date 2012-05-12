@@ -1,3 +1,7 @@
+/**
+* Performs a glob operation.
+* http://en.wikipedia.org/wiki/Glob_%28programming%29
+*/
 
 #include <Windows.h>
 

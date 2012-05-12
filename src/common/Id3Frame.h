@@ -1,3 +1,7 @@
+/**
+* A single frame of an ID3v2 tag.
+* http://www.id3.org/id3v2.3.0
+*/
 
 #include <Windows.h>
 

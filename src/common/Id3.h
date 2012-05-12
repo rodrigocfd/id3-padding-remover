@@ -1,3 +1,7 @@
+/**
+* Handles an ID3v2 tag.
+* http://www.id3.org/id3v2.3.0
+*/
 
 #include "FileMap.h"
 #include "Id3Frame.h"

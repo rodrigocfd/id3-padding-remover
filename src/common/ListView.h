@@ -1,3 +1,8 @@
+/**
+* ListView control shorthand routines and macros.
+* The idea is, when dealing with a ListView control, use only these, and don't
+* call directly the system routines/macros.
+*/
 
 #include <Windows.h>
 #include <CommCtrl.h>
