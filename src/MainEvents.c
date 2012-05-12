@@ -26,20 +26,9 @@ static void _Main_calcPaddingSizeAll()
 			continue;
 		}
 
-		ListView_setTextFmt(hList, i, 1, L"%d", Id3_paddingSize(&id3));
+		ListView_setTextFmt(hList, i, 1, L"%d", Id3_paddingSize(&id3)); // calc the padding of all files
 		Id3_free(&id3);
 	}
-}
-
-static void _Main_fileToList(const wchar_t *file)
-{
-	if(!endswith(file, L".mp3"))
-		return; // bypass if not MP3
-
-	if(ListView_itemExists(hList, file))
-		return; // bypass if file already in list
-
-	ListView_addItem(hList, file, 0);
 }
 
 void Main_onSize(WPARAM wp, LPARAM lp)
@@ -92,12 +81,14 @@ void Main_onDropFiles(WPARAM wp)
 			Glob globMp3 = Glob_new(path, L"*.mp3");
 
 			while(Glob_next(&globMp3, subFileBuf))
-				_Main_fileToList(subFileBuf);
+				if(endswith(subFileBuf, L".mp3") && !ListView_itemExists(hList, subFileBuf)) // bypass if not MP3, or if already listed
+					ListView_addItem(hList, subFileBuf, 0);
 
 			Glob_free(&globMp3);
 		}
-		else
-			_Main_fileToList(path); // add single file
+		else // add single file
+			if(endswith(path, L".mp3") && !ListView_itemExists(hList, path)) // bypass if not MP3, or if already listed
+				ListView_addItem(hList, path, 0);
 	}
 	
 	_Main_calcPaddingSizeAll();
@@ -125,7 +116,8 @@ void Main_onAddFiles()
 		SendMessage(hList, WM_SETREDRAW, (WPARAM)FALSE, 0);
 		
 		for(i = 0; i < files.num; ++i) {
-			_Main_fileToList(files.ptr[i]); // add to list
+			if(endswith(files.ptr[i], L".mp3") && !ListView_itemExists(hList, files.ptr[i])) // bypass if not MP3, or if already listed
+				ListView_addItem(hList, files.ptr[i], 0); // add to list
 			free(files.ptr[i]);
 		}
 		
