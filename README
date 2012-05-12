@@ -7,7 +7,7 @@ I use Mp3tag to write my tags, and it always writes padding bytes. So I decided 
 This program is pure C, and it uses nothing but Win32. It works well on Wine.
 
 
-Copyright (c) 2012, Rodrigo César de Freitas Dias.
+Copyright (c) 2012, Rodrigo Cesar de Freitas Dias.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
