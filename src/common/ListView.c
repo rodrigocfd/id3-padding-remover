@@ -43,7 +43,7 @@ int ListView_addItem(HWND hList, const wchar_t *caption, int iconIdx)
 	return ListView_InsertItem(hList, &lvi); // return index of newly inserted item
 }
 
-HIMAGELIST _ListView_proceedImageList(HWND hList)
+static HIMAGELIST _ListView_proceedImageList(HWND hList)
 {
 	// Imagelist is destroyed automatically:
 	// http://www.catch22.net/tuts/sysimgq
