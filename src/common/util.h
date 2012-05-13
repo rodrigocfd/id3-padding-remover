@@ -23,7 +23,6 @@ int      quotedstr2array(const wchar_t *quotedStr, wchar_t ***pBuf);
 
 void  debugfmt      (const wchar_t *fmt, ...);
 void  setTextFmt    (HWND hWnd, int id, const wchar_t *fmt, ...);
-int   msgBox        (HWND hParent, UINT uType, const wchar_t *caption, const wchar_t *msg);
 int   msgBoxFmt     (HWND hParent, UINT uType, const wchar_t *caption, const wchar_t *msg, ...);
 int   runDialog     (HINSTANCE hInst, int cmdShow, int dialogId, int iconId, int accelTableId, DLGPROC dialogProc, LPARAM lp);
 void  centerOnParent(HWND hDlg);

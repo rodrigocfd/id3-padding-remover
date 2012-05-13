@@ -41,7 +41,7 @@ static INT_PTR CALLBACK Main_dialogProc(HWND hDlg, UINT msg, WPARAM wp, LPARAM l
 				case 'A':       if(hasCtrl()) ListView_selAllItems(GetDlgItem(hDlg, LST_MAIN)); return TRUE; // Ctrl+A
 				case VK_DELETE: ListView_delSelItems(GetDlgItem(hDlg, LST_MAIN)); return TRUE; // Del
 				case VK_APPS:   popMenu(hDlg, MEN_MAIN, 2, 10, GetDlgItem(hDlg, LST_MAIN)); return TRUE; // context menu
-				case VK_F1:     msgBox(hDlg, MB_ICONINFORMATION, L"About", L"ID3 Padding Remover v1.0.4\nRodrigo César de Freitas Dias."); return TRUE;
+				case VK_F1:     msgBoxFmt(hDlg, MB_ICONINFORMATION, L"About", L"ID3 Padding Remover v1.0.4\nRodrigo César de Freitas Dias."); return TRUE;
 				}
 				break;
 			}

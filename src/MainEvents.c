@@ -164,7 +164,7 @@ void Main_onSummary()
 					(float)Id3Frame_getDataSize(theFrame) * 100 / Id3_totalTagSize(&id3) );
 		}
 		appendfmt(&summary, L"\nTotal: %d bytes.", Id3_totalTagSize(&id3));
-		msgBox(hDlg, MB_ICONINFORMATION, L"Summary", summary);
+		msgBoxFmt(hDlg, MB_ICONINFORMATION, L"Summary", summary);
 		free(summary);
 	}
 
