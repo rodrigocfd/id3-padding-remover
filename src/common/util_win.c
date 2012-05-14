@@ -82,13 +82,6 @@ static LRESULT CALLBACK _msgBoxHookProc(int code, WPARAM wp, LPARAM lp)
 	return CallNextHookEx(0, code, wp, lp);
 }
 
-int msgBox(HWND hParent, UINT uType, const wchar_t *caption, const wchar_t *msg)
-{
-	// The hook is set to center the message box window on parent.
-	_hHookMsgBox = SetWindowsHookEx(WH_CBT, _msgBoxHookProc, 0, GetCurrentThreadId());
-	return MessageBox(hParent, msg, caption, uType);
-}
-
 int msgBoxFmt(HWND hParent, UINT uType, const wchar_t *caption, const wchar_t *msg, ...)
 {
 	wchar_t *buf;
@@ -98,7 +91,10 @@ int msgBoxFmt(HWND hParent, UINT uType, const wchar_t *caption, const wchar_t *m
 	va_start(args, msg);
 	buf = allocfmtv(msg, args);
 	va_end(args);
-	ret = msgBox(hParent, uType, caption, buf);
+
+	// The hook is set to center the message box window on parent.
+	_hHookMsgBox = SetWindowsHookEx(WH_CBT, _msgBoxHookProc, 0, GetCurrentThreadId());
+	ret = MessageBox(hParent, buf, caption, uType);
 	free(buf);
 	return ret;
 }
