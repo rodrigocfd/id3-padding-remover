@@ -98,7 +98,7 @@ BOOL Id3_removePadding(Id3 *pid3)
 
 	tailSize = Id3_mp3TailSize(pid3); // useless zero bytes eventually found at end of MP3
 	if(padLen + tailSize)
-		return FileMap_truncate(&pid3->fm, -(padLen + tailSize)); // truncate file
+		return FileMap_truncate(&pid3->fm, -(padLen + tailSize), NULL); // truncate file
 	return TRUE;
 }
 

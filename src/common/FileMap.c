@@ -70,7 +70,7 @@ void FileMap_getPtrs(FileMap *pfm, BYTE **pMem, BYTE **pPastEnd)
 	if(pPastEnd) *pPastEnd = (BYTE*)pfm->pMem + pfm->size;
 }
 
-BOOL FileMap_truncate(FileMap *pfm, int offset)
+BOOL FileMap_truncate(FileMap *pfm, int offset, wchar_t **pErrMsgBuf)
 {
 	// This function will fail if file was opened as read-only.
 
@@ -88,20 +88,38 @@ BOOL FileMap_truncate(FileMap *pfm, int offset)
 	CloseHandle(pfm->hMap);
 
 	// Truncate file; negative offset cuts from end to beginning.
-	if( SetFilePointer(pfm->hFile, offset, NULL,
-		offset > 0 ? FILE_BEGIN : FILE_END) == INVALID_SET_FILE_POINTER )
-	{ FileMap_close(pfm); return FALSE; }
+	if(SetFilePointer(pfm->hFile, offset, NULL, offset > 0 ? FILE_BEGIN : FILE_END) == INVALID_SET_FILE_POINTER) {
+		FileMap_close(pfm);
+		if(pErrMsgBuf)
+			*pErrMsgBuf = _wcsdup(L"Could not set file pointer position."); // user must free buf
+		return FALSE;
+	}
 
-	if(!SetEndOfFile(pfm->hFile)) { FileMap_close(pfm); return FALSE; }
+	if(!SetEndOfFile(pfm->hFile)) {
+		FileMap_close(pfm);
+		if(pErrMsgBuf)
+			*pErrMsgBuf = _wcsdup(L"Could not set new end of file."); // user must free buf
+		return FALSE;
+	}
 	SetFilePointer(pfm->hFile, 0, NULL, FILE_BEGIN); // rewind
 
 	// Remapping into memory.
 	pfm->hMap = CreateFileMapping(pfm->hFile, NULL, PAGE_READWRITE, 0, 0, NULL);
-	if(!pfm->hMap) { FileMap_close(pfm); return FALSE; }
+	if(!pfm->hMap) {
+		FileMap_close(pfm);
+		if(pErrMsgBuf)
+			*pErrMsgBuf = _wcsdup(L"Could not recreate file mapping."); // user must free buf
+		return FALSE;
+	}
 
 	// Get new pointer to data block, old one just became invalid!
 	pfm->pMem = MapViewOfFile(pfm->hMap, FILE_MAP_WRITE, 0, 0, 0);
-	if(!pfm->pMem) { FileMap_close(pfm); return FALSE; }
+	if(!pfm->pMem) {
+		FileMap_close(pfm);
+		if(pErrMsgBuf)
+			*pErrMsgBuf = _wcsdup(L"Could not remap view of file."); // user must free buf
+		return FALSE;
+	}
 
 	// Calculate new file size.
 	if(offset > 0) pfm->size = offset;
