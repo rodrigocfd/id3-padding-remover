@@ -12,7 +12,7 @@ BOOL Thread_RunAsyncTimed(void (*runFunc)(void*), void *pArg, int msTimeout);
 
 
 /* Synchronous threads. */
-typedef struct Threads_ {
+typedef struct {
 	HANDLE *handles;
 	int     n, lastInserted;
 } Threads;

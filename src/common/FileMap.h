@@ -4,7 +4,7 @@
 
 #include <Windows.h>
 
-typedef struct FileMap_ {
+typedef struct {
 	HANDLE hFile, hMap;
 	void  *pMem;
 	int    size;

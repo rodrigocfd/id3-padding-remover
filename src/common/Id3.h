@@ -6,7 +6,7 @@
 #include "FileMap.h"
 #include "Id3Frame.h"
 
-typedef struct Id3_ {
+typedef struct {
 	FileMap fm;
 } Id3;
 

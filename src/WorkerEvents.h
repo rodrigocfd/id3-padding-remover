@@ -1,10 +1,11 @@
 
 #include <Windows.h>
+
 #define WM_FILEDONE   WM_USER + 1
 #define WM_FILEFAILED WM_USER + 2
 
 
-typedef struct WorkerFiles_ {
+typedef struct {
 	int n;
 	const wchar_t **ptr;
 } WorkerFiles;

@@ -9,7 +9,7 @@
 #define ID3FRAME_BINARY    1
 #define ID3FRAME_TEXT      2
 
-typedef struct Id3Frame_ {
+typedef struct {
 	wchar_t name[5];
 	BYTE    type;
 	union {

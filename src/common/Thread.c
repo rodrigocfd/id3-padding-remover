@@ -4,7 +4,7 @@
 #include "Thread.h"
 
 
-typedef struct Thread_Sync_Info_ {
+typedef struct {
 	void (*func)(void*); // user callback function
 	void *arg;          // user passed argument
 } Thread_Sync_Info;

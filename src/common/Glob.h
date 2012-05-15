@@ -5,7 +5,7 @@
 
 #include <Windows.h>
 
-typedef struct Glob_ {
+typedef struct {
 	HANDLE          hFind;
 	WIN32_FIND_DATA wfd;
 	wchar_t        *pattern;
