@@ -63,5 +63,5 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE h0, LPWSTR cmdLine, int cmdShow)
 {
 	int ret = runDialog(hInst, cmdShow, DLG_MAIN, ICO_FROG, 0, Main_dialogProc, 0);
 	_ASSERT(!_CrtDumpMemoryLeaks());
-	return 0;
+	return ret;
 }
