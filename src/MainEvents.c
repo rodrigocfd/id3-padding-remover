@@ -160,7 +160,7 @@ void Main_onSummary()
 			if(theFrame->type == ID3FRAME_TEXT)
 				appendfmt(&summary, L"%s\n", Id3Frame_getText(theFrame));
 			else if(theFrame->type == ID3FRAME_BINARY)
-				appendfmt(&summary, L"%d bytes (%.2f%%)\n", Id3Frame_getDataSize(theFrame),
+				appendfmt(&summary, L"%d bytes (%.2f%%%%)\n", Id3Frame_getDataSize(theFrame),
 					(float)Id3Frame_getDataSize(theFrame) * 100 / Id3_totalTagSize(&id3) );
 		}
 		appendfmt(&summary, L"\nTotal: %d bytes.", Id3_totalTagSize(&id3));
