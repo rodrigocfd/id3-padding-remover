@@ -59,7 +59,7 @@ void FileMap_close(FileMap *pfm)
 {
 	if(pfm->pMem) UnmapViewOfFile(pfm->pMem);
 	if(pfm->hMap) CloseHandle(pfm->hMap);
-	if(pfm->hFile) CloseHandle(pfm->hFile);
+	if(pfm->hFile && pfm->hFile != INVALID_HANDLE_VALUE) CloseHandle(pfm->hFile);
 	SecureZeroMemory(pfm, sizeof(FileMap));
 }
 
