@@ -79,7 +79,7 @@ void explodeMultiStr(const wchar_t *multiStr, Strings *pBuf)
 	for(i = 0; i < numStrings; ++i) {
 		int len = lstrlen(pRun);
 		Strings_reallocStr(pBuf, i, len);
-		memcpy(Strings_get(pBuf, i), pRun, sizeof(wchar_t) * (len + 1));
+		wcsncpy(Strings_get(pBuf, i), pRun, len + 1);
 		pRun += len + 1;
 	}
 }
@@ -133,7 +133,7 @@ void explodeQuotedStr(const wchar_t *quotedStr, Strings *pBuf)
 				else if(*pRun == L'\"') {
 					len = (int)(pRun - pBase);
 					Strings_reallocStr(pBuf, i, len);
-					memcpy(Strings_get(pBuf, i), pBase, sizeof(wchar_t) * len); // copy to buffer
+					wcsncpy(Strings_get(pBuf, i), pBase, len); // copy to buffer
 					Strings_get(pBuf, i)[len] = L'\0'; // terminating null
 					++i; // next string
 
@@ -150,7 +150,7 @@ void explodeQuotedStr(const wchar_t *quotedStr, Strings *pBuf)
 			
 			len = (int)(pRun - pBase);
 			Strings_reallocStr(pBuf, i, len);
-			memcpy(Strings_get(pBuf, i), pBase, sizeof(wchar_t) * len); // copy to buffer
+			wcsncpy(Strings_get(pBuf, i), pBase, len); // copy to buffer
 			Strings_get(pBuf, i)[len] = L'\0'; // terminating null
 			++i; // next string
 		}
