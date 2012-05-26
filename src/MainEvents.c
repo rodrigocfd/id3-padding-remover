@@ -125,8 +125,9 @@ void Main_onAddFiles()
 		
 		_Main_calcPaddingSizeAll();
 		SendMessage(hList, WM_SETREDRAW, (WPARAM)TRUE, 0);
-		Strings_free(&files);
 	}
+
+	Strings_free(&files);
 }
 
 void Main_onSummary()
