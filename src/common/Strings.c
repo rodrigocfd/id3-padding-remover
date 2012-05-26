@@ -34,3 +34,8 @@ void Strings_realloc(Strings *pStrs, int size)
 		pStrs->n = size;
 	}
 }
+
+void Strings_reallocStr(Strings *pStrs, int i, int lengthWithoutNull)
+{
+	pStrs->ptr[i] = realloc(pStrs->ptr[i], sizeof(wchar_t) * (lengthWithoutNull + 1));
+}

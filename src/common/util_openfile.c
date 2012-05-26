@@ -92,8 +92,8 @@ BOOL openFiles(HWND hWnd, const wchar_t *filter, Strings *pBuf)
 		Strings_realloc(pBuf, Strings_count(&parsedFiles)); // alloc return buffer
 
 		for(i = 0; i < Strings_count(&parsedFiles); ++i) {
-			Strings_get(pBuf, i) = malloc(sizeof(wchar_t) *
-				(lstrlen(buffer.pFolder) + lstrlen(Strings_get(&parsedFiles, i)) + 2)); // room for backslash and null
+			Strings_reallocStr(pBuf, i,
+				lstrlen(buffer.pFolder) + lstrlen(Strings_get(&parsedFiles, i)) + 1); // room for backslash
 			lstrcpy(Strings_get(pBuf, i), buffer.pFolder);
 			lstrcat(Strings_get(pBuf, i), L"\\");
 			lstrcat(Strings_get(pBuf, i), Strings_get(&parsedFiles, i)); // concat folder + file
@@ -122,8 +122,8 @@ BOOL openFiles(HWND hWnd, const wchar_t *filter, Strings *pBuf)
 			Strings_realloc(pBuf, Strings_count(&strs) - 1); // alloc return buffer
 
 			for(i = 0; i < Strings_count(&strs) - 1; ++i) {
-				Strings_get(pBuf, i) = malloc(sizeof(wchar_t) *
-					(lstrlen(pBasePath) + lstrlen(Strings_get(&strs, i + 1)) + 2)); // room for backslash and null
+				Strings_reallocStr(pBuf, i,
+					lstrlen(pBasePath) + lstrlen(Strings_get(&strs, i + 1)) + 1); // room for backslash
 				lstrcpy(Strings_get(pBuf, i), pBasePath);
 				lstrcat(Strings_get(pBuf, i), L"\\");
 				lstrcat(Strings_get(pBuf, i), Strings_get(&strs, i + 1)); // concat folder + file

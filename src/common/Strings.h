@@ -10,9 +10,10 @@ typedef struct {
 } Strings;
 
 
-Strings Strings_new    ();
-void    Strings_free   (Strings *pStrs);
-void    Strings_realloc(Strings *pStrs, int size);
+Strings Strings_new       ();
+void    Strings_free      (Strings *pStrs);
+void    Strings_realloc   (Strings *pStrs, int size);
+void    Strings_reallocStr(Strings *pStrs, int i, int lengthWithoutNull);
 
 #define Strings_count(pStrs)     ((pStrs)->n)
 #define Strings_get(pStrs, i)    ((pStrs)->ptr[i])
