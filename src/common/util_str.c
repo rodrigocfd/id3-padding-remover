@@ -54,7 +54,7 @@ wchar_t* trim(wchar_t *s)
 	return s; // return pointer to same passed string
 }
 
-int multistr2array(const wchar_t *multiStr, wchar_t ***pBuf)
+void explodeMultiStr(const wchar_t *multiStr, Strings *pBuf)
 {
 	// Example multiStr:
 	// L"first one\0second one\0third one\0"
@@ -73,7 +73,7 @@ int multistr2array(const wchar_t *multiStr, wchar_t ***pBuf)
 	}
 
 	// Alloc array of pointers to arrays (strings).
-	*pBuf = malloc(sizeof(wchar_t*) * numStrings);
+	Strings_realloc(pBuf, numStrings);
 
 	// Alloc and copy each string.
 	{
@@ -81,16 +81,14 @@ int multistr2array(const wchar_t *multiStr, wchar_t ***pBuf)
 		const wchar_t *pRun = multiStr;
 		for(i = 0; i < numStrings; ++i) {
 			int len = lstrlen(pRun);
-			(*pBuf)[i] = malloc(sizeof(wchar_t) * (len + 1));
-			memcpy((*pBuf)[i], pRun, sizeof(wchar_t) * (len + 1));
+			Strings_get(pBuf, i) = malloc(sizeof(wchar_t) * (len + 1));
+			memcpy(Strings_get(pBuf, i), pRun, sizeof(wchar_t) * (len + 1));
 			pRun += len + 1;
 		}
 	}
-
-	return numStrings; // user must free the array of arrays
 }
 
-int quotedstr2array(const wchar_t *quotedStr, wchar_t ***pBuf)
+void explodeQuotedStr(const wchar_t *quotedStr, Strings *pBuf)
 {
 	// Example quotedStr:
 	// "first one" "second one" "third one"
@@ -117,7 +115,7 @@ int quotedstr2array(const wchar_t *quotedStr, wchar_t ***pBuf)
 no_more_strs:
 
 	// Alloc array of pointers to arrays (strings).
-	*pBuf = malloc(sizeof(wchar_t*) * numStrings);
+	Strings_realloc(pBuf, numStrings);
 
 	// Alloc and copy each string.
 	{
@@ -131,13 +129,11 @@ no_more_strs:
 			while(*pRun != L'\"') ++pRun; // now points to closing quote
 
 			len = pRun - pBase;
-			(*pBuf)[i] = malloc(sizeof(wchar_t) * (len + 1));
-			memcpy((*pBuf)[i], pBase, sizeof(wchar_t) * len);
-			(*pBuf)[i][len] = L'\0'; // terminating null
+			Strings_get(pBuf, i) = malloc(sizeof(wchar_t) * (len + 1));
+			memcpy(Strings_get(pBuf, i), pBase, sizeof(wchar_t) * len);
+			Strings_get(pBuf, i)[len] = L'\0'; // terminating null
 
 			pBase = ++pRun; // not points to past closing quote
 		}
 	}
-
-	return numStrings; // user must free the array of arrays
 }

@@ -25,15 +25,6 @@ struct { // parallel buffers
 	BOOL     bUsed;
 } buffer = { 0 };
 
-static void _releaseParallelBuffers() {
-	if(buffer.bUsed) {
-		free(buffer.pFiles);
-		free(buffer.pFolder);
-		buffer.pFiles = buffer.pFolder = NULL;
-		buffer.bUsed = FALSE;
-	}
-}
-
 static UINT_PTR CALLBACK _openFilesHookProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
 	// http://www.codeproject.com/Articles/3235/Multiple-Selection-in-a-File-Dialog
@@ -64,7 +55,7 @@ static UINT_PTR CALLBACK _openFilesHookProc(HWND hWnd, UINT msg, WPARAM wp, LPAR
 					CommDlg_OpenSave_GetFolderPath(hWndSel, buffer.pFolder, szFolder);
 				}
 				else
-					_releaseParallelBuffers(); // original buffer is larger enough, we don't need the parallel buffers
+					buffer.bUsed = FALSE; // original buffer is larger enough, we don't need the parallel buffers
 			}
 			break;
 		}
@@ -73,12 +64,11 @@ static UINT_PTR CALLBACK _openFilesHookProc(HWND hWnd, UINT msg, WPARAM wp, LPAR
 	return 0;
 }
 
-int openFiles(HWND hWnd, const wchar_t *filter, wchar_t ***pBuf)
+BOOL openFiles(HWND hWnd, const wchar_t *filter, Strings *pBuf)
 {
 	OPENFILENAME ofn = { 0 };
-	BOOL         retCode;
+	BOOL         retCode = FALSE, retCodeNow = FALSE;
 	wchar_t      multiBuf[256] = { 0 }; // will receive the multi-string
-	int          numFiles = 0;
 
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner   = hWnd;
@@ -89,64 +79,65 @@ int openFiles(HWND hWnd, const wchar_t *filter, wchar_t ***pBuf)
 	ofn.Flags       = OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT |
 		OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLEHOOK;
 
-	*pBuf = NULL;
+	Strings_realloc(pBuf, 0);
 	retCode = GetOpenFileName(&ofn);
 
 	if( (retCode && buffer.bUsed) || (!retCode && CommDlgExtendedError() == FNERR_BUFFERTOOSMALL) )
 	{
-		int i;
-		wchar_t **pParsed = NULL;
+		int     i;
+		Strings parsedFiles = Strings_new();
 
-		numFiles = quotedstr2array(buffer.pFiles, &pParsed); // break quoted-string into string array
-		_ASSERT(numFiles);
-		*pBuf = malloc(sizeof(wchar_t*) * numFiles); // alloc return buffer
+		explodeQuotedStr(buffer.pFiles, &parsedFiles);
+		_ASSERT(Strings_count(&parsedFiles));
+		Strings_realloc(pBuf, Strings_count(&parsedFiles)); // alloc return buffer
 
-		for(i = 0; i < numFiles; ++i) {
-			(*pBuf)[i] = malloc(sizeof(wchar_t) *
-				(lstrlen(buffer.pFolder) + lstrlen(pParsed[i]) + 2)); // room for backslash and null
-			lstrcpy((*pBuf)[i], buffer.pFolder);
-			lstrcat((*pBuf)[i], L"\\");
-			lstrcat((*pBuf)[i], pParsed[i]); // concat folder + file
+		for(i = 0; i < Strings_count(&parsedFiles); ++i) {
+			Strings_get(pBuf, i) = malloc(sizeof(wchar_t) *
+				(lstrlen(buffer.pFolder) + lstrlen(Strings_get(&parsedFiles, i)) + 2)); // room for backslash and null
+			lstrcpy(Strings_get(pBuf, i), buffer.pFolder);
+			lstrcat(Strings_get(pBuf, i), L"\\");
+			lstrcat(Strings_get(pBuf, i), Strings_get(&parsedFiles, i)); // concat folder + file
 		}
 
-		for(i = 0; i < numFiles; ++i) free(pParsed[i]); // cleanup
-		free(pParsed);
+		Strings_free(&parsedFiles);
+		retCodeNow = TRUE; // okay
 	}
 	else if(retCode) // call OK with regular stack buffer
 	{
-		int i;
-		wchar_t *pBasePath;
-		struct { int num; wchar_t **ptr; } strs = { 0 };
+		int      i;
+		Strings  strs = Strings_new();
+		wchar_t *pBasePath = NULL;
 		
-		strs.num = multistr2array(multiBuf, &strs.ptr); // break multi-string into string array
-		_ASSERT(strs.num);
+		explodeMultiStr(multiBuf, &strs);
+		_ASSERT(Strings_count(&strs));
 
-		if(strs.num == 1) // if user selected only 1 file, the string is the full path, and that's all
+		if(Strings_count(&strs) == 1) // if user selected only 1 file, the string is the full path, and that's all
 		{
-			numFiles = 1;
-			*pBuf = malloc(sizeof(wchar_t*) * 1); // alloc return buffer; array of 1 string
-			(*pBuf)[0] = malloc(sizeof(wchar_t) * (lstrlen(strs.ptr[0]) + 1)); // alloc unique string
-			lstrcpy((*pBuf)[0], strs.ptr[0]);
+			Strings_realloc(pBuf, 1); // alloc return buffer; array of 1 string
+			Strings_set(pBuf, 0, Strings_get(&strs, 0));
 		}
 		else // user selected 2 or more files
 		{
-			pBasePath = strs.ptr[0]; // 1st string is the base path; others are the filenames
-			numFiles = strs.num - 1;
-			*pBuf = malloc(sizeof(wchar_t*) * numFiles); // alloc return buffer
+			pBasePath = Strings_get(&strs, 0); // 1st string is the base path; others are the filenames
+			Strings_realloc(pBuf, Strings_count(&strs) - 1); // alloc return buffer
 
-			for(i = 0; i < numFiles; ++i) {
-				(*pBuf)[i] = malloc(sizeof(wchar_t) *
-					(lstrlen(pBasePath) + lstrlen(strs.ptr[i + 1]) + 2)); // room for backslash and null
-				lstrcpy((*pBuf)[i], pBasePath);
-				lstrcat((*pBuf)[i], L"\\");
-				lstrcat((*pBuf)[i], strs.ptr[i + 1]); // concat folder + file
+			for(i = 0; i < Strings_count(&strs) - 1; ++i) {
+				Strings_get(pBuf, i) = malloc(sizeof(wchar_t) *
+					(lstrlen(pBasePath) + lstrlen(Strings_get(&strs, i + 1)) + 2)); // room for backslash and null
+				lstrcpy(Strings_get(pBuf, i), pBasePath);
+				lstrcat(Strings_get(pBuf, i), L"\\");
+				lstrcat(Strings_get(pBuf, i), Strings_get(&strs, i + 1)); // concat folder + file
 			}
 		}
 		
-		for(i = 0; i < strs.num; ++i) free(strs.ptr[i]); // cleanup
-		free(strs.ptr);
+		Strings_free(&strs);
+		retCodeNow = TRUE; // okay
 	}
 
-	_releaseParallelBuffers(); // eventual cleanup
-	return numFiles; // user must free this array of arrays, if files have been returned
+	if(buffer.pFiles) free(buffer.pFiles); // eventual cleanup
+	if(buffer.pFolder) free(buffer.pFolder);
+	buffer.pFiles = buffer.pFolder = NULL;
+	buffer.bUsed = FALSE;
+
+	return retCodeNow;
 }

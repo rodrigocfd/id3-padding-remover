@@ -1,5 +1,6 @@
 
 #include <Windows.h>
+#include "Strings.h"
 
 
 /* String-related stuff. */
@@ -8,12 +9,12 @@
 #define within(x, a, b)  ((x) >= (a) && (x) <= (b))
 #define between(x, a, b) ((x) > (a) && (x) < (b))
 
-wchar_t* allocfmtv      (const wchar_t *fmt, va_list args);
-wchar_t* allocfmt       (const wchar_t *fmt, ...);
-void     appendfmt      (wchar_t **pStr, const wchar_t *fmt, ...);
-wchar_t* trim           (wchar_t *s);
-int      multistr2array (const wchar_t *multiStr, wchar_t ***pBuf);
-int      quotedstr2array(const wchar_t *quotedStr, wchar_t ***pBuf);
+wchar_t* allocfmtv       (const wchar_t *fmt, va_list args);
+wchar_t* allocfmt        (const wchar_t *fmt, ...);
+void     appendfmt       (wchar_t **pStr, const wchar_t *fmt, ...);
+wchar_t* trim            (wchar_t *s);
+void     explodeMultiStr (const wchar_t *multiStr, Strings *pBuf);
+void     explodeQuotedStr(const wchar_t *quotedStr, Strings *pBuf);
 
 
 /* Win32 shorthand routines. */
@@ -29,7 +30,7 @@ void  centerOnParent(HWND hDlg);
 void  popMenu       (HWND hDlg, int popupMenuId, int x, int y, HWND hWndCoordsRelativeTo);
 HICON explorerIcon  (const wchar_t *fileExtension);
 BOOL  openFile      (HWND hWnd, const wchar_t *filter, wchar_t *buf, int szBuf);
-int   openFiles     (HWND hWnd, const wchar_t *filter, wchar_t ***pBuf);
+BOOL  openFiles     (HWND hWnd, const wchar_t *filter, Strings *pBuf);
 
 
 /* Global system font, handled by runDialog(). */

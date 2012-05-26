@@ -109,21 +109,23 @@ void Main_onInitMenuPopup(WPARAM wp)
 
 void Main_onAddFiles()
 {
-	struct { int num; wchar_t **ptr; } files = { 0 }; // an array of strings
+	Strings files = Strings_new();
 
-	if(files.num = openFiles(hDlg, L"MP3 files (*.mp3)\0*.mp3\0", &files.ptr)) {
+	if(openFiles(hDlg, L"MP3 files (*.mp3)\0*.mp3\0", &files)) {
 		int i;
 		SendMessage(hList, WM_SETREDRAW, (WPARAM)FALSE, 0);
 		
-		for(i = 0; i < files.num; ++i) {
-			if(endswith(files.ptr[i], L".mp3") && !ListView_itemExists(hList, files.ptr[i])) // bypass if not MP3, or if already listed
-				ListView_addItem(hList, files.ptr[i], 0); // add to list
-			free(files.ptr[i]);
+		for(i = 0; i < Strings_count(&files); ++i) {
+			if(endswith(Strings_get(&files, i), L".mp3") &&
+				!ListView_itemExists(hList, Strings_get(&files, i)) ) // bypass if not MP3, or if already listed
+			{
+				ListView_addItem(hList, Strings_get(&files, i), 0); // add to list
+			}
 		}
 		
 		_Main_calcPaddingSizeAll();
 		SendMessage(hList, WM_SETREDRAW, (WPARAM)TRUE, 0);
-		free(files.ptr);
+		Strings_free(&files);
 	}
 }
 
