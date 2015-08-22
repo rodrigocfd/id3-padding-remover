@@ -1,10 +1,10 @@
 
 #include "MainEvents.h"
-#include "common/ListView.h"
-#include "common/Glob.h"
-#include "common/Font.h"
-#include "common/Id3.h"
-#include "common/util.h"
+#include "../common/ListView.h"
+#include "../common/Glob.h"
+#include "../common/Font.h"
+#include "../common/Id3.h"
+#include "../common/util.h"
 #include "../res/resource.h"
 #include "Worker.h"
 

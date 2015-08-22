@@ -4,8 +4,8 @@
 
 #include <Windows.h>
 #include <crtdbg.h>
-#include "common/util.h"
-#include "common/ListView.h"
+#include "../common/util.h"
+#include "../common/ListView.h"
 #include "../res/resource.h"
 #include "MainEvents.h"
 

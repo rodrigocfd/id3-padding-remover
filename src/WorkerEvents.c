@@ -2,10 +2,10 @@
 #include "WorkerEvents.h"
 #include <CommCtrl.h>
 #include "../res/resource.h"
-#include "common/util.h"
-#include "common/Id3.h"
-#include "common/Font.h"
-#include "common/Thread.h"
+#include "../common/util.h"
+#include "../common/Id3.h"
+#include "../common/Font.h"
+#include "../common/Thread.h"
 
 static HWND hDlg = 0;
 static WorkerFiles *pWf = 0;
