@@ -1,5 +1,6 @@
 
 #include "Font.h"
+#include <VersionHelpers.h>
 
 
 HFONT Font_create(const wchar_t *name, int size, BOOL bold, BOOL italic)
@@ -14,15 +15,13 @@ HFONT Font_create(const wchar_t *name, int size, BOOL bold, BOOL italic)
 
 HFONT Font_cloneFromSystem()
 {
-	OSVERSIONINFO ovi = { 0 };
 	NONCLIENTMETRICS ncm = { 0 };
-
-	ovi.dwOSVersionInfoSize = sizeof(ovi);
-	GetVersionEx(&ovi);
 	
 	ncm.cbSize = sizeof(ncm);
-	if(ovi.dwMajorVersion < 6) // below Vista
+
+	if(!IsWindowsVistaOrGreater()) {
 		ncm.cbSize -= sizeof(ncm.iBorderWidth);
+	}
 
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, ncm.cbSize, &ncm, 0);
 	return CreateFontIndirect(&ncm.lfMenuFont);

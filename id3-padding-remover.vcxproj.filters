@@ -1,75 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="res">
-      <UniqueIdentifier>{c314c687-6bb7-4220-b19a-f93e84a15612}</UniqueIdentifier>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="src">
-      <UniqueIdentifier>{ee8f6294-ead7-4190-bf63-6a3ac6ee8ca2}</UniqueIdentifier>
+      <UniqueIdentifier>{ce092317-c8d8-43b0-8147-36dfcdcfb068}</UniqueIdentifier>
     </Filter>
     <Filter Include="common">
-      <UniqueIdentifier>{4610956d-b2ee-4d1f-be2d-94c81552babb}</UniqueIdentifier>
+      <UniqueIdentifier>{6c6a74f0-6d52-466e-8167-46ff3ee3f4db}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Main.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MainEvents.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Worker.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WorkerEvents.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="common\FileMap.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Font.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Glob.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Id3.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Id3Frame.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\ListView.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Strings.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\Thread.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\util_openfile.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\util_str.c">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="common\util_win.c">
-      <Filter>common</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\MainEvents.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\Worker.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\WorkerEvents.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="res\resource.h">
-      <Filter>res</Filter>
+    <ClInclude Include="src\MainEvents.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="common\FileMap.h">
       <Filter>common</Filter>
@@ -98,15 +49,65 @@
     <ClInclude Include="common\util.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="res\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainEvents.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Worker.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WorkerEvents.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="common\ListView.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Strings.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Thread.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\util_openfile.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\util_str.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\util_win.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\FileMap.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Font.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Glob.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Id3.c">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\Id3Frame.c">
+      <Filter>common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\foul-bachelor-frog.ico">
-      <Filter>res</Filter>
+      <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="res\Id3PaddingRemover.rc">
-      <Filter>res</Filter>
+    <ResourceCompile Include="res\id3-padding-remover.rc">
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
