@@ -43,6 +43,8 @@ func (me *DlgMain) events() {
 		me.lstFiles.Column(0).FillRoom()
 
 		me.lstValues.CreateReport(&me.wnd, 424, 6, 232, 318)
+		me.lstValues.AddColumn("Field", 100)
+		me.lstValues.AddColumn("Value", 1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)
 
 		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
@@ -53,5 +55,10 @@ func (me *DlgMain) events() {
 
 	me.wnd.OnMsg().WmSize(func(p wm.Size) {
 		me.resizer.Adjust(p)
+		me.lstFiles.Column(0).FillRoom()
+	})
+
+	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p wm.Command) {
+		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 	})
 }
