@@ -4,6 +4,7 @@ import (
 	"wingows/co"
 	"wingows/gui"
 	"wingows/gui/wm"
+	"wingows/win"
 )
 
 func main() {
@@ -18,6 +19,7 @@ type DlgMain struct {
 func (me *DlgMain) RunAsMain() {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
+	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
 	me.events()
 	me.wnd.RunAsMain()
