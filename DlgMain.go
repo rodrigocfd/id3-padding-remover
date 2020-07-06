@@ -13,10 +13,10 @@ func main() {
 }
 
 type DlgMain struct {
-	wnd        gui.WindowMain
-	lstFiles   gui.ListView
-	lstDetails gui.ListView
-	resizer    gui.Resizer
+	wnd       gui.WindowMain
+	lstFiles  gui.ListView
+	lstValues gui.ListView
+	resizer   gui.Resizer
 }
 
 func (me *DlgMain) RunAsMain() {
@@ -32,12 +32,21 @@ func (me *DlgMain) RunAsMain() {
 
 func (me *DlgMain) events() {
 	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
-		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318)
+		il := gui.ImageList{}
+		il.Create(16, 1)
+		il.AddShellIcon("*.mp3")
 
-		me.lstDetails.CreateReport(&me.wnd, 424, 6, 232, 318)
+		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318)
+		me.lstFiles.SetImageList(co.LVSIL_SMALL, il.Himagelist())
+		me.lstFiles.AddColumn("File", 1)
+		me.lstFiles.AddColumn("Padding", 80)
+		me.lstFiles.Column(0).FillRoom()
+
+		me.lstValues.CreateReport(&me.wnd, 424, 6, 232, 318)
+		me.lstValues.Hwnd().EnableWindow(false)
 
 		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
-			Add(&me.lstDetails, gui.RESZ_REPOS, gui.RESZ_RESIZE)
+			Add(&me.lstValues, gui.RESZ_REPOS, gui.RESZ_RESIZE)
 
 		return 0
 	})
