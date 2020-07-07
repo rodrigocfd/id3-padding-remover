@@ -13,10 +13,11 @@ func main() {
 }
 
 type DlgMain struct {
-	wnd       gui.WindowMain
-	lstFiles  gui.ListView
-	lstValues gui.ListView
-	resizer   gui.Resizer
+	wnd          gui.WindowMain
+	lstFiles     gui.ListView
+	lstFilesMenu gui.Menu
+	lstValues    gui.ListView
+	resizer      gui.Resizer
 }
 
 func (me *DlgMain) RunAsMain() {
@@ -26,7 +27,11 @@ func (me *DlgMain) RunAsMain() {
 	me.wnd.Setup().Height = 370
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
+	me.buildMenu()
+	defer me.lstFilesMenu.Destroy()
+
 	me.events()
+	me.menuEvents()
 	me.wnd.RunAsMain()
 }
 
@@ -36,11 +41,12 @@ func (me *DlgMain) events() {
 		il.Create(16, 1)
 		il.AddShellIcon("*.mp3")
 
-		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318)
-		me.lstFiles.SetImageList(co.LVSIL_SMALL, il.Himagelist())
-		me.lstFiles.AddColumn("File", 1)
+		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318).
+			SetContextMenu(me.lstFilesMenu.Hmenu()).
+			SetImageList(co.LVSIL_SMALL, il.Himagelist())
+		c1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 80)
-		me.lstFiles.Column(0).FillRoom()
+		c1.FillRoom()
 
 		me.lstValues.CreateReport(&me.wnd, 424, 6, 232, 318)
 		me.lstValues.AddColumn("Field", 100)
@@ -59,6 +65,6 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p wm.Command) {
-		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
+		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on Esc
 	})
 }
