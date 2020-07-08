@@ -27,15 +27,15 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Height = 370
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
-	me.buildMenu()
+	me.buildMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
 
-	me.events()
+	me.basicEvents()
 	me.menuEvents()
 	return me.wnd.RunAsMain()
 }
 
-func (me *DlgMain) events() {
+func (me *DlgMain) basicEvents() {
 	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
 		il := gui.ImageList{}
 		il.Create(16, 1)
@@ -44,9 +44,9 @@ func (me *DlgMain) events() {
 		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318).
 			SetContextMenu(me.lstFilesMenu.Hmenu()).
 			SetImageList(co.LVSIL_SMALL, il.Himagelist())
-		c1 := me.lstFiles.AddColumn("File", 1)
+		col1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 80)
-		c1.FillRoom()
+		col1.FillRoom()
 
 		me.lstValues.CreateReport(&me.wnd, 424, 6, 232, 318)
 		me.lstValues.AddColumn("Field", 100)
