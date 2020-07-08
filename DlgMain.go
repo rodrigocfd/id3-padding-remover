@@ -20,7 +20,7 @@ type DlgMain struct {
 	resizer      gui.Resizer
 }
 
-func (me *DlgMain) RunAsMain() {
+func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().Width = 680
@@ -32,7 +32,7 @@ func (me *DlgMain) RunAsMain() {
 
 	me.events()
 	me.menuEvents()
-	me.wnd.RunAsMain()
+	return me.wnd.RunAsMain()
 }
 
 func (me *DlgMain) events() {

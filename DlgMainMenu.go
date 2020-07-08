@@ -1,6 +1,10 @@
 package main
 
-import "wingows/gui/wm"
+import (
+	"wingows/co"
+	"wingows/gui"
+	"wingows/gui/wm"
+)
 
 func (me *DlgMain) buildMenu() {
 	me.lstFilesMenu.CreatePopup().
@@ -12,6 +16,13 @@ func (me *DlgMain) buildMenu() {
 		AddItem("REMRGPIC", "Remove ReplayGain and P&ic").
 		AddSeparator().
 		AddItem("ABOUT", "&About...\tF1")
+
+	accelTable := gui.AccelTable{}
+	accelTable.
+		AddWithCmdId("CTRLO", 'O', co.ACCELF_CONTROL, me.lstFilesMenu.Item("OPEN").CmdId()).
+		AddWithCmdId("DEL", co.VK_DELETE, co.ACCELF_NONE, me.lstFilesMenu.Item("DELETE").CmdId()).
+		AddWithCmdId("F1", co.VK_F1, co.ACCELF_NONE, me.lstFilesMenu.Item("ABOUT").CmdId())
+	me.wnd.Setup().HAccel = accelTable.Build()
 }
 
 func (me *DlgMain) menuEvents() {
