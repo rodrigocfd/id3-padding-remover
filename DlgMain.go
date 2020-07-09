@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"strings"
 	"wingows/co"
 	"wingows/gui"
 	"wingows/gui/wm"
@@ -70,6 +72,23 @@ func (me *DlgMain) RunAsMain() {
 	})
 
 	me.wnd.OnMsg().WmDropFiles(func(p wm.DropFiles) {
-		me.addFilesIfNotYet(p.RetrieveAll())
+		paths := p.RetrieveAll()
+		mp3s := make([]string, 0, len(paths))
+		for _, path := range paths {
+			if gui.PathIsFolder(path) { // if a folder, add all MP3 directly within
+				subFiles := gui.ListFilesInFolder(path + "\\*.mp3")
+				mp3s = append(mp3s, subFiles...)
+			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
+				mp3s = append(mp3s, path)
+			}
+		}
+
+		if len(mp3s) == 0 {
+			me.wnd.Hwnd().MessageBox(
+				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
+				"No files added", co.MB_ICONEXCLAMATION)
+		} else {
+			me.addFilesIfNotYet(mp3s)
+		}
 	})
 }
