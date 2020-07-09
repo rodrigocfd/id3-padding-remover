@@ -62,6 +62,11 @@ func (me *DlgMain) menuEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("ABOUT").CmdId(), func(p wm.Command) {
-		println("About us")
+		me.wnd.Hwnd().MessageBox(
+			"ID3 Fit 2.0.0\n"+
+				"Rodrigo César de Freitas Dias\n"+
+				"rcesar@gmail.com\n\n"+
+				"This application was written in Go with Wingows library.",
+			"About", co.MB_ICONINFORMATION)
 	})
 }
