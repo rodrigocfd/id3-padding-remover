@@ -37,13 +37,7 @@ func (me *DlgMain) menuEvents() {
 		ok, mp3s := gui.ShowFileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
 		if ok {
-			me.lstFiles.SetRedraw(false)
-			for _, mp3 := range mp3s {
-				if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
-					me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
-				}
-			}
-			me.lstFiles.SetRedraw(true)
+			me.addFilesIfNotYet(mp3s)
 		}
 	})
 
