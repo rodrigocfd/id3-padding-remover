@@ -31,6 +31,7 @@ func (me *DlgMain) RunAsMain() int {
 	defer me.lstFilesMenu.Destroy()
 
 	me.basicEvents()
+	me.lstFilesEvents()
 	me.menuEvents()
 	return me.wnd.RunAsMain()
 }
