@@ -26,6 +26,13 @@ func (me *DlgMain) buildMenuAndAccel() {
 }
 
 func (me *DlgMain) menuEvents() {
+	me.wnd.OnMsg().WmInitMenuPopup(func(p wm.InitMenuPopup) {
+		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
+			me.lstFilesMenu.EnableMany(me.lstFiles.SelectedItemCount() > 0,
+				[]string{"DELETE", "REMPAD", "REMRG", "REMRGPIC"})
+		}
+	})
+
 	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("OPEN").CmdId(), func(p wm.Command) {
 		ok, mp3s := gui.ShowFileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
