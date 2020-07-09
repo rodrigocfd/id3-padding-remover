@@ -41,7 +41,12 @@ func (me *DlgMain) menuEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("DELETE").CmdId(), func(p wm.Command) {
-		println("Delete from list")
+		selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
+		me.lstFiles.SetRedraw(false)
+		for i := len(selItems) - 1; i >= 0; i-- {
+			selItems[i].Delete() // will fire LVM_DELETEITEM
+		}
+		me.lstFiles.SetRedraw(true)
 	})
 
 	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMPAD").CmdId(), func(p wm.Command) {

@@ -23,8 +23,8 @@ type DlgMain struct {
 func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
-	me.wnd.Setup().Width = 680
-	me.wnd.Setup().Height = 370
+	me.wnd.Setup().Width = 700
+	me.wnd.Setup().Height = 350
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
 	me.buildMenuAndAccel()
@@ -41,14 +41,14 @@ func (me *DlgMain) basicEvents() {
 		il.Create(16, 1)
 		il.AddShellIcon("*.mp3")
 
-		me.lstFiles.CreateReport(&me.wnd, 6, 6, 410, 318).
+		me.lstFiles.CreateReport(&me.wnd, 6, 6, 430, 298).
 			SetContextMenu(me.lstFilesMenu.Hmenu()).
 			SetImageList(co.LVSIL_SMALL, il.Himagelist())
 		col1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 80)
 		col1.FillRoom()
 
-		me.lstValues.CreateReport(&me.wnd, 424, 6, 232, 318)
+		me.lstValues.CreateReport(&me.wnd, 444, 6, 232, 298)
 		me.lstValues.AddColumn("Field", 100)
 		me.lstValues.AddColumn("Value", 1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)
