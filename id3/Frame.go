@@ -18,10 +18,10 @@ type Frame struct {
 	name4     string
 	kind      FRAME
 	texts     []string
-	binData   []uint8
+	binData   []byte
 }
 
-func (me *Frame) Read(src []uint8) error {
+func (me *Frame) Read(src []byte) error {
 	me.frameSize = binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 	me.name4 = string(src[0:4])
 
@@ -44,23 +44,25 @@ func (me *Frame) Read(src []uint8) error {
 	return nil
 }
 
-func (me *Frame) parseAscii(src []uint8) {
+func (me *Frame) parseAscii(src []byte) {
+	frameDataSize := me.frameSize - 10 // minus header size
+
 	off := 1 // skip encoding byte
 	offBase := 1
 
 	// Parse any number of null-separated strings.
 	for {
-		if src[off] == 0x00 || uint32(off) == me.frameSize-10-1 { // we reached the end of a string
+		if src[off] == 0x00 || uint32(off) == frameDataSize-1 { // we reached the end of a string
 			me.texts = append(me.texts, string(src[offBase:off+1]))
 			offBase = off + 1
 		}
 		off++
-		if uint32(off) == me.frameSize-10 { // end of frame
+		if uint32(off) == frameDataSize { // end of frame
 			break
 		}
 	}
 }
 
-func (me *Frame) parseUtf16(src []uint8) {
+func (me *Frame) parseUtf16(src []byte) {
 
 }

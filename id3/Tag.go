@@ -8,17 +8,18 @@ import (
 )
 
 type Tag struct {
-	version [3]uint16
-	tagSize uint32
-	frames  []Frame
+	version     [3]uint16
+	tagSize     uint32
+	paddingSize uint32
+	frames      []Frame
 }
 
 func (me *Tag) Version() [3]uint16 { return me.version }
 func (me *Tag) TotalSize() uint32  { return me.tagSize }
 func (me *Tag) Frames() []Frame    { return me.frames }
 
-func (me *Tag) Read(mp3Blob []uint8) error {
-	if !bytes.Equal(mp3Blob[:3], []uint8("ID3")) {
+func (me *Tag) Read(mp3Blob []byte) error {
+	if !bytes.Equal(mp3Blob[:3], []byte("ID3")) {
 		return errors.New("No tag found.")
 	}
 
@@ -44,28 +45,41 @@ func (me *Tag) Read(mp3Blob []uint8) error {
 		binary.BigEndian.Uint32(mp3Blob[6:10]) + 10, // also count 10-byte tag header
 	)
 
-	return me.readFrames(mp3Blob)
+	return me.readFrames(mp3Blob[10:me.tagSize]) // skip 10-byte tag header
 }
 
-func (me *Tag) readFrames(mp3Blob []uint8) error {
-	off := uint32(10) // skip 10-byte tag header
-
+func (me *Tag) readFrames(src []byte) error {
+	off := 0
 	for {
-		// CHECK IF PADDING BEFORE PARSING AS A FRAME
+		if len(me.frames) == 7 {
+			println("here", len(src[off:]))
+		}
+
+		if me.isSliceZeroed(src[off:]) { // we entered a padding region after all frames
+			me.paddingSize = uint32(len(src[off:]))
+			break
+		} else if off == int(me.tagSize) { // end of tag, no padding
+			break
+		}
 
 		me.frames = append(me.frames, Frame{})
 		lastFrame := &me.frames[len(me.frames)-1]
 
-		err := lastFrame.Read(mp3Blob[off:])
+		err := lastFrame.Read(src[off:])
 		if err != nil {
 			return err
 		}
-		off += lastFrame.frameSize // now points to 1st byte of next frame
-
-		if off == me.tagSize { // end of tag
-			break
-		}
+		off += int(lastFrame.frameSize) // now points to 1st byte of next frame
 	}
 
 	return nil
+}
+
+func (me *Tag) isSliceZeroed(blob []byte) bool {
+	for _, b := range blob {
+		if b != 0x00 {
+			return false
+		}
+	}
+	return true
 }
