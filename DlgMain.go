@@ -65,6 +65,7 @@ func (me *DlgMain) RunAsMain() {
 	me.wnd.OnMsg().WmSize(func(p wm.Size) {
 		me.resizer.Adjust(p)
 		me.lstFiles.Column(0).FillRoom()
+		me.lstValues.Column(1).FillRoom()
 	})
 
 	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p wm.Command) {
@@ -75,8 +76,8 @@ func (me *DlgMain) RunAsMain() {
 		paths := p.RetrieveAll()
 		mp3s := make([]string, 0, len(paths))
 		for _, path := range paths {
-			if gui.PathIsFolder(path) { // if a folder, add all MP3 directly within
-				subFiles := gui.ListFilesInFolder(path + "\\*.mp3")
+			if gui.FileUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
+				subFiles := gui.FileUtil.ListFilesInFolder(path + "\\*.mp3")
 				mp3s = append(mp3s, subFiles...)
 			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
 				mp3s = append(mp3s, path)
