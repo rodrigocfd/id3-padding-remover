@@ -22,9 +22,7 @@ type DlgMain struct {
 	resizer      gui.Resizer
 }
 
-func (me *DlgMain) RunAsMain() {
-	defer me.wnd.RunAsMain()
-
+func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
@@ -35,13 +33,20 @@ func (me *DlgMain) RunAsMain() {
 	me.buildMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
 
+	me.mainEvents()
 	me.lstFilesEvents()
 	me.menuEvents()
+	return me.wnd.RunAsMain()
+}
 
+func (me *DlgMain) mainEvents() {
 	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
 		il := gui.ImageList{}
 		il.Create(16, 1)
 		il.AddShellIcon("*.mp3")
+
+		mi := win.MENUINFO{}
+		me.lstFilesMenu.Hmenu().GetMenuInfo(&mi)
 
 		lstFilesCx, lstFilesCy := uint32(470), uint32(294)
 		me.lstFiles.CreateReport(&me.wnd, 6, 6, lstFilesCx, lstFilesCy).

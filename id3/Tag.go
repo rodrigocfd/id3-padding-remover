@@ -11,12 +11,33 @@ type Tag struct {
 	version     [3]uint16
 	tagSize     uint32
 	paddingSize uint32
-	frames      []Frame
+	frames      map[string]Frame
 }
 
-func (me *Tag) Version() [3]uint16 { return me.version }
-func (me *Tag) TotalSize() uint32  { return me.tagSize }
-func (me *Tag) Frames() []Frame    { return me.frames }
+func (me *Tag) Version() [3]uint16       { return me.version }
+func (me *Tag) TotalSize() uint32        { return me.tagSize }
+func (me *Tag) Frames() map[string]Frame { return me.frames }
+
+func (me *Tag) Album() (string, bool)  { return me.simpleText("TALB") }
+func (me *Tag) Artist() (string, bool) { return me.simpleText("TPE1") }
+func (me *Tag) Genre() (string, bool)  { return me.simpleText("TCON") }
+func (me *Tag) Title() (string, bool)  { return me.simpleText("TIT2") }
+func (me *Tag) Track() (string, bool)  { return me.simpleText("TRCK") }
+func (me *Tag) Year() (string, bool)   { return me.simpleText("TYER") }
+
+func (me *Tag) AlbumArt() ([]byte, bool) {
+	if frame, ok := me.frames["TALB"]; ok {
+		return frame.binData, true
+	}
+	return nil, false
+}
+
+func (me *Tag) Comment() ([]string, bool) {
+	if frame, ok := me.frames["COMM"]; ok {
+		return frame.texts, true
+	}
+	return nil, false
+}
 
 func (me *Tag) Read(mp3Blob []byte) error {
 	if !bytes.Equal(mp3Blob[:3], []byte("ID3")) {
@@ -49,7 +70,9 @@ func (me *Tag) Read(mp3Blob []byte) error {
 }
 
 func (me *Tag) readFrames(src []byte) error {
+	me.frames = make(map[string]Frame)
 	off := 0
+
 	for {
 		if len(me.frames) == 7 {
 			println("here", len(src[off:]))
@@ -62,14 +85,13 @@ func (me *Tag) readFrames(src []byte) error {
 			break
 		}
 
-		me.frames = append(me.frames, Frame{})
-		lastFrame := &me.frames[len(me.frames)-1]
-
-		err := lastFrame.Read(src[off:])
+		newFrame := Frame{}
+		err := newFrame.Read(src[off:])
 		if err != nil {
 			return err
 		}
-		off += int(lastFrame.frameSize) // now points to 1st byte of next frame
+		me.frames[newFrame.name4] = newFrame
+		off += int(newFrame.frameSize) // now points to 1st byte of next frame
 	}
 
 	return nil
@@ -82,4 +104,11 @@ func (me *Tag) isSliceZeroed(blob []byte) bool {
 		}
 	}
 	return true
+}
+
+func (me *Tag) simpleText(name4 string) (string, bool) {
+	if frame, ok := me.frames[name4]; ok {
+		return frame.texts[0], true
+	}
+	return "", false
 }

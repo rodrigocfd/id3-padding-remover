@@ -34,9 +34,9 @@ func (me *DlgMain) menuEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("OPEN").CmdId(), func(p wm.Command) {
-		ok, mp3s := gui.SysDlg.FileOpenMany(&me.wnd,
-			[]string{"MP3 audio files (*.mp3)|*.mp3"})
-		if ok {
+		if mp3s, ok := gui.SysDlg.FileOpenMany(&me.wnd,
+			[]string{"MP3 audio files (*.mp3)|*.mp3"}); ok {
+
 			me.addFilesIfNotYet(mp3s)
 		}
 	})
