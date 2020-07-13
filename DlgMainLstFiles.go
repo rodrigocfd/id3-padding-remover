@@ -16,29 +16,31 @@ func (me *DlgMain) lstFilesEvents() {
 			me.lstFilesSelLocked = true
 
 			go func() {
-				win.Sleep(100) // wait 100ms between LVM_ITEMCHANGED updates
+				win.Sleep(50) // wait between LVM_ITEMCHANGED updates
 
 				me.wnd.RunUiThread(func() {
 					me.updateTitlebarCount(me.lstFiles.ItemCount())
+					me.lstValues.SetRedraw(false).
+						DeleteAllItems()
 
 					selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
+
 					for _, selItem := range selItems {
 						tag := me.cachedTags[selItem.Text()]
 
-						me.lstValues.SetRedraw(false).
-							DeleteAllItems()
-						for i := range tag.Frames() {
+						for i := range tag.Frames() { // read each frame of the tag
 							frame := &tag.Frames()[i]
 							valItem := me.lstValues.AddItem(frame.Name4())
 							if frame.Kind() == id3.FRAME_KIND_TEXT {
 								valItem.SubItem(1).SetText(frame.Texts()[0])
 							}
 						}
-						me.lstValues.SetRedraw(true).
-							Hwnd().EnableWindow(true)
 
 						break // TODO remove after processing many
 					}
+
+					me.lstValues.SetRedraw(true).
+						Hwnd().EnableWindow(len(selItems) > 0)
 
 					me.lstFilesSelLocked = false
 				})

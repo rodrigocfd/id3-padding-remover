@@ -84,7 +84,7 @@ func (me *Tag) ReadFile(path string) error {
 func (me *Tag) readFrames(src []byte) error {
 	off := 0
 	for {
-		if me.isSliceZeroed(src[off:]) { // we entered a padding region after all frames
+		if isSliceZeroed(src[off:]) { // we entered a padding region after all frames
 			me.paddingSize = uint32(len(src[off:])) // store padding size
 			break
 		} else if off == int(me.tagSize) { // end of tag, no padding found
@@ -109,15 +109,6 @@ func (me *Tag) findFrame(name4 string) *Frame {
 		}
 	}
 	return nil
-}
-
-func (me *Tag) isSliceZeroed(blob []byte) bool {
-	for _, b := range blob {
-		if b != 0x00 {
-			return false
-		}
-	}
-	return true // the slice only contain zeros
 }
 
 func (me *Tag) simpleText(name4 string) (string, bool) {
