@@ -9,14 +9,6 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 	for _, mp3 := range mp3s {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
 			me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
-
-			// file := gui.File{}
-			// file.OpenExistingForRead(mp3)
-			// contents := file.ReadAll()
-			// file.Close()
-
-			// tag := id3.Tag{}
-			// tag.Read(contents)
 		}
 	}
 	me.lstFiles.SetRedraw(true)

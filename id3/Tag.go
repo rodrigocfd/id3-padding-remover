@@ -11,12 +11,12 @@ type Tag struct {
 	version     [3]uint16
 	tagSize     uint32
 	paddingSize uint32
-	frames      map[string]Frame
+	frames      []Frame
 }
 
-func (me *Tag) Version() [3]uint16       { return me.version }
-func (me *Tag) TotalSize() uint32        { return me.tagSize }
-func (me *Tag) Frames() map[string]Frame { return me.frames }
+func (me *Tag) Version() [3]uint16 { return me.version }
+func (me *Tag) TotalSize() uint32  { return me.tagSize }
+func (me *Tag) Frames() []Frame    { return me.frames }
 
 func (me *Tag) Album() (string, bool)  { return me.simpleText("TALB") }
 func (me *Tag) Artist() (string, bool) { return me.simpleText("TPE1") }
@@ -26,17 +26,19 @@ func (me *Tag) Track() (string, bool)  { return me.simpleText("TRCK") }
 func (me *Tag) Year() (string, bool)   { return me.simpleText("TYER") }
 
 func (me *Tag) AlbumArt() ([]byte, bool) {
-	if frame, ok := me.frames["TALB"]; ok {
-		return frame.binData, true // return whole binary data
+	frame := me.findFrame("TALB")
+	if frame == nil {
+		return nil, false // frame not found
 	}
-	return nil, false
+	return frame.binData, true // return whole binary data
 }
 
 func (me *Tag) Comment() ([]string, bool) {
-	if frame, ok := me.frames["COMM"]; ok {
-		return frame.texts, true // return all comment strings
+	frame := me.findFrame("COMM")
+	if frame == nil {
+		return nil, false // frame not found
 	}
-	return nil, false
+	return frame.texts, true // return all comment strings
 }
 
 func (me *Tag) Read(mp3Blob []byte) error {
@@ -70,9 +72,7 @@ func (me *Tag) Read(mp3Blob []byte) error {
 }
 
 func (me *Tag) readFrames(src []byte) error {
-	me.frames = make(map[string]Frame)
 	off := 0
-
 	for {
 		if me.isSliceZeroed(src[off:]) { // we entered a padding region after all frames
 			me.paddingSize = uint32(len(src[off:])) // store padding size
@@ -81,15 +81,23 @@ func (me *Tag) readFrames(src []byte) error {
 			break
 		}
 
-		newFrame := Frame{}
-		err := newFrame.Read(src[off:])
+		me.frames = append(me.frames, Frame{}) // append new frame to our slice
+		newFrame := &me.frames[len(me.frames)-1]
+		err := newFrame.Read(src[off:]) // parse frame contents
 		if err != nil {
-			return err
+			return err // an error occurred when parsing the frame
 		}
-		me.frames[newFrame.name4] = newFrame // save new frame into map
-		off += int(newFrame.frameSize)       // now points to 1st byte of next frame
+		off += int(newFrame.frameSize) // now points to 1st byte of next frame
 	}
+	return nil // all frames parsed
+}
 
+func (me *Tag) findFrame(name4 string) *Frame {
+	for i := range me.frames {
+		if me.frames[i].name4 == name4 {
+			return &me.frames[i]
+		}
+	}
 	return nil
 }
 
@@ -103,11 +111,11 @@ func (me *Tag) isSliceZeroed(blob []byte) bool {
 }
 
 func (me *Tag) simpleText(name4 string) (string, bool) {
-	if frame, ok := me.frames[name4]; ok {
-		if frame.kind != FRAME_TEXT {
-			return "", false // not a text frame
-		}
-		return frame.texts[0], true // returns 1st text of frame
+	frame := me.findFrame(name4)
+	if frame == nil {
+		return "", false // frame not found
+	} else if frame.kind != FRAME_KIND_TEXT {
+		return "", false // not a text frame
 	}
-	return "", false // frame not found
+	return frame.texts[0], true // return 1st text of frame
 }

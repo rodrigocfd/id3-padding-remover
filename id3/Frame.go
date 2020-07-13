@@ -5,39 +5,44 @@ import (
 	"errors"
 )
 
-type FRAME uint8
+type FRAME_KIND uint8
 
 const (
-	FRAME_UNDEFINED FRAME = iota
-	FRAME_TEXT
-	FRAME_BINARY
+	FRAME_KIND_UNDEFINED FRAME_KIND = iota
+	FRAME_KIND_TEXT
+	FRAME_KIND_BINARY
 )
 
 type Frame struct {
-	frameSize uint32
+	frameSize uint32 // including 10-byte header
 	name4     string
-	kind      FRAME
+	kind      FRAME_KIND
 	texts     []string
 	binData   []byte
 }
+
+func (me *Frame) Name4() string    { return me.name4 }
+func (me *Frame) Kind() FRAME_KIND { return me.kind }
+func (me *Frame) Texts() []string  { return me.texts }
+func (me *Frame) BinData() []byte  { return me.binData }
 
 func (me *Frame) Read(src []byte) error {
 	me.frameSize = binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 	me.name4 = string(src[0:4])
 
 	if me.name4[0] == 'T' || me.name4 == "COMM" {
-		me.kind = FRAME_TEXT
+		me.kind = FRAME_KIND_TEXT
 
 		if src[10] == 0x00 { // encoding is ISO-8859-1
-			me.parseAscii(src[10:])
+			me.parseAscii(src[10:me.frameSize])
 		} else if src[10] == 0x01 { // encoding is Unicode UTF-16 with 2-byte BOM
-			me.parseUtf16(src[10:])
+			me.parseUtf16(src[10:me.frameSize])
 		} else {
 			return errors.New("Unknown text encoding.")
 		}
 
 	} else {
-		me.kind = FRAME_BINARY
+		me.kind = FRAME_KIND_BINARY
 		copy(me.binData, src[10:10+me.frameSize]) // simply store bytes
 	}
 
@@ -45,20 +50,25 @@ func (me *Frame) Read(src []byte) error {
 }
 
 func (me *Frame) parseAscii(src []byte) {
-	frameDataSize := me.frameSize - 10 // minus header size
+	src = src[1:] // skip encoding byte
 
-	off := 1 // skip encoding byte
-	offBase := 1
+	if src[len(src)-1] == 0x00 { // we have a trailing zero, which is useless
+		src = src[:len(src)-1]
+	}
 
 	// Parse any number of null-separated strings.
+	off := 0
 	for {
-		if src[off] == 0x00 || uint32(off) == frameDataSize-1 { // we reached the end of a string
-			me.texts = append(me.texts, string(src[offBase:off+1]))
-			offBase = off + 1
-		}
-		off++
-		if uint32(off) == frameDataSize { // end of frame
-			break
+		if off == len(src)-1 || src[off+1] == 0x00 { // we reached the end of frame contents, or string
+			me.texts = append(me.texts, string(src[:off+1]))
+
+			if off == len(src)-1 { // no more data
+				break
+			}
+			src = src[off+2:] // skip null separator between strings
+			off = 0
+		} else {
+			off++
 		}
 	}
 }

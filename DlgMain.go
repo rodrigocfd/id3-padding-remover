@@ -27,7 +27,7 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
-	me.wnd.Setup().Width = 740
+	me.wnd.Setup().Width = 760
 	me.wnd.Setup().Height = 346
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
@@ -50,14 +50,14 @@ func (me *DlgMain) mainEvents() {
 		me.lstFilesMenu.Hmenu().GetMenuInfo(&mi)
 
 		lstFilesCx, lstFilesCy := uint32(470), uint32(294)
-		me.lstFiles.CreateReport(&me.wnd, 6, 6, lstFilesCx, lstFilesCy).
+		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, lstFilesCx, lstFilesCy).
 			SetContextMenu(me.lstFilesMenu.Hmenu()).
 			SetImageList(co.LVSIL_SMALL, il.Himagelist())
 		col1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 80)
 		col1.FillRoom()
 
-		me.lstValues.CreateReport(&me.wnd, int32(lstFilesCx)+14, 6, 232, lstFilesCy)
+		me.lstValues.CreateReport(&me.wnd, int32(lstFilesCx)+14, 6, 252, lstFilesCy)
 		me.lstValues.AddColumn("Field", 100)
 		me.lstValues.AddColumn("Value", 1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)
