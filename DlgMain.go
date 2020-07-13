@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"id3-fit/id3"
 	"strings"
 	"wingows/co"
 	"wingows/gui"
@@ -18,9 +19,10 @@ type DlgMain struct {
 	wnd               gui.WindowMain
 	lstFiles          gui.ListView
 	lstFilesMenu      gui.Menu
-	lstFilesSelLocked bool // lstFiles selection is scheduled to fire
+	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         gui.ListView
 	resizer           gui.Resizer
+	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
 func (me *DlgMain) RunAsMain() int {
@@ -65,6 +67,7 @@ func (me *DlgMain) mainEvents() {
 		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
 			Add(&me.lstValues, gui.RESZ_REPOS, gui.RESZ_RESIZE)
 
+		me.cachedTags = make(map[string]*id3.Tag)
 		return 0
 	})
 

@@ -60,7 +60,11 @@ func (me *Frame) parseAscii(src []byte) {
 	off := 0
 	for {
 		if off == len(src)-1 || src[off+1] == 0x00 { // we reached the end of frame contents, or string
-			me.texts = append(me.texts, string(src[:off+1]))
+			runes := make([]rune, 0, len(src[:off+1]))
+			for _, ch := range src[:off+1] {
+				runes = append(runes, rune(ch)) // brute force byte to rune
+			}
+			me.texts = append(me.texts, string(runes))
 
 			if off == len(src)-1 { // no more data
 				break

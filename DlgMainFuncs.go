@@ -11,8 +11,10 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
 			newItem := me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
 
-			tag := id3.Tag{}
+			tag := &id3.Tag{}
 			tag.ReadFile(mp3)
+			me.cachedTags[mp3] = tag // load and cache the tag
+
 			newItem.SubItem(1).SetText(fmt.Sprintf("%d", tag.PaddingSize()))
 		}
 	}

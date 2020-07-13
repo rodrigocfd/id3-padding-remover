@@ -16,30 +16,29 @@ func (me *DlgMain) lstFilesEvents() {
 			me.lstFilesSelLocked = true
 
 			go func() {
-				win.Sleep(100)
+				win.Sleep(100) // wait 100ms between LVM_ITEMCHANGED updates
 
 				me.wnd.RunUiThread(func() {
 					me.updateTitlebarCount(me.lstFiles.ItemCount())
 
 					selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
-					// for _, selItem := range selItems {
+					for _, selItem := range selItems {
+						tag := me.cachedTags[selItem.Text()]
 
-					tag := id3.Tag{}
-					tag.ReadFile(selItems[0].Text())
-
-					me.lstValues.SetRedraw(false).
-						DeleteAllItems()
-					for i := range tag.Frames() {
-						frame := &tag.Frames()[i]
-						valItem := me.lstValues.AddItem(frame.Name4())
-						if frame.Kind() == id3.FRAME_KIND_TEXT {
-							valItem.SubItem(1).SetText(frame.Texts()[0])
+						me.lstValues.SetRedraw(false).
+							DeleteAllItems()
+						for i := range tag.Frames() {
+							frame := &tag.Frames()[i]
+							valItem := me.lstValues.AddItem(frame.Name4())
+							if frame.Kind() == id3.FRAME_KIND_TEXT {
+								valItem.SubItem(1).SetText(frame.Texts()[0])
+							}
 						}
-					}
-					me.lstValues.SetRedraw(true).
-						Hwnd().EnableWindow(true)
+						me.lstValues.SetRedraw(true).
+							Hwnd().EnableWindow(true)
 
-					// }
+						break // TODO remove after processing many
+					}
 
 					me.lstFilesSelLocked = false
 				})
@@ -49,5 +48,8 @@ func (me *DlgMain) lstFilesEvents() {
 
 	me.wnd.OnMsg().LvnDeleteItem(&me.lstFiles, func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount() - 1) // notification is sent before deletion
+
+		delItem := me.lstFiles.Item(uint32(p.IItem))
+		delete(me.cachedTags, delItem.Text()) // remove tag from cache
 	})
 }
