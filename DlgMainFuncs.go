@@ -2,13 +2,18 @@ package main
 
 import (
 	"fmt"
+	"id3-fit/id3"
 )
 
 func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 	for _, mp3 := range mp3s {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
-			me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
+			newItem := me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
+
+			tag := id3.Tag{}
+			tag.ReadFile(mp3)
+			newItem.SubItem(1).SetText(fmt.Sprintf("%d", tag.PaddingSize()))
 		}
 	}
 	me.lstFiles.SetRedraw(true)

@@ -3,7 +3,6 @@ package main
 import (
 	"id3-fit/id3"
 	"wingows/co"
-	"wingows/gui"
 	"wingows/win"
 )
 
@@ -13,8 +12,8 @@ func (me *DlgMain) lstFilesEvents() {
 	})
 
 	me.wnd.OnMsg().LvnItemChanged(&me.lstFiles, func(p *win.NMLISTVIEW) {
-		if !me.lstFilesSelChanging {
-			me.lstFilesSelChanging = true
+		if !me.lstFilesSelLocked {
+			me.lstFilesSelLocked = true
 
 			go func() {
 				win.Sleep(100)
@@ -24,13 +23,9 @@ func (me *DlgMain) lstFilesEvents() {
 
 					selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
 					// for _, selItem := range selItems {
-					file := gui.File{}
-					file.OpenExistingForRead(selItems[0].Text())
-					contents := file.ReadAll()
-					file.Close()
 
 					tag := id3.Tag{}
-					tag.Read(contents)
+					tag.ReadFile(selItems[0].Text())
 
 					me.lstValues.SetRedraw(false).
 						DeleteAllItems()
@@ -46,7 +41,7 @@ func (me *DlgMain) lstFilesEvents() {
 
 					// }
 
-					me.lstFilesSelChanging = false
+					me.lstFilesSelLocked = false
 				})
 			}()
 		}

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"wingows/gui"
 )
 
 type Tag struct {
@@ -14,9 +15,10 @@ type Tag struct {
 	frames      []Frame
 }
 
-func (me *Tag) Version() [3]uint16 { return me.version }
-func (me *Tag) TotalSize() uint32  { return me.tagSize }
-func (me *Tag) Frames() []Frame    { return me.frames }
+func (me *Tag) Version() [3]uint16  { return me.version }
+func (me *Tag) TotalSize() uint32   { return me.tagSize }
+func (me *Tag) PaddingSize() uint32 { return me.paddingSize }
+func (me *Tag) Frames() []Frame     { return me.frames }
 
 func (me *Tag) Album() (string, bool)  { return me.simpleText("TALB") }
 func (me *Tag) Artist() (string, bool) { return me.simpleText("TPE1") }
@@ -41,7 +43,7 @@ func (me *Tag) Comment() ([]string, bool) {
 	return frame.texts, true // return all comment strings
 }
 
-func (me *Tag) Read(mp3Blob []byte) error {
+func (me *Tag) ReadBinary(mp3Blob []byte) error {
 	if !bytes.Equal(mp3Blob[:3], []byte("ID3")) {
 		return errors.New("No tag found.")
 	}
@@ -69,6 +71,14 @@ func (me *Tag) Read(mp3Blob []byte) error {
 	)
 
 	return me.readFrames(mp3Blob[10:me.tagSize]) // skip 10-byte tag header
+}
+
+func (me *Tag) ReadFile(path string) error {
+	file := gui.File{}
+	file.OpenExistingForRead(path)
+	contents := file.ReadAll()
+	file.Close()
+	return me.ReadBinary(contents)
 }
 
 func (me *Tag) readFrames(src []byte) error {

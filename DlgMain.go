@@ -15,12 +15,12 @@ func main() {
 }
 
 type DlgMain struct {
-	wnd                 gui.WindowMain
-	lstFiles            gui.ListView
-	lstFilesMenu        gui.Menu
-	lstFilesSelChanging bool // lstFiles selection is being changed
-	lstValues           gui.ListView
-	resizer             gui.Resizer
+	wnd               gui.WindowMain
+	lstFiles          gui.ListView
+	lstFilesMenu      gui.Menu
+	lstFilesSelLocked bool // lstFiles selection is scheduled to fire
+	lstValues         gui.ListView
+	resizer           gui.Resizer
 }
 
 func (me *DlgMain) RunAsMain() int {
