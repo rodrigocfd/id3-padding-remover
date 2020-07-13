@@ -27,14 +27,14 @@ func (me *Tag) Year() (string, bool)   { return me.simpleText("TYER") }
 
 func (me *Tag) AlbumArt() ([]byte, bool) {
 	if frame, ok := me.frames["TALB"]; ok {
-		return frame.binData, true
+		return frame.binData, true // return whole binary data
 	}
 	return nil, false
 }
 
 func (me *Tag) Comment() ([]string, bool) {
 	if frame, ok := me.frames["COMM"]; ok {
-		return frame.texts, true
+		return frame.texts, true // return all comment strings
 	}
 	return nil, false
 }
@@ -74,14 +74,10 @@ func (me *Tag) readFrames(src []byte) error {
 	off := 0
 
 	for {
-		if len(me.frames) == 7 {
-			println("here", len(src[off:]))
-		}
-
 		if me.isSliceZeroed(src[off:]) { // we entered a padding region after all frames
-			me.paddingSize = uint32(len(src[off:]))
+			me.paddingSize = uint32(len(src[off:])) // store padding size
 			break
-		} else if off == int(me.tagSize) { // end of tag, no padding
+		} else if off == int(me.tagSize) { // end of tag, no padding found
 			break
 		}
 
@@ -90,8 +86,8 @@ func (me *Tag) readFrames(src []byte) error {
 		if err != nil {
 			return err
 		}
-		me.frames[newFrame.name4] = newFrame
-		off += int(newFrame.frameSize) // now points to 1st byte of next frame
+		me.frames[newFrame.name4] = newFrame // save new frame into map
+		off += int(newFrame.frameSize)       // now points to 1st byte of next frame
 	}
 
 	return nil
@@ -103,12 +99,15 @@ func (me *Tag) isSliceZeroed(blob []byte) bool {
 			return false
 		}
 	}
-	return true
+	return true // the slice only contain zeros
 }
 
 func (me *Tag) simpleText(name4 string) (string, bool) {
 	if frame, ok := me.frames[name4]; ok {
-		return frame.texts[0], true
+		if frame.kind != FRAME_TEXT {
+			return "", false // not a text frame
+		}
+		return frame.texts[0], true // returns 1st text of frame
 	}
-	return "", false
+	return "", false // frame not found
 }

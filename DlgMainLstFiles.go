@@ -1,7 +1,6 @@
 package main
 
 import (
-	"wingows/co"
 	"wingows/win"
 )
 
@@ -11,12 +10,18 @@ func (me *DlgMain) lstFilesEvents() {
 	})
 
 	me.wnd.OnMsg().LvnItemChanged(&me.lstFiles, func(p *win.NMLISTVIEW) {
-		me.updateTitlebarCount(me.lstFiles.ItemCount())
-		me.lstValues.DeleteAllItems()
+		if !me.lstFilesSelChanging {
+			me.lstFilesSelChanging = true
+			go func() {
+				win.Sleep(100)
 
-		sels := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
-		for _, sel := range sels {
-			println(sel.Text())
+				me.wnd.RunUiThread(func() {
+					me.updateTitlebarCount(me.lstFiles.ItemCount())
+					me.lstValues.DeleteAllItems()
+
+					me.lstFilesSelChanging = false
+				})
+			}()
 		}
 	})
 
