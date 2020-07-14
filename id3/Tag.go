@@ -27,7 +27,7 @@ func (me *Tag) Title() (string, bool)  { return me.simpleText("TIT2") }
 func (me *Tag) Track() (string, bool)  { return me.simpleText("TRCK") }
 func (me *Tag) Year() (string, bool)   { return me.simpleText("TYER") }
 
-func (me *Tag) AlbumArt() ([]byte, bool) {
+func (me *Tag) Picture() ([]byte, bool) {
 	frame := me.findFrame("TALB")
 	if frame == nil {
 		return nil, false // frame not found
@@ -93,10 +93,14 @@ func (me *Tag) readFrames(src []byte) error {
 		me.frames = append(me.frames, Frame{}) // append new frame to our slice
 		newFrame := &me.frames[len(me.frames)-1]
 		err := newFrame.Read(src) // parse frame contents
-
 		if err != nil {
 			return err // an error occurred when parsing the frame
 		}
+
+		if int(newFrame.frameSize) > len(src) {
+			return errors.New("Frame size is greater than real size.")
+		}
+
 		src = src[newFrame.frameSize:] // now starts at 1st byte of next frame
 	}
 	return nil // all frames parsed

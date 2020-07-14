@@ -30,7 +30,7 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
 	me.wnd.Setup().Width = 760
-	me.wnd.Setup().Height = 346
+	me.wnd.Setup().Height = 384
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
 	me.buildMenuAndAccel()
@@ -44,26 +44,26 @@ func (me *DlgMain) RunAsMain() int {
 
 func (me *DlgMain) mainEvents() {
 	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
+		// MP3 files list view setup.
 		il := gui.ImageList{}
 		il.Create(16, 1)
 		il.AddShellIcon("*.mp3")
 
-		mi := win.MENUINFO{}
-		me.lstFilesMenu.Hmenu().GetMenuInfo(&mi)
-
-		lstFilesCx, lstFilesCy := uint32(470), uint32(294)
+		lstFilesCx, lstFilesCy := uint32(510), uint32(p.CreateStruct().Cy-52)
 		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, lstFilesCx, lstFilesCy).
 			SetContextMenu(me.lstFilesMenu.Hmenu()).
 			SetImageList(co.LVSIL_SMALL, il.Himagelist())
 		col1 := me.lstFiles.AddColumn("File", 1)
-		me.lstFiles.AddColumn("Padding", 80)
+		me.lstFiles.AddColumn("Padding", 60)
 		col1.FillRoom()
 
-		me.lstValues.CreateReport(&me.wnd, int32(lstFilesCx)+14, 6, 252, lstFilesCy)
-		me.lstValues.AddColumn("Field", 100)
+		// Tag values list view setup.
+		me.lstValues.CreateReport(&me.wnd, int32(lstFilesCx)+14, 6, 212, lstFilesCy)
+		me.lstValues.AddColumn("Field", 50)
 		me.lstValues.AddColumn("Value", 1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)
 
+		// Other stuff.
 		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
 			Add(&me.lstValues, gui.RESZ_REPOS, gui.RESZ_RESIZE)
 

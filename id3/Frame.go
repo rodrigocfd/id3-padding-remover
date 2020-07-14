@@ -10,6 +10,7 @@ type FRAME_KIND uint8
 const (
 	FRAME_KIND_UNDEFINED FRAME_KIND = iota
 	FRAME_KIND_TEXT
+	FRAME_KIND_MULTI_TEXT
 	FRAME_KIND_BINARY
 )
 
@@ -31,8 +32,6 @@ func (me *Frame) Read(src []byte) error {
 	me.name4 = string(src[0:4])
 
 	if me.name4[0] == 'T' || me.name4 == "COMM" {
-		me.kind = FRAME_KIND_TEXT
-
 		if src[10] == 0x00 { // encoding is ISO-8859-1
 			me.parseAscii(src[10:me.frameSize])
 		} else if src[10] == 0x01 { // encoding is Unicode UTF-16 with 2-byte BOM
@@ -41,11 +40,17 @@ func (me *Frame) Read(src []byte) error {
 			return errors.New("Unknown text encoding.")
 		}
 
+		if len(me.texts) == 1 {
+			me.kind = FRAME_KIND_TEXT
+		} else {
+			me.kind = FRAME_KIND_MULTI_TEXT
+		}
+
 	} else {
-		me.kind = FRAME_KIND_BINARY
 		dataSlice := src[10:me.frameSize]
 		me.binData = make([]byte, len(dataSlice))
 		copy(me.binData, dataSlice) // simply store bytes
+		me.kind = FRAME_KIND_BINARY
 	}
 
 	return nil

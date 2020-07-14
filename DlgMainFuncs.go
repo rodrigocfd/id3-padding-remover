@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3-fit/id3"
+	"wingows/co"
 )
 
 func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
@@ -20,6 +21,44 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 	}
 	me.lstFiles.SetRedraw(true)
 	me.lstFiles.Column(0).FillRoom()
+}
+
+func (me *DlgMain) displayTags() {
+	me.lstValues.SetRedraw(false).
+		DeleteAllItems()
+
+	selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
+
+	if len(selItems) > 1 {
+		// Multiple tags: none of them will be shown.
+		me.lstValues.AddItem(fmt.Sprintf("%d selected...", len(selItems)))
+
+	} else if len(selItems) == 1 {
+		tag := me.cachedTags[selItems[0].Text()]
+
+		for i := range tag.Frames() { // read each frame of the tag
+			frame := &tag.Frames()[i]
+			valItem := me.lstValues.AddItem(frame.Name4()) // add each name4 to lstValues
+
+			if frame.Kind() == id3.FRAME_KIND_TEXT ||
+				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
+				// Text or multi text.
+				valItem.SubItem(1).SetText(frame.Texts()[0])
+			}
+
+			if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
+				for i := 1; i < len(frame.Texts()); i++ {
+					additionalItem := me.lstValues.AddItem("") // add an empty line
+					additionalItem.SubItem(1).SetText(frame.Texts()[i])
+				}
+			}
+
+		}
+	}
+
+	me.lstValues.SetRedraw(true).
+		Column(1).FillRoom()
+	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
 }
 
 func (me *DlgMain) updateTitlebarCount(total uint32) {
