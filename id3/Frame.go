@@ -83,6 +83,10 @@ func (me *Frame) parseAscii(src []byte) {
 }
 
 func (me *Frame) parseUtf16(src []byte) {
+	if len(src)&1 != 0 { // length is not even, something is wrong... the last byte will be discarded
+		src = src[:len(src)-1]
+	}
+
 	wsrc := make([]uint16, 0, len(src)/2) // convert []byte to []uint16
 	for len(src) > 0 {
 		wsrc = append(wsrc, binary.LittleEndian.Uint16(src)) // preserve endianness
