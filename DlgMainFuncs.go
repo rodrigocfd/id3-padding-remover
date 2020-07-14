@@ -42,11 +42,14 @@ func (me *DlgMain) displayTags() {
 			valItem := me.lstValues.AddItem(frame.Name4()) // add each name4 to lstValues
 
 			if frame.Kind() == id3.FRAME_KIND_TEXT ||
-				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
-				// Text or multi text.
+				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
+				frame.Kind() == id3.FRAME_KIND_COMMENT {
+				// String or multi-string frame types.
 				valItem.SubItem(1).SetText(frame.Texts()[0])
 
-				if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
+				if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
+					frame.Kind() == id3.FRAME_KIND_COMMENT {
+					// These are multi-string frame types.
 					for i := 1; i < len(frame.Texts()); i++ {
 						additionalItem := me.lstValues.AddItem("") // add an empty line
 						additionalItem.SubItem(1).SetText(frame.Texts()[i])

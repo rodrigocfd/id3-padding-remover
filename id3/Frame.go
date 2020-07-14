@@ -11,6 +11,7 @@ const (
 	FRAME_KIND_UNDEFINED FRAME_KIND = iota
 	FRAME_KIND_TEXT
 	FRAME_KIND_MULTI_TEXT
+	FRAME_KIND_COMMENT
 	FRAME_KIND_BINARY
 )
 
@@ -30,90 +31,63 @@ func (me *Frame) BinData() []byte  { return me.binData }
 func (me *Frame) Read(src []byte) error {
 	me.frameSize = binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 	me.name4 = string(src[0:4])
+	src = src[10:me.frameSize] // skip frame header, limit to frame size
 
-	if me.name4[0] == 'T' || me.name4 == "COMM" {
-		if src[10] == 0x00 { // encoding is ISO-8859-1
-			me.parseAscii(src[11:me.frameSize])
-		} else if src[10] == 0x01 { // encoding is Unicode UTF-16 with 2-byte BOM
-			me.parseUtf16(src[11:me.frameSize])
-		} else {
-			return errors.New("Unknown text encoding.")
-		}
+	if me.name4 == "COMM" {
+		return me.parseCommentFrame(src)
+	} else if me.name4[0] == 'T' {
+		return me.parseTextFrame(src)
+	}
+	return me.parseBinaryFrame(src) // anything else will be treated as binary
+}
 
-		if len(me.texts) == 1 {
-			me.kind = FRAME_KIND_TEXT
-		} else {
-			me.kind = FRAME_KIND_MULTI_TEXT
-		}
+func (me *Frame) parseCommentFrame(src []byte) error {
+	if src[0] != 0x00 && src[0] != 0x01 {
+		return errors.New("Unknown comment encoding.")
+	}
+	isUtf16 := src[0] == 0x01
+	src = src[1:] // skip encoding byte
 
-	} else {
-		dataSlice := src[10:me.frameSize]
-		me.binData = make([]byte, len(dataSlice))
-		copy(me.binData, dataSlice) // simply store bytes
-		me.kind = FRAME_KIND_BINARY
+	me.texts = append(me.texts, convertAsciiStrings(src[:3])[0]) // 1st string is 3-char lang
+	src = src[3:]
+
+	if src[0] == 0x00 {
+		src = src[1:] // a null separator may appear, skip it
 	}
 
+	if isUtf16 {
+		me.texts = append(me.texts, convertUtf16Strings(src)...)
+	} else {
+		me.texts = append(me.texts, convertAsciiStrings(src)...)
+	}
+
+	me.kind = FRAME_KIND_COMMENT
 	return nil
 }
 
-func (me *Frame) parseAscii(src []byte) {
-	if src[len(src)-1] == 0x00 {
-		src = src[:len(src)-1] // we have a trailing zero, which is useless
+func (me *Frame) parseTextFrame(src []byte) error {
+	switch src[0] {
+	case 0x00:
+		// Encoding is ISO-8859-1.
+		me.texts = append(me.texts, convertAsciiStrings(src[1:])...) // skip 0x00 encoding byte
+	case 0x01:
+		// Encoding is Unicode UTF-16, may have 2-byte BOM.
+		me.texts = append(me.texts, convertUtf16Strings(src[1:])...) // skip 0x01 encoding byte
+	default:
+		return errors.New("Unknown text encoding.")
 	}
 
-	// Parse any number of null-separated strings.
-	off := 0
-	for {
-		if off == len(src)-1 || src[off+1] == 0x00 { // we reached the end of frame contents, or string
-			runes := make([]rune, 0, len(src[:off+1]))
-			for _, ch := range src[:off+1] {
-				runes = append(runes, rune(ch)) // brute force byte to rune
-			}
-			me.texts = append(me.texts, string(runes)) // then convert from rune slice to string
-
-			if off == len(src)-1 { // no more data
-				break
-			}
-			src = src[off+2:] // skip null separator between strings
-			off = 0
-		} else {
-			off++
-		}
+	if len(me.texts) == 1 {
+		me.kind = FRAME_KIND_TEXT
+	} else {
+		me.kind = FRAME_KIND_MULTI_TEXT // usually TXXX frames with ReplayGain info
 	}
+	return nil
 }
 
-func (me *Frame) parseUtf16(src []byte) {
-	if len(src)&1 != 0 { // length is not even, something is wrong... the last byte will be discarded
-		src = src[:len(src)-1]
-	}
-
-	wsrc := make([]uint16, 0, len(src)/2) // convert []byte to []uint16
-	for len(src) > 0 {
-		wsrc = append(wsrc, binary.LittleEndian.Uint16(src)) // preserve endianness
-		src = src[2:]
-	}
-
-	if wsrc[len(wsrc)-1] == 0x0000 {
-		wsrc = wsrc[:len(wsrc)-1] // we have a trailing zero, which is useless
-	}
-
-	// Parse any number of null-separated strings.
-	off := 0
-	for {
-		if off == len(wsrc)-1 || wsrc[off+1] == 0x0000 { // we reached the end of frame contents, or string
-			runes := make([]rune, 0, len(wsrc[:off+1]))
-			for _, ch := range wsrc[:off+1] {
-				runes = append(runes, rune(ch)) // brute force uint16 to rune
-			}
-			me.texts = append(me.texts, string(runes)) // then convert from rune slice to string
-
-			if off == len(wsrc)-1 { // no more data
-				break
-			}
-			wsrc = wsrc[off+2:] // skip null separator between strings
-			off = 0
-		} else {
-			off++
-		}
-	}
+func (me *Frame) parseBinaryFrame(src []byte) error {
+	me.binData = make([]byte, len(src))
+	copy(me.binData, src) // simply store bytes
+	me.kind = FRAME_KIND_BINARY
+	return nil
 }
