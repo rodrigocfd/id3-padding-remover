@@ -43,7 +43,9 @@ func (me *Frame) Read(src []byte) error {
 
 	} else {
 		me.kind = FRAME_KIND_BINARY
-		copy(me.binData, src[10:10+me.frameSize]) // simply store bytes
+		dataSlice := src[10:me.frameSize]
+		me.binData = make([]byte, len(dataSlice))
+		copy(me.binData, dataSlice) // simply store bytes
 	}
 
 	return nil
@@ -64,7 +66,7 @@ func (me *Frame) parseAscii(src []byte) {
 			for _, ch := range src[:off+1] {
 				runes = append(runes, rune(ch)) // brute force byte to rune
 			}
-			me.texts = append(me.texts, string(runes))
+			me.texts = append(me.texts, string(runes)) // then convert from rune slice to string
 
 			if off == len(src)-1 { // no more data
 				break

@@ -67,8 +67,8 @@ func (me *Tag) ReadBinary(mp3Blob []byte) error {
 	}
 
 	me.tagSize = synchSafeDecode(
-		binary.BigEndian.Uint32(mp3Blob[6:10]) + 10, // also count 10-byte tag header
-	)
+		binary.BigEndian.Uint32(mp3Blob[6:10]), // also count 10-byte tag header
+	) + 10
 
 	return me.readFrames(mp3Blob[10:me.tagSize]) // skip 10-byte tag header
 }
@@ -82,22 +82,22 @@ func (me *Tag) ReadFile(path string) error {
 }
 
 func (me *Tag) readFrames(src []byte) error {
-	off := 0
 	for {
-		if isSliceZeroed(src[off:]) { // we entered a padding region after all frames
-			me.paddingSize = uint32(len(src[off:])) // store padding size
+		if len(src) == 0 { // end of tag, no padding found
 			break
-		} else if off == int(me.tagSize) { // end of tag, no padding found
+		} else if isSliceZeroed(src) { // we entered a padding region after all frames
+			me.paddingSize = uint32(len(src)) // store padding size
 			break
 		}
 
 		me.frames = append(me.frames, Frame{}) // append new frame to our slice
 		newFrame := &me.frames[len(me.frames)-1]
-		err := newFrame.Read(src[off:]) // parse frame contents
+		err := newFrame.Read(src) // parse frame contents
+
 		if err != nil {
 			return err // an error occurred when parsing the frame
 		}
-		off += int(newFrame.frameSize) // now points to 1st byte of next frame
+		src = src[newFrame.frameSize:] // now starts at 1st byte of next frame
 	}
 	return nil // all frames parsed
 }
