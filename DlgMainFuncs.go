@@ -31,7 +31,8 @@ func (me *DlgMain) displayTags() {
 
 	if len(selItems) > 1 {
 		// Multiple tags: none of them will be shown.
-		me.lstValues.AddItem(fmt.Sprintf("%d selected...", len(selItems)))
+		me.lstValues.AddItem("").
+			SubItem(1).SetText(fmt.Sprintf("%d selected...", len(selItems)))
 
 	} else if len(selItems) == 1 {
 		tag := me.cachedTags[selItems[0].Text()]

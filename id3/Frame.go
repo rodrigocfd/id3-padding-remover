@@ -33,9 +33,9 @@ func (me *Frame) Read(src []byte) error {
 
 	if me.name4[0] == 'T' || me.name4 == "COMM" {
 		if src[10] == 0x00 { // encoding is ISO-8859-1
-			me.parseAscii(src[10:me.frameSize])
+			me.parseAscii(src[11:me.frameSize])
 		} else if src[10] == 0x01 { // encoding is Unicode UTF-16 with 2-byte BOM
-			me.parseUtf16(src[10:me.frameSize])
+			me.parseUtf16(src[11:me.frameSize])
 		} else {
 			return errors.New("Unknown text encoding.")
 		}
@@ -57,10 +57,8 @@ func (me *Frame) Read(src []byte) error {
 }
 
 func (me *Frame) parseAscii(src []byte) {
-	src = src[1:] // skip encoding byte
-
-	if src[len(src)-1] == 0x00 { // we have a trailing zero, which is useless
-		src = src[:len(src)-1]
+	if src[len(src)-1] == 0x00 {
+		src = src[:len(src)-1] // we have a trailing zero, which is useless
 	}
 
 	// Parse any number of null-separated strings.
@@ -85,5 +83,33 @@ func (me *Frame) parseAscii(src []byte) {
 }
 
 func (me *Frame) parseUtf16(src []byte) {
+	wsrc := make([]uint16, 0, len(src)/2) // convert []byte to []uint16
+	for len(src) > 0 {
+		wsrc = append(wsrc, binary.LittleEndian.Uint16(src)) // preserve endianness
+		src = src[2:]
+	}
 
+	if wsrc[len(wsrc)-1] == 0x0000 {
+		wsrc = wsrc[:len(wsrc)-1] // we have a trailing zero, which is useless
+	}
+
+	// Parse any number of null-separated strings.
+	off := 0
+	for {
+		if off == len(wsrc)-1 || wsrc[off+1] == 0x0000 { // we reached the end of frame contents, or string
+			runes := make([]rune, 0, len(wsrc[:off+1]))
+			for _, ch := range wsrc[:off+1] {
+				runes = append(runes, rune(ch)) // brute force uint16 to rune
+			}
+			me.texts = append(me.texts, string(runes)) // then convert from rune slice to string
+
+			if off == len(wsrc)-1 { // no more data
+				break
+			}
+			wsrc = wsrc[off+2:] // skip null separator between strings
+			off = 0
+		} else {
+			off++
+		}
+	}
 }
