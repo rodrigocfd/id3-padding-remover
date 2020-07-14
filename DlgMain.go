@@ -44,21 +44,27 @@ func (me *DlgMain) RunAsMain() int {
 
 func (me *DlgMain) mainEvents() {
 	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
-		// MP3 files list view setup.
-		il := gui.ImageList{}
-		il.Create(16, 1)
-		il.AddShellIcon("*.mp3")
+		imgFiles := gui.ImageList{}
+		imgFiles.Create(16, 1)
+		imgFiles.AddShellIcon("*.mp3")
 
-		lstFilesCx, lstFilesCy := uint32(510), uint32(p.CreateStruct().Cy-52)
-		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, lstFilesCx, lstFilesCy).
+		// Dimensions of our two list views.
+		cxLstValues := uint32(212)
+		cyLstValues := p.CreateStruct().Cy - 52
+
+		cxLstFiles := uint32(510)
+		cyLstFiles := cyLstValues
+
+		// MP3 files list view creation.
+		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, cxLstFiles, cyLstFiles).
 			SetContextMenu(me.lstFilesMenu.Hmenu()).
-			SetImageList(co.LVSIL_SMALL, il.Himagelist())
+			SetImageList(co.LVSIL_SMALL, imgFiles.Himagelist())
 		col1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 60)
 		col1.FillRoom()
 
-		// Tag values list view setup.
-		me.lstValues.CreateReport(&me.wnd, int32(lstFilesCx)+14, 6, 212, lstFilesCy)
+		// Tag values list view creation.
+		me.lstValues.CreateReport(&me.wnd, int32(cxLstFiles)+14, 6, cxLstValues, cyLstValues)
 		me.lstValues.AddColumn("Field", 50)
 		me.lstValues.AddColumn("Value", 1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)
