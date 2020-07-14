@@ -45,13 +45,21 @@ func (me *DlgMain) displayTags() {
 				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
 				// Text or multi text.
 				valItem.SubItem(1).SetText(frame.Texts()[0])
-			}
 
-			if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
-				for i := 1; i < len(frame.Texts()); i++ {
-					additionalItem := me.lstValues.AddItem("") // add an empty line
-					additionalItem.SubItem(1).SetText(frame.Texts()[i])
+				if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT {
+					for i := 1; i < len(frame.Texts()); i++ {
+						additionalItem := me.lstValues.AddItem("") // add an empty line
+						additionalItem.SubItem(1).SetText(frame.Texts()[i])
+					}
 				}
+
+			} else if frame.Kind() == id3.FRAME_KIND_BINARY {
+				valItem.SubItem(1).SetText(
+					fmt.Sprintf("%.2f KB (%.2f%%)",
+						float64(len(frame.BinData()))/1024, // frame size in KB
+						float64(len(frame.BinData()))*100/ // percent of whole tag size
+							float64(tag.TotalSize())),
+				)
 			}
 
 		}
