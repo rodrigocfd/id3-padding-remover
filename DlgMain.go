@@ -29,7 +29,7 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
-	me.wnd.Setup().Width = 760
+	me.wnd.Setup().Width = 770
 	me.wnd.Setup().Height = 384
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
@@ -49,7 +49,7 @@ func (me *DlgMain) mainEvents() {
 		imgFiles.AddShellIcon("*.mp3")
 
 		// Dimensions of our two list views.
-		cxLstValues := uint32(212)
+		cxLstValues := uint32(222)
 		cyLstValues := p.CreateStruct().Cy - 52
 
 		cxLstFiles := uint32(510)
@@ -86,7 +86,7 @@ func (me *DlgMain) mainEvents() {
 	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p wm.Command) { // close on ESC
 		if me.lstFiles.ItemCount() > 0 {
 			if me.wnd.Hwnd().MessageBox("There are files in the list. Close anyway?",
-				"Close", co.MB_ICONQUESTION|co.MB_OKCANCEL) == co.MBID_OK {
+				"Close", co.MB_ICONEXCLAMATION|co.MB_OKCANCEL) == co.MBID_OK {
 
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 			}

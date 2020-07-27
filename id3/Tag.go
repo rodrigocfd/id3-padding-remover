@@ -74,10 +74,11 @@ func (me *Tag) ReadBinary(mp3Blob []byte) error {
 }
 
 func (me *Tag) ReadFile(path string) error {
-	file := gui.File{}
-	file.OpenExistingForRead(path)
-	contents := file.ReadAll()
-	file.Close()
+	fMap := gui.FileMapped{}
+	fMap.OpenExistingForRead(path)
+	defer fMap.Close()
+
+	contents := fMap.HotSlice()
 	return me.ReadBinary(contents)
 }
 
