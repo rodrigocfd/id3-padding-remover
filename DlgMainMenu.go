@@ -3,7 +3,6 @@ package main
 import (
 	"wingows/co"
 	"wingows/gui"
-	"wingows/gui/wm"
 )
 
 func (me *DlgMain) buildMenuAndAccel() {
@@ -26,14 +25,14 @@ func (me *DlgMain) buildMenuAndAccel() {
 }
 
 func (me *DlgMain) menuEvents() {
-	me.wnd.OnMsg().WmInitMenuPopup(func(p wm.InitMenuPopup) {
+	me.wnd.OnMsg().WmInitMenuPopup(func(p gui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableMany(me.lstFiles.SelectedItemCount() > 0,
 				[]string{"DELETE", "REMPAD", "REMRG", "REMRGPIC"})
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("OPEN").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("OPEN").CmdId(), func(p gui.WmCommand) {
 		if mp3s, ok := gui.SysDlgUtil.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"}); ok {
 
@@ -41,7 +40,7 @@ func (me *DlgMain) menuEvents() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("DELETE").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("DELETE").CmdId(), func(p gui.WmCommand) {
 		selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
 		me.lstFiles.SetRedraw(false)
 		for i := len(selItems) - 1; i >= 0; i-- {
@@ -50,19 +49,19 @@ func (me *DlgMain) menuEvents() {
 		me.lstFiles.SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMPAD").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMPAD").CmdId(), func(p gui.WmCommand) {
 		println("Remove padding")
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMRG").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMRG").CmdId(), func(p gui.WmCommand) {
 		println("Remove ReplayGain")
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMRGPIC").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("REMRGPIC").CmdId(), func(p gui.WmCommand) {
 		println("Remove ReplayGain and pic, bro")
 	})
 
-	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("ABOUT").CmdId(), func(p wm.Command) {
+	me.wnd.OnMsg().WmCommand(me.lstFilesMenu.Item("ABOUT").CmdId(), func(p gui.WmCommand) {
 		me.wnd.Hwnd().MessageBox(
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+

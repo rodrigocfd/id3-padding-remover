@@ -6,7 +6,6 @@ import (
 	"strings"
 	"wingows/co"
 	"wingows/gui"
-	"wingows/gui/wm"
 	"wingows/win"
 )
 
@@ -43,7 +42,7 @@ func (me *DlgMain) RunAsMain() int {
 }
 
 func (me *DlgMain) mainEvents() {
-	me.wnd.OnMsg().WmCreate(func(p wm.Create) int32 {
+	me.wnd.OnMsg().WmCreate(func(p gui.WmCreate) int32 {
 		imgFiles := gui.ImageList{}
 		imgFiles.Create(16, 1)
 		imgFiles.AddShellIcon("*.mp3")
@@ -77,13 +76,13 @@ func (me *DlgMain) mainEvents() {
 		return 0
 	})
 
-	me.wnd.OnMsg().WmSize(func(p wm.Size) {
+	me.wnd.OnMsg().WmSize(func(p gui.WmSize) {
 		me.resizer.Adjust(p)
 		me.lstFiles.Column(0).FillRoom()
 		me.lstValues.Column(1).FillRoom()
 	})
 
-	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p wm.Command) { // close on ESC
+	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) { // close on ESC
 		if me.lstFiles.ItemCount() > 0 {
 			if me.wnd.Hwnd().MessageBox("There are files in the list. Close anyway?",
 				"Close", co.MB_ICONEXCLAMATION|co.MB_OKCANCEL) == co.MBID_OK {
@@ -95,7 +94,7 @@ func (me *DlgMain) mainEvents() {
 		}
 	})
 
-	me.wnd.OnMsg().WmDropFiles(func(p wm.DropFiles) {
+	me.wnd.OnMsg().WmDropFiles(func(p gui.WmDropFiles) {
 		paths := p.RetrieveAll()
 		mp3s := make([]string, 0, len(paths))
 		for _, path := range paths {
