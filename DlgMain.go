@@ -14,6 +14,16 @@ func main() {
 	dlgMain.RunAsMain()
 }
 
+// Command ID constants.
+const (
+	MNU_OPEN int32 = iota + 1001
+	MNU_DELETE
+	MNU_REMPAD
+	MNU_REMRG
+	MNU_REMRGPIC
+	MNU_ABOUT
+)
+
 type DlgMain struct {
 	wnd               gui.WindowMain
 	lstFiles          gui.ListView
@@ -56,7 +66,7 @@ func (me *DlgMain) mainEvents() {
 
 		// MP3 files list view creation.
 		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, cxLstFiles, cyLstFiles).
-			SetContextMenu(me.lstFilesMenu.Hmenu()).
+			SetContextMenu(&me.lstFilesMenu).
 			SetImageList(co.LVSIL_SMALL, imgFiles.Himagelist())
 		col1 := me.lstFiles.AddColumn("File", 1)
 		me.lstFiles.AddColumn("Padding", 60)
