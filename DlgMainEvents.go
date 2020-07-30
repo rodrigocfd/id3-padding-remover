@@ -50,15 +50,7 @@ func (me *DlgMain) mainEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) { // close on ESC
-		if me.lstFiles.ItemCount() > 0 {
-			if me.wnd.Hwnd().MessageBox("There are files in the list. Close anyway?",
-				"Close", co.MB_ICONEXCLAMATION|co.MB_OKCANCEL) == co.MBID_OK {
-
-				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
-			}
-		} else {
-			me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
-		}
+		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 	})
 
 	me.wnd.OnMsg().WmDropFiles(func(p gui.WmDropFiles) {
