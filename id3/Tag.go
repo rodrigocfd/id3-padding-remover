@@ -76,7 +76,7 @@ func (me *Tag) ReadBinary(mp3Blob []byte) error {
 func (me *Tag) ReadFile(path string) error {
 	fMap := gui.FileMapped{}
 	fMap.OpenExistingForRead(path)
-	defer fMap.Close()
+	defer fMap.Close() // HotSlice() needs the file to remain open
 
 	contents := fMap.HotSlice()
 	return me.ReadBinary(contents)

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"id3-fit/id3"
-	"strings"
 	"wingows/co"
 	"wingows/gui"
 	"wingows/win"
@@ -51,77 +50,80 @@ func (me *DlgMain) RunAsMain() int {
 	return me.wnd.RunAsMain()
 }
 
-func (me *DlgMain) mainEvents() {
-	me.wnd.OnMsg().WmCreate(func(p gui.WmCreate) int32 {
-		imgFiles := gui.ImageList{}
-		imgFiles.Create(16, 1)
-		imgFiles.AddShellIcon("*.mp3")
+func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
+	me.lstFiles.SetRedraw(false)
+	for _, mp3 := range mp3s {
+		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
+			newItem := me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
 
-		// Dimensions of our two list views.
-		cxLstValues := uint32(222)
-		cyLstValues := p.CreateStruct().Cy - 52
+			tag := &id3.Tag{}
+			tag.ReadFile(mp3)
+			me.cachedTags[mp3] = tag // load and cache the tag
 
-		cxLstFiles := uint32(510)
-		cyLstFiles := cyLstValues
+			newItem.SubItem(1).SetText(fmt.Sprintf("%d", tag.PaddingSize()))
+		}
+	}
+	me.lstFiles.SetRedraw(true)
+	me.lstFiles.Column(0).FillRoom()
+}
 
-		// MP3 files list view creation.
-		me.lstFiles.CreateSortedReport(&me.wnd, 6, 6, cxLstFiles, cyLstFiles).
-			SetContextMenu(&me.lstFilesMenu).
-			SetImageList(co.LVSIL_SMALL, imgFiles.Himagelist())
-		col1 := me.lstFiles.AddColumn("File", 1)
-		me.lstFiles.AddColumn("Padding", 60)
-		col1.FillRoom()
+func (me *DlgMain) displayTags() {
+	me.lstValues.SetRedraw(false).
+		DeleteAllItems()
 
-		// Tag values list view creation.
-		me.lstValues.CreateReport(&me.wnd, int32(cxLstFiles)+14, 6, cxLstValues, cyLstValues)
-		me.lstValues.AddColumn("Field", 50)
-		me.lstValues.AddColumn("Value", 1).FillRoom()
-		me.lstValues.Hwnd().EnableWindow(false)
+	selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
 
-		// Other stuff.
-		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
-			Add(&me.lstValues, gui.RESZ_REPOS, gui.RESZ_RESIZE)
+	if len(selItems) > 1 {
+		// Multiple tags: none of them will be shown.
+		me.lstValues.AddItem("").
+			SubItem(1).SetText(fmt.Sprintf("%d selected...", len(selItems)))
 
-		me.cachedTags = make(map[string]*id3.Tag)
-		return 0
-	})
+	} else if len(selItems) == 1 {
+		tag := me.cachedTags[selItems[0].Text()]
 
-	me.wnd.OnMsg().WmSize(func(p gui.WmSize) {
-		me.resizer.Adjust(p)
-		me.lstFiles.Column(0).FillRoom()
-		me.lstValues.Column(1).FillRoom()
-	})
+		for i := range tag.Frames() { // read each frame of the tag
+			frame := &tag.Frames()[i]
+			valItem := me.lstValues.AddItem(frame.Name4()) // add each name4 to lstValues
 
-	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) { // close on ESC
-		if me.lstFiles.ItemCount() > 0 {
-			if me.wnd.Hwnd().MessageBox("There are files in the list. Close anyway?",
-				"Close", co.MB_ICONEXCLAMATION|co.MB_OKCANCEL) == co.MBID_OK {
+			if frame.Kind() == id3.FRAME_KIND_TEXT ||
+				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
+				frame.Kind() == id3.FRAME_KIND_COMMENT {
+				// String or multi-string frame types.
+				valItem.SubItem(1).SetText(frame.Texts()[0])
 
-				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
+				if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
+					frame.Kind() == id3.FRAME_KIND_COMMENT {
+					// These are multi-string frame types.
+					for i := 1; i < len(frame.Texts()); i++ {
+						additionalItem := me.lstValues.AddItem("") // add an empty line
+						additionalItem.SubItem(1).SetText(frame.Texts()[i])
+					}
+				}
+
+			} else if frame.Kind() == id3.FRAME_KIND_BINARY {
+				valItem.SubItem(1).SetText(
+					fmt.Sprintf("%.2f KB (%.2f%%)",
+						float64(len(frame.BinData()))/1024, // frame size in KB
+						float64(len(frame.BinData()))*100/ // percent of whole tag size
+							float64(tag.TotalSize())),
+				)
 			}
-		} else {
-			me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
-		}
-	})
 
-	me.wnd.OnMsg().WmDropFiles(func(p gui.WmDropFiles) {
-		paths := p.RetrieveAll()
-		mp3s := make([]string, 0, len(paths))
-		for _, path := range paths {
-			if gui.FileUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
-				subFiles := gui.FileUtil.ListFilesInFolder(path + "\\*.mp3")
-				mp3s = append(mp3s, subFiles...)
-			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
-				mp3s = append(mp3s, path)
-			}
 		}
+	}
 
-		if len(mp3s) == 0 {
-			me.wnd.Hwnd().MessageBox(
-				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
-				"No files added", co.MB_ICONEXCLAMATION)
-		} else {
-			me.addFilesIfNotYet(mp3s)
-		}
-	})
+	me.lstValues.SetRedraw(true).
+		Column(1).FillRoom()
+	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
+}
+
+func (me *DlgMain) updateTitlebarCount(total uint32) {
+	// Total is not computed here because LVN_DELETEITEM notification is sent
+	// before the item is actually deleted, so the count would be wrong.
+	if total == 0 {
+		me.wnd.Hwnd().SetWindowText("ID3 Fit")
+	} else {
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)",
+			me.lstFiles.SelectedItemCount(), total))
+	}
 }
