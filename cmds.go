@@ -1,0 +1,13 @@
+package main
+
+const (
+	MNU_OPEN int32 = iota + 1001
+	MNU_DELETE
+	MNU_REMPAD
+	MNU_REMRG
+	MNU_REMRGPIC
+	MNU_ABOUT
+
+	LST_FILES
+	LST_VALUES
+)

@@ -5,11 +5,11 @@ import (
 )
 
 func (me *DlgMain) lstFilesEvents() {
-	me.wnd.OnMsg().LvnInsertItem(&me.lstFiles, func(p *win.NMLISTVIEW) {
+	me.wnd.OnMsg().LvnInsertItem(LST_FILES, func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount())
 	})
 
-	me.wnd.OnMsg().LvnItemChanged(&me.lstFiles, func(p *win.NMLISTVIEW) {
+	me.wnd.OnMsg().LvnItemChanged(LST_FILES, func(p *win.NMLISTVIEW) {
 		if !me.lstFilesSelLocked {
 			me.lstFilesSelLocked = true
 
@@ -25,7 +25,7 @@ func (me *DlgMain) lstFilesEvents() {
 		}
 	})
 
-	me.wnd.OnMsg().LvnDeleteItem(&me.lstFiles, func(p *win.NMLISTVIEW) {
+	me.wnd.OnMsg().LvnDeleteItem(LST_FILES, func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount() - 1) // notification is sent before deletion
 
 		delItem := me.lstFiles.Item(uint32(p.IItem))

@@ -13,16 +13,6 @@ func main() {
 	dlgMain.RunAsMain()
 }
 
-// Command ID constants.
-const (
-	MNU_OPEN int32 = iota + 1001
-	MNU_DELETE
-	MNU_REMPAD
-	MNU_REMRG
-	MNU_REMRGPIC
-	MNU_ABOUT
-)
-
 type DlgMain struct {
 	wnd               gui.WindowMain
 	lstFiles          gui.ListView
