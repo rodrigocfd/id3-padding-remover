@@ -47,7 +47,7 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 			tag := &id3.Tag{}
 			err := tag.ReadFile(mp3)
 			if err != nil {
-				me.wnd.Hwnd().MessageBox(
+				gui.SysDlgUtil.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {

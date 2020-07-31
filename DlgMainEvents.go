@@ -66,7 +66,7 @@ func (me *DlgMain) mainEvents() {
 		}
 
 		if len(mp3s) == 0 {
-			me.wnd.Hwnd().MessageBox(
+			gui.SysDlgUtil.MsgBox(&me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {

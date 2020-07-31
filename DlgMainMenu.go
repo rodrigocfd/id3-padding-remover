@@ -62,7 +62,7 @@ func (me *DlgMain) menuEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p gui.WmCommand) {
-		me.wnd.Hwnd().MessageBox(
+		gui.SysDlgUtil.MsgBox(&me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
