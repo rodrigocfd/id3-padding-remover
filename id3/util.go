@@ -6,8 +6,8 @@ import (
 
 // Parses null-separated ASCII strings.
 func convertAsciiStrings(src []byte) []string {
-	texts := make([]string, 0)
-	if len(src) == 0 { // no data to be parsed
+	texts := make([]string, 0) // strings to be returned
+	if len(src) == 0 {         // no data to be parsed
 		return texts
 	}
 
@@ -18,7 +18,7 @@ func convertAsciiStrings(src []byte) []string {
 	off := 0
 	for {
 		if off == len(src) || src[off] == 0x00 { // we reached the end of contents, or string
-			runes := make([]rune, 0, len(src[:off]))
+			runes := make([]rune, 0, off)
 			for _, ch := range src[:off] {
 				runes = append(runes, rune(ch)) // convert byte to rune
 			}
@@ -27,10 +27,10 @@ func convertAsciiStrings(src []byte) []string {
 				texts = append(texts, parsedText) // only non-empty strings
 			}
 
-			if off == len(src) { // no more contents
+			if off == len(src) { // no more contents, we reached end of data
 				break
 			}
-			src = src[off+1:] // skip null separator between string
+			src = src[off+1:] // skip null separator between strings
 			off = 0
 		} else {
 			off++
@@ -41,11 +41,11 @@ func convertAsciiStrings(src []byte) []string {
 
 // Parses null-separated UTF-16 strings.
 func convertUtf16Strings(src []byte) []string {
-	var endianDec binary.ByteOrder = binary.LittleEndian // decode text as little-endian by default
+	var endianDecoder binary.ByteOrder = binary.LittleEndian // decode text as little-endian by default
 	bomMark := binary.LittleEndian.Uint16(src)
 	if bomMark == 0xFEFF || bomMark == 0xFFFE { // BOM mark found
-		if bomMark == 0xFFFE {
-			endianDec = binary.BigEndian
+		if bomMark == 0xFFFE { // we have a big-endian string
+			endianDecoder = binary.BigEndian
 		}
 		src = src[2:] // skip BOM
 	}
@@ -56,14 +56,14 @@ func convertUtf16Strings(src []byte) []string {
 		src = src[:len(src)-1]
 	}
 
-	texts := make([]string, 0)
+	texts := make([]string, 0) // strings to be returned
 	if len(src) == 0 {
 		return texts // no data to be parsed
 	}
 
 	wsrc := make([]uint16, 0, len(src)/2) // convert []byte to []uint16
 	for len(src) > 0 {
-		wsrc = append(wsrc, endianDec.Uint16(src))
+		wsrc = append(wsrc, endianDecoder.Uint16(src)) // observe endianness
 		src = src[2:]
 	}
 
@@ -74,7 +74,7 @@ func convertUtf16Strings(src []byte) []string {
 	off := 0
 	for {
 		if off == len(wsrc) || wsrc[off] == 0x0000 { // we reached the end of contents, or string
-			runes := make([]rune, 0, len(wsrc[:off]))
+			runes := make([]rune, 0, off)
 			for _, ch := range wsrc[:off] {
 				runes = append(runes, rune(ch)) // convert uint16 to rune
 			}
@@ -83,10 +83,10 @@ func convertUtf16Strings(src []byte) []string {
 				texts = append(texts, parsedText) // only non-empty strings
 			}
 
-			if off == len(wsrc) { // no more contents
+			if off == len(wsrc) { // no more contents, we reached end of data
 				break
 			}
-			wsrc = wsrc[off+1:] // skip null separator between string
+			wsrc = wsrc[off+1:] // skip null separator between strings
 			off = 0
 		} else {
 			off++

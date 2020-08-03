@@ -109,7 +109,7 @@ func (me *Tag) readFrames(src []byte) error {
 
 func (me *Tag) findFrame(name4 string) *Frame {
 	for i := range me.frames {
-		if me.frames[i].name4 == name4 {
+		if me.frames[i].name4 == name4 { // linear search
 			return &me.frames[i]
 		}
 	}
