@@ -2,11 +2,11 @@ package id3
 
 import "encoding/binary"
 
-type utilsT struct{}
+type _UtilT struct{}
 
-var utils utilsT
+var _Util _UtilT
 
-func (utilsT) IsSliceZeroed(blob []byte) bool {
+func (_UtilT) IsSliceZeroed(blob []byte) bool {
 	for _, b := range blob {
 		if b != 0x00 {
 			return false
@@ -15,7 +15,7 @@ func (utilsT) IsSliceZeroed(blob []byte) bool {
 	return true
 }
 
-func (utilsT) SynchSafeEncode(n uint32) uint32 {
+func (_UtilT) SynchSafeEncode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7F)
 	for (mask ^ 0x7FFFFFFF) != 0 {
 		out = n & ^mask
@@ -27,7 +27,7 @@ func (utilsT) SynchSafeEncode(n uint32) uint32 {
 	return out
 }
 
-func (utilsT) SynchSafeDecode(n uint32) uint32 {
+func (_UtilT) SynchSafeDecode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7F000000)
 	for mask != 0 {
 		out >>= 1
@@ -38,7 +38,7 @@ func (utilsT) SynchSafeDecode(n uint32) uint32 {
 }
 
 // Parses null-separated ASCII strings.
-func (utilsT) ConvertAsciiStrings(src []byte) []string {
+func (_UtilT) ConvertAsciiStrings(src []byte) []string {
 	texts := make([]string, 0) // strings to be returned
 	if len(src) == 0 {         // no data to be parsed
 		return texts
@@ -73,7 +73,7 @@ func (utilsT) ConvertAsciiStrings(src []byte) []string {
 }
 
 // Parses null-separated UTF-16 strings.
-func (utilsT) ConvertUtf16Strings(src []byte) []string {
+func (_UtilT) ConvertUtf16Strings(src []byte) []string {
 	var endianDecoder binary.ByteOrder = binary.LittleEndian // decode text as little-endian by default
 	bomMark := binary.LittleEndian.Uint16(src)
 	if bomMark == 0xFEFF || bomMark == 0xFFFE { // BOM mark found

@@ -7,32 +7,32 @@ import (
 	"fmt"
 )
 
-type parser struct {
+type Parser struct {
 	version     [3]uint16
 	tagSize     uint32
 	paddingSize uint32
 	frames      []Frame
 }
 
-func (me *parser) Version() [3]uint16  { return me.version }
-func (me *parser) TagSize() uint32     { return me.tagSize }
-func (me *parser) PaddingSize() uint32 { return me.paddingSize }
-func (me *parser) Frames() []Frame     { return me.frames }
+func (me *Parser) Version() [3]uint16  { return me.version }
+func (me *Parser) TagSize() uint32     { return me.tagSize }
+func (me *Parser) PaddingSize() uint32 { return me.paddingSize }
+func (me *Parser) Frames() []Frame     { return me.frames }
 
-func (me *parser) Parse(src []byte) error {
+func (me *Parser) Parse(src []byte) error {
 	if err := me.parseTagHeader(src); err != nil {
 		return err
 	}
 
 	src = src[10:me.tagSize] // skip 10-byte tag header; limit tag size
-	if err := me.parseFrames(src); err != nil {
+	if err := me.parseAllFrames(src); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (me *parser) parseTagHeader(src []byte) error {
+func (me *Parser) parseTagHeader(src []byte) error {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return errors.New("No ID3 tag found.")
@@ -59,23 +59,23 @@ func (me *parser) parseTagHeader(src []byte) error {
 	}
 
 	// Read tag size.
-	me.tagSize = utils.SynchSafeDecode(
+	me.tagSize = _Util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
 	) + 10
 
 	return nil
 }
 
-func (me *parser) parseFrames(src []byte) error {
+func (me *Parser) parseAllFrames(src []byte) error {
 	for {
 		if len(src) == 0 { // end of tag, no padding found
 			break
-		} else if utils.IsSliceZeroed(src) { // we entered a padding region after all frames
+		} else if _Util.IsSliceZeroed(src) { // we entered a padding region after all frames
 			me.paddingSize = uint32(len(src)) // store padding size
 			break
 		}
 
-		newFrame, err := me.buildFrame(src)
+		newFrame, err := me.parseFrame(src)
 		if err != nil {
 			return err // error when parsing the frame
 		}
@@ -90,8 +90,8 @@ func (me *parser) parseFrames(src []byte) error {
 	return nil
 }
 
-func (me *parser) buildFrame(src []byte) (Frame, error) {
-	baseFr := baseFrame{}
+func (me *Parser) parseFrame(src []byte) (Frame, error) {
+	baseFr := _BaseFrame{}
 	baseFr.name4 = string(src[0:4])
 	baseFr.frameSize = binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 
@@ -102,22 +102,22 @@ func (me *parser) buildFrame(src []byte) (Frame, error) {
 
 	if baseFr.name4 == "COMM" {
 		finalFr, err = me.parseCommentFrame(src)
-		finalFr.(*FrameComment).baseFrame = baseFr
+		finalFr.(*FrameComment)._BaseFrame = baseFr
 	} else if baseFr.name4[0] == 'T' { // text or multi text
 		var texts []string
 		texts, err = me.parseTextFrame(src)
 		if len(texts) == 1 {
 			finalFr = &FrameText{}
-			finalFr.(*FrameText).baseFrame = baseFr
+			finalFr.(*FrameText)._BaseFrame = baseFr
 			finalFr.(*FrameText).text = texts[0]
 		} else { // anything else is treated as raw binary
 			finalFr = &FrameMultiText{}
-			finalFr.(*FrameMultiText).baseFrame = baseFr
+			finalFr.(*FrameMultiText)._BaseFrame = baseFr
 			finalFr.(*FrameMultiText).texts = texts
 		}
 	} else {
 		finalFr = me.parseBinaryFrame(src)
-		finalFr.(*FrameBinary).baseFrame = baseFr
+		finalFr.(*FrameBinary)._BaseFrame = baseFr
 	}
 
 	if err != nil {
@@ -126,7 +126,7 @@ func (me *parser) buildFrame(src []byte) (Frame, error) {
 	return finalFr, nil // frame parsed successfully
 }
 
-func (me *parser) parseCommentFrame(src []byte) (*FrameComment, error) {
+func (me *Parser) parseCommentFrame(src []byte) (*FrameComment, error) {
 	fr := &FrameComment{}
 
 	// Retrieve text encoding.
@@ -137,7 +137,7 @@ func (me *parser) parseCommentFrame(src []byte) (*FrameComment, error) {
 	src = src[1:] // skip encoding byte
 
 	// Retrieve language string, always ASCII.
-	fr.lang = utils.ConvertAsciiStrings(src[:3])[0] // 1st string is 3-char lang
+	fr.lang = _Util.ConvertAsciiStrings(src[:3])[0] // 1st string is 3-char lang
 	src = src[3:]
 
 	if src[0] == 0x00 {
@@ -147,9 +147,9 @@ func (me *parser) parseCommentFrame(src []byte) (*FrameComment, error) {
 	// Retrieve comment text.
 	var texts []string
 	if isUtf16 {
-		texts = utils.ConvertUtf16Strings(src)
+		texts = _Util.ConvertUtf16Strings(src)
 	} else {
-		texts = utils.ConvertAsciiStrings(src)
+		texts = _Util.ConvertAsciiStrings(src)
 	}
 
 	if len(texts) > 1 {
@@ -164,14 +164,14 @@ func (me *parser) parseCommentFrame(src []byte) (*FrameComment, error) {
 	return fr, nil
 }
 
-func (me *parser) parseTextFrame(src []byte) ([]string, error) {
+func (me *Parser) parseTextFrame(src []byte) ([]string, error) {
 	switch src[0] {
 	case 0x00:
 		// Encoding is ISO-8859-1.
-		return utils.ConvertAsciiStrings(src[1:]), nil // skip 0x00 encoding byte
+		return _Util.ConvertAsciiStrings(src[1:]), nil // skip 0x00 encoding byte
 	case 0x01:
 		// Encoding is Unicode UTF-16, may have 2-byte BOM.
-		return utils.ConvertUtf16Strings(src[1:]), nil // skip 0x01 encoding byte
+		return _Util.ConvertUtf16Strings(src[1:]), nil // skip 0x01 encoding byte
 	default:
 		return nil, errors.New(
 			fmt.Sprintf("Text frame with unknown text encoding (%d).", src[0]),
@@ -179,7 +179,7 @@ func (me *parser) parseTextFrame(src []byte) ([]string, error) {
 	}
 }
 
-func (me *parser) parseBinaryFrame(src []byte) *FrameBinary {
+func (me *Parser) parseBinaryFrame(src []byte) *FrameBinary {
 	fr := &FrameBinary{}
 	fr.data = make([]byte, len(src))
 	copy(fr.data, src) // simply store bytes
