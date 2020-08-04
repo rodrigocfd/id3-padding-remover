@@ -1,11 +1,44 @@
 package id3
 
-import (
-	"encoding/binary"
-)
+import "encoding/binary"
+
+type utilsT struct{}
+
+var utils utilsT
+
+func (utilsT) IsSliceZeroed(blob []byte) bool {
+	for _, b := range blob {
+		if b != 0x00 {
+			return false
+		}
+	}
+	return true
+}
+
+func (utilsT) SynchSafeEncode(n uint32) uint32 {
+	out, mask := uint32(0), uint32(0x7F)
+	for (mask ^ 0x7FFFFFFF) != 0 {
+		out = n & ^mask
+		out <<= 1
+		out |= n & mask
+		mask = ((mask + 1) << 8) - 1
+		n = out
+	}
+	return out
+}
+
+func (utilsT) SynchSafeDecode(n uint32) uint32 {
+	out, mask := uint32(0), uint32(0x7F000000)
+	for mask != 0 {
+		out >>= 1
+		out |= n & mask
+		mask >>= 8
+	}
+	return out
+}
 
 // Parses null-separated ASCII strings.
-func convertAsciiStrings(src []byte) []string {
+func (utilsT) ConvertAsciiStrings(src []byte) []string {
 	texts := make([]string, 0) // strings to be returned
 	if len(src) == 0 {         // no data to be parsed
 		return texts
@@ -40,7 +73,7 @@ func convertAsciiStrings(src []byte) []string {
 }
 
 // Parses null-separated UTF-16 strings.
-func convertUtf16Strings(src []byte) []string {
+func (utilsT) ConvertUtf16Strings(src []byte) []string {
 	var endianDecoder binary.ByteOrder = binary.LittleEndian // decode text as little-endian by default
 	bomMark := binary.LittleEndian.Uint16(src)
 	if bomMark == 0xFEFF || bomMark == 0xFFFE { // BOM mark found
@@ -93,35 +126,4 @@ func convertUtf16Strings(src []byte) []string {
 		}
 	}
 	return texts
-}
-
-func isSliceZeroed(blob []byte) bool {
-	for _, b := range blob {
-		if b != 0x00 {
-			return false
-		}
-	}
-	return true // the slice only contain zeros
-}
-
-func synchSafeEncode(n uint32) uint32 {
-	out, mask := uint32(0), uint32(0x7F)
-	for (mask ^ 0x7FFFFFFF) != 0 {
-		out = n & ^mask
-		out <<= 1
-		out |= n & mask
-		mask = ((mask + 1) << 8) - 1
-		n = out
-	}
-	return out
-}
-
-func synchSafeDecode(n uint32) uint32 {
-	out, mask := uint32(0), uint32(0x7F000000)
-	for mask != 0 {
-		out >>= 1
-		out |= n & mask
-		mask >>= 8
-	}
-	return out
 }

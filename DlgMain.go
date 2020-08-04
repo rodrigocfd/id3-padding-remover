@@ -42,18 +42,21 @@ func (me *DlgMain) RunAsMain() int {
 
 func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
+
 	for _, mp3 := range mp3s {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
 			tag := &id3.Tag{}
-			err := tag.ReadFile(mp3)
-			if err != nil {
+			err := tag.ReadFromFile(mp3)
+
+			if err != nil { // error when parsing the tag
 				gui.SysDlgUtil.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
 				newItem := me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
-				me.cachedTags[mp3] = tag                       // load and cache the tag
 				newItem.SubItem(1).SetText(fmt.Sprintf("%d", tag.PaddingSize()))
+
+				me.cachedTags[mp3] = tag // cache the tag
 			}
 		}
 	}
@@ -75,35 +78,34 @@ func (me *DlgMain) displayTags() {
 	} else if len(selItems) == 1 {
 		tag := me.cachedTags[selItems[0].Text()]
 
-		for i := range tag.Frames() { // read each frame of the tag
-			frame := &tag.Frames()[i]
-			valItem := me.lstValues.AddItem(frame.Name4()) // add each name4 to lstValues
+		for _, frame := range tag.Frames() { // read each frame of the tag
+			valItem := me.lstValues.AddItem(frame.Name4())
 
-			if frame.Kind() == id3.FRAME_KIND_TEXT ||
-				frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
-				frame.Kind() == id3.FRAME_KIND_COMMENT {
-				// String or multi-string frame types.
-				valItem.SubItem(1).SetText(frame.Texts()[0])
-
-				if frame.Kind() == id3.FRAME_KIND_MULTI_TEXT ||
-					frame.Kind() == id3.FRAME_KIND_COMMENT {
-					// These are multi-string frame types.
-					for i := 1; i < len(frame.Texts()); i++ {
-						additionalItem := me.lstValues.AddItem("") // add an empty line
-						additionalItem.SubItem(1).SetText(frame.Texts()[i])
-					}
-				}
-
-			} else if frame.Kind() == id3.FRAME_KIND_BINARY {
+			if frComm, ok := frame.(*id3.FrameComment); ok { // comment frame
 				valItem.SubItem(1).SetText(
-					fmt.Sprintf("%.2f KB (%.2f%%)",
-						float64(len(frame.BinData()))/1024, // frame size in KB
-						float64(len(frame.BinData()))*100/ // percent of whole tag size
-							float64(tag.TotalSize())),
+					fmt.Sprintf("[%s] %s", frComm.Lang(), frComm.Text()),
 				)
-			}
+			} else {
+				if frTxt, ok := frame.(*id3.FrameText); ok { // text frame
+					valItem.SubItem(1).SetText(frTxt.Text())
+				} else if frMulti, ok := frame.(*id3.FrameMultiText); ok { // multi text frame
+					valItem.SubItem(1).SetText(frMulti.Texts()[0])
 
+					for i := 1; i < len(frMulti.Texts()); i++ {
+						additionalItem := me.lstValues.AddItem("") // add an empty 1st column
+						additionalItem.SubItem(1).SetText(frMulti.Texts()[i])
+					}
+				} else if frBin, ok := frame.(*id3.FrameBinary); ok { // binary frame
+					valItem.SubItem(1).SetText(
+						fmt.Sprintf("%.2f KB (%.2f%%)",
+							float64(len(frBin.Data()))/1024, // frame size in KB
+							float64(len(frBin.Data()))*100/ // percent of whole tag size
+								float64(tag.TagSize())),
+					)
+				}
+			}
 		}
+
 	}
 
 	me.lstValues.SetRedraw(true).
