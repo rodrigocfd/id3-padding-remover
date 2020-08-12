@@ -1,5 +1,7 @@
 package main
 
+// Command IDs used in the application.
+
 const (
 	MNU_OPEN int32 = iota + 1001
 	MNU_DELETE

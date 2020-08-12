@@ -41,12 +41,9 @@ func (me *DlgMain) menuEvents() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(p gui.WmCommand) {
-		selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
-		me.lstFiles.SetRedraw(false)
-		for i := len(selItems) - 1; i >= 0; i-- {
-			selItems[i].Delete() // will fire LVM_DELETEITEM
-		}
-		me.lstFiles.SetRedraw(true)
+		me.lstFiles.SetRedraw(false).
+			DeleteItems(me.lstFiles.SelectedItems()). // will fire LVM_DELETEITEM
+			SetRedraw(true)
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {

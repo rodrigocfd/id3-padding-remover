@@ -15,6 +15,7 @@ func main() {
 
 type DlgMain struct {
 	wnd               gui.WindowMain
+	iconImgList       gui.ImageList
 	lstFiles          gui.ListView
 	lstFilesMenu      gui.Menu
 	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
@@ -30,6 +31,10 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Width = 770
 	me.wnd.Setup().Height = 384
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
+
+	me.iconImgList.Create(16, 1).
+		AddShellIcon("*.mp3")
+	defer me.iconImgList.Destroy()
 
 	me.buildMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
@@ -60,15 +65,15 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 			}
 		}
 	}
-	me.lstFiles.SetRedraw(true)
-	me.lstFiles.Column(0).FillRoom()
+	me.lstFiles.SetRedraw(true).
+		Column(0).FillRoom()
 }
 
 func (me *DlgMain) displayTags() {
 	me.lstValues.SetRedraw(false).
 		DeleteAllItems()
 
-	selItems := me.lstFiles.NextItemAll(co.LVNI_SELECTED)
+	selItems := me.lstFiles.SelectedItems()
 
 	if len(selItems) > 1 {
 		// Multiple tags: none of them will be shown.
