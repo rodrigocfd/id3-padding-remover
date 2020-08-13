@@ -4,7 +4,7 @@ import (
 	"wingows/win"
 )
 
-func (me *DlgMain) lstFilesEvents() {
+func (me *DlgMain) eventsLstFiles() {
 	me.wnd.OnMsg().LvnInsertItem(LST_FILES, func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount())
 	})
@@ -18,7 +18,7 @@ func (me *DlgMain) lstFilesEvents() {
 
 				me.wnd.RunUiThread(func() {
 					me.updateTitlebarCount(me.lstFiles.ItemCount())
-					me.displayTags()
+					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
 				})
 			}()

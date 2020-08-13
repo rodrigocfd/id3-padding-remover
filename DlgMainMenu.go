@@ -23,11 +23,11 @@ func (me *DlgMain) buildMenuAndAccel() {
 		Build()
 }
 
-func (me *DlgMain) menuEvents() {
+func (me *DlgMain) eventsMenu() {
 	me.wnd.OnMsg().WmInitMenuPopup(func(p gui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableManyByCmdId(
-				me.lstFiles.SelectedItemCount() > 0,
+				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
 				[]int32{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
 		}
 	})
@@ -36,7 +36,7 @@ func (me *DlgMain) menuEvents() {
 		if mp3s, ok := gui.SysDlgUtil.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"}); ok {
 
-			me.addFilesIfNotYet(mp3s)
+			me.addFilesToListIfNotYet(mp3s)
 		}
 	})
 

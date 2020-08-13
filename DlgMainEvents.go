@@ -8,7 +8,7 @@ import (
 	"wingows/gui"
 )
 
-func (me *DlgMain) mainEvents() {
+func (me *DlgMain) eventsMain() {
 	me.wnd.OnMsg().WmCreate(func(p gui.WmCreate) int32 {
 		// Dimensions of our two list views.
 		cxLstValues := uint32(222)
@@ -44,13 +44,14 @@ func (me *DlgMain) mainEvents() {
 		me.lstValues.Column(1).FillRoom()
 	})
 
-	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) { // close on ESC
-		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
+	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) {
+		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 
 	me.wnd.OnMsg().WmDropFiles(func(p gui.WmDropFiles) {
 		paths := p.RetrieveAll()
 		mp3s := make([]string, 0, len(paths))
+
 		for _, path := range paths {
 			if gui.FileUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
 				subFiles := gui.FileUtil.ListFilesInFolder(path + "\\*.mp3")
@@ -60,12 +61,12 @@ func (me *DlgMain) mainEvents() {
 			}
 		}
 
-		if len(mp3s) == 0 {
+		if len(mp3s) == 0 { // no MP3 files have been drag n' dropped
 			gui.SysDlgUtil.MsgBox(&me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {
-			me.addFilesIfNotYet(mp3s)
+			me.addFilesToListIfNotYet(mp3s)
 		}
 	})
 }

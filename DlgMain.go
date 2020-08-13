@@ -32,20 +32,20 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Height = 384
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
-	me.iconImgList.Create(16, 1).
-		AddShellIcon("*.mp3")
+	me.iconImgList.Create(16, 1). // image list with system MP3 icon
+					AddShellIcon("*.mp3")
 	defer me.iconImgList.Destroy()
 
 	me.buildMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
 
-	me.mainEvents()
-	me.lstFilesEvents()
-	me.menuEvents()
+	me.eventsMain()
+	me.eventsLstFiles()
+	me.eventsMenu()
 	return me.wnd.RunAsMain()
 }
 
-func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
+func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 
 	for _, mp3 := range mp3s {
@@ -58,8 +58,8 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
-				newItem := me.lstFiles.AddItemWithIcon(mp3, 0) // will fire LVN_INSERTITEM
-				newItem.SubItem(1).SetText(fmt.Sprintf("%d", tag.PaddingSize()))
+				me.lstFiles.AddItemWithIcon(mp3, 0). // will fire LVN_INSERTITEM
+									SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize()))
 
 				me.cachedTags[mp3] = tag // cache the tag
 			}
@@ -69,39 +69,41 @@ func (me *DlgMain) addFilesIfNotYet(mp3s []string) {
 		Column(0).FillRoom()
 }
 
-func (me *DlgMain) displayTags() {
+func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(false).
-		DeleteAllItems()
+		DeleteAllItems() // clear all tag displays
 
 	selItems := me.lstFiles.SelectedItems()
 
-	if len(selItems) > 1 {
-		// Multiple tags: none of them will be shown.
+	if len(selItems) > 1 { // multiple files selected, no tags are shown
 		me.lstValues.AddItem("").
-			SubItem(1).SetText(fmt.Sprintf("%d selected...", len(selItems)))
+			SetSubItemText(1, fmt.Sprintf("%d selected...", len(selItems)))
 
-	} else if len(selItems) == 1 {
+	} else if len(selItems) == 1 { // only 1 file selected, we show its tags
 		tag := me.cachedTags[selItems[0].Text()]
 
 		for _, frame := range tag.Frames() { // read each frame of the tag
 			valItem := me.lstValues.AddItem(frame.Name4())
 
 			if frComm, ok := frame.(*id3.FrameComment); ok { // comment frame
-				valItem.SubItem(1).SetText(
+				valItem.SetSubItemText(1,
 					fmt.Sprintf("[%s] %s", frComm.Lang(), frComm.Text()),
 				)
+
 			} else {
 				if frTxt, ok := frame.(*id3.FrameText); ok { // text frame
-					valItem.SubItem(1).SetText(frTxt.Text())
+					valItem.SetSubItemText(1, frTxt.Text())
+
 				} else if frMulti, ok := frame.(*id3.FrameMultiText); ok { // multi text frame
-					valItem.SubItem(1).SetText(frMulti.Texts()[0])
+					valItem.SetSubItemText(1, frMulti.Texts()[0])
 
 					for i := 1; i < len(frMulti.Texts()); i++ {
-						additionalItem := me.lstValues.AddItem("") // add an empty 1st column
-						additionalItem.SubItem(1).SetText(frMulti.Texts()[i])
+						me.lstValues.AddItem(""). // add an empty 1st column
+										SetSubItemText(1, frMulti.Texts()[i])
 					}
+
 				} else if frBin, ok := frame.(*id3.FrameBinary); ok { // binary frame
-					valItem.SubItem(1).SetText(
+					valItem.SetSubItemText(1,
 						fmt.Sprintf("%.2f KB (%.2f%%)",
 							float64(len(frBin.Data()))/1024, // frame size in KB
 							float64(len(frBin.Data()))*100/ // percent of whole tag size

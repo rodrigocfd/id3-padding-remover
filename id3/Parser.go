@@ -24,7 +24,7 @@ func (me *Parser) Parse(src []byte) error {
 		return err
 	}
 
-	src = src[10:me.tagSize] // skip 10-byte tag header; limit tag size
+	src = src[10:me.tagSize] // skip 10-byte tag header; truncate to tag size
 	if err := me.parseAllFrames(src); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (me *Parser) parseTagHeader(src []byte) error {
 	}
 
 	// Validade unsupported flags.
-	if (src[5] & 0b1000_0000) != 0 { // flags
+	if (src[5] & 0b1000_0000) != 0 {
 		return errors.New("Tag is unsynchronised, not supported.")
 	} else if (src[5] & 0b0100_0000) != 0 {
 		return errors.New("Tag extended header not supported.")
@@ -100,22 +100,26 @@ func (me *Parser) parseFrame(src []byte) (Frame, error) {
 	var finalFr Frame
 	var err error = nil
 
-	if baseFr.name4 == "COMM" {
+	if baseFr.name4 == "COMM" { // comment
 		finalFr, err = me.parseCommentFrame(src)
 		finalFr.(*FrameComment)._BaseFrame = baseFr
-	} else if baseFr.name4[0] == 'T' { // text or multi text
+
+	} else if baseFr.name4[0] == 'T' { // single or multi text
 		var texts []string
-		texts, err = me.parseTextFrame(src)
-		if len(texts) == 1 {
+		texts, err = me.parseTextFrame(src) // retrieve all texts
+
+		if len(texts) == 1 { // single text
 			finalFr = &FrameText{}
 			finalFr.(*FrameText)._BaseFrame = baseFr
 			finalFr.(*FrameText).text = texts[0]
-		} else { // anything else is treated as raw binary
+
+		} else { // multi text
 			finalFr = &FrameMultiText{}
 			finalFr.(*FrameMultiText)._BaseFrame = baseFr
 			finalFr.(*FrameMultiText).texts = texts
 		}
-	} else {
+
+	} else { // anything else is treated as raw binary
 		finalFr = me.parseBinaryFrame(src)
 		finalFr.(*FrameBinary)._BaseFrame = baseFr
 	}
