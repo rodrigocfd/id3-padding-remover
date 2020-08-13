@@ -5,7 +5,7 @@ import (
 )
 
 type Tag struct {
-	parsed Parser
+	parsed _Parser
 }
 
 func (me *Tag) Version() [3]uint16  { return me.parsed.Version() }

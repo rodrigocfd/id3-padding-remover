@@ -4,6 +4,7 @@ import "encoding/binary"
 
 type _UtilT struct{}
 
+// Tag utilities.
 var _Util _UtilT
 
 func (_UtilT) IsSliceZeroed(blob []byte) bool {

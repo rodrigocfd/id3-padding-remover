@@ -5,6 +5,7 @@ type Frame interface {
 	Name4() string
 }
 
+// Implements the fields and methods common to all Frame types.
 type _BaseFrame struct {
 	name4     string
 	frameSize uint32
