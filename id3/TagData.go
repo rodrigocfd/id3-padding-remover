@@ -7,19 +7,19 @@ import (
 	"fmt"
 )
 
-type _Parser struct {
+type _TagData struct {
 	version     [3]uint16
 	tagSize     uint32
 	paddingSize uint32
 	frames      []Frame
 }
 
-func (me *_Parser) Version() [3]uint16  { return me.version }
-func (me *_Parser) TagSize() uint32     { return me.tagSize }
-func (me *_Parser) PaddingSize() uint32 { return me.paddingSize }
-func (me *_Parser) Frames() []Frame     { return me.frames }
+func (me *_TagData) Version() [3]uint16  { return me.version }
+func (me *_TagData) TagSize() uint32     { return me.tagSize }
+func (me *_TagData) PaddingSize() uint32 { return me.paddingSize }
+func (me *_TagData) Frames() []Frame     { return me.frames }
 
-func (me *_Parser) Parse(src []byte) error {
+func (me *_TagData) Parse(src []byte) error {
 	if err := me.parseTagHeader(src); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (me *_Parser) Parse(src []byte) error {
 	return nil
 }
 
-func (me *_Parser) parseTagHeader(src []byte) error {
+func (me *_TagData) parseTagHeader(src []byte) error {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return errors.New("No ID3 tag found.")
@@ -66,7 +66,7 @@ func (me *_Parser) parseTagHeader(src []byte) error {
 	return nil
 }
 
-func (me *_Parser) parseAllFrames(src []byte) error {
+func (me *_TagData) parseAllFrames(src []byte) error {
 	for {
 		if len(src) == 0 { // end of tag, no padding found
 			break
@@ -90,47 +90,47 @@ func (me *_Parser) parseAllFrames(src []byte) error {
 	return nil
 }
 
-func (me *_Parser) parseFrame(src []byte) (Frame, error) {
+func (me *_TagData) parseFrame(src []byte) (Frame, error) {
 	baseFr := _BaseFrame{}
 	baseFr.name4 = string(src[0:4])
 	baseFr.frameSize = binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 
 	src = src[10:baseFr.frameSize] // skip frame header, limit to frame size
 
-	var finalFr Frame
+	var retFrame Frame
 	var err error = nil
 
 	if baseFr.name4 == "COMM" { // comment
-		finalFr, err = me.parseCommentFrame(src)
-		finalFr.(*FrameComment)._BaseFrame = baseFr
+		retFrame, err = me.parseCommentFrame(src)
+		retFrame.(*FrameComment)._BaseFrame = baseFr
 
 	} else if baseFr.name4[0] == 'T' { // single or multi text
 		var texts []string
-		texts, err = me.parseTextFrame(src) // retrieve all texts
+		texts, err = me.parseTextsOfFrame(src) // retrieve all texts
 
 		if len(texts) == 1 { // single text
-			finalFr = &FrameText{}
-			finalFr.(*FrameText)._BaseFrame = baseFr
-			finalFr.(*FrameText).text = texts[0]
+			retFrame = &FrameText{}
+			retFrame.(*FrameText)._BaseFrame = baseFr
+			retFrame.(*FrameText).text = texts[0]
 
 		} else { // multi text
-			finalFr = &FrameMultiText{}
-			finalFr.(*FrameMultiText)._BaseFrame = baseFr
-			finalFr.(*FrameMultiText).texts = texts
+			retFrame = &FrameMultiText{}
+			retFrame.(*FrameMultiText)._BaseFrame = baseFr
+			retFrame.(*FrameMultiText).texts = texts
 		}
 
 	} else { // anything else is treated as raw binary
-		finalFr = me.parseBinaryFrame(src)
-		finalFr.(*FrameBinary)._BaseFrame = baseFr
+		retFrame = me.parseBinaryFrame(src)
+		retFrame.(*FrameBinary)._BaseFrame = baseFr
 	}
 
 	if err != nil {
 		return nil, err
 	}
-	return finalFr, nil // frame parsed successfully
+	return retFrame, nil // frame parsed successfully
 }
 
-func (me *_Parser) parseCommentFrame(src []byte) (*FrameComment, error) {
+func (me *_TagData) parseCommentFrame(src []byte) (*FrameComment, error) {
 	fr := &FrameComment{}
 
 	// Retrieve text encoding.
@@ -168,7 +168,7 @@ func (me *_Parser) parseCommentFrame(src []byte) (*FrameComment, error) {
 	return fr, nil
 }
 
-func (me *_Parser) parseTextFrame(src []byte) ([]string, error) {
+func (me *_TagData) parseTextsOfFrame(src []byte) ([]string, error) {
 	switch src[0] {
 	case 0x00:
 		// Encoding is ISO-8859-1.
@@ -183,7 +183,7 @@ func (me *_Parser) parseTextFrame(src []byte) ([]string, error) {
 	}
 }
 
-func (me *_Parser) parseBinaryFrame(src []byte) *FrameBinary {
+func (me *_TagData) parseBinaryFrame(src []byte) *FrameBinary {
 	fr := &FrameBinary{}
 	fr.data = make([]byte, len(src))
 	copy(fr.data, src) // simply store bytes

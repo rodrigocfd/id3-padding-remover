@@ -5,13 +5,13 @@ import (
 )
 
 type Tag struct {
-	parsed _Parser
+	tagData _TagData
 }
 
-func (me *Tag) Version() [3]uint16  { return me.parsed.Version() }
-func (me *Tag) TagSize() uint32     { return me.parsed.TagSize() }
-func (me *Tag) PaddingSize() uint32 { return me.parsed.PaddingSize() }
-func (me *Tag) Frames() []Frame     { return me.parsed.Frames() }
+func (me *Tag) Version() [3]uint16  { return me.tagData.Version() }
+func (me *Tag) TagSize() uint32     { return me.tagData.TagSize() }
+func (me *Tag) PaddingSize() uint32 { return me.tagData.PaddingSize() }
+func (me *Tag) Frames() []Frame     { return me.tagData.Frames() }
 
 func (me *Tag) Album() *FrameText    { return me.findByName4("TALB").(*FrameText) }
 func (me *Tag) Artist() *FrameText   { return me.findByName4("TPE1").(*FrameText) }
@@ -30,7 +30,7 @@ func (me *Tag) ReadFromFile(mp3Path string) error {
 }
 
 func (me *Tag) ReadFromBinary(src []byte) error {
-	return me.parsed.Parse(src)
+	return me.tagData.Parse(src)
 }
 
 func (me *Tag) findByName4(name4 string) Frame {

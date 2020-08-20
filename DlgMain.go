@@ -79,37 +79,34 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 		me.lstValues.AddItem("").
 			SetSubItemText(1, fmt.Sprintf("%d selected...", len(selItems)))
 
-	} else if len(selItems) == 1 { // only 1 file selected, we show its tags
+	} else if len(selItems) == 1 { // only 1 file selected, we display its tag
 		tag := me.cachedTags[selItems[0].Text()]
 
 		for _, frame := range tag.Frames() { // read each frame of the tag
-			valItem := me.lstValues.AddItem(frame.Name4())
+			valItem := me.lstValues.AddItem(frame.Name4()) // first column displays frame name
 
-			if frComm, ok := frame.(*id3.FrameComment); ok { // comment frame
+			switch myFrame := frame.(type) {
+			case *id3.FrameComment:
 				valItem.SetSubItemText(1,
-					fmt.Sprintf("[%s] %s", frComm.Lang(), frComm.Text()),
+					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()),
 				)
 
-			} else {
-				if frTxt, ok := frame.(*id3.FrameText); ok { // text frame
-					valItem.SetSubItemText(1, frTxt.Text())
+			case *id3.FrameText:
+				valItem.SetSubItemText(1, myFrame.Text())
 
-				} else if frMulti, ok := frame.(*id3.FrameMultiText); ok { // multi text frame
-					valItem.SetSubItemText(1, frMulti.Texts()[0])
-
-					for i := 1; i < len(frMulti.Texts()); i++ {
-						me.lstValues.AddItem(""). // add an empty 1st column
-										SetSubItemText(1, frMulti.Texts()[i])
-					}
-
-				} else if frBin, ok := frame.(*id3.FrameBinary); ok { // binary frame
-					valItem.SetSubItemText(1,
-						fmt.Sprintf("%.2f KB (%.2f%%)",
-							float64(len(frBin.Data()))/1024, // frame size in KB
-							float64(len(frBin.Data()))*100/ // percent of whole tag size
-								float64(tag.TagSize())),
-					)
+			case *id3.FrameMultiText:
+				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
+				for i := 1; i < len(myFrame.Texts()); i++ {
+					me.lstValues.AddItemMultiColumn([]string{"", myFrame.Texts()[i]})
 				}
+
+			case *id3.FrameBinary:
+				valItem.SetSubItemText(1,
+					fmt.Sprintf("%.2f KB (%.2f%%)",
+						float64(len(myFrame.Data()))/1024, // frame size in KB
+						float64(len(myFrame.Data()))*100/ // percent of whole tag size
+							float64(tag.TagSize())),
+				)
 			}
 		}
 
