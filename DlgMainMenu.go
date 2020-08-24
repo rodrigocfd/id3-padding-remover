@@ -19,8 +19,7 @@ func (me *DlgMain) buildMenuAndAccel() {
 	me.wnd.Setup().AcceleratorTable.
 		AddChar('o', co.ACCELF_CONTROL, MNU_OPEN).
 		AddKey(co.VK_DELETE, co.ACCELF_NONE, MNU_DELETE).
-		AddKey(co.VK_F1, co.ACCELF_NONE, MNU_ABOUT).
-		Build()
+		AddKey(co.VK_F1, co.ACCELF_NONE, MNU_ABOUT)
 }
 
 func (me *DlgMain) eventsMenu() {
