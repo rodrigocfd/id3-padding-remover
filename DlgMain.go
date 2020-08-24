@@ -103,9 +103,9 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			case *id3.FrameBinary:
 				valItem.SetSubItemText(1,
 					fmt.Sprintf("%.2f KB (%.2f%%)",
-						float64(len(myFrame.Data()))/1024, // frame size in KB
-						float64(len(myFrame.Data()))*100/ // percent of whole tag size
-							float64(tag.TagSize())),
+						float64(len(myFrame.BinData()))/1024, // frame size in KB
+						float64(len(myFrame.BinData()))*100/ // percent of whole tag size
+							float64(tag.TotalTagSize())),
 				)
 			}
 		}

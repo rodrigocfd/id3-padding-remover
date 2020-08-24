@@ -1,28 +1,25 @@
 package id3
 
 type Frame interface {
-	FrameSize() uint32
 	Name4() string
+	TotalFrameSize() uint
 }
 
-// Implements the fields and methods common to all Frame types.
 type _BaseFrame struct {
-	name4     string
-	frameSize uint32
+	name4          string
+	totalFrameSize uint
 }
 
-func (me *_BaseFrame) Name4() string     { return me.name4 }
-func (me *_BaseFrame) FrameSize() uint32 { return me.frameSize }
+func (me *_BaseFrame) Name4() string        { return me.name4 }
+func (me *_BaseFrame) TotalFrameSize() uint { return me.totalFrameSize }
 
-// Contains binary data, no further validations performed.
 type FrameBinary struct {
 	_BaseFrame
-	data []byte
+	binData []byte
 }
 
-func (me *FrameBinary) Data() []byte { return me.data }
+func (me *FrameBinary) BinData() []byte { return me.binData }
 
-// Contains one single text field.
 type FrameText struct {
 	_BaseFrame
 	text string
@@ -30,7 +27,6 @@ type FrameText struct {
 
 func (me *FrameText) Text() string { return me.text }
 
-// Contains many text fields.
 type FrameMultiText struct {
 	_BaseFrame
 	texts []string
@@ -38,7 +34,6 @@ type FrameMultiText struct {
 
 func (me *FrameMultiText) Texts() []string { return me.texts }
 
-// Commentary is a special case of multi text.
 type FrameComment struct {
 	_BaseFrame
 	lang string
