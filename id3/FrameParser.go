@@ -6,14 +6,19 @@ import (
 	"fmt"
 )
 
-func _ParseFrame(src []byte) (Frame, error) {
+type _FrameParserT struct{}
+
+// Frame parser.
+var _FrameParser _FrameParserT
+
+func (_FrameParserT) ParseFrame(src []byte) (Frame, error) {
 	name4 := string(src[0:4])
 	totalFrameSize := binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 
 	src = src[10:totalFrameSize] // skip frame header, limit to frame size
 
 	if name4 == "COMM" { // comment frame
-		frameComm, err := parseCommentFrame(src)
+		frameComm, err := _FrameParser.parseCommentFrame(src)
 		if err != nil {
 			return nil, err
 		}
@@ -22,7 +27,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 		return frameComm, nil
 
 	} else if name4[0] == 'T' {
-		parsedTexts, err := parseTextsOfFrame(src)
+		parsedTexts, err := _FrameParser.parseTextsOfFrame(src)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +60,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 	return frameBin, nil
 }
 
-func parseCommentFrame(src []byte) (*FrameComment, error) {
+func (_FrameParserT) parseCommentFrame(src []byte) (*FrameComment, error) {
 	frameComm := &FrameComment{}
 
 	// Retrieve text encoding.
@@ -66,7 +71,7 @@ func parseCommentFrame(src []byte) (*FrameComment, error) {
 	src = src[1:] // skip encoding byte
 
 	// Retrieve language string, always ASCII.
-	frameComm.lang = _Util.ConvertAsciiStrings(src[:3])[0] // 1st string is 3-char lang
+	frameComm.lang = _Util.ParseAsciiStrings(src[:3])[0] // 1st string is 3-char lang
 	src = src[3:]
 
 	if src[0] == 0x00 {
@@ -76,9 +81,9 @@ func parseCommentFrame(src []byte) (*FrameComment, error) {
 	// Retrieve comment text.
 	var texts []string
 	if isUtf16 {
-		texts = _Util.ConvertUtf16Strings(src)
+		texts = _Util.ParseUtf16Strings(src)
 	} else {
-		texts = _Util.ConvertAsciiStrings(src)
+		texts = _Util.ParseAsciiStrings(src)
 	}
 
 	if len(texts) > 1 {
@@ -93,14 +98,14 @@ func parseCommentFrame(src []byte) (*FrameComment, error) {
 	return frameComm, nil
 }
 
-func parseTextsOfFrame(src []byte) ([]string, error) {
+func (_FrameParserT) parseTextsOfFrame(src []byte) ([]string, error) {
 	switch src[0] {
 	case 0x00:
 		// Encoding is ISO-8859-1.
-		return _Util.ConvertAsciiStrings(src[1:]), nil // skip 0x00 encoding byte
+		return _Util.ParseAsciiStrings(src[1:]), nil // skip 0x00 encoding byte
 	case 0x01:
 		// Encoding is Unicode UTF-16, may have 2-byte BOM.
-		return _Util.ConvertUtf16Strings(src[1:]), nil // skip 0x01 encoding byte
+		return _Util.ParseUtf16Strings(src[1:]), nil // skip 0x01 encoding byte
 	default:
 		return nil, errors.New(
 			fmt.Sprintf("Text frame with unknown text encoding (%d).", src[0]),

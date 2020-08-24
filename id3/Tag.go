@@ -99,7 +99,7 @@ func (me *Tag) parseAllFrames(src []byte) error {
 			break
 		}
 
-		newFrame, err := _ParseFrame(src)
+		newFrame, err := _FrameParser.ParseFrame(src)
 		if err != nil {
 			return err // error when parsing the frame
 		}

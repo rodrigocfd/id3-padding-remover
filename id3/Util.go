@@ -39,7 +39,7 @@ func (_UtilT) SynchSafeDecode(n uint32) uint32 {
 }
 
 // Parses null-separated ASCII strings.
-func (_UtilT) ConvertAsciiStrings(src []byte) []string {
+func (_UtilT) ParseAsciiStrings(src []byte) []string {
 	texts := make([]string, 0) // strings to be returned
 	if len(src) == 0 {         // no data to be parsed
 		return texts
@@ -74,7 +74,7 @@ func (_UtilT) ConvertAsciiStrings(src []byte) []string {
 }
 
 // Parses null-separated UTF-16 strings.
-func (_UtilT) ConvertUtf16Strings(src []byte) []string {
+func (_UtilT) ParseUtf16Strings(src []byte) []string {
 	var endianDecoder binary.ByteOrder = binary.LittleEndian // decode text as little-endian by default
 	bomMark := binary.LittleEndian.Uint16(src)
 	if bomMark == 0xFEFF || bomMark == 0xFFFE { // BOM mark found
