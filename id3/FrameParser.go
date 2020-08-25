@@ -70,8 +70,8 @@ func (_FrameParserT) parseCommentFrame(src []byte) (*FrameComment, error) {
 	isUtf16 := src[0] == 0x01
 	src = src[1:] // skip encoding byte
 
-	// Retrieve language string, always ASCII.
-	frameComm.lang = _Util.ParseAsciiStrings(src[:3])[0] // 1st string is 3-char lang
+	// Retrieve 3-char language string, always ASCII.
+	frameComm.lang = string(src[:3])
 	src = src[3:]
 
 	if src[0] == 0x00 {
@@ -86,15 +86,7 @@ func (_FrameParserT) parseCommentFrame(src []byte) (*FrameComment, error) {
 		texts = _Util.ParseAsciiStrings(src)
 	}
 
-	if len(texts) > 1 {
-		msg := "Comment has more than 1 text field"
-		for _, t := range texts {
-			msg += fmt.Sprintf(", \"%s\"", t)
-		}
-		return nil, errors.New(msg)
-	}
-
-	frameComm.text = texts[0]
+	frameComm.text = texts[len(texts)-1] // if more than one, get the last one
 	return frameComm, nil
 }
 

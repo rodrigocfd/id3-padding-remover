@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"wingows/co"
 	"wingows/gui"
 )
@@ -46,7 +47,17 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {
-		println("Remove padding")
+		for _, selFile := range me.lstFiles.SelectedItemTexts(0) {
+			tag := me.cachedTags[selFile]
+			err := tag.SerializeToFile(selFile) // simply rewrite tag, no padding is written
+			if err != nil {
+				gui.SysDlgUtil.MsgBox(&me.wnd,
+					fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
+						selFile, err.Error()),
+					"Writing error", co.MB_ICONERROR)
+				break
+			}
+		}
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p gui.WmCommand) {

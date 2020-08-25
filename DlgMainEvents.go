@@ -54,7 +54,10 @@ func (me *DlgMain) eventsMain() {
 
 		for _, path := range paths {
 			if gui.PathUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
-				subFiles := gui.PathUtil.ListFilesInFolder(path + "\\*.mp3")
+				subFiles, err := gui.PathUtil.ListFilesInFolder(path + "\\*.mp3")
+				if err != nil {
+					panic(err.Error())
+				}
 				mp3s = append(mp3s, subFiles...)
 			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
 				mp3s = append(mp3s, path)

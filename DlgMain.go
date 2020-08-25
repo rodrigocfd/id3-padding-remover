@@ -73,14 +73,14 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(false).
 		DeleteAllItems() // clear all tag displays
 
-	selItems := me.lstFiles.SelectedItems()
+	selFiles := me.lstFiles.SelectedItemTexts(0)
 
-	if len(selItems) > 1 { // multiple files selected, no tags are shown
+	if len(selFiles) > 1 { // multiple files selected, no tags are shown
 		me.lstValues.AddItem("").
-			SetSubItemText(1, fmt.Sprintf("%d selected...", len(selItems)))
+			SetSubItemText(1, fmt.Sprintf("%d selected...", len(selFiles)))
 
-	} else if len(selItems) == 1 { // only 1 file selected, we display its tag
-		tag := me.cachedTags[selItems[0].Text()]
+	} else if len(selFiles) == 1 { // only 1 file selected, we display its tag
+		tag := me.cachedTags[selFiles[0]]
 
 		for _, frame := range tag.Frames() { // read each frame of the tag
 			valItem := me.lstValues.AddItem(frame.Name4()) // first column displays frame name
@@ -114,7 +114,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 
 	me.lstValues.SetRedraw(true).
 		Column(1).FillRoom()
-	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
+	me.lstValues.Hwnd().EnableWindow(len(selFiles) > 0) // if no files selected, disable lstValues
 }
 
 func (me *DlgMain) updateTitlebarCount(total uint32) {

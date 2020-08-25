@@ -9,13 +9,11 @@ import (
 )
 
 type Tag struct {
-	version      [3]uint16
 	totalTagSize uint32
 	paddingSize  uint32
 	frames       []Frame
 }
 
-func (me *Tag) Version() [3]uint16   { return me.version }
 func (me *Tag) TotalTagSize() uint32 { return me.totalTagSize }
 func (me *Tag) PaddingSize() uint32  { return me.paddingSize }
 func (me *Tag) Frames() []Frame      { return me.frames }
@@ -33,8 +31,10 @@ func (me *Tag) ReadFromFile(mp3Path string) error {
 	fMap.OpenExistingForRead(mp3Path)
 	defer fMap.Close() // HotSlice() needs the file to remain open
 
-	src := fMap.HotSlice()
+	return me.ReadFromBinary(fMap.HotSlice())
+}
 
+func (me *Tag) ReadFromBinary(src []byte) error {
 	if err := me.parseTagHeader(src); err != nil {
 		return err
 	}
@@ -45,6 +45,31 @@ func (me *Tag) ReadFromFile(mp3Path string) error {
 	}
 
 	return nil // tag parsed successfully
+}
+
+func (me *Tag) SerializeToFile(mp3Path string) error {
+	// Serialize all frames.
+	serializedFrames := make([][]byte, len(me.frames))
+	tagSize := 0
+	for i := range me.frames {
+		serialized := _FrameSerializer.SerializeFrame(me.frames[i])
+		serializedFrames[i] = serialized
+		tagSize += len(serialized)
+	}
+
+	// Build the binary blob.
+	blob := make([]byte, 10, 10+tagSize)
+	copy(blob, []byte("ID3"))    // magic bytes
+	copy(blob[3:], []byte{3, 0}) // v2.3.0
+
+	blob[5] = 0 // flags
+	binary.BigEndian.PutUint32(blob[6:], _Util.SynchSafeEncode(uint32(tagSize)))
+
+	for _, serialized := range serializedFrames {
+		blob = append(blob, serialized...)
+	}
+
+	return me.writeTagToFile(mp3Path, blob)
 }
 
 func (me *Tag) findByName4(name4 string) Frame {
@@ -63,19 +88,13 @@ func (me *Tag) parseTagHeader(src []byte) error {
 	}
 
 	// Validate tag version 2.3.0.
-	me.version = [3]uint16{
-		2, // the "2" is not actually stored in the tag itself
-		uint16(src[3]),
-		uint16(src[4]),
-	}
-	if me.version[1] != 3 && me.version[2] != 0 { // not v2.3.0?
+	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
 		return errors.New(
 			fmt.Sprintf("Tag version 2.%d.%d is not supported, only 2.3.0.",
-				me.version[1], me.version[2]),
-		)
+				src[1], src[2]))
 	}
 
-	// Validade unsupported flags.
+	// Validate unsupported flags.
 	if (src[5] & 0b1000_0000) != 0 {
 		return errors.New("Tag is unsynchronised, not supported.")
 	} else if (src[5] & 0b0100_0000) != 0 {
@@ -113,4 +132,38 @@ func (me *Tag) parseAllFrames(src []byte) error {
 	}
 
 	return nil // all frames parsed successfully
+}
+
+func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
+	fout := gui.FileMapped{}
+	if err := fout.OpenExistingForReadWrite(mp3Path); err != nil {
+		return err
+	}
+	defer fout.Close()
+	fileMem := fout.HotSlice()
+
+	currentTag := Tag{}
+	currentTag.ReadFromBinary(fileMem)
+
+	diff := len(blob) - int(currentTag.TotalTagSize()) // size difference between new/old tags
+
+	if diff > 0 { // new tag is larger, we need to make room
+		if err := fout.SetSize(fout.Size() + uint64(diff)); err != nil {
+			return err
+		}
+	}
+
+	// Move the MP3 data block inside the file.
+	copy(fileMem[int(currentTag.TotalTagSize())+diff:], fileMem[currentTag.TotalTagSize():])
+
+	// Copy the new tag into the file, no padding.
+	copy(fileMem, blob)
+
+	if diff < 0 { // new tag is shorter
+		if err := fout.SetSize(fout.Size() + uint64(diff)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
