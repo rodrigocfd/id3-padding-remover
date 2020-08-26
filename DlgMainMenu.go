@@ -12,7 +12,8 @@ func (me *DlgMain) buildMenuAndAccel() {
 		AppendItem(MNU_DELETE, "&Delete from list\tDel").
 		AppendSeparator().
 		AppendItem(MNU_REMPAD, "Remove &padding").
-		AppendItem(MNU_REMRGPIC, "Remove Replay&Gain and pic").
+		AppendItem(MNU_REMRG, "Remove Replay&Gain").
+		AppendItem(MNU_REMRGPIC, "Remove ReplayGain and p&ic").
 		AppendSeparator().
 		AppendItem(MNU_ABOUT, "&About...\tF1")
 
@@ -47,6 +48,12 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {})
+	})
+
+	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p gui.WmCommand) {
+		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+			tag.DeleteReplayGainFrames()
+		})
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p gui.WmCommand) {
