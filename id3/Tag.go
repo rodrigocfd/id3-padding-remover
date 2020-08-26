@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 	"wingows/gui"
 )
 
@@ -74,6 +75,51 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	}
 
 	return me.writeTagToFile(mp3Path, blob)
+}
+
+func (me *Tag) DeleteFrames(names4 []string) {
+	newFramesSlice := make([]Frame, 0, len(me.frames))
+
+	for _, frame := range me.frames {
+		willDelete := false
+
+		for _, name4 := range names4 {
+			if frame.Name4() == name4 {
+				willDelete = true
+				break
+			}
+		}
+
+		if !willDelete {
+			newFramesSlice = append(newFramesSlice, frame)
+		}
+	}
+
+	me.frames = newFramesSlice
+}
+
+func (me *Tag) DeleteReplayGainFrames() {
+	newFramesSlice := make([]Frame, 0, len(me.frames))
+
+	for _, frame := range me.frames {
+		willDelete := false
+
+		if frameMulti, ok := frame.(*FrameMultiText); ok {
+			if frameMulti.Name4() == "TXXX" {
+				if strings.HasPrefix(frameMulti.Texts()[0], "replaygain_") ||
+					strings.HasPrefix(frameMulti.Texts()[1], "replaygain_") {
+
+					willDelete = true
+				}
+			}
+		}
+
+		if !willDelete {
+			newFramesSlice = append(newFramesSlice, frame)
+		}
+	}
+
+	me.frames = newFramesSlice
 }
 
 func (me *Tag) findByName4(name4 string) Frame {

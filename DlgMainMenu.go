@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"id3-fit/id3"
 	"wingows/co"
 	"wingows/gui"
 )
@@ -46,30 +46,14 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {
-		for _, selItem := range me.lstFiles.SelectedItems() {
-			selFilePath := selItem.Text()
-			tag := me.cachedTags[selFilePath]
-
-			err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
-			if err != nil {
-				gui.SysDlgUtil.MsgBox(&me.wnd,
-					fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
-						selFilePath, err.Error()),
-					"Writing error", co.MB_ICONERROR)
-				break
-			}
-
-			tag.ReadFromFile(selFilePath)
-			me.cachedTags[selFilePath] = tag // re-cache modified tag
-
-			selItem.SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize())) // refresh padding size
-		}
-
-		me.displayTagsOfSelectedFiles() // refresh the frames display
+		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {})
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p gui.WmCommand) {
-		println("Remove ReplayGain and pic, bro")
+		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+			tag.DeleteReplayGainFrames()
+			tag.DeleteFrames([]string{"APIC"})
+		})
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p gui.WmCommand) {

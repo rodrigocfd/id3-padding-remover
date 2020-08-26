@@ -116,6 +116,31 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.Hwnd().EnableWindow(len(selFiles) > 0) // if no files selected, disable lstValues
 }
 
+func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
+	for _, selItem := range me.lstFiles.SelectedItems() {
+		selFilePath := selItem.Text()
+		tag := me.cachedTags[selFilePath]
+
+		tagProcess(tag) // tag frames can be modified before saving
+
+		err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
+		if err != nil {
+			gui.SysDlgUtil.MsgBox(&me.wnd,
+				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
+					selFilePath, err.Error()),
+				"Writing error", co.MB_ICONERROR)
+			break
+		}
+
+		tag.ReadFromFile(selFilePath)
+		me.cachedTags[selFilePath] = tag // re-cache modified tag
+
+		selItem.SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize())) // refresh padding size
+	}
+
+	me.displayTagsOfSelectedFiles() // refresh the frames display
+}
+
 func (me *DlgMain) updateTitlebarCount(total uint32) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
