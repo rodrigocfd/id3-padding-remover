@@ -19,13 +19,14 @@ func (me *Tag) TotalTagSize() uint32 { return me.totalTagSize }
 func (me *Tag) PaddingSize() uint32  { return me.paddingSize }
 func (me *Tag) Frames() []Frame      { return me.frames }
 
-func (me *Tag) Album() *FrameText    { return me.findByName4("TALB").(*FrameText) }
-func (me *Tag) Artist() *FrameText   { return me.findByName4("TPE1").(*FrameText) }
-func (me *Tag) Composer() *FrameText { return me.findByName4("TCOM").(*FrameText) }
-func (me *Tag) Genre() *FrameText    { return me.findByName4("TCON").(*FrameText) }
-func (me *Tag) Title() *FrameText    { return me.findByName4("TIT2").(*FrameText) }
-func (me *Tag) Track() *FrameText    { return me.findByName4("TRCK").(*FrameText) }
-func (me *Tag) Year() *FrameText     { return me.findByName4("TYER").(*FrameText) }
+func (me *Tag) Album() *FrameText     { return me.findByName4("TALB").(*FrameText) }
+func (me *Tag) Artist() *FrameText    { return me.findByName4("TPE1").(*FrameText) }
+func (me *Tag) Composer() *FrameText  { return me.findByName4("TCOM").(*FrameText) }
+func (me *Tag) Genre() *FrameText     { return me.findByName4("TCON").(*FrameText) }
+func (me *Tag) Picture() *FrameBinary { return me.findByName4("APIC").(*FrameBinary) }
+func (me *Tag) Title() *FrameText     { return me.findByName4("TIT2").(*FrameText) }
+func (me *Tag) Track() *FrameText     { return me.findByName4("TRCK").(*FrameText) }
+func (me *Tag) Year() *FrameText      { return me.findByName4("TYER").(*FrameText) }
 
 func (me *Tag) ReadFromFile(mp3Path string) error {
 	fMap := gui.FileMapped{}
