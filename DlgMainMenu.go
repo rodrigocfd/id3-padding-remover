@@ -12,8 +12,7 @@ func (me *DlgMain) buildMenuAndAccel() {
 		AppendItem(MNU_DELETE, "&Delete from list\tDel").
 		AppendSeparator().
 		AppendItem(MNU_REMPAD, "Remove &padding").
-		AppendItem(MNU_REMRG, "Remove Replay&Gain").
-		AppendItem(MNU_REMRGPIC, "Remove ReplayGain and P&ic").
+		AppendItem(MNU_REMRGPIC, "Remove Replay&Gain and pic").
 		AppendSeparator().
 		AppendItem(MNU_ABOUT, "&About...\tF1")
 
@@ -28,7 +27,7 @@ func (me *DlgMain) eventsMenu() {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableManyByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
-				[]int32{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
+				[]int32{MNU_DELETE, MNU_REMPAD, MNU_REMRGPIC})
 		}
 	})
 
@@ -67,10 +66,6 @@ func (me *DlgMain) eventsMenu() {
 		}
 
 		me.displayTagsOfSelectedFiles() // refresh the frames display
-	})
-
-	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p gui.WmCommand) {
-		println("Remove ReplayGain")
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p gui.WmCommand) {
