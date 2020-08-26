@@ -10,9 +10,6 @@ type _FrameSerializerT struct{}
 var _FrameSerializer _FrameSerializerT
 
 func (_FrameSerializerT) SerializeFrame(frame Frame) []byte {
-
-	println("next", frame.Name4())
-
 	blob := make([]byte, 0, 10) // header is 10 bytes
 	blob = append(blob, []byte(frame.Name4())...)
 	blob = append(blob, []byte{0, 0, 0, 0}...) // size not yet known

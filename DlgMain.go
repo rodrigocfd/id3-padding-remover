@@ -52,7 +52,6 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
 			tag := &id3.Tag{}
 			err := tag.ReadFromFile(mp3)
-
 			if err != nil { // error when parsing the tag
 				gui.SysDlgUtil.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),

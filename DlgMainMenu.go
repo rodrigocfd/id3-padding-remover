@@ -33,9 +33,9 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(p gui.WmCommand) {
-		if mp3s, ok := gui.SysDlgUtil.FileOpenMany(&me.wnd,
-			[]string{"MP3 audio files (*.mp3)|*.mp3"}); ok {
-
+		mp3s, ok := gui.SysDlgUtil.FileOpenMany(&me.wnd,
+			[]string{"MP3 audio files (*.mp3)|*.mp3"})
+		if ok {
 			me.addFilesToListIfNotYet(mp3s)
 		}
 	})
@@ -47,17 +47,26 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {
-		for _, selFile := range me.lstFiles.SelectedItemTexts(0) {
-			tag := me.cachedTags[selFile]
-			err := tag.SerializeToFile(selFile) // simply rewrite tag, no padding is written
+		for _, selItem := range me.lstFiles.SelectedItems() {
+			selFilePath := selItem.Text()
+			tag := me.cachedTags[selFilePath]
+
+			err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
 			if err != nil {
 				gui.SysDlgUtil.MsgBox(&me.wnd,
 					fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
-						selFile, err.Error()),
+						selFilePath, err.Error()),
 					"Writing error", co.MB_ICONERROR)
 				break
 			}
+
+			tag.ReadFromFile(selFilePath)
+			me.cachedTags[selFilePath] = tag // re-cache modified tag
+
+			selItem.SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize())) // refresh padding size
 		}
+
+		me.displayTagsOfSelectedFiles() // refresh the frames display
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p gui.WmCommand) {

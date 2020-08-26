@@ -35,6 +35,10 @@ func (me *Tag) ReadFromFile(mp3Path string) error {
 }
 
 func (me *Tag) ReadFromBinary(src []byte) error {
+	me.totalTagSize = 0 // clear
+	me.paddingSize = 0
+	me.frames = nil
+
 	if err := me.parseTagHeader(src); err != nil {
 		return err
 	}
