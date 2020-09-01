@@ -5,11 +5,11 @@ import (
 	"id3-fit/id3"
 	"strings"
 	"wingows/co"
-	"wingows/gui"
+	"wingows/ui"
 )
 
 func (me *DlgMain) eventsMain() {
-	me.wnd.OnMsg().WmCreate(func(p gui.WmCreate) int32 {
+	me.wnd.OnMsg().WmCreate(func(p ui.WmCreate) int32 {
 		// Dimensions of our two list views.
 		cxLstValues := uint32(222)
 		cyLstValues := p.CreateStruct().Cy - 52
@@ -31,30 +31,30 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.Hwnd().EnableWindow(false)
 
 		// Other stuff.
-		me.resizer.Add(&me.lstFiles, gui.RESZ_RESIZE, gui.RESZ_RESIZE).
-			Add(&me.lstValues, gui.RESZ_REPOS, gui.RESZ_RESIZE)
+		me.resizer.Add(&me.lstFiles, ui.RESZ_RESIZE, ui.RESZ_RESIZE).
+			Add(&me.lstValues, ui.RESZ_REPOS, ui.RESZ_RESIZE)
 
 		me.cachedTags = make(map[string]*id3.Tag)
 		return 0
 	})
 
-	me.wnd.OnMsg().WmSize(func(p gui.WmSize) {
+	me.wnd.OnMsg().WmSize(func(p ui.WmSize) {
 		me.resizer.Adjust(p)
 		me.lstFiles.Column(0).FillRoom()
 		me.lstValues.Column(1).FillRoom()
 	})
 
-	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p gui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(int32(co.MBID_CANCEL), func(p ui.WmCommand) {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 
-	me.wnd.OnMsg().WmDropFiles(func(p gui.WmDropFiles) {
+	me.wnd.OnMsg().WmDropFiles(func(p ui.WmDropFiles) {
 		paths := p.RetrieveAll()
 		mp3s := make([]string, 0, len(paths))
 
 		for _, path := range paths {
-			if gui.PathUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
-				subFiles, err := gui.PathUtil.ListFilesInFolder(path + "\\*.mp3")
+			if ui.PathUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
+				subFiles, err := ui.PathUtil.ListFilesInFolder(path + "\\*.mp3")
 				if err != nil {
 					panic(err.Error())
 				}
@@ -65,7 +65,7 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(mp3s) == 0 { // no MP3 files have been drag n' dropped
-			gui.SysDlgUtil.MsgBox(&me.wnd,
+			ui.SysDlgUtil.MsgBox(&me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {

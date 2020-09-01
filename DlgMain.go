@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"id3-fit/id3"
 	"wingows/co"
-	"wingows/gui"
+	"wingows/ui"
 	"wingows/win"
 )
 
@@ -14,13 +14,13 @@ func main() {
 }
 
 type DlgMain struct {
-	wnd               gui.WindowMain
-	iconImgList       gui.ImageList
-	lstFiles          gui.ListView
-	lstFilesMenu      gui.Menu
+	wnd               ui.WindowMain
+	iconImgList       ui.ImageList
+	lstFiles          ui.ListView
+	lstFilesMenu      ui.Menu
 	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
-	lstValues         gui.ListView
-	resizer           gui.Resizer
+	lstValues         ui.ListView
+	resizer           ui.Resizer
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
@@ -53,7 +53,7 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 			tag := &id3.Tag{}
 			err := tag.ReadFromFile(mp3)
 			if err != nil { // error when parsing the tag
-				gui.SysDlgUtil.MsgBox(&me.wnd,
+				ui.SysDlgUtil.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
@@ -125,7 +125,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 
 		err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
 		if err != nil {
-			gui.SysDlgUtil.MsgBox(&me.wnd,
+			ui.SysDlgUtil.MsgBox(&me.wnd,
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
 					selFilePath, err.Error()),
 				"Writing error", co.MB_ICONERROR)

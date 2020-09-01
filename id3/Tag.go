@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"wingows/gui"
+	"wingows/ui"
 )
 
 type Tag struct {
@@ -29,7 +29,7 @@ func (me *Tag) Track() *FrameText     { return me.findByName4("TRCK").(*FrameTex
 func (me *Tag) Year() *FrameText      { return me.findByName4("TYER").(*FrameText) }
 
 func (me *Tag) ReadFromFile(mp3Path string) error {
-	fMap := gui.FileMapped{}
+	fMap := ui.FileMapped{}
 	fMap.OpenExistingForRead(mp3Path)
 	defer fMap.Close() // HotSlice() needs the file to remain open
 
@@ -91,7 +91,7 @@ func (me *Tag) DeleteFrames(names4 []string) {
 			}
 		}
 
-		if !willDelete {
+		if !willDelete { // the new slice will contain the non-deleted tags
 			newFramesSlice = append(newFramesSlice, frame)
 		}
 	}
@@ -115,7 +115,7 @@ func (me *Tag) DeleteReplayGainFrames() {
 			}
 		}
 
-		if !willDelete {
+		if !willDelete { // the new slice will contain the non-deleted tags
 			newFramesSlice = append(newFramesSlice, frame)
 		}
 	}
@@ -186,7 +186,7 @@ func (me *Tag) parseAllFrames(src []byte) error {
 }
 
 func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
-	fout := gui.FileMapped{}
+	fout := ui.FileMapped{}
 	if err := fout.OpenExistingForReadWrite(mp3Path); err != nil {
 		return err
 	}

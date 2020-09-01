@@ -3,7 +3,7 @@ package main
 import (
 	"id3-fit/id3"
 	"wingows/co"
-	"wingows/gui"
+	"wingows/ui"
 )
 
 func (me *DlgMain) buildMenuAndAccel() {
@@ -24,7 +24,7 @@ func (me *DlgMain) buildMenuAndAccel() {
 }
 
 func (me *DlgMain) eventsMenu() {
-	me.wnd.OnMsg().WmInitMenuPopup(func(p gui.WmInitMenuPopup) {
+	me.wnd.OnMsg().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableManyByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
@@ -32,39 +32,39 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(p gui.WmCommand) {
-		mp3s, ok := gui.SysDlgUtil.FileOpenMany(&me.wnd,
+	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(p ui.WmCommand) {
+		mp3s, ok := ui.SysDlgUtil.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
 		if ok {
 			me.addFilesToListIfNotYet(mp3s)
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(p gui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(p ui.WmCommand) {
 		me.lstFiles.SetRedraw(false).
 			DeleteItems(me.lstFiles.SelectedItems()). // will fire LVM_DELETEITEM
 			SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p gui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p gui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p gui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 			tag.DeleteFrames([]string{"APIC"})
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p gui.WmCommand) {
-		gui.SysDlgUtil.MsgBox(&me.wnd,
+	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p ui.WmCommand) {
+		ui.SysDlgUtil.MsgBox(&me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
