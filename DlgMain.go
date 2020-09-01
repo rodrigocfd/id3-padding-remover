@@ -15,10 +15,10 @@ func main() {
 
 type DlgMain struct {
 	wnd               ui.WindowMain
-	iconImgList       ui.ImageList
+	iconImgList       ui.ImageList // for system MP3 icon
 	lstFiles          ui.ListView
-	lstFilesMenu      ui.Menu
-	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
+	lstFilesMenu      ui.Menu // files list view right-click menu
+	lstFilesSelLocked bool    // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         ui.ListView
 	resizer           ui.Resizer
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
@@ -32,8 +32,8 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Height = 384
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
-	me.iconImgList.Create(16, 1). // image list with system MP3 icon
-					AddShellIcon("*.mp3")
+	me.iconImgList.Create(16, 1).
+		AddShellIcon("*.mp3")
 	defer me.iconImgList.Destroy()
 
 	me.buildMenuAndAccel()
@@ -141,7 +141,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 	me.displayTagsOfSelectedFiles() // refresh the frames display
 }
 
-func (me *DlgMain) updateTitlebarCount(total uint32) {
+func (me *DlgMain) updateTitlebarCount(total uint) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {

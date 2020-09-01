@@ -28,7 +28,7 @@ func (me *DlgMain) eventsMenu() {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableManyByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
-				[]int32{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
+				[]int{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
 		}
 	})
 

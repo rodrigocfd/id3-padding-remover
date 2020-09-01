@@ -28,7 +28,7 @@ func (me *DlgMain) eventsLstFiles() {
 	me.wnd.OnMsg().LvnDeleteItem(LST_FILES, func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount() - 1) // notification is sent before deletion
 
-		delItem := me.lstFiles.Item(uint32(p.IItem))
+		delItem := me.lstFiles.Item(uint(p.IItem))
 		delete(me.cachedTags, delItem.Text()) // remove tag from cache
 	})
 }

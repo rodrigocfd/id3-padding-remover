@@ -10,14 +10,14 @@ import (
 )
 
 type Tag struct {
-	totalTagSize uint32
-	paddingSize  uint32
+	totalTagSize uint
+	paddingSize  uint
 	frames       []Frame
 }
 
-func (me *Tag) TotalTagSize() uint32 { return me.totalTagSize }
-func (me *Tag) PaddingSize() uint32  { return me.paddingSize }
-func (me *Tag) Frames() []Frame      { return me.frames }
+func (me *Tag) TotalTagSize() uint { return me.totalTagSize }
+func (me *Tag) PaddingSize() uint  { return me.paddingSize }
+func (me *Tag) Frames() []Frame    { return me.frames }
 
 func (me *Tag) Album() *FrameText     { return me.findByName4("TALB").(*FrameText) }
 func (me *Tag) Artist() *FrameText    { return me.findByName4("TPE1").(*FrameText) }
@@ -153,9 +153,9 @@ func (me *Tag) parseTagHeader(src []byte) error {
 	}
 
 	// Read tag size.
-	me.totalTagSize = _Util.SynchSafeDecode(
+	me.totalTagSize = uint(_Util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
-	) + 10
+	) + 10)
 
 	return nil
 }
@@ -165,7 +165,7 @@ func (me *Tag) parseAllFrames(src []byte) error {
 		if len(src) == 0 { // end of tag, no padding found
 			break
 		} else if _Util.IsSliceZeroed(src) { // we entered a padding region after all frames
-			me.paddingSize = uint32(len(src)) // store padding size
+			me.paddingSize = uint(len(src)) // store padding size
 			break
 		}
 
@@ -199,7 +199,7 @@ func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
 	diff := len(blob) - int(currentTag.TotalTagSize()) // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
-		if err := fout.SetSize(fout.Size() + uint64(diff)); err != nil {
+		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
 			return err
 		}
 	}
@@ -211,7 +211,7 @@ func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
 	copy(fileMem, blob)
 
 	if diff < 0 { // new tag is shorter
-		if err := fout.SetSize(fout.Size() + uint64(diff)); err != nil {
+		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
 			return err
 		}
 	}
