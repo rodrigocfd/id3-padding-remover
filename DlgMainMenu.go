@@ -2,8 +2,8 @@ package main
 
 import (
 	"id3-fit/id3"
-	"wingows/co"
-	"wingows/ui"
+	"windigo/co"
+	"windigo/ui"
 )
 
 func (me *DlgMain) buildMenuAndAccel() {
@@ -26,14 +26,14 @@ func (me *DlgMain) buildMenuAndAccel() {
 func (me *DlgMain) eventsMenu() {
 	me.wnd.OnMsg().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
-			me.lstFilesMenu.EnableManyByCmdId(
+			me.lstFilesMenu.EnableItemsByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
 				[]int{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
 		}
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(p ui.WmCommand) {
-		mp3s, ok := ui.SysDlgUtil.FileOpenMany(&me.wnd,
+		mp3s, ok := ui.SysDlg.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
 		if ok {
 			me.addFilesToListIfNotYet(mp3s)
@@ -64,11 +64,11 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p ui.WmCommand) {
-		ui.SysDlgUtil.MsgBox(&me.wnd,
+		ui.SysDlg.MsgBox(&me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
-				"This application was written in Go with Wingows library.",
+				"This application was written in Go with Windigo library.",
 			"About", co.MB_ICONINFORMATION)
 	})
 }

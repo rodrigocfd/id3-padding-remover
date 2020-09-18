@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"id3-fit/id3"
-	"wingows/co"
-	"wingows/ui"
-	"wingows/win"
+	"windigo/co"
+	"windigo/ui"
+	"windigo/win"
 )
 
 func main() {
@@ -53,7 +53,7 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 			tag := &id3.Tag{}
 			err := tag.ReadFromFile(mp3)
 			if err != nil { // error when parsing the tag
-				ui.SysDlgUtil.MsgBox(&me.wnd,
+				ui.SysDlg.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
@@ -96,7 +96,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			case *id3.FrameMultiText:
 				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
 				for i := 1; i < len(myFrame.Texts()); i++ {
-					me.lstValues.AddItemMultiColumn([]string{"", myFrame.Texts()[i]})
+					me.lstValues.AddItemWithColumns([]string{"", myFrame.Texts()[i]})
 				}
 
 			case *id3.FrameBinary:
@@ -125,7 +125,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 
 		err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
 		if err != nil {
-			ui.SysDlgUtil.MsgBox(&me.wnd,
+			ui.SysDlg.MsgBox(&me.wnd,
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
 					selFilePath, err.Error()),
 				"Writing error", co.MB_ICONERROR)

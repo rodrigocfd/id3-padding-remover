@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"id3-fit/id3"
 	"strings"
-	"wingows/co"
-	"wingows/ui"
+	"windigo/co"
+	"windigo/ui"
+	"windigo/win"
 )
 
 func (me *DlgMain) eventsMain() {
-	me.wnd.OnMsg().WmCreate(func(p ui.WmCreate) int {
+	me.wnd.OnMsg().WmCreate(func(p *win.CREATESTRUCT) int {
 		// Dimensions of our two list views.
 		cxLstValues := uint(222)
-		cyLstValues := uint(p.CreateStruct().Cy - 52)
+		cyLstValues := uint(p.Cy - 52)
 
 		cxLstFiles := uint(510)
 		cyLstFiles := cyLstValues
@@ -53,8 +54,8 @@ func (me *DlgMain) eventsMain() {
 		mp3s := make([]string, 0, len(paths))
 
 		for _, path := range paths {
-			if ui.PathUtil.PathIsFolder(path) { // if a folder, add all MP3 directly within
-				subFiles, err := ui.PathUtil.ListFilesInFolder(path + "\\*.mp3")
+			if ui.Path.PathIsFolder(path) { // if a folder, add all MP3 directly within
+				subFiles, err := ui.Path.ListFilesInFolder(path + "\\*.mp3")
 				if err != nil {
 					panic(err.Error())
 				}
@@ -65,7 +66,7 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(mp3s) == 0 { // no MP3 files have been drag n' dropped
-			ui.SysDlgUtil.MsgBox(&me.wnd,
+			ui.SysDlg.MsgBox(&me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {

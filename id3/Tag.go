@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"wingows/ui"
+	"windigo/ui"
 )
 
 type Tag struct {

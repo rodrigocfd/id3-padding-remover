@@ -1,7 +1,7 @@
 package main
 
 import (
-	"wingows/win"
+	"windigo/win"
 )
 
 func (me *DlgMain) eventsLstFiles() {
