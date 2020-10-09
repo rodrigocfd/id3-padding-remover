@@ -45,7 +45,7 @@ func (me *Tag) ReadFromBinary(src []byte) error {
 		return err
 	}
 
-	src = src[10:me.totalTagSize] // skip 10-byte tag header; truncate to tag size
+	src = src[10:me.totalTagSize] // skip 10-byte tag header; truncate to tag bounds
 	if err := me.parseAllFrames(src); err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (me *Tag) parseTagHeader(src []byte) error {
 	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
 		return errors.New(
 			fmt.Sprintf("Tag version 2.%d.%d is not supported, only 2.3.0.",
-				src[1], src[2]))
+				src[3], src[4]))
 	}
 
 	// Validate unsupported flags.

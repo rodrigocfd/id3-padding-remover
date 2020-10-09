@@ -27,7 +27,7 @@ func (me *DlgMain) eventsMenu() {
 	me.wnd.OnMsg().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableItemsByCmdId(
-				me.lstFiles.SelectedItemCount() > 0, // 1 or more files actually selected
+				me.lstFiles.SelectedItemCount() > 0, // 1 or more files currently selected
 				[]int{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
 		}
 	})

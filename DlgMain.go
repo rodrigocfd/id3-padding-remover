@@ -51,8 +51,8 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 	for _, mp3 := range mp3s {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
 			tag := &id3.Tag{}
-			err := tag.ReadFromFile(mp3)
-			if err != nil { // error when parsing the tag
+
+			if err := tag.ReadFromFile(mp3); err != nil { // error when parsing the tag
 				ui.SysDlg.MsgBox(&me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
@@ -123,8 +123,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 
 		tagProcess(tag) // tag frames can be modified before saving
 
-		err := tag.SerializeToFile(selFilePath) // simply rewrite tag, no padding is written
-		if err != nil {
+		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
 			ui.SysDlg.MsgBox(&me.wnd,
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
 					selFilePath, err.Error()),

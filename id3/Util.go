@@ -19,8 +19,8 @@ func (_UtilT) IsSliceZeroed(blob []byte) bool {
 }
 
 func (_UtilT) SynchSafeEncode(n uint32) uint32 {
-	out, mask := uint32(0), uint32(0x7F)
-	for (mask ^ 0x7FFFFFFF) != 0 {
+	out, mask := uint32(0), uint32(0x7f)
+	for (mask ^ 0x7fff_ffff) != 0 {
 		out = n & ^mask
 		out <<= 1
 		out |= n & mask
@@ -31,7 +31,7 @@ func (_UtilT) SynchSafeEncode(n uint32) uint32 {
 }
 
 func (_UtilT) SynchSafeDecode(n uint32) uint32 {
-	out, mask := uint32(0), uint32(0x7F000000)
+	out, mask := uint32(0), uint32(0x7f00_0000)
 	for mask != 0 {
 		out >>= 1
 		out |= n & mask
@@ -100,8 +100,8 @@ func (_UtilT) ParseUtf16Strings(src []byte) []string {
 		var endianDecoder binary.ByteOrder = binary.LittleEndian
 
 		bom := binary.LittleEndian.Uint16(src)
-		if bom == 0xFEFF || bom == 0xFFFE { // BOM mark found
-			if bom == 0xFFFE { // we have a big-endian string, change our decoder
+		if bom == 0xfeff || bom == 0xfffe { // BOM mark found
+			if bom == 0xfffe { // we have a big-endian string, change our decoder
 				endianDecoder = binary.BigEndian
 			}
 			src = src[2:] // skip BOM

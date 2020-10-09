@@ -13,15 +13,13 @@ func (me *DlgMain) eventsLstFiles() {
 		if !me.lstFilesSelLocked {
 			me.lstFilesSelLocked = true
 
-			go func() {
-				win.Sleep(50) // wait between LVM_ITEMCHANGED updates
-
-				me.wnd.RunUiThread(func() {
+			me.wnd.Hwnd().SetTimer(123456, 500, // wait between LVM_ITEMCHANGED updates
+				func(hWnd win.HWND, nIDEvent uintptr, msElapsed uint32) {
+					hWnd.KillTimer(123456)
 					me.updateTitlebarCount(me.lstFiles.ItemCount())
 					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
 				})
-			}()
 		}
 	})
 

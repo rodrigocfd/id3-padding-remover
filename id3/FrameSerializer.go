@@ -51,7 +51,7 @@ func (_FrameSerializerT) serializeCommentFrame(frame *FrameComment) []byte {
 		blob[4] = 0x00 // zero char before text
 		_Util.SerializeAsciiStrings(blob[5:], []string{frame.Text()})
 	} else {
-		binary.LittleEndian.PutUint16(blob[4:], 0xFEFF) // 2-byte little-endian BOM
+		binary.LittleEndian.PutUint16(blob[4:], 0xfeff) // 2-byte little-endian BOM
 		binary.LittleEndian.PutUint16(blob[6:], 0x0000) // zero char before text
 		_Util.SerializeUtf16StringsLE(blob[8:], []string{frame.Text()})
 	}
@@ -77,7 +77,7 @@ func (_FrameSerializerT) serializeTextsOfFrame(strs []string) []byte {
 	} else {
 		blob = make([]byte, 1+(totalChars+len(strs))*2) // include encoding byte and null separators
 		blob[0] = 0x01                                  // UTF-16 encoding
-		binary.LittleEndian.PutUint16(blob[1:], 0xFEFF) // 2-byte little-endian BOM
+		binary.LittleEndian.PutUint16(blob[1:], 0xfeff) // 2-byte little-endian BOM
 		_Util.SerializeUtf16StringsLE(blob[3:], strs)
 	}
 
