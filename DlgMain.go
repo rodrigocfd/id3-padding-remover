@@ -50,7 +50,7 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 
 	for _, mp3 := range mp3s {
 		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
-			tag := &id3.Tag{}
+			tag := id3.Tag{}
 
 			if err := tag.ReadFromFile(mp3); err != nil { // error when parsing the tag
 				ui.SysDlg.MsgBox(&me.wnd,
@@ -60,7 +60,7 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 				me.lstFiles.AddItemWithIcon(mp3, 0). // will fire LVN_INSERTITEM
 									SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize()))
 
-				me.cachedTags[mp3] = tag // cache the tag
+				me.cachedTags[mp3] = &tag // cache the tag
 			}
 		}
 	}

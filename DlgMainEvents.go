@@ -11,11 +11,16 @@ import (
 
 func (me *DlgMain) eventsMain() {
 	me.wnd.OnMsg().WmCreate(func(p *win.CREATESTRUCT) int {
-		// Dimensions of our two list views.
-		cxLstValues := uint(222)
-		cyLstValues := uint(p.Cy - 52)
+		// Dimensions of client area.
+		rcClient := me.wnd.Hwnd().GetClientRect()
+		cxClient := rcClient.Right - rcClient.Left
+		cyClient := rcClient.Bottom - rcClient.Top
 
-		cxLstFiles := uint(510)
+		// Dimensions of our two list views.
+		cxLstValues := uint(220)
+		cyLstValues := uint(cyClient - 110)
+
+		cxLstFiles := uint(cxClient - 432)
 		cyLstFiles := cyLstValues
 
 		// MP3 files list view creation.
@@ -45,7 +50,7 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.Column(1).FillRoom()
 	})
 
-	me.wnd.OnMsg().WmCommand(int(co.MBID_CANCEL), func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 

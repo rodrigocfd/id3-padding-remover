@@ -32,7 +32,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(_ ui.WmCommand) {
 		mp3s, ok := ui.SysDlg.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
 		if ok {
@@ -40,30 +40,30 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(_ ui.WmCommand) {
 		me.lstFiles.SetRedraw(false).
 			DeleteItems(me.lstFiles.SelectedItems()). // will fire LVM_DELETEITEM
 			SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 			tag.DeleteFrames([]string{"APIC"})
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(p ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(_ ui.WmCommand) {
 		ui.SysDlg.MsgBox(&me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+

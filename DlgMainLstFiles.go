@@ -5,17 +5,17 @@ import (
 )
 
 func (me *DlgMain) eventsLstFiles() {
-	me.wnd.OnMsg().LvnInsertItem(LST_FILES, func(p *win.NMLISTVIEW) {
+	me.wnd.OnMsg().LvnInsertItem(LST_FILES, func(_ *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.ItemCount())
 	})
 
-	me.wnd.OnMsg().LvnItemChanged(LST_FILES, func(p *win.NMLISTVIEW) {
+	me.wnd.OnMsg().LvnItemChanged(LST_FILES, func(_ *win.NMLISTVIEW) {
 		if !me.lstFilesSelLocked {
 			me.lstFilesSelLocked = true
 
-			me.wnd.Hwnd().SetTimer(123456, 500, // wait between LVM_ITEMCHANGED updates
-				func(hWnd win.HWND, nIDEvent uintptr, msElapsed uint32) {
-					hWnd.KillTimer(123456)
+			me.wnd.Hwnd().SetTimer(123456, 50, // wait between LVM_ITEMCHANGED updates
+				func(msElapsed uint32) {
+					me.wnd.Hwnd().KillTimer(123456)
 					me.updateTitlebarCount(me.lstFiles.ItemCount())
 					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
