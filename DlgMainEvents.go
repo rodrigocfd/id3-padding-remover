@@ -11,27 +11,17 @@ import (
 
 func (me *DlgMain) eventsMain() {
 	me.wnd.OnMsg().WmCreate(func(p *win.CREATESTRUCT) int {
-		// Dimensions of client area.
-		rcClient := me.wnd.Hwnd().GetClientRect()
-		cxClient := rcClient.Right - rcClient.Left
-		cyClient := rcClient.Bottom - rcClient.Top
-
-		// Dimensions of our two list views.
-		cxLstValues := uint(220)
-		cyLstValues := uint(cyClient - 110)
-
-		cxLstFiles := uint(cxClient - 432)
-		cyLstFiles := cyLstValues
-
 		// MP3 files list view creation.
-		me.lstFiles.CreateSortedReport(&me.wnd, LST_FILES, 6, 6, cxLstFiles, cyLstFiles).
+		me.lstFiles.
+			CreateSortedReport(&me.wnd, LST_FILES, ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 418, Cy: 328}).
 			SetContextMenu(&me.lstFilesMenu).
 			SetImageList(co.LVSIL_SMALL, me.iconImgList.Himagelist())
 		me.lstFiles.AddColumns([]string{"File", "Padding"}, []uint{1, 60}).
 			Column(0).FillRoom()
 
 		// Tag values list view creation.
-		me.lstValues.CreateReport(&me.wnd, LST_VALUES, int(cxLstFiles)+14, 6, cxLstValues, cyLstValues).
+		me.lstValues.
+			CreateReport(&me.wnd, LST_VALUES, ui.Pos{X: 430, Y: 6}, ui.Size{Cx: 242, Cy: 328}).
 			AddColumns([]string{"Field", "Value"}, []uint{50, 1}).
 			Column(1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)

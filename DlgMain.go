@@ -28,8 +28,7 @@ func (me *DlgMain) RunAsMain() int {
 	me.wnd.Setup().Title = "ID3 Fit"
 	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
-	me.wnd.Setup().Width = 770
-	me.wnd.Setup().Height = 384
+	me.wnd.Setup().ClientAreaSize = ui.Size{Cx: 680, Cy: 340}
 	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
 	me.iconImgList.Create(16, 1).
