@@ -36,32 +36,32 @@ func (_FrameParserT) ParseFrame(src []byte) (Frame, error) {
 			return nil, errors.New("Frame text contains no texts.")
 
 		} else if len(parsedTexts) == 1 { // simple text frame
-			frameText := &FrameText{}
+			frameText := FrameText{}
 			frameText.name4 = name4
 			frameText.totalFrameSize = uint(totalFrameSize)
 			frameText.text = parsedTexts[0]
-			return frameText, nil
+			return &frameText, nil
 
 		} else if len(parsedTexts) > 1 { // multi text frame
-			frameTexts := &FrameMultiText{}
+			frameTexts := FrameMultiText{}
 			frameTexts.name4 = name4
 			frameTexts.totalFrameSize = uint(totalFrameSize)
 			frameTexts.texts = parsedTexts
-			return frameTexts, nil
+			return &frameTexts, nil
 		}
 	}
 
 	// Anything else is treated as raw binary.
-	frameBin := &FrameBinary{}
+	frameBin := FrameBinary{}
 	frameBin.name4 = name4
 	frameBin.totalFrameSize = uint(totalFrameSize)
 	frameBin.binData = make([]byte, len(src))
 	copy(frameBin.binData, src) // simply store bytes
-	return frameBin, nil
+	return &frameBin, nil
 }
 
 func (_FrameParserT) parseCommentFrame(src []byte) (*FrameComment, error) {
-	frameComm := &FrameComment{}
+	frameComm := FrameComment{}
 
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
@@ -87,7 +87,7 @@ func (_FrameParserT) parseCommentFrame(src []byte) (*FrameComment, error) {
 	}
 
 	frameComm.text = texts[len(texts)-1] // if more than one, get the last one
-	return frameComm, nil
+	return &frameComm, nil
 }
 
 func (_FrameParserT) parseTextsOfFrame(src []byte) ([]string, error) {

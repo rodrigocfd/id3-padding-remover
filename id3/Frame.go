@@ -1,17 +1,21 @@
 package id3
 
+// Frame is polymorphic, the underlying type will expose the methods to access the contents.
+// Note that the methods don't allow the user to change name4/totalFrameSize.
 type Frame interface {
 	Name4() string
 	TotalFrameSize() uint
 }
 
-type _BaseFrame struct {
+type _BaseFrame struct { // implements Frame
 	name4          string
 	totalFrameSize uint
 }
 
 func (me *_BaseFrame) Name4() string        { return me.name4 }
 func (me *_BaseFrame) TotalFrameSize() uint { return me.totalFrameSize }
+
+//------------------------------------------------------------------------------
 
 type FrameBinary struct {
 	_BaseFrame
