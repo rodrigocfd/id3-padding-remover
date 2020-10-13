@@ -10,10 +10,10 @@ import (
 )
 
 func (me *DlgMain) eventsMain() {
-	me.wnd.OnMsg().WmCreate(func(p *win.CREATESTRUCT) int {
+	me.wnd.OnMsg().WmCreate(func(_ *win.CREATESTRUCT) int {
 		// MP3 files list view creation.
 		me.lstFiles.
-			CreateSortedReport(&me.wnd, LST_FILES, ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 418, Cy: 328}).
+			CreateSortedReport(&me.wnd, LST_FILES, ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 438, Cy: 348}).
 			SetContextMenu(&me.lstFilesMenu).
 			SetImageList(co.LVSIL_SMALL, me.iconImgList.Himagelist())
 		me.lstFiles.AddColumns([]string{"File", "Padding"}, []uint{1, 60}).
@@ -21,7 +21,7 @@ func (me *DlgMain) eventsMain() {
 
 		// Tag values list view creation.
 		me.lstValues.
-			CreateReport(&me.wnd, LST_VALUES, ui.Pos{X: 430, Y: 6}, ui.Size{Cx: 242, Cy: 328}).
+			CreateReport(&me.wnd, LST_VALUES, ui.Pos{X: 450, Y: 6}, ui.Size{Cx: 242, Cy: 348}).
 			AddColumns([]string{"Field", "Value"}, []uint{50, 1}).
 			Column(1).FillRoom()
 		me.lstValues.Hwnd().EnableWindow(false)

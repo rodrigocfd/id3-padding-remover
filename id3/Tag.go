@@ -191,7 +191,7 @@ func (me *Tag) parseAllFrames(src []byte) error {
 	return nil // all frames parsed successfully
 }
 
-func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
+func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 	fout := ui.FileMapped{}
 	if err := fout.OpenExistingForReadWrite(mp3Path); err != nil {
 		return err
@@ -202,7 +202,7 @@ func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
 	currentTag := Tag{}
 	currentTag.ReadFromBinary(fileMem)
 
-	diff := len(blob) - int(currentTag.TotalTagSize()) // size difference between new/old tags
+	diff := len(newTagBlob) - int(currentTag.TotalTagSize()) // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
 		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
@@ -214,7 +214,7 @@ func (me *Tag) writeTagToFile(mp3Path string, blob []byte) error {
 	copy(fileMem[int(currentTag.TotalTagSize())+diff:], fileMem[currentTag.TotalTagSize():])
 
 	// Copy the new tag into the file, no padding.
-	copy(fileMem, blob)
+	copy(fileMem, newTagBlob)
 
 	if diff < 0 { // new tag is shorter
 		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
