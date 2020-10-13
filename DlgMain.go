@@ -21,6 +21,7 @@ type DlgMain struct {
 	lstFilesSelLocked bool    // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         ui.ListView
 	resizer           ui.Resizer
+	resizingLocked    bool                // WM_SIZE is scheduled to fire
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 

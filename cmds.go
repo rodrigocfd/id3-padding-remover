@@ -13,3 +13,7 @@ const (
 	LST_FILES
 	LST_VALUES
 )
+
+const (
+	TIMER_LSTFILES uintptr = iota + 100
+)

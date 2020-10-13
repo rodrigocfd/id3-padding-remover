@@ -35,9 +35,15 @@ func (me *DlgMain) eventsMain() {
 	})
 
 	me.wnd.OnMsg().WmSize(func(p ui.WmSize) {
+		me.lstFiles.SetRedraw(false)
+		me.lstValues.SetRedraw(false)
+
 		me.resizer.Adjust(p)
 		me.lstFiles.Column(0).FillRoom()
 		me.lstValues.Column(1).FillRoom()
+
+		me.lstFiles.SetRedraw(true)
+		me.lstValues.SetRedraw(true)
 	})
 
 	me.wnd.OnMsg().WmCommand(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
