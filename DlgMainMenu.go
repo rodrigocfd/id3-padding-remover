@@ -11,9 +11,10 @@ func (me *DlgMain) buildMenuAndAccel() {
 		AppendItem(MNU_OPEN, "&Open files...\tCtrl+O").
 		AppendItem(MNU_DELETE, "&Delete from list\tDel").
 		AppendSeparator().
-		AppendItem(MNU_REMPAD, "Remove &padding").
-		AppendItem(MNU_REMRG, "Remove Replay&Gain").
-		AppendItem(MNU_REMRGPIC, "Remove ReplayGain and p&ic").
+		AppendItem(MNU_REM_PAD, "Remove &padding").
+		AppendItem(MNU_REM_RG, "Remove Replay&Gain").
+		AppendItem(MNU_REM_RG_PIC, "Remove ReplayGain and p&ic").
+		AppendItem(MNU_PREFIX_YEAR, "Prefix album with &year").
 		AppendSeparator().
 		AppendItem(MNU_ABOUT, "&About...\tF1")
 
@@ -28,7 +29,7 @@ func (me *DlgMain) eventsMenu() {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableItemsByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files currently selected
-				[]int{MNU_DELETE, MNU_REMPAD, MNU_REMRG, MNU_REMRGPIC})
+				[]int{MNU_DELETE, MNU_PREFIX_YEAR, MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC})
 		}
 	})
 
@@ -46,20 +47,26 @@ func (me *DlgMain) eventsMenu() {
 			SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMPAD, func(_ ui.WmCommand) {
-		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {})
+	me.wnd.OnMsg().WmCommand(MNU_REM_PAD, func(_ ui.WmCommand) {
+		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {}) // simply saving will remove the padding
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRG, func(_ ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REM_RG, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REMRGPIC, func(_ ui.WmCommand) {
+	me.wnd.OnMsg().WmCommand(MNU_REM_RG_PIC, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 			tag.DeleteFrames([]string{"APIC"})
+		})
+	})
+
+	me.wnd.OnMsg().WmCommand(MNU_PREFIX_YEAR, func(_ ui.WmCommand) {
+		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+			tag.PrefixAlbumNameWithYear()
 		})
 	})
 

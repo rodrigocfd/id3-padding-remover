@@ -123,6 +123,12 @@ func (me *Tag) DeleteReplayGainFrames() {
 	me.frames = newFramesSlice
 }
 
+func (me *Tag) PrefixAlbumNameWithYear() {
+	*me.Album().Text() = fmt.Sprintf(
+		"%s %s",
+		*me.Year().Text(), *me.Album().Text())
+}
+
 func (me *Tag) findByName4(name4 string) Frame {
 	for _, myFrame := range me.Frames() {
 		if myFrame.Name4() == name4 {

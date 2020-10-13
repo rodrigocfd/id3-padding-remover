@@ -21,7 +21,7 @@ func (_FrameSerializerT) SerializeFrame(frame Frame) []byte {
 	case *FrameComment:
 		data = _FrameSerializer.serializeCommentFrame(myFrame)
 	case *FrameText:
-		data = _FrameSerializer.serializeTextsOfFrame([]string{myFrame.Text()})
+		data = _FrameSerializer.serializeTextsOfFrame([]string{*myFrame.Text()})
 	case *FrameMultiText:
 		data = _FrameSerializer.serializeTextsOfFrame(myFrame.Texts())
 	case *FrameBinary:
@@ -34,26 +34,26 @@ func (_FrameSerializerT) SerializeFrame(frame Frame) []byte {
 }
 
 func (_FrameSerializerT) serializeCommentFrame(frame *FrameComment) []byte {
-	isAscii := _Util.IsStringAscii(frame.Text())
+	isAscii := _Util.IsStringAscii(*frame.Text())
 	var blob []byte
 
 	if isAscii {
-		blob = make([]byte, 1+3+1+len(frame.Text()))
+		blob = make([]byte, 1+3+1+len(*frame.Text()))
 		blob[0] = 0x00 // ASCII encoding
 	} else {
-		blob = make([]byte, 1+3+(2+len(frame.Text()))*2)
+		blob = make([]byte, 1+3+(2+len(*frame.Text()))*2)
 		blob[0] = 0x01 // UTF-16 encoding
 	}
 
-	copy(blob[1:4], []byte(frame.Lang())) // 3-char lang string, always ASCII
+	copy(blob[1:4], []byte(*frame.Lang())) // 3-char lang string, always ASCII
 
 	if isAscii {
 		blob[4] = 0x00 // zero char before text
-		_Util.SerializeAsciiStrings(blob[5:], []string{frame.Text()})
+		_Util.SerializeAsciiStrings(blob[5:], []string{*frame.Text()})
 	} else {
 		binary.LittleEndian.PutUint16(blob[4:], 0xfeff) // 2-byte little-endian BOM
 		binary.LittleEndian.PutUint16(blob[6:], 0x0000) // zero char before text
-		_Util.SerializeUtf16StringsLE(blob[8:], []string{frame.Text()})
+		_Util.SerializeUtf16StringsLE(blob[8:], []string{*frame.Text()})
 	}
 
 	return blob

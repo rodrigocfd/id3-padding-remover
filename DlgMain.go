@@ -87,11 +87,11 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			switch myFrame := frame.(type) {
 			case *id3.FrameComment:
 				valItem.SetSubItemText(1,
-					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()),
+					fmt.Sprintf("[%s] %s", *myFrame.Lang(), *myFrame.Text()),
 				)
 
 			case *id3.FrameText:
-				valItem.SetSubItemText(1, myFrame.Text())
+				valItem.SetSubItemText(1, *myFrame.Text())
 
 			case *id3.FrameMultiText:
 				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text

@@ -25,7 +25,7 @@ type FrameText struct {
 	text string
 }
 
-func (me *FrameText) Text() string { return me.text }
+func (me *FrameText) Text() *string { return &me.text }
 
 type FrameMultiText struct {
 	_BaseFrame
@@ -40,5 +40,5 @@ type FrameComment struct {
 	text string
 }
 
-func (me *FrameComment) Lang() string { return me.lang }
-func (me *FrameComment) Text() string { return me.text }
+func (me *FrameComment) Lang() *string { return &me.lang }
+func (me *FrameComment) Text() *string { return &me.text }
