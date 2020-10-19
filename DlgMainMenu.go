@@ -25,7 +25,7 @@ func (me *DlgMain) buildMenuAndAccel() {
 }
 
 func (me *DlgMain) eventsMenu() {
-	me.wnd.OnMsg().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
+	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		if p.Hmenu() == me.lstFilesMenu.Hmenu() {
 			me.lstFilesMenu.EnableItemsByCmdId(
 				me.lstFiles.SelectedItemCount() > 0, // 1 or more files currently selected
@@ -33,7 +33,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_OPEN, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_OPEN, func(_ ui.WmCommand) {
 		mp3s, ok := ui.SysDlg.FileOpenMany(&me.wnd,
 			[]string{"MP3 audio files (*.mp3)|*.mp3"})
 		if ok {
@@ -41,36 +41,36 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_DELETE, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_DELETE, func(_ ui.WmCommand) {
 		me.lstFiles.SetRedraw(false).
 			DeleteItems(me.lstFiles.SelectedItems()). // will fire LVM_DELETEITEM
 			SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REM_PAD, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_REM_PAD, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {}) // simply saving will remove the padding
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REM_RG, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_REM_RG, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_REM_RG_PIC, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_REM_RG_PIC, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.DeleteReplayGainFrames()
 			tag.DeleteFrames([]string{"APIC"})
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_PREFIX_YEAR, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_PREFIX_YEAR, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
 			tag.PrefixAlbumNameWithYear()
 		})
 	})
 
-	me.wnd.OnMsg().WmCommand(MNU_ABOUT, func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(MNU_ABOUT, func(_ ui.WmCommand) {
 		ui.SysDlg.MsgBox(&me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+

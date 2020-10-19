@@ -10,7 +10,7 @@ import (
 )
 
 func (me *DlgMain) eventsMain() {
-	me.wnd.OnMsg().WmCreate(func(_ *win.CREATESTRUCT) int {
+	me.wnd.On().WmCreate(func(_ *win.CREATESTRUCT) int {
 		// MP3 files list view creation.
 		me.lstFiles.
 			CreateSortedReport(&me.wnd, LST_FILES, ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 438, Cy: 348}).
@@ -34,7 +34,7 @@ func (me *DlgMain) eventsMain() {
 		return 0
 	})
 
-	me.wnd.OnMsg().WmSize(func(p ui.WmSize) {
+	me.wnd.On().WmSize(func(p ui.WmSize) {
 		me.lstFiles.SetRedraw(false)
 		me.lstValues.SetRedraw(false)
 
@@ -46,11 +46,11 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.SetRedraw(true)
 	})
 
-	me.wnd.OnMsg().WmCommand(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
+	me.wnd.On().WmCommand(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 
-	me.wnd.OnMsg().WmDropFiles(func(p ui.WmDropFiles) {
+	me.wnd.On().WmDropFiles(func(p ui.WmDropFiles) {
 		paths := p.RetrieveAll()
 		mp3s := make([]string, 0, len(paths))
 
