@@ -15,7 +15,7 @@ func (_FrameParserT) ParseFrame(src []byte) (Frame, error) {
 	name4 := string(src[0:4])
 	totalFrameSize := binary.BigEndian.Uint32(src[4:8]) + 10 // also count 10-byte tag header
 
-	src = src[10:totalFrameSize] // skip frame header, limit to frame size
+	src = src[10:totalFrameSize] // skip frame header, truncate to frame size
 
 	if name4 == "COMM" { // comment frame
 		frameComm, err := _FrameParser.parseCommentFrame(src)

@@ -19,18 +19,20 @@ func (me *Tag) TotalTagSize() uint { return me.totalTagSize }
 func (me *Tag) PaddingSize() uint  { return me.paddingSize }
 func (me *Tag) Frames() []Frame    { return me.frames }
 
-func (me *Tag) Album() *FrameText     { return me.findByName4("TALB").(*FrameText) }
-func (me *Tag) Artist() *FrameText    { return me.findByName4("TPE1").(*FrameText) }
-func (me *Tag) Composer() *FrameText  { return me.findByName4("TCOM").(*FrameText) }
-func (me *Tag) Genre() *FrameText     { return me.findByName4("TCON").(*FrameText) }
-func (me *Tag) Picture() *FrameBinary { return me.findByName4("APIC").(*FrameBinary) }
-func (me *Tag) Title() *FrameText     { return me.findByName4("TIT2").(*FrameText) }
-func (me *Tag) Track() *FrameText     { return me.findByName4("TRCK").(*FrameText) }
-func (me *Tag) Year() *FrameText      { return me.findByName4("TYER").(*FrameText) }
+func (me *Tag) Album() *FrameText     { return me.frameByName4("TALB").(*FrameText) }
+func (me *Tag) Artist() *FrameText    { return me.frameByName4("TPE1").(*FrameText) }
+func (me *Tag) Composer() *FrameText  { return me.frameByName4("TCOM").(*FrameText) }
+func (me *Tag) Genre() *FrameText     { return me.frameByName4("TCON").(*FrameText) }
+func (me *Tag) Picture() *FrameBinary { return me.frameByName4("APIC").(*FrameBinary) }
+func (me *Tag) Title() *FrameText     { return me.frameByName4("TIT2").(*FrameText) }
+func (me *Tag) Track() *FrameText     { return me.frameByName4("TRCK").(*FrameText) }
+func (me *Tag) Year() *FrameText      { return me.frameByName4("TYER").(*FrameText) }
 
 func (me *Tag) ReadFromFile(mp3Path string) error {
-	fMap := ui.FileMapped{}
-	fMap.OpenExistingForRead(mp3Path)
+	fMap, err := ui.NewFileMappedOpen(mp3Path, ui.FILEMAPO_READ)
+	if err != nil {
+		return err
+	}
 	defer fMap.Close() // HotSlice() needs the file to remain open
 
 	return me.ReadFromBinary(fMap.HotSlice())
@@ -129,7 +131,7 @@ func (me *Tag) PrefixAlbumNameWithYear() {
 		*me.Year().Text(), *me.Album().Text())
 }
 
-func (me *Tag) findByName4(name4 string) Frame {
+func (me *Tag) frameByName4(name4 string) Frame {
 	for _, myFrame := range me.Frames() {
 		if myFrame.Name4() == name4 {
 			return myFrame
@@ -192,8 +194,8 @@ func (me *Tag) parseAllFrames(src []byte) error {
 }
 
 func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
-	fout := ui.FileMapped{}
-	if err := fout.OpenExistingForReadWrite(mp3Path); err != nil {
+	fout, err := ui.NewFileMappedOpen(mp3Path, ui.FILEMAPO_READ_WRITE)
+	if err != nil {
 		return err
 	}
 	defer fout.Close()

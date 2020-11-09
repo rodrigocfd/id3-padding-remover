@@ -10,9 +10,6 @@ const (
 	MNU_REM_RG_PIC
 	MNU_PREFIX_YEAR
 	MNU_ABOUT
-
-	LST_FILES
-	LST_VALUES
 )
 
 const (

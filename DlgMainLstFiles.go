@@ -5,28 +5,28 @@ import (
 )
 
 func (me *DlgMain) eventsLstFiles() {
-	me.wnd.On().LvnInsertItem(LST_FILES, func(_ *win.NMLISTVIEW) {
-		me.updateTitlebarCount(me.lstFiles.ItemCount())
+	me.lstFiles.On().LvnInsertItem(func(_ *win.NMLISTVIEW) {
+		me.updateTitlebarCount(me.lstFiles.Items().Count())
 	})
 
-	me.wnd.On().LvnItemChanged(LST_FILES, func(_ *win.NMLISTVIEW) {
+	me.lstFiles.On().LvnItemChanged(func(_ *win.NMLISTVIEW) {
 		if !me.lstFilesSelLocked {
 			me.lstFilesSelLocked = true
 
 			me.wnd.Hwnd().SetTimer(TIMER_LSTFILES, 50, // wait between LVM_ITEMCHANGED updates
 				func(msElapsed uint32) {
 					me.wnd.Hwnd().KillTimer(TIMER_LSTFILES)
-					me.updateTitlebarCount(me.lstFiles.ItemCount())
+					me.updateTitlebarCount(me.lstFiles.Items().Count())
 					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
 				})
 		}
 	})
 
-	me.wnd.On().LvnDeleteItem(LST_FILES, func(p *win.NMLISTVIEW) {
-		me.updateTitlebarCount(me.lstFiles.ItemCount() - 1) // notification is sent before deletion
+	me.lstFiles.On().LvnDeleteItem(func(p *win.NMLISTVIEW) {
+		me.updateTitlebarCount(me.lstFiles.Items().Count() - 1) // notification is sent before deletion
 
-		delItem := me.lstFiles.Item(uint(p.IItem))
+		delItem := me.lstFiles.Items().Get(int(p.IItem))
 		delete(me.cachedTags, delItem.Text()) // remove tag from cache
 	})
 }

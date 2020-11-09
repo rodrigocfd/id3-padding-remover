@@ -9,39 +9,53 @@ import (
 )
 
 func main() {
-	dlgMain := DlgMain{}
-	dlgMain.RunAsMain()
+	NewDlgMain().Run()
 }
 
 type DlgMain struct {
-	wnd               ui.WindowMain
-	iconImgList       ui.ImageList // for system MP3 icon
-	lstFiles          ui.ListView
-	lstFilesMenu      ui.Menu // files list view right-click menu
-	lstFilesSelLocked bool    // LVN_ITEMCHANGED is scheduled to fire
-	lstValues         ui.ListView
-	resizer           ui.Resizer
+	wnd               *ui.WindowMain
+	iconImgList       *ui.ImageList // for system MP3 icon
+	lstFiles          *ui.ListView
+	lstFilesMenu      *ui.Menu // files list view right-click menu
+	lstFilesSelLocked bool     // LVN_ITEMCHANGED is scheduled to fire
+	lstValues         *ui.ListView
+	resizer           *ui.Resizer
 	resizingLocked    bool                // WM_SIZE is scheduled to fire
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
-func (me *DlgMain) RunAsMain() int {
-	me.wnd.Setup().Title = "ID3 Fit"
-	me.wnd.Setup().Style |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
-	me.wnd.Setup().ExStyle |= co.WS_EX_ACCEPTFILES
-	me.wnd.Setup().ClientAreaSize = ui.Size{Cx: 700, Cy: 360}
-	me.wnd.Setup().HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
+func NewDlgMain() *DlgMain {
+	opts := ui.NewOptsWindowMain()
+	opts.Title = "ID3 Fit"
+	opts.Styles |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
+	opts.ExStyles |= co.WS_EX_ACCEPTFILES
+	opts.ClientAreaSize = ui.Size{Cx: 700, Cy: 360}
+	opts.HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
 
-	me.iconImgList.Create(16, 1).
-		AddShellIcon("*.mp3")
-	defer me.iconImgList.Destroy()
+	wnd := ui.NewWindowMain(opts)
 
-	me.buildMenuAndAccel()
-	defer me.lstFilesMenu.Destroy()
+	return &DlgMain{
+		wnd:          wnd,
+		iconImgList:  ui.NewImageList(16, 16),
+		lstFiles:     ui.NewListView(wnd),
+		lstFilesMenu: ui.NewMenu(),
+		lstValues:    ui.NewListView(wnd),
+		resizer:      ui.NewResizer(wnd),
+		cachedTags:   make(map[string]*id3.Tag),
+	}
+}
 
+func (me *DlgMain) Run() int {
 	me.eventsMain()
 	me.eventsLstFiles()
-	me.eventsMenu()
+	me.eventsLstFilesMenu()
+
+	me.iconImgList.AddShellIcon("mp3")
+	defer me.iconImgList.Destroy()
+
+	me.buildLstFilesMenuAndAccel()
+	defer me.lstFilesMenu.Destroy()
+
 	return me.wnd.RunAsMain()
 }
 
@@ -49,40 +63,40 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 
 	for _, mp3 := range mp3s {
-		if me.lstFiles.FindItem(mp3) == nil { // not yet in the list
+		if me.lstFiles.Items().Find(mp3) == nil { // not yet in the list
 			tag := id3.Tag{}
 
 			if err := tag.ReadFromFile(mp3); err != nil { // error when parsing the tag
-				ui.SysDlg.MsgBox(&me.wnd,
+				ui.SysDlg.MsgBox(me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
-				me.lstFiles.AddItemWithIcon(mp3, 0). // will fire LVN_INSERTITEM
-									SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize()))
-
+				me.lstFiles.Items().
+					AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
 				me.cachedTags[mp3] = &tag // cache the tag
 			}
 		}
 	}
 	me.lstFiles.SetRedraw(true).
-		Column(0).FillRoom()
+		Columns().Get(0).SetWidthToFill()
 }
 
 func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(false).
-		DeleteAllItems() // clear all tag displays
+		Items().DeleteAll() // clear all tag displays
 
-	selFiles := me.lstFiles.SelectedItemTexts(0)
+	selFiles := me.lstFiles.Columns().Get(0).SelectedItemsTexts()
 
 	if len(selFiles) > 1 { // multiple files selected, no tags are shown
-		me.lstValues.AddItem("").
-			SetSubItemText(1, fmt.Sprintf("%d selected...", len(selFiles)))
+		me.lstValues.Items().
+			Add("", fmt.Sprintf("%d selected...", len(selFiles)))
 
 	} else if len(selFiles) == 1 { // only 1 file selected, we display its tag
 		tag := me.cachedTags[selFiles[0]]
 
 		for _, frame := range tag.Frames() { // read each frame of the tag
-			valItem := me.lstValues.AddItem(frame.Name4()) // first column displays frame name
+			valItem := me.lstValues.Items().
+				Add(frame.Name4()) // first column displays frame name
 
 			switch myFrame := frame.(type) {
 			case *id3.FrameComment:
@@ -96,7 +110,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			case *id3.FrameMultiText:
 				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
 				for i := 1; i < len(myFrame.Texts()); i++ {
-					me.lstValues.AddItemWithColumns([]string{"", myFrame.Texts()[i]})
+					me.lstValues.Items().Add("", myFrame.Texts()[i]) // subsequent
 				}
 
 			case *id3.FrameBinary:
@@ -112,19 +126,19 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	}
 
 	me.lstValues.SetRedraw(true).
-		Column(1).FillRoom()
+		Columns().Get(1).SetWidthToFill()
 	me.lstValues.Hwnd().EnableWindow(len(selFiles) > 0) // if no files selected, disable lstValues
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
-	for _, selItem := range me.lstFiles.SelectedItems() {
+	for _, selItem := range me.lstFiles.Items().Selected() {
 		selFilePath := selItem.Text()
 		tag := me.cachedTags[selFilePath]
 
 		tagProcess(tag) // tag frames can be modified before saving
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			ui.SysDlg.MsgBox(&me.wnd,
+			ui.SysDlg.MsgBox(me.wnd,
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
 					selFilePath, err.Error()),
 				"Writing error", co.MB_ICONERROR)
@@ -140,13 +154,13 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 	me.displayTagsOfSelectedFiles() // refresh the frames display
 }
 
-func (me *DlgMain) updateTitlebarCount(total uint) {
+func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
 		me.wnd.Hwnd().SetWindowText("ID3 Fit")
 	} else {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)",
-			me.lstFiles.SelectedItemCount(), total))
+			me.lstFiles.Items().SelectedCount(), total))
 	}
 }
