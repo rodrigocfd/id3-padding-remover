@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"id3-fit/id3"
 	"windigo/co"
 	"windigo/ui"
@@ -54,26 +55,54 @@ func (me *DlgMain) eventsLstFilesMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
-			tag.DeleteReplayGainFrames()
+			tag.DeleteFrames(func(fr id3.Frame) bool {
+				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
+					return frMulti.IsReplayGain()
+				}
+				return false
+			})
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
-			tag.DeleteReplayGainFrames()
-			tag.DeleteFrames([]string{"APIC"})
+			tag.DeleteFrames(func(frDyn id3.Frame) bool {
+				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
+					if frMulti.IsReplayGain() {
+						return true
+					}
+				} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
+					if frBin.Name4() == "APIC" {
+						return true
+					}
+				}
+				return false
+			})
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ ui.WmCommand) {
 		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
-			tag.PrefixAlbumNameWithYear()
+			frAlbDyn := tag.FrameByName("TALB")
+			frYerDyn := tag.FrameByName("TYER")
+
+			if frAlbDyn == nil {
+				ui.SysDlg.MsgBox(me.wnd, "Album frame not found.", "Missing frame", co.MB_ICONERROR)
+			} else if frYerDyn == nil {
+				ui.SysDlg.MsgBox(me.wnd, "Year frame not found.", "Missing frame", co.MB_ICONERROR)
+			}
+
+			if frAlb, ok := frAlbDyn.(*id3.FrameText); ok {
+				if frYer, ok := frYerDyn.(*id3.FrameText); ok {
+					frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
+				}
+			}
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ ui.WmCommand) {
 		ui.SysDlg.MsgBox(me.wnd,
-			"ID3 Fit 2.0.0\n"+
+			"aa Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.",

@@ -25,7 +25,7 @@ type DlgMain struct {
 }
 
 func NewDlgMain() *DlgMain {
-	opts := ui.NewOptsWindowMain()
+	opts := ui.DefOptsWindowMain()
 	opts.Title = "ID3 Fit"
 	opts.Styles |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
 	opts.ExStyles |= co.WS_EX_ACCEPTFILES
@@ -64,16 +64,14 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 
 	for _, mp3 := range mp3s {
 		if me.lstFiles.Items().Find(mp3) == nil { // not yet in the list
-			tag := id3.Tag{}
-
-			if err := tag.ReadFromFile(mp3); err != nil { // error when parsing the tag
+			if tag, err := id3.ParseTagFromFile(mp3); err != nil {
 				ui.SysDlg.MsgBox(me.wnd,
 					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 					"Error", co.MB_ICONERROR)
 			} else {
 				me.lstFiles.Items().
 					AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
-				me.cachedTags[mp3] = &tag // cache the tag
+				me.cachedTags[mp3] = tag // cache the tag
 			}
 		}
 	}
@@ -101,11 +99,11 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			switch myFrame := frame.(type) {
 			case *id3.FrameComment:
 				valItem.SetSubItemText(1,
-					fmt.Sprintf("[%s] %s", *myFrame.Lang(), *myFrame.Text()),
+					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()),
 				)
 
 			case *id3.FrameText:
-				valItem.SetSubItemText(1, *myFrame.Text())
+				valItem.SetSubItemText(1, myFrame.Text())
 
 			case *id3.FrameMultiText:
 				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
@@ -130,12 +128,14 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.Hwnd().EnableWindow(len(selFiles) > 0) // if no files selected, disable lstValues
 }
 
-func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
+func (me *DlgMain) reSaveTagsOfSelectedFiles(
+	tagProcessBeforeSave func(tag *id3.Tag)) {
+
 	for _, selItem := range me.lstFiles.Items().Selected() {
 		selFilePath := selItem.Text()
 		tag := me.cachedTags[selFilePath]
 
-		tagProcess(tag) // tag frames can be modified before saving
+		tagProcessBeforeSave(tag) // tag frames can be modified before saving
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
 			ui.SysDlg.MsgBox(me.wnd,
@@ -145,9 +145,15 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(tagProcess func(tag *id3.Tag)) {
 			break
 		}
 
-		tag.ReadFromFile(selFilePath)
-		me.cachedTags[selFilePath] = tag // re-cache modified tag
+		reTag, err := id3.ParseTagFromFile(selFilePath) // parse newly saved tag
+		if err != nil {
+			ui.SysDlg.MsgBox(me.wnd,
+				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()),
+				"Error", co.MB_ICONERROR)
+			break
+		}
 
+		me.cachedTags[selFilePath] = reTag                              // re-cache modified tag
 		selItem.SetSubItemText(1, fmt.Sprintf("%d", tag.PaddingSize())) // refresh padding size
 	}
 
@@ -158,9 +164,9 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
-		me.wnd.Hwnd().SetWindowText("ID3 Fit")
+		me.wnd.Hwnd().SetWindowText("aa Fit")
 	} else {
-		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)",
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("aa Fit (%d/%d)",
 			me.lstFiles.Items().SelectedCount(), total))
 	}
 }

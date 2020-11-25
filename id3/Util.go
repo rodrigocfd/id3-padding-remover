@@ -2,6 +2,8 @@ package id3
 
 import (
 	"encoding/binary"
+	"errors"
+	"fmt"
 )
 
 type _UtilT struct{}
@@ -40,8 +42,24 @@ func (_UtilT) SynchSafeDecode(n uint32) uint32 {
 	return out
 }
 
+// Parses null-separated strings, ANSI or UTF-16.
+func (_UtilT) ParseAnyStrings(src []byte) ([]string, error) {
+	switch src[0] {
+	case 0x00:
+		// Encoding is ISO-8859-1.
+		return _Util.ParseAnsiStrings(src[1:]), nil // skip 0x00 encoding byte
+	case 0x01:
+		// Encoding is Unicode UTF-16, may have 2-byte BOM.
+		return _Util.ParseUtf16Strings(src[1:]), nil // skip 0x01 encoding byte
+	default:
+		return nil, errors.New(
+			fmt.Sprintf("Text frame with unknown text encoding (%d).", src[0]),
+		)
+	}
+}
+
 // Parses null-separated ASCII strings.
-func (_UtilT) ParseAsciiStrings(src []byte) []string {
+func (_UtilT) ParseAnsiStrings(src []byte) []string {
 	texts := make([]string, 0) // strings to be returned
 
 	if len(src) == 0 { // no data to be parsed
@@ -143,6 +161,32 @@ func (_UtilT) IsStringAscii(s string) bool {
 		}
 	}
 	return true
+}
+
+// Serializes null-separated strings, ASCII or UTF-16.
+func (_UtilT) SerializeAnyStrings(strs []string) []byte {
+	isAscii := false
+	totalChars := 0
+	for _, str := range strs {
+		if _Util.IsStringAscii(str) {
+			isAscii = true
+			totalChars += len(str)
+		}
+	}
+
+	var blob []byte
+	if isAscii {
+		blob = make([]byte, totalChars+len(strs)) // include encoding byte and null separators
+		blob[0] = 0x00                            // ASCII encoding
+		_Util.SerializeAsciiStrings(blob[1:], strs)
+	} else {
+		blob = make([]byte, 1+(totalChars+len(strs))*2) // include encoding byte and null separators
+		blob[0] = 0x01                                  // UTF-16 encoding
+		binary.LittleEndian.PutUint16(blob[1:], 0xfeff) // 2-byte little-endian BOM
+		_Util.SerializeUtf16StringsLE(blob[3:], strs)
+	}
+
+	return blob
 }
 
 // Serializes null-separated ASCII strings.
