@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3-fit/id3"
 	"windigo/co"
+	"windigo/com/shell"
 	"windigo/ui"
 )
 
@@ -36,8 +37,12 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ ui.WmCommand) {
-		mp3s, ok := ui.SysDlg.FileOpenMany(me.wnd,
-			[]string{"MP3 audio files (*.mp3)|*.mp3"})
+		mp3s, ok := ui.SysDlg.OpenMultipleFiles(me.wnd,
+			[]shell.FilterSpec{
+				{Name: "MP3 audio files", Spec: "*.mp3"},
+				{Name: "All files", Spec: "*.*"},
+			})
+
 		if ok {
 			me.addFilesToListIfNotYet(mp3s)
 		}
@@ -102,7 +107,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ ui.WmCommand) {
 		ui.SysDlg.MsgBox(me.wnd,
-			"aa Fit 2.0.0\n"+
+			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.",

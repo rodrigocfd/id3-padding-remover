@@ -5,7 +5,6 @@ import (
 	"id3-fit/id3"
 	"windigo/co"
 	"windigo/ui"
-	"windigo/win"
 )
 
 func main() {
@@ -25,14 +24,15 @@ type DlgMain struct {
 }
 
 func NewDlgMain() *DlgMain {
-	opts := ui.DefOptsWindowMain()
-	opts.Title = "ID3 Fit"
-	opts.Styles |= co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX
-	opts.ExStyles |= co.WS_EX_ACCEPTFILES
-	opts.ClientAreaSize = ui.Size{Cx: 700, Cy: 360}
-	opts.HIcon = win.GetModuleHandle("").LoadIcon(co.IDI(101))
-
-	wnd := ui.NewWindowMain(opts)
+	wnd := ui.NewWindowMain(
+		&ui.WindowMainOpts{
+			Title:          "ID3 Fit",
+			StylesAdd:      co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
+			ExStylesAdd:    co.WS_EX_ACCEPTFILES,
+			ClientAreaSize: ui.Size{Cx: 700, Cy: 360},
+			IconId:         101,
+		},
+	)
 
 	return &DlgMain{
 		wnd:          wnd,
@@ -92,27 +92,27 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	} else if len(selFiles) == 1 { // only 1 file selected, we display its tag
 		tag := me.cachedTags[selFiles[0]]
 
-		for _, frame := range tag.Frames() { // read each frame of the tag
-			valItem := me.lstValues.Items().
-				Add(frame.Name4()) // first column displays frame name
+		for _, frameDyn := range tag.Frames() { // read each frame of the tag
+			newValItem := me.lstValues.Items().
+				Add(frameDyn.Name4()) // first column displays frame name
 
-			switch myFrame := frame.(type) {
+			switch myFrame := frameDyn.(type) {
 			case *id3.FrameComment:
-				valItem.SetSubItemText(1,
+				newValItem.SetSubItemText(1,
 					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()),
 				)
 
 			case *id3.FrameText:
-				valItem.SetSubItemText(1, myFrame.Text())
+				newValItem.SetSubItemText(1, myFrame.Text())
 
 			case *id3.FrameMultiText:
-				valItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
+				newValItem.SetSubItemText(1, myFrame.Texts()[0]) // 1st text
 				for i := 1; i < len(myFrame.Texts()); i++ {
 					me.lstValues.Items().Add("", myFrame.Texts()[i]) // subsequent
 				}
 
 			case *id3.FrameBinary:
-				valItem.SetSubItemText(1,
+				newValItem.SetSubItemText(1,
 					fmt.Sprintf("%.2f KB (%.2f%%)",
 						float64(len(myFrame.BinData()))/1024, // frame size in KB
 						float64(len(myFrame.BinData()))*100/ // percent of whole tag size
@@ -164,9 +164,9 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
-		me.wnd.Hwnd().SetWindowText("aa Fit")
+		me.wnd.Hwnd().SetWindowText("ID3 Fit")
 	} else {
-		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("aa Fit (%d/%d)",
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)",
 			me.lstFiles.Items().SelectedCount(), total))
 	}
 }

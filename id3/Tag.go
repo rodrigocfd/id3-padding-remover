@@ -16,7 +16,7 @@ type Tag struct {
 
 // Constructor.
 func ParseTagFromFile(mp3Path string) (*Tag, error) {
-	fMap, err := ui.NewFileMappedOpen(mp3Path, ui.FILEMAPO_READ)
+	fMap, err := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_R)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 }
 
 func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
-	fout, wErr := ui.NewFileMappedOpen(mp3Path, ui.FILEMAPO_READ_WRITE)
+	fout, wErr := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_RW)
 	if wErr != nil {
 		return wErr
 	}
@@ -144,10 +144,10 @@ func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 		return err
 	}
 
-	diff := len(newTagBlob) - int(currentTag.TotalTagSize()) // size difference between new/old tags
+	diff := len(newTagBlob) - currentTag.TotalTagSize() // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
-		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
+		if err := fout.SetSize(fout.Size() + diff); err != nil {
 			return err
 		}
 	}
@@ -159,7 +159,7 @@ func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 	copy(fileMem, newTagBlob)
 
 	if diff < 0 { // new tag is shorter
-		if err := fout.SetSize(fout.Size() + uint(diff)); err != nil {
+		if err := fout.SetSize(fout.Size() + diff); err != nil {
 			return err
 		}
 	}
