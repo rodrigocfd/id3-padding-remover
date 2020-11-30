@@ -33,7 +33,7 @@ func NewDlgMain() *DlgMain {
 		},
 	)
 
-	return &DlgMain{
+	me := DlgMain{
 		wnd:          wnd,
 		iconImgList:  ui.NewImageList(16, 16),
 		lstFiles:     ui.NewListView(wnd),
@@ -42,13 +42,14 @@ func NewDlgMain() *DlgMain {
 		resizer:      ui.NewResizer(wnd),
 		cachedTags:   make(map[string]*id3.Tag),
 	}
-}
 
-func (me *DlgMain) Run() int {
 	me.eventsMain()
 	me.eventsLstFiles()
 	me.eventsLstFilesMenu()
+	return &me
+}
 
+func (me *DlgMain) Run() int {
 	me.iconImgList.AddShellIcon("mp3")
 	defer me.iconImgList.Destroy()
 
