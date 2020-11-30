@@ -53,27 +53,27 @@ func (me *DlgMain) eventsMain() {
 	})
 
 	me.wnd.On().WmDropFiles(func(p ui.WmDropFiles) {
-		paths := p.RetrieveAll()
-		mp3s := make([]string, 0, len(paths))
+		droppedFiles := p.RetrieveAll()
+		droppedMp3s := make([]string, 0, len(droppedFiles))
 
-		for _, path := range paths {
+		for _, path := range droppedFiles {
 			if ui.Path.IsFolder(path) { // if a folder, add all MP3 directly within
 				if subFiles, err := ui.Path.ListFilesInFolder(path + "\\*.mp3"); err != nil {
 					panic(err.Error())
 				} else {
-					mp3s = append(mp3s, subFiles...)
+					droppedMp3s = append(droppedMp3s, subFiles...)
 				}
 			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
-				mp3s = append(mp3s, path)
+				droppedMp3s = append(droppedMp3s, path)
 			}
 		}
 
-		if len(mp3s) == 0 { // no MP3 files have been drag n' dropped
+		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
 			ui.SysDlg.MsgBox(me.wnd,
-				fmt.Sprintf("%d items dropped, no MP3 found.", len(paths)),
+				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {
-			me.addFilesToListIfNotYet(mp3s)
+			me.addFilesToListIfNotYet(droppedMp3s)
 		}
 	})
 }

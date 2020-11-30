@@ -19,7 +19,6 @@ type DlgMain struct {
 	lstFilesSelLocked bool     // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         *ui.ListView
 	resizer           *ui.Resizer
-	resizingLocked    bool                // WM_SIZE is scheduled to fire
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
@@ -63,16 +62,18 @@ func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 
 	for _, mp3 := range mp3s {
-		if me.lstFiles.Items().Find(mp3) == nil { // not yet in the list
-			if tag, err := id3.ParseTagFromFile(mp3); err != nil {
-				ui.SysDlg.MsgBox(me.wnd,
-					fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
-					"Error", co.MB_ICONERROR)
-			} else {
-				me.lstFiles.Items().
-					AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
-				me.cachedTags[mp3] = tag // cache the tag
-			}
+		if me.lstFiles.Items().Find(mp3) != nil {
+			continue // already in the list
+		}
+
+		if tag, err := id3.ParseTagFromFile(mp3); err != nil {
+			ui.SysDlg.MsgBox(me.wnd,
+				fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
+				"Error", co.MB_ICONERROR)
+		} else {
+			me.lstFiles.Items().
+				AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
+			me.cachedTags[mp3] = tag // cache the tag
 		}
 	}
 	me.lstFiles.SetRedraw(true).
@@ -83,18 +84,18 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(false).
 		Items().DeleteAll() // clear all tag displays
 
-	selFiles := me.lstFiles.Columns().Get(0).SelectedItemsTexts()
+	selPaths := me.lstFiles.Columns().Get(0).SelectedItemsTexts()
 
-	if len(selFiles) > 1 { // multiple files selected, no tags are shown
+	if len(selPaths) > 1 { // multiple files selected, no tags are shown
 		me.lstValues.Items().
-			Add("", fmt.Sprintf("%d selected...", len(selFiles)))
+			Add("", fmt.Sprintf("%d selected...", len(selPaths)))
 
-	} else if len(selFiles) == 1 { // only 1 file selected, we display its tag
-		tag := me.cachedTags[selFiles[0]]
+	} else if len(selPaths) == 1 { // only 1 file selected, we display its tag
+		cachedTag := me.cachedTags[selPaths[0]]
 
-		for _, frameDyn := range tag.Frames() { // read each frame of the tag
+		for _, frameDyn := range cachedTag.Frames() { // read each frame of the tag
 			newValItem := me.lstValues.Items().
-				Add(frameDyn.Name4()) // first column displays frame name
+				Add(frameDyn.Name4()) // add new item, first column displays frame name
 
 			switch myFrame := frameDyn.(type) {
 			case *id3.FrameComment:
@@ -116,7 +117,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 					fmt.Sprintf("%.2f KB (%.2f%%)",
 						float64(len(myFrame.BinData()))/1024, // frame size in KB
 						float64(len(myFrame.BinData()))*100/ // percent of whole tag size
-							float64(tag.TotalTagSize())),
+							float64(cachedTag.TotalTagSize())),
 				)
 			}
 		}
@@ -125,7 +126,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 
 	me.lstValues.SetRedraw(true).
 		Columns().Get(1).SetWidthToFill()
-	me.lstValues.Hwnd().EnableWindow(len(selFiles) > 0) // if no files selected, disable lstValues
+	me.lstValues.Hwnd().EnableWindow(len(selPaths) > 0) // if no files selected, disable lstValues
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(

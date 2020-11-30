@@ -66,9 +66,9 @@ func parseAllFrames(src []byte) ([]Frame, int, error) {
 }
 
 func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
-	fout, wErr := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_RW)
-	if wErr != nil {
-		return wErr
+	fout, err := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_RW)
+	if err != nil {
+		return err
 	}
 	defer fout.Close()
 	fileMem := fout.HotSlice()
@@ -92,7 +92,7 @@ func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 	// Copy the new tag into the file, no padding.
 	copy(fileMem, newTagBlob)
 
-	if diff < 0 { // new tag is shorter
+	if diff < 0 { // new tag is shorter, shrink
 		if err := fout.SetSize(fout.Size() + diff); err != nil {
 			return err
 		}
