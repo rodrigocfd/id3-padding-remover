@@ -73,7 +73,7 @@ func (me *DlgMain) eventsMain() {
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {
-			me.addFilesToListIfNotYet(droppedMp3s)
+			me.addFilesToList(droppedMp3s)
 		}
 	})
 }

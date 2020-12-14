@@ -44,7 +44,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			})
 
 		if ok {
-			me.addFilesToListIfNotYet(mp3s)
+			me.addFilesToList(mp3s)
 		}
 	})
 

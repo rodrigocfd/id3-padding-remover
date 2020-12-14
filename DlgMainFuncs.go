@@ -7,26 +7,29 @@ import (
 	"windigo/ui"
 )
 
-func (me *DlgMain) addFilesToListIfNotYet(mp3s []string) {
+func (me *DlgMain) addFilesToList(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 
 	for _, mp3 := range mp3s {
-		if me.lstFiles.Items().Find(mp3) != nil {
-			continue // already in the list
-		}
-
-		if tag, err := id3.ParseTagFromFile(mp3); err != nil {
+		tag, err := id3.ParseTagFromFile(mp3)
+		if err != nil {
 			ui.SysDlg.MsgBox(me.wnd,
 				fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
 				"Error", co.MB_ICONERROR)
-		} else {
+			continue // then just proceed to next file
+		}
+
+		if me.lstFiles.Items().Find(mp3) == nil { // file not yet in the list
 			me.lstFiles.Items().
 				AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
-			me.cachedTags[mp3] = tag // cache the tag
 		}
+
+		me.cachedTags[mp3] = tag // cache (or re-cache) the tag
 	}
 	me.lstFiles.SetRedraw(true).
 		Columns().Get(0).SetWidthToFill()
+
+	me.displayTagsOfSelectedFiles()
 }
 
 func (me *DlgMain) displayTagsOfSelectedFiles() {
