@@ -81,7 +81,7 @@ func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 	diff := len(newTagBlob) - currentTag.TotalTagSize() // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
-		if err := fout.SetSize(fout.Size() + diff); err != nil {
+		if err := fout.Resize(fout.Size() + diff); err != nil {
 			return err
 		}
 	}
@@ -93,7 +93,7 @@ func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
 	copy(fileMem, newTagBlob)
 
 	if diff < 0 { // new tag is shorter, shrink
-		if err := fout.SetSize(fout.Size() + diff); err != nil {
+		if err := fout.Resize(fout.Size() + diff); err != nil {
 			return err
 		}
 	}
