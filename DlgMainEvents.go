@@ -32,9 +32,9 @@ func (me *DlgMain) eventsMain() {
 
 		// Other stuff.
 		me.statusBar.Create().
-			Parts().AddFixed(200).
-			Parts().AddFixed(200).
-			Parts().AddFixed(200).
+			Parts().AddResizable(1).
+			Parts().AddResizable(1).
+			Parts().AddResizable(1).
 			Parts().AddResizable(1).
 			Parts().
 			SetTexts(
