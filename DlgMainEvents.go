@@ -48,15 +48,15 @@ func (me *DlgMain) eventsMain() {
 			Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
 
 		// Memory stats timer.
-		me.wnd.Hwnd().SetTimer(TIMER_MEMSTATS, 200,
+		me.wnd.Hwnd().SetTimer(TIMER_MEMSTATS, 1000,
 			func(msElapsed uint32) {
 				m := runtime.MemStats{}
 				runtime.ReadMemStats(&m)
 
 				me.statusBar.Parts().SetTexts(
-					fmt.Sprintf("Alloc: %.2f MB", float32(m.Alloc)/1024/1024),
-					fmt.Sprintf("Accum alloc: %.2f MB", float32(m.TotalAlloc)/1024/1024),
-					fmt.Sprintf("Obtained: %.2f MB", float32(m.Sys)/1024/1024),
+					fmt.Sprintf("Alloc: %s", win.Str.FmtBytes(m.Alloc)),
+					fmt.Sprintf("Accum alloc: %s", win.Str.FmtBytes(m.TotalAlloc)),
+					fmt.Sprintf("Obtained: %s", win.Str.FmtBytes(m.Sys)),
 					fmt.Sprintf("GC cycles: %d", m.NumGC),
 				)
 			})
