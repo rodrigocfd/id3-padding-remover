@@ -18,6 +18,7 @@ type DlgMain struct {
 	lstFilesSelLocked bool     // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         *ui.ListView
 	resizer           *ui.Resizer
+	statusBar         *ui.StatusBar
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
@@ -27,7 +28,7 @@ func NewDlgMain() *DlgMain {
 			Title:          "ID3 Fit",
 			StylesAdd:      co.WS_MINIMIZEBOX | co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
 			ExStylesAdd:    co.WS_EX_ACCEPTFILES,
-			ClientAreaSize: ui.Size{Cx: 700, Cy: 360},
+			ClientAreaSize: ui.Size{Cx: 700, Cy: 380},
 			IconId:         101,
 		},
 	)
@@ -39,6 +40,7 @@ func NewDlgMain() *DlgMain {
 		lstFilesMenu: ui.NewMenu(),
 		lstValues:    ui.NewListView(wnd),
 		resizer:      ui.NewResizer(wnd),
+		statusBar:    ui.NewStatusBar(wnd),
 		cachedTags:   make(map[string]*id3.Tag),
 	}
 
@@ -54,6 +56,8 @@ func (me *DlgMain) Run() int {
 
 	me.buildLstFilesMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
+
+	defer me.wnd.Hwnd().KillTimer(TIMER_MEMSTATS)
 
 	return me.wnd.RunAsMain()
 }

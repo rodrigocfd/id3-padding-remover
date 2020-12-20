@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"windigo/co"
 	"windigo/ui"
@@ -12,7 +13,7 @@ func (me *DlgMain) eventsMain() {
 	me.wnd.On().WmCreate(func(_ *win.CREATESTRUCT) int {
 		// MP3 files list view creation.
 		me.lstFiles.
-			Create(ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 438, Cy: 348},
+			Create(ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 438, Cy: 346},
 				co.LVS_REPORT|co.LVS_NOSORTHEADER|co.LVS_SHOWSELALWAYS,
 				co.LVS_EX_FULLROWSELECT).
 			SetContextMenu(me.lstFilesMenu).
@@ -22,7 +23,7 @@ func (me *DlgMain) eventsMain() {
 
 		// Tag values list view creation.
 		me.lstValues.
-			Create(ui.Pos{X: 450, Y: 6}, ui.Size{Cx: 242, Cy: 348},
+			Create(ui.Pos{X: 450, Y: 6}, ui.Size{Cx: 242, Cy: 346},
 				co.LVS_REPORT|co.LVS_NOSORTHEADER,
 				co.LVS_EX_GRIDLINES).
 			Columns().AddMany([]string{"Field", "Value"}, []int{50, 1}).
@@ -30,8 +31,35 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.Hwnd().EnableWindow(false)
 
 		// Other stuff.
+		me.statusBar.Create().
+			Parts().AddFixed(200).
+			Parts().AddFixed(200).
+			Parts().AddFixed(200).
+			Parts().AddResizable(1).
+			Parts().
+			SetTexts(
+				"Alloc: 0 MB",
+				"Accum alloc: 0 MB",
+				"Obtained: 0 MB",
+				"GC cycles: 0",
+			)
+
 		me.resizer.Add(ui.RESZ_RESIZE, ui.RESZ_RESIZE, me.lstFiles).
 			Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
+
+		// Memory stats timer.
+		me.wnd.Hwnd().SetTimer(TIMER_MEMSTATS, 200,
+			func(msElapsed uint32) {
+				m := runtime.MemStats{}
+				runtime.ReadMemStats(&m)
+
+				me.statusBar.Parts().SetTexts(
+					fmt.Sprintf("Alloc: %.2f MB", float32(m.Alloc)/1024/1024),
+					fmt.Sprintf("Accum alloc: %.2f MB", float32(m.TotalAlloc)/1024/1024),
+					fmt.Sprintf("Obtained: %.2f MB", float32(m.Sys)/1024/1024),
+					fmt.Sprintf("GC cycles: %d", m.NumGC),
+				)
+			})
 
 		return 0
 	})
@@ -46,6 +74,8 @@ func (me *DlgMain) eventsMain() {
 
 		me.lstFiles.SetRedraw(true)
 		me.lstValues.SetRedraw(true)
+
+		me.statusBar.ResizeToFitParent(p)
 	})
 
 	me.wnd.On().WmCommandAccelMenu(int(co.MBID_CANCEL), func(_ ui.WmCommand) {

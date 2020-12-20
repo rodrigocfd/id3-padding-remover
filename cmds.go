@@ -14,4 +14,5 @@ const (
 
 const (
 	TIMER_LSTFILES uintptr = iota + 100
+	TIMER_MEMSTATS
 )
