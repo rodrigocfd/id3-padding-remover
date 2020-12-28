@@ -7,6 +7,7 @@ import (
 func (me *DlgMain) eventsLstFiles() {
 	me.lstFiles.On().LvnInsertItem(func(_ *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.Items().Count())
+		me.updateMemStatus()
 	})
 
 	me.lstFiles.On().LvnItemChanged(func(_ *win.NMLISTVIEW) {
@@ -19,6 +20,8 @@ func (me *DlgMain) eventsLstFiles() {
 					me.updateTitlebarCount(me.lstFiles.Items().Count())
 					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
+
+					me.updateMemStatus()
 				})
 		}
 	})
@@ -28,5 +31,7 @@ func (me *DlgMain) eventsLstFiles() {
 
 		delItem := me.lstFiles.Items().Get(int(p.IItem))
 		delete(me.cachedTags, delItem.Text()) // remove tag from cache
+
+		me.updateMemStatus()
 	})
 }

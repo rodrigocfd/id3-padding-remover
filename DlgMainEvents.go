@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
 	"windigo/co"
 	"windigo/ui"
@@ -47,20 +46,7 @@ func (me *DlgMain) eventsMain() {
 		me.resizer.Add(ui.RESZ_RESIZE, ui.RESZ_RESIZE, me.lstFiles).
 			Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
 
-		// Memory stats timer.
-		me.wnd.Hwnd().SetTimer(TIMER_MEMSTATS, 1000,
-			func(msElapsed uint32) {
-				m := runtime.MemStats{}
-				runtime.ReadMemStats(&m)
-
-				me.statusBar.Parts().SetTexts(
-					fmt.Sprintf("Alloc: %s", win.Str.FmtBytes(m.Alloc)),
-					fmt.Sprintf("Accum alloc: %s", win.Str.FmtBytes(m.TotalAlloc)),
-					fmt.Sprintf("Obtained: %s", win.Str.FmtBytes(m.Sys)),
-					fmt.Sprintf("GC cycles: %d", m.NumGC),
-				)
-			})
-
+		me.updateMemStatus()
 		return 0
 	})
 
@@ -76,6 +62,13 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.SetRedraw(true)
 
 		me.statusBar.ResizeToFitParent(p)
+
+		me.updateMemStatus()
+	})
+
+	me.statusBar.On().NmClick(func(_ *win.NMMOUSE) bool {
+		me.updateMemStatus()
+		return true
 	})
 
 	me.wnd.On().WmCommandAccelMenu(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
@@ -105,5 +98,7 @@ func (me *DlgMain) eventsMain() {
 		} else {
 			me.addFilesToList(droppedMp3s)
 		}
+
+		me.updateMemStatus()
 	})
 }

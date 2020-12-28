@@ -57,7 +57,5 @@ func (me *DlgMain) Run() int {
 	me.buildLstFilesMenuAndAccel()
 	defer me.lstFilesMenu.Destroy()
 
-	defer me.wnd.Hwnd().KillTimer(TIMER_MEMSTATS)
-
 	return me.wnd.RunAsMain()
 }
