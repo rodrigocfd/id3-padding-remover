@@ -47,7 +47,7 @@ func NewDlgMain() *DlgMain {
 		}),
 		lstValues: ui.NewListViewRaw(wnd, &ui.ListViewRawOpts{
 			Position:         win.POINT{X: 450, Y: 6},
-			Size:             win.SIZE{Cx: 342, Cy: 346},
+			Size:             win.SIZE{Cx: 242, Cy: 346},
 			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER,
 			ListViewExStyles: co.LVS_EX_GRIDLINES,
 		}),

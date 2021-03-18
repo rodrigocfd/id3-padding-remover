@@ -9,8 +9,8 @@ import (
 
 var memStats runtime.MemStats
 
-func (me *DlgMain) updateMemStatus() {
-	me.wnd.Hwnd().SetTimer(1, 2000, func(msElapsed uint32) {
+func (me *DlgMain) updateMemoryStatus() {
+	me.wnd.Hwnd().SetTimer(1, 1000, func(msElapsed uint32) {
 		runtime.ReadMemStats(&memStats)
 		me.statusBar.Parts().SetAllTexts(
 			fmt.Sprintf("Alloc: %s", win.Str.FmtBytes(memStats.Alloc)),

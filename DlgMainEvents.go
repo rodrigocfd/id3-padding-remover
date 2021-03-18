@@ -38,7 +38,7 @@ func (me *DlgMain) eventsMain() {
 		me.resizer.Add(ui.RESZ_RESIZE, ui.RESZ_RESIZE, me.lstFiles).
 			Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
 
-		me.updateMemStatus()
+		me.updateMemoryStatus()
 		return 0
 	})
 
