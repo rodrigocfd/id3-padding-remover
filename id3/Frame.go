@@ -13,15 +13,15 @@ type Frame interface {
 	Serialize() []byte
 }
 
-type _FrameBase struct { // implements Frame
+type _Frame struct { // implements Frame
 	name4 string
 }
 
-func (me *_FrameBase) Name4() string { return me.name4 }
+func (me *_Frame) Name4() string { return me.name4 }
 
 // Constructor.
 func _ParseFrame(src []byte) (Frame, int, error) {
-	fr := _FrameBase{
+	fr := _Frame{
 		name4: string(src[0:4]),
 	}
 
@@ -57,7 +57,7 @@ func _ParseFrame(src []byte) (Frame, int, error) {
 	return _ParseFrameBinary(&fr, src), totalFrameSize, nil
 }
 
-func (me *_FrameBase) serializeHeader(totalFrameSize int) []byte {
+func (me *_Frame) serializeHeader(totalFrameSize int) []byte {
 	blob := make([]byte, 0, 10) // header is 10 bytes
 	blob = append(blob, []byte(me.name4)...)
 

@@ -7,15 +7,15 @@ import (
 )
 
 type FrameBinary struct {
-	*_FrameBase
+	*_Frame
 	binData []byte
 }
 
 // Constructor.
-func _ParseFrameBinary(frBase *_FrameBase, src []byte) *FrameBinary {
+func _ParseFrameBinary(baseFrame *_Frame, src []byte) *FrameBinary {
 	fr := FrameBinary{
-		_FrameBase: frBase,
-		binData:    make([]byte, len(src)),
+		_Frame:  baseFrame,
+		binData: make([]byte, len(src)),
 	}
 
 	copy(fr.binData, src) // simply store bytes
@@ -27,7 +27,7 @@ func (me *FrameBinary) BinData() []byte { return me.binData }
 func (me *FrameBinary) Serialize() []byte {
 	totalFrameSize := 10 + len(me.binData)
 	blob := make([]byte, 0, totalFrameSize)
-	blob = append(me._FrameBase.serializeHeader(totalFrameSize))
+	blob = append(me._Frame.serializeHeader(totalFrameSize))
 	blob = append(blob, me.binData...)
 	return blob
 }
@@ -35,13 +35,13 @@ func (me *FrameBinary) Serialize() []byte {
 //------------------------------------------------------------------------------
 
 type FrameComment struct {
-	*_FrameBase
+	*_Frame
 	lang string
 	text string
 }
 
 // Constructor.
-func _ParseFrameComment(frBase *_FrameBase, src []byte) (*FrameComment, error) {
+func _ParseFrameComment(baseFrame *_Frame, src []byte) (*FrameComment, error) {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
 		return nil, errors.New("Unknown comment encoding.")
@@ -66,9 +66,9 @@ func _ParseFrameComment(frBase *_FrameBase, src []byte) (*FrameComment, error) {
 	}
 
 	return &FrameComment{
-		_FrameBase: frBase,
-		lang:       lang,
-		text:       texts[0],
+		_Frame: baseFrame,
+		lang:   lang,
+		text:   texts[0],
 	}, nil
 }
 
@@ -104,15 +104,15 @@ func (me *FrameComment) Serialize() []byte {
 //------------------------------------------------------------------------------
 
 type FrameMultiText struct {
-	*_FrameBase
+	*_Frame
 	texts []string
 }
 
 // Constructor.
-func _ParseFrameMultiText(frBase *_FrameBase, texts []string) *FrameMultiText {
+func _ParseFrameMultiText(baseFrame *_Frame, texts []string) *FrameMultiText {
 	return &FrameMultiText{
-		_FrameBase: frBase,
-		texts:      texts,
+		_Frame: baseFrame,
+		texts:  texts,
 	}
 }
 
@@ -122,13 +122,13 @@ func (me *FrameMultiText) Serialize() []byte {
 	blobStr := _Util.SerializeAnyStrings(me.texts)
 	totalFrameSize := 10 + len(blobStr)
 	blob := make([]byte, 0, totalFrameSize)
-	blob = append(me._FrameBase.serializeHeader(totalFrameSize))
+	blob = append(me._Frame.serializeHeader(totalFrameSize))
 	blob = append(blob, blobStr...)
 	return blob
 }
 
 func (me *FrameMultiText) IsReplayGain() bool {
-	return me._FrameBase.Name4() == "TXXX" &&
+	return me._Frame.Name4() == "TXXX" &&
 		len(me.texts) == 2 &&
 		(strings.HasPrefix(me.texts[0], "replaygain_") ||
 			strings.HasPrefix(me.texts[1], "replaygain_"))
@@ -137,15 +137,15 @@ func (me *FrameMultiText) IsReplayGain() bool {
 //------------------------------------------------------------------------------
 
 type FrameText struct {
-	*_FrameBase
+	*_Frame
 	text string
 }
 
 // Constructor.
-func _ParseFrameText(frBase *_FrameBase, texts []string) *FrameText {
+func _ParseFrameText(baseFrame *_Frame, texts []string) *FrameText {
 	return &FrameText{
-		_FrameBase: frBase,
-		text:       texts[0],
+		_Frame: baseFrame,
+		text:   texts[0],
 	}
 }
 
@@ -156,7 +156,7 @@ func (me *FrameText) Serialize() []byte {
 	blobStr := _Util.SerializeAnyStrings([]string{me.text})
 	totalFrameSize := 10 + len(blobStr)
 	blob := make([]byte, 0, totalFrameSize)
-	blob = append(me._FrameBase.serializeHeader(totalFrameSize))
+	blob = append(me._Frame.serializeHeader(totalFrameSize))
 	blob = append(blob, blobStr...)
 	return blob
 }
