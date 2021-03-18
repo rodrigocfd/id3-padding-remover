@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// A frame that contains binary data.
 type FrameBinary struct {
 	*_Frame
 	binData []byte
@@ -34,6 +35,7 @@ func (me *FrameBinary) Serialize() []byte {
 
 //------------------------------------------------------------------------------
 
+// A frame that contains two text fields: the language and the comment text.
 type FrameComment struct {
 	*_Frame
 	lang string
@@ -103,6 +105,7 @@ func (me *FrameComment) Serialize() []byte {
 
 //------------------------------------------------------------------------------
 
+// A frame that contains 2 or more texts.
 type FrameMultiText struct {
 	*_Frame
 	texts []string
@@ -136,6 +139,7 @@ func (me *FrameMultiText) IsReplayGain() bool {
 
 //------------------------------------------------------------------------------
 
+// A frame that contains a simple text.
 type FrameText struct {
 	*_Frame
 	text string

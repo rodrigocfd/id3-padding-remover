@@ -7,13 +7,14 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
+// A tag is the metadata of a single MP3 file, composed of many frames.
 type Tag struct {
 	totalTagSize int
 	paddingSize  int
 	frames       []Frame
 }
 
-// Constructor.
+// Reads the tag from an MP3 file.
 func ParseTagFromFile(mp3Path string) (*Tag, error) {
 	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
 	if err != nil {
@@ -24,7 +25,7 @@ func ParseTagFromFile(mp3Path string) (*Tag, error) {
 	return ParseTagFromBinary(fMap.HotSlice())
 }
 
-// Constructor.
+// Reads the tag from a file stored as a binary blob.
 func ParseTagFromBinary(src []byte) (*Tag, error) {
 	totalTagSize, err := parseTagHeader(src)
 	if err != nil {

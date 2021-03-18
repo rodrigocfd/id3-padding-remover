@@ -9,18 +9,6 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
-// func (me *DlgMain) updateMemStatus() {
-// 	m := runtime.MemStats{}
-// 	runtime.ReadMemStats(&m)
-
-// 	me.statusBar.Parts().SetAllTexts(
-// 		fmt.Sprintf("Alloc: %s", win.Str.FmtBytes(m.Alloc)),
-// 		fmt.Sprintf("Accum alloc: %s", win.Str.FmtBytes(m.TotalAlloc)),
-// 		fmt.Sprintf("Obtained: %s", win.Str.FmtBytes(m.Sys)),
-// 		fmt.Sprintf("GC cycles: %d", m.NumGC),
-// 	)
-// }
-
 func (me *DlgMain) addFilesToList(mp3s []string) {
 	me.lstFiles.SetRedraw(false)
 
