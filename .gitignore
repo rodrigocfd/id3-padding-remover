@@ -1,5 +1,4 @@
 *.code-workspace
 *.exe
-*.res
 *.syso
 __debug_bin
