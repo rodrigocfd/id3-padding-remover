@@ -3,46 +3,38 @@ package main
 import (
 	"fmt"
 	"strings"
-	"windigo/co"
-	"windigo/ui"
-	"windigo/win"
+
+	"github.com/rodrigocfd/windigo/ui"
+	"github.com/rodrigocfd/windigo/ui/wm"
+	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgMain) eventsMain() {
-	me.wnd.On().WmCreate(func(_ *win.CREATESTRUCT) int {
+	me.wnd.On().WmCreate(func(_ wm.Create) int {
 		// MP3 files list view creation.
-		me.lstFiles.
-			Create(ui.Pos{X: 6, Y: 6}, ui.Size{Cx: 438, Cy: 346},
-				co.LVS_REPORT|co.LVS_NOSORTHEADER|co.LVS_SHOWSELALWAYS,
-				co.LVS_EX_FULLROWSELECT).
-			SetContextMenu(me.lstFilesMenu).
-			SetImageList(co.LVSIL_SMALL, me.iconImgList)
-		me.lstFiles.Columns().AddMany([]string{"File", "Padding"}, []int{1, 60}).
-			Columns().Get(0).SetWidthToFill()
+		// me.lstFiles.
+		// SetContextMenu(me.lstFilesMenu).
+		// SetImageList(co.LVSIL_SMALL, me.iconImgList)
+		me.lstFiles.Columns().Add([]int{1, 60}, "File", "Padding")
+		me.lstFiles.Columns().SetWidthToFill(0)
 
 		// Tag values list view creation.
-		me.lstValues.
-			Create(ui.Pos{X: 450, Y: 6}, ui.Size{Cx: 242, Cy: 346},
-				co.LVS_REPORT|co.LVS_NOSORTHEADER,
-				co.LVS_EX_GRIDLINES).
-			Columns().AddMany([]string{"Field", "Value"}, []int{50, 1}).
-			Columns().Get(1).SetWidthToFill()
+		me.lstValues.Columns().Add([]int{50, 1}, "Field", "Value")
+		me.lstValues.Columns().SetWidthToFill(1)
+
 		me.lstValues.Hwnd().EnableWindow(false)
 
-		// Other stuff.
-		me.statusBar.Create().
-			Parts().AddResizable(1).
-			Parts().AddResizable(1).
-			Parts().AddResizable(1).
-			Parts().AddResizable(1).
-			Parts().
-			SetTexts(
-				"Alloc: 0 MB",
-				"Accum alloc: 0 MB",
-				"Obtained: 0 MB",
-				"GC cycles: 0",
-			)
+		// Status bar.
+		me.statusBar.Parts().AddResizable(1, 1, 1, 1)
+		me.statusBar.Parts().SetAllTexts(
+			"Alloc: 0 MB",
+			"Accum alloc: 0 MB",
+			"Obtained: 0 MB",
+			"GC cycles: 0",
+		)
 
+		// Resizer.
 		me.resizer.Add(ui.RESZ_RESIZE, ui.RESZ_RESIZE, me.lstFiles).
 			Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
 
@@ -50,39 +42,29 @@ func (me *DlgMain) eventsMain() {
 		return 0
 	})
 
-	me.wnd.On().WmSize(func(p ui.WmSize) {
+	me.wnd.On().WmSize(func(p wm.Size) {
 		me.lstFiles.SetRedraw(false)
 		me.lstValues.SetRedraw(false)
 
-		me.resizer.AdjustToParent(p)
-		me.lstFiles.Columns().Get(0).SetWidthToFill()
-		me.lstValues.Columns().Get(1).SetWidthToFill()
+		me.lstFiles.Columns().SetWidthToFill(0)
+		me.lstValues.Columns().SetWidthToFill(1)
 
 		me.lstFiles.SetRedraw(true)
 		me.lstValues.SetRedraw(true)
-
-		me.statusBar.ResizeToFitParent(p)
-
-		me.updateMemStatus()
 	})
 
-	me.statusBar.On().NmClick(func(_ *win.NMMOUSE) bool {
-		me.updateMemStatus()
-		return true
-	})
-
-	me.wnd.On().WmCommandAccelMenu(int(co.MBID_CANCEL), func(_ ui.WmCommand) {
+	me.wnd.On().WmCommandAccelMenu(int(co.ID_CANCEL), func(_ wm.Command) {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 
-	me.wnd.On().WmDropFiles(func(p ui.WmDropFiles) {
-		droppedFiles := p.RetrieveAll()
+	me.wnd.On().WmDropFiles(func(p wm.DropFiles) {
+		droppedFiles := p.Hdrop().GetFilesAndFinish()
 		droppedMp3s := make([]string, 0, len(droppedFiles))
 
 		for _, path := range droppedFiles {
-			if ui.Path.IsFolder(path) { // if a folder, add all MP3 directly within
-				if subFiles, err := ui.Path.ListFilesInFolder(path + "\\*.mp3"); err != nil {
-					panic(err.Error())
+			if win.Path.IsFolder(path) { // if a folder, add all MP3 directly within
+				if subFiles, err := win.Path.ListFilesInFolder(path + "\\*.mp3"); err != nil {
+					panic(err) // should really never happen
 				} else {
 					droppedMp3s = append(droppedMp3s, subFiles...)
 				}
@@ -98,7 +80,5 @@ func (me *DlgMain) eventsMain() {
 		} else {
 			me.addFilesToList(droppedMp3s)
 		}
-
-		me.updateMemStatus()
 	})
 }

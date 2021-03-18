@@ -2,7 +2,9 @@ package id3
 
 import (
 	"encoding/binary"
-	"windigo/ui"
+
+	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 type Tag struct {
@@ -13,7 +15,7 @@ type Tag struct {
 
 // Constructor.
 func ParseTagFromFile(mp3Path string) (*Tag, error) {
-	fMap, err := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_R)
+	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
 	if err != nil {
 		return nil, err
 	}

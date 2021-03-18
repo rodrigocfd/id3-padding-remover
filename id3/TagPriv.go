@@ -5,7 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"windigo/ui"
+
+	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func parseTagHeader(src []byte) (int, error) {
@@ -66,7 +68,7 @@ func parseAllFrames(src []byte) ([]Frame, int, error) {
 }
 
 func (me *Tag) writeTagToFile(mp3Path string, newTagBlob []byte) error {
-	fout, err := ui.OpenFileMapped(mp3Path, ui.FILEMAP_MODE_RW)
+	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_RW)
 	if err != nil {
 		return err
 	}

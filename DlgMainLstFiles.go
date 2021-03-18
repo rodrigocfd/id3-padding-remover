@@ -1,13 +1,14 @@
 package main
 
 import (
-	"windigo/win"
+	"github.com/rodrigocfd/windigo/win"
 )
+
+const TIMER_LSTFILES uintptr = iota + 100
 
 func (me *DlgMain) eventsLstFiles() {
 	me.lstFiles.On().LvnInsertItem(func(_ *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.Items().Count())
-		me.updateMemStatus()
 	})
 
 	me.lstFiles.On().LvnItemChanged(func(_ *win.NMLISTVIEW) {
@@ -20,8 +21,6 @@ func (me *DlgMain) eventsLstFiles() {
 					me.updateTitlebarCount(me.lstFiles.Items().Count())
 					me.displayTagsOfSelectedFiles()
 					me.lstFilesSelLocked = false
-
-					me.updateMemStatus()
 				})
 		}
 	})
@@ -29,9 +28,7 @@ func (me *DlgMain) eventsLstFiles() {
 	me.lstFiles.On().LvnDeleteItem(func(p *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.Items().Count() - 1) // notification is sent before deletion
 
-		delItem := me.lstFiles.Items().Get(int(p.IItem))
-		delete(me.cachedTags, delItem.Text()) // remove tag from cache
-
-		me.updateMemStatus()
+		delPath := me.lstFiles.Items().Text(int(p.IItem), 0)
+		delete(me.cachedTags, delPath) // remove tag from cache
 	})
 }
