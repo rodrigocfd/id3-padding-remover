@@ -9,29 +9,38 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
+type ParseRes struct {
+	Mp3 string
+	Tag *id3.Tag
+	Err error
+}
+
 func (me *DlgMain) addFilesToList(mp3s []string) {
-	me.lstFiles.SetRedraw(false)
-
+	channel := make(chan ParseRes, len(mp3s))
 	for _, mp3 := range mp3s {
-		tag, err := id3.ParseTagFromFile(mp3)
-		if err != nil {
-			ui.SysDlg.MsgBox(me.wnd,
-				fmt.Sprintf("File:\n%s\n\n%s", mp3, err.Error()),
-				"Error parsing tag", co.MB_ICONERROR)
-			continue // then just proceed to next file
-		}
-
-		if _, found := me.lstFiles.Items().Find(mp3); !found { // file not yet in the list?
-			me.lstFiles.Items().
-				AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
-		}
-
-		me.cachedTags[mp3] = tag // cache (or re-cache) the tag
+		theMp3 := mp3
+		go func() {
+			tag, lerr := id3.ParseTagFromFile(theMp3)
+			channel <- ParseRes{theMp3, tag, lerr}
+		}()
 	}
 
-	me.lstFiles.SetRedraw(true)
-	me.lstFiles.Columns().SetWidthToFill(0)
-	me.displayTagsOfSelectedFiles()
+	for i := 0; i < len(mp3s); i++ {
+		parseRes := <-channel
+		if parseRes.Err != nil { // if error, simply popup and move on
+			ui.SysDlg.MsgBox(me.wnd,
+				fmt.Sprintf("File:\n%s\n\n%s", parseRes.Mp3, parseRes.Err),
+				"Error parsing tag", co.MB_ICONERROR)
+		}
+
+		if _, found := me.lstFiles.Items().Find(parseRes.Mp3); !found { // file not yet in the list?
+			me.lstFiles.Items().
+				AddWithIcon(0, parseRes.Mp3,
+					fmt.Sprintf("%d", parseRes.Tag.PaddingSize())) // will fire LVN_INSERTITEM
+		}
+
+		me.cachedTags[parseRes.Mp3] = parseRes.Tag // cache (or re-cache) the tag
+	}
 }
 
 func (me *DlgMain) displayTagsOfSelectedFiles() {
