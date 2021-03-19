@@ -26,7 +26,7 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.Hwnd().EnableWindow(false)
 
 		// Status bar.
-		me.statusBar.Parts().AddResizable(1, 1, 1, 1)
+		me.statusBar.Parts().AddResizable(4, 2, 3, 3)
 		me.statusBar.Parts().SetAllTexts(
 			"Alloc: 0 MB",
 			"Accum alloc: 0 MB",
