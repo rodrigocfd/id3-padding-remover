@@ -41,6 +41,8 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 
 		me.cachedTags[parseRes.Mp3] = parseRes.Tag // cache (or re-cache) the tag
 	}
+
+	me.lstFiles.Columns().SetWidthToFill(0)
 }
 
 func (me *DlgMain) displayTagsOfSelectedFiles() {
