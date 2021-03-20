@@ -109,9 +109,9 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			frYerDyn := tag.FrameByName("TYER")
 
 			if frAlbDyn == nil {
-				ui.SysDlg.MsgBox(me.wnd, "Album frame not found.", "Missing frame", co.MB_ICONERROR)
+				ui.SysDlg.MessageBox(me.wnd, "Album frame not found.", "Missing frame", co.MB_ICONERROR)
 			} else if frYerDyn == nil {
-				ui.SysDlg.MsgBox(me.wnd, "Year frame not found.", "Missing frame", co.MB_ICONERROR)
+				ui.SysDlg.MessageBox(me.wnd, "Year frame not found.", "Missing frame", co.MB_ICONERROR)
 			}
 
 			if frAlb, ok := frAlbDyn.(*id3.FrameText); ok {
@@ -123,7 +123,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		ui.SysDlg.MsgBox(me.wnd,
+		ui.SysDlg.MessageBox(me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+

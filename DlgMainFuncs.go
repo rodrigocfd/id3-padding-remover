@@ -28,7 +28,7 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 	for i := 0; i < len(mp3s); i++ {
 		parseRes := <-channel
 		if parseRes.Err != nil { // if error, simply popup and move on
-			ui.SysDlg.MsgBox(me.wnd,
+			ui.SysDlg.MessageBox(me.wnd,
 				fmt.Sprintf("File:\n%s\n\n%s", parseRes.Mp3, parseRes.Err),
 				"Error parsing tag", co.MB_ICONERROR)
 		}
@@ -102,7 +102,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(
 		tagProcessBeforeSave(tag) // tag frames can be modified before saving
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			ui.SysDlg.MsgBox(me.wnd,
+			ui.SysDlg.MessageBox(me.wnd,
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
 					selFilePath, err.Error()),
 				"Writing error", co.MB_ICONERROR)
@@ -111,7 +111,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(
 
 		reTag, err := id3.ParseTagFromFile(selFilePath) // parse newly saved tag
 		if err != nil {
-			ui.SysDlg.MsgBox(me.wnd,
+			ui.SysDlg.MessageBox(me.wnd,
 				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()),
 				"Error", co.MB_ICONERROR)
 			break
