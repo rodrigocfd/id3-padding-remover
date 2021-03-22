@@ -54,7 +54,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		mp3s, ok := ui.SysDlg.OpenMultipleFiles(me.wnd,
+		mp3s, ok := ui.Native.OpenMultipleFiles(me.wnd,
 			[]shell.FilterSpec{
 				{Name: "MP3 audio files", Spec: "*.mp3"},
 				{Name: "All files", Spec: "*.*"},
@@ -109,9 +109,11 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			frYerDyn := tag.FrameByName("TYER")
 
 			if frAlbDyn == nil {
-				ui.SysDlg.MessageBox(me.wnd, "Album frame not found.", "Missing frame", co.MB_ICONERROR)
+				ui.Native.MessageBox(me.wnd, "Album frame not found.",
+					"Missing frame", co.MB_ICONERROR)
 			} else if frYerDyn == nil {
-				ui.SysDlg.MessageBox(me.wnd, "Year frame not found.", "Missing frame", co.MB_ICONERROR)
+				ui.Native.MessageBox(me.wnd, "Year frame not found.",
+					"Missing frame", co.MB_ICONERROR)
 			}
 
 			if frAlb, ok := frAlbDyn.(*id3.FrameText); ok {
@@ -123,7 +125,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		ui.SysDlg.MessageBox(me.wnd,
+		ui.Native.MessageBox(me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+

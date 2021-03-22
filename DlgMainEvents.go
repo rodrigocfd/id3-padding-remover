@@ -14,7 +14,6 @@ func (me *DlgMain) eventsMain() {
 	me.wnd.On().WmCreate(func(_ wm.Create) int {
 		// MP3 files list view creation.
 		// me.lstFiles.
-		// SetContextMenu(me.lstFilesMenu).
 		// SetImageList(co.LVSIL_SMALL, me.iconImgList)
 		me.lstFiles.Columns().Add([]int{1, 60}, "File", "Padding")
 		me.lstFiles.Columns().SetWidthToFill(0)
@@ -74,7 +73,7 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			ui.SysDlg.MessageBox(me.wnd,
+			ui.Native.MessageBox(me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {
