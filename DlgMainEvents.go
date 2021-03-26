@@ -73,7 +73,7 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			ui.Native.MessageBox(me.wnd,
+			ui.Prompt.MessageBox(me.wnd,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
 				"No files added", co.MB_ICONEXCLAMATION)
 		} else {

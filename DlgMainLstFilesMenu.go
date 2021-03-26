@@ -54,7 +54,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		mp3s, ok := ui.Native.OpenMultipleFiles(me.wnd,
+		mp3s, ok := ui.Prompt.OpenMultipleFiles(me.wnd,
 			[]shell.FilterSpec{
 				{Name: "MP3 audio files", Spec: "*.mp3"},
 				{Name: "All files", Spec: "*.*"},
@@ -109,10 +109,10 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			frYerDyn := tag.FrameByName("TYER")
 
 			if frAlbDyn == nil {
-				ui.Native.MessageBox(me.wnd, "Album frame not found.",
+				ui.Prompt.MessageBox(me.wnd, "Album frame not found.",
 					"Missing frame", co.MB_ICONERROR)
 			} else if frYerDyn == nil {
-				ui.Native.MessageBox(me.wnd, "Year frame not found.",
+				ui.Prompt.MessageBox(me.wnd, "Year frame not found.",
 					"Missing frame", co.MB_ICONERROR)
 			}
 
@@ -125,7 +125,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		ui.Native.MessageBox(me.wnd,
+		ui.Prompt.MessageBox(me.wnd,
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
