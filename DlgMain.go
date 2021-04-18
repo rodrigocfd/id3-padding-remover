@@ -24,7 +24,7 @@ type DlgMain struct {
 }
 
 func NewDlgMain() *DlgMain {
-	wnd := ui.NewWindowMainOpts(ui.WindowMainOpts{
+	wnd := ui.NewWindowMainRaw(ui.WindowMainRawOpts{
 		Title: "ID3 Fit",
 		Styles: co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
 			co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
@@ -38,14 +38,14 @@ func NewDlgMain() *DlgMain {
 	me := DlgMain{
 		wnd:        wnd,
 		hImageList: win.ImageListCreate(16, 16, co.ILC_COLOR32, 1, 1),
-		lstFiles: ui.NewListViewOpts(wnd, ui.ListViewOpts{
+		lstFiles: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
 			Position:         win.POINT{X: 6, Y: 6},
 			Size:             win.SIZE{Cx: 438, Cy: 346},
-			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER | co.LVS_SHOWSELALWAYS,
+			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER | co.LVS_SHOWSELALWAYS | co.LVS_SORTASCENDING,
 			ListViewExStyles: co.LVS_EX_FULLROWSELECT,
 			ContextMenu:      createContextMenu(),
 		}),
-		lstValues: ui.NewListViewOpts(wnd, ui.ListViewOpts{
+		lstValues: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
 			Position:         win.POINT{X: 450, Y: 6},
 			Size:             win.SIZE{Cx: 242, Cy: 346},
 			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER,

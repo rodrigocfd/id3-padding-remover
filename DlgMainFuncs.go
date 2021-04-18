@@ -9,37 +9,36 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
-type ParseRes struct {
+type ParseResult struct {
 	Mp3 string
 	Tag *id3.Tag
 	Err error
 }
 
 func (me *DlgMain) addFilesToList(mp3s []string) {
-	channel := make(chan ParseRes, len(mp3s))
+	channel := make(chan ParseResult, len(mp3s))
 	for _, mp3 := range mp3s {
-		theMp3 := mp3
-		go func() {
-			tag, lerr := id3.ParseTagFromFile(theMp3)
-			channel <- ParseRes{theMp3, tag, lerr}
-		}()
+		go func(mp3 string) {
+			tag, lerr := id3.ParseTagFromFile(mp3)
+			channel <- ParseResult{mp3, tag, lerr}
+		}(mp3)
 	}
 
 	for i := 0; i < len(mp3s); i++ {
-		parseRes := <-channel
-		if parseRes.Err != nil { // if error, simply popup and move on
+		parseResult := <-channel
+		if parseResult.Err != nil { // if error, simply popup and move on
 			ui.Prompt.MessageBox(me.wnd,
-				fmt.Sprintf("File:\n%s\n\n%s", parseRes.Mp3, parseRes.Err),
+				fmt.Sprintf("File:\n%s\n\n%s", parseResult.Mp3, parseResult.Err),
 				"Error parsing tag", co.MB_ICONERROR)
 		}
 
-		if _, found := me.lstFiles.Items().Find(parseRes.Mp3); !found { // file not yet in the list?
+		if _, found := me.lstFiles.Items().Find(parseResult.Mp3); !found { // file not yet in the list?
 			me.lstFiles.Items().
-				AddWithIcon(0, parseRes.Mp3,
-					fmt.Sprintf("%d", parseRes.Tag.PaddingSize())) // will fire LVN_INSERTITEM
+				AddWithIcon(0, parseResult.Mp3,
+					fmt.Sprintf("%d", parseResult.Tag.PaddingSize())) // will fire LVN_INSERTITEM
 		}
 
-		me.cachedTags[parseRes.Mp3] = parseRes.Tag // cache (or re-cache) the tag
+		me.cachedTags[parseResult.Mp3] = parseResult.Tag // cache (or re-cache) the tag
 	}
 
 	me.lstFiles.Columns().SetWidthToFill(0)
