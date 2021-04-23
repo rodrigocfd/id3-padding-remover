@@ -25,14 +25,14 @@ type DlgMain struct {
 
 func NewDlgMain() *DlgMain {
 	wnd := ui.NewWindowMainRaw(ui.WindowMainRawOpts{
-		Title: "ID3 Fit",
-		Styles: co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
-			co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
-			co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
-		ExStyles:       co.WS_EX_ACCEPTFILES,
+		Title:          "ID3 Fit",
 		ClientAreaSize: win.SIZE{Cx: 700, Cy: 380},
 		IconId:         101,
 		AccelTable:     createAccelTable(),
+		ExStyles:       co.WS_EX_ACCEPTFILES,
+		Styles: co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
+			co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
+			co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
 	})
 
 	me := DlgMain{
@@ -41,15 +41,16 @@ func NewDlgMain() *DlgMain {
 		lstFiles: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
 			Position:         win.POINT{X: 6, Y: 6},
 			Size:             win.SIZE{Cx: 438, Cy: 346},
-			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER | co.LVS_SHOWSELALWAYS | co.LVS_SORTASCENDING,
-			ListViewExStyles: co.LVS_EX_FULLROWSELECT,
 			ContextMenu:      createContextMenu(),
+			ListViewExStyles: co.LVS_EX_FULLROWSELECT,
+			ListViewStyles: co.LVS_REPORT | co.LVS_NOSORTHEADER |
+				co.LVS_SHOWSELALWAYS | co.LVS_SORTASCENDING,
 		}),
 		lstValues: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
 			Position:         win.POINT{X: 450, Y: 6},
 			Size:             win.SIZE{Cx: 242, Cy: 346},
-			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER,
 			ListViewExStyles: co.LVS_EX_GRIDLINES,
+			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER,
 		}),
 		resizer:    ui.NewResizer(wnd),
 		statusBar:  ui.NewStatusBar(wnd),

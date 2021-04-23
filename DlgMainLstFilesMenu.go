@@ -72,22 +72,26 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
-		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {}) // simply saving will remove the padding
+		me.reSaveTagsOfSelectedFiles() // simply saving will remove the padding
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
-		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+			tag := me.cachedTags[selFilePath]
 			tag.DeleteFrames(func(fr id3.Frame) bool {
 				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
 					return frMulti.IsReplayGain()
 				}
 				return false
 			})
-		})
+		}
+
+		me.reSaveTagsOfSelectedFiles()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
-		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+			tag := me.cachedTags[selFilePath]
 			tag.DeleteFrames(func(frDyn id3.Frame) bool {
 				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
 					if frMulti.IsReplayGain() {
@@ -100,11 +104,14 @@ func (me *DlgMain) eventsLstFilesMenu() {
 				}
 				return false
 			})
-		})
+		}
+
+		me.reSaveTagsOfSelectedFiles()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-		me.reSaveTagsOfSelectedFiles(func(tag *id3.Tag) {
+		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+			tag := me.cachedTags[selFilePath]
 			frAlbDyn := tag.FrameByName("TALB")
 			frYerDyn := tag.FrameByName("TYER")
 
@@ -116,12 +123,12 @@ func (me *DlgMain) eventsLstFilesMenu() {
 					"Missing frame", co.MB_ICONERROR)
 			}
 
-			if frAlb, ok := frAlbDyn.(*id3.FrameText); ok {
-				if frYer, ok := frYerDyn.(*id3.FrameText); ok {
-					frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
-				}
-			}
-		})
+			frAlb, _ := frAlbDyn.(*id3.FrameText)
+			frYer, _ := frYerDyn.(*id3.FrameText)
+			frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
+		}
+
+		me.reSaveTagsOfSelectedFiles()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {

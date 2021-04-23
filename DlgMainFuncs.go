@@ -93,14 +93,10 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.Hwnd().EnableWindow(len(selPaths) > 0) // if no files selected, disable lstValues
 }
 
-func (me *DlgMain) reSaveTagsOfSelectedFiles(
-	tagProcessBeforeSave func(tag *id3.Tag)) {
-
+func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 	for _, selIdx := range me.lstFiles.Items().Selected() {
 		selFilePath := me.lstFiles.Items().Text(selIdx, 0)
 		tag := me.cachedTags[selFilePath]
-
-		tagProcessBeforeSave(tag) // tag frames can be modified before saving
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
 			ui.Prompt.MessageBox(me.wnd,
@@ -121,7 +117,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(
 		me.cachedTags[selFilePath] = reTag // re-cache modified tag
 
 		me.lstFiles.Items().SetText(selIdx, 1,
-			fmt.Sprintf("%d", tag.PaddingSize())) // refresh padding size
+			fmt.Sprintf("%d", reTag.PaddingSize())) // refresh padding size
 	}
 
 	me.displayTagsOfSelectedFiles() // refresh the frames display
