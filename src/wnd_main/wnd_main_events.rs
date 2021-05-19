@@ -1,7 +1,7 @@
 use winsafe::co;
-use winsafe::gui;
 use winsafe::msg;
 
+use crate::ids;
 use super::WndMain;
 
 impl WndMain {
@@ -21,17 +21,7 @@ impl WndMain {
 				]).unwrap();
 				selfc.lst_frames.columns().set_width_to_fill(1).unwrap();
 
-				selfc.resizer.add(gui::Resz::Resize, gui::Resz::Resize, &[&selfc.lst_files])
-					.add(gui::Resz::Repos, gui::Resz::Resize, &[&selfc.lst_frames]);
-
 				true
-			}
-		});
-
-		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), { // close on ESC
-			let wnd = self.wnd.clone();
-			move || {
-				wnd.hwnd().PostMessage(msg::wm::Close {}).unwrap();
 			}
 		});
 
@@ -44,6 +34,20 @@ impl WndMain {
 
 				selfc.lst_files.columns().set_width_to_fill(0).unwrap();
 				selfc.lst_frames.columns().set_width_to_fill(1).unwrap();
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), { // close on ESC
+			let wnd = self.wnd.clone();
+			move || {
+				wnd.hwnd().PostMessage(msg::wm::Close {}).unwrap();
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_OPEN, {
+			let selfc = self.clone();
+			move || {
+				println!("ayy");
 			}
 		});
 	}
