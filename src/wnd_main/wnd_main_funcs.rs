@@ -1,6 +1,11 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 use winsafe as w;
+use winsafe::co;
 use winsafe::gui;
 
+use crate::id3v2::Tag;
 use crate::ids;
 use super::WndMain;
 
@@ -17,8 +22,9 @@ impl WndMain {
 			(gui::Resz::Resize, gui::Resz::Resize, &[&lst_files, &lst_files]),
 			(gui::Resz::Repos, gui::Resz::Resize, &[&lst_frames]),
 		]);
+		let tags = Rc::new(RefCell::new(HashMap::default()));
 
-		let selfc = Self { wnd, lst_files, lst_frames, resizer };
+		let selfc = Self { wnd, lst_files, lst_frames, resizer, tags };
 		selfc.events();
 		selfc.menu_events();
 		selfc
@@ -31,6 +37,19 @@ impl WndMain {
 	pub(super) fn add_files(&self, files: &Vec<String>) {
 		for file in files.iter() {
 			if self.lst_files.items().find(file).is_none() { // item not added yet?
+				let tag = match Tag::read(file) {
+					Ok(tag) => tag,
+					Err(e) => {
+						self.wnd.hwnd().MessageBox(
+							&format!("Tag reading failed:\n{}\n\n{}", file, e),
+							"Error",
+							co::MB::ICONERROR,
+						).unwrap();
+						return
+					},
+				};
+
+				self.tags.borrow_mut().insert(file.to_owned(), tag);
 				self.lst_files.items().add(file, None).unwrap();
 			}
 		}

@@ -1,4 +1,9 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 use winsafe::gui;
+
+use crate::id3v2::Tag;
 
 mod wnd_main_events;
 mod wnd_main_funcs;
@@ -10,4 +15,5 @@ pub struct WndMain {
 	lst_files:  gui::ListView,
 	lst_frames: gui::ListView,
 	resizer:    gui::Resizer,
+	tags:       Rc<RefCell<HashMap<String, Tag>>>,
 }
