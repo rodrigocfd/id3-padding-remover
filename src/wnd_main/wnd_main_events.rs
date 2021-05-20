@@ -1,7 +1,6 @@
 use winsafe::co;
 use winsafe::msg;
 
-use crate::ids;
 use super::WndMain;
 
 impl WndMain {
@@ -41,13 +40,6 @@ impl WndMain {
 			let wnd = self.wnd.clone();
 			move || {
 				wnd.hwnd().PostMessage(msg::wm::Close {}).unwrap();
-			}
-		});
-
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_OPEN, {
-			let selfc = self.clone();
-			move || {
-				println!("ayy");
 			}
 		});
 	}

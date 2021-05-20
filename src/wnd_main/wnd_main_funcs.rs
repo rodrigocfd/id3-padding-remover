@@ -20,10 +20,19 @@ impl WndMain {
 
 		let selfc = Self { wnd, lst_files, lst_frames, resizer };
 		selfc.events();
+		selfc.menu_events();
 		selfc
 	}
 
 	pub fn run(&self) -> w::WinResult<()> {
 		self.wnd.run_main(None)
+	}
+
+	pub(super) fn add_files(&self, files: &Vec<String>) {
+		for file in files.iter() {
+			if self.lst_files.items().find(file).is_none() { // item not added yet?
+				self.lst_files.items().add(file, None).unwrap();
+			}
+		}
 	}
 }
