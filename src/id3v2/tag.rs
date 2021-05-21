@@ -7,10 +7,13 @@ use super::Frame;
 use super::util;
 
 pub struct Tag {
-	frames: Vec<Frame>,
+	frames:           Vec<Frame>,
+	original_size:    usize,
+	original_padding: usize,
 }
 
 impl Tag {
+	/// Reads a tag from an MP3 file.
 	pub fn read(file: &str) -> Result<Self, Box<dyn Error>> {
 		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ,
 			co::FILE_SHARE::READ, None, co::DISPOSITION::OPEN_EXISTING,
@@ -20,17 +23,27 @@ impl Tag {
 		Self::parse(&bytes)
 	}
 
-	pub fn parse(src: &[u8]) -> Result<Self, Box<dyn Error>> {
-		let total_tag_size = Self::parse_header(src)?;
-		println!("Total tag size: {}", total_tag_size);
-		Err("NOT HERE YET".into())
+	/// Parses a tag from a binary blob.
+	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
+		let original_size = Self::parse_header(src)?;
+		src = &src[10..original_size]; // skip 10-byte tag header; truncate to tag bounds
+
+		let (frames, original_padding) = Self::parse_all_frames(src)?;
+
+		Ok(Self { frames, original_size, original_padding })
 	}
 
+	/// Returns a reference to the frames stored in the tag.
 	pub fn frames(&self) -> &Vec<Frame> {
 		&self.frames
 	}
 
-	fn parse_header(src: &[u8]) -> Result<u32, Box<dyn Error>> {
+	/// Returns a mutable reference to the frames stored in the tag.
+	pub fn frames_mut(&mut self) -> &mut Vec<Frame> {
+		&mut self.frames
+	}
+
+	fn parse_header(src: &[u8]) -> Result<usize, Box<dyn Error>> {
 		// Check ID3 magic bytes.
 		let magic_str = ['I' as u8, 'D' as u8, '3' as u8];
 		if src[..3] != magic_str {
@@ -53,10 +66,42 @@ impl Tag {
 		}
 
 		// Read total tag size.
-		let total_tag_size = util::SynchSafeDecode(
+		let total_tag_size = util::synch_safe_decode(
 			u32::from_be_bytes(src[6..10].try_into()?),
-		) + 10; // also count 10-byte tag header
+		) as usize + 10; // also count 10-byte tag header
 
 		Ok(total_tag_size)
+	}
+
+	fn parse_all_frames(mut src: &[u8]) -> Result<(Vec<Frame>, usize), Box<dyn Error>> {
+		let mut frames = Vec::new();
+		let mut original_padding = 0;
+
+		loop {
+			if src.is_empty() { // end of tag, no padding found
+				break;
+			} else if util::is_all_zero(src) { // we entered a padding region after all frames
+				original_padding = src.len();
+				break;
+			}
+
+			let new_frame = Frame::parse(src)?;
+			frames.push(new_frame);
+			let new_frame_ref = frames.last().unwrap();
+
+			if new_frame_ref.original_size() > src.len() { // means the tag was serialized with error
+				return Err(
+					format!(
+						"Frame size is greater than declared tag size: {} vs {}.",
+						new_frame_ref.original_size(),
+						src.len(),
+					).into(),
+				);
+			}
+
+			src = &src[new_frame_ref.original_size()..]; // now starts at 1st byte of next frame
+		}
+
+		Ok((frames, original_padding))
 	}
 }

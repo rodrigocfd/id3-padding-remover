@@ -5,7 +5,7 @@ use winsafe as w;
 use winsafe::co;
 use winsafe::gui;
 
-use crate::id3v2::Tag;
+use crate::id3v2::{FrameData, Tag};
 use crate::ids;
 use super::WndMain;
 
@@ -15,7 +15,7 @@ impl WndMain {
 			.LoadMenu(w::IdStr::Id(ids::MNU_MAIN)).unwrap()
 			.GetSubMenu(0).unwrap();
 
-		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), None);
+		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), Some(ids::ACT_MAIN));
 		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, Some(context_menu));
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, None);
 		let resizer = gui::Resizer::new(&wnd, &[
@@ -51,6 +51,16 @@ impl WndMain {
 
 				self.tags.borrow_mut().insert(file.to_owned(), tag);
 				self.lst_files.items().add(file, None).unwrap();
+			}
+		}
+	}
+
+	pub(super) fn show_tag_frames(&self, tag: &Tag) {
+		for frame in tag.frames().iter() {
+			let idx = self.lst_frames.items().add(frame.name4(), None).unwrap();
+			match frame.data() {
+				FrameData::Text(s) => self.lst_frames.items().set_text(idx, 1, s).unwrap(),
+				_ => {},
 			}
 		}
 	}
