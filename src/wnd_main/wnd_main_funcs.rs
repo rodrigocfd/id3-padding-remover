@@ -49,8 +49,10 @@ impl WndMain {
 					},
 				};
 
+				let idx = self.lst_files.items().add(file, None).unwrap();
+				self.lst_files.items().set_text(idx, 1,
+					&format!("{}", tag.original_padding())).unwrap();
 				self.tags.borrow_mut().insert(file.to_owned(), tag);
-				self.lst_files.items().add(file, None).unwrap();
 			}
 		}
 	}

@@ -13,7 +13,6 @@ pub struct Tag {
 }
 
 impl Tag {
-	/// Reads a tag from an MP3 file.
 	pub fn read(file: &str) -> Result<Self, Box<dyn Error>> {
 		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ,
 			co::FILE_SHARE::READ, None, co::DISPOSITION::OPEN_EXISTING,
@@ -23,7 +22,6 @@ impl Tag {
 		Self::parse(&bytes)
 	}
 
-	/// Parses a tag from a binary blob.
 	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
 		let original_size = Self::parse_header(src)?;
 		src = &src[10..original_size]; // skip 10-byte tag header; truncate to tag bounds
@@ -33,12 +31,18 @@ impl Tag {
 		Ok(Self { frames, original_size, original_padding })
 	}
 
-	/// Returns a reference to the frames stored in the tag.
+	pub fn original_size(&self) -> usize {
+		self.original_size
+	}
+
+	pub fn original_padding(&self) -> usize {
+		self.original_padding
+	}
+
 	pub fn frames(&self) -> &Vec<Frame> {
 		&self.frames
 	}
 
-	/// Returns a mutable reference to the frames stored in the tag.
 	pub fn frames_mut(&mut self) -> &mut Vec<Frame> {
 		&mut self.frames
 	}

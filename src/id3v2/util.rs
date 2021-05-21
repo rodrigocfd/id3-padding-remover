@@ -46,7 +46,7 @@ pub fn parse_any_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
 }
 
 pub fn parse_iso88591_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
-	let mut texts = Vec::new();
+	let mut texts = Vec::with_capacity(1); // arbitrary
 
 	for str_block in src.split(|b| *b == 0x00).into_iter() {
 		let parsed_str = std::str::from_utf8(str_block)?.to_string();
@@ -65,7 +65,7 @@ pub fn parse_unicode_strings(mut src: &[u8]) -> Result<Vec<String>, Box<dyn Erro
 		src = &src[..src.len() - 1];
 	}
 
-	let mut texts = Vec::new();
+	let mut texts = Vec::with_capacity(1); // arbitrary
 
 	for str_block in src.split(|b| *b == 0x00).into_iter() {
 
