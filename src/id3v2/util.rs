@@ -58,7 +58,6 @@ pub fn parse_iso88591_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>>
 			buf16.push(*chh as _);
 		}
 
-		// let parsed_str = std::str::from_utf8(str_block)?.to_string();
 		let parsed_str = w::WString::from_wchars_slice(&buf16);
 		if !parsed_str.is_empty() {
 			texts.push(parsed_str.to_string());
