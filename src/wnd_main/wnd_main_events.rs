@@ -56,9 +56,9 @@ impl WndMain {
 				}
 
 				if sel_files.len() == 1 {
-					let tags = selfc.tags.borrow();
+					let tags = selfc.tags_cache.borrow();
 					let tag = tags.get(&sel_files[0]).unwrap();
-					selfc.show_tag_frames(&tag);
+					selfc.show_tag_frames(&tag).unwrap();
 
 				} else {
 					selfc.lst_frames.items().add("", None).unwrap();

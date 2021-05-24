@@ -32,7 +32,7 @@ impl WndMain {
 					selfc.add_files(
 						&fileo.GetResults().unwrap()
 							.GetDisplayNames(co::SIGDN::FILESYSPATH).unwrap(),
-					);
+					).unwrap();
 				}
 			}
 		});

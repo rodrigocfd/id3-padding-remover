@@ -15,5 +15,5 @@ pub struct WndMain {
 	lst_files:  gui::ListView,
 	lst_frames: gui::ListView,
 	resizer:    gui::Resizer,
-	tags:       Rc<RefCell<HashMap<String, Tag>>>,
+	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
 }

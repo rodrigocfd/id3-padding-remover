@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::error::Error;
 use std::rc::Rc;
 use winsafe as w;
 use winsafe::co;
 use winsafe::gui;
 
-use crate::id3v2::{FrameData, Tag};
+use crate::id3v2::{format_bytes, FrameData, Tag};
 use crate::ids;
 use super::WndMain;
 
@@ -19,12 +20,12 @@ impl WndMain {
 		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, Some(context_menu));
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, None);
 		let resizer = gui::Resizer::new(&wnd, &[
-			(gui::Resz::Resize, gui::Resz::Resize, &[&lst_files, &lst_files]),
+			(gui::Resz::Resize, gui::Resz::Resize, &[&lst_files]),
 			(gui::Resz::Repos, gui::Resz::Resize, &[&lst_frames]),
 		]);
-		let tags = Rc::new(RefCell::new(HashMap::default()));
+		let tags_cache = Rc::new(RefCell::new(HashMap::default()));
 
-		let selfc = Self { wnd, lst_files, lst_frames, resizer, tags };
+		let selfc = Self { wnd, lst_files, lst_frames, resizer, tags_cache };
 		selfc.events();
 		selfc.menu_events();
 		selfc
@@ -34,36 +35,41 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
-	pub(super) fn add_files(&self, files: &Vec<String>) {
+	pub(super) fn add_files(&self, files: &Vec<String>) -> Result<(), Box<dyn Error>> {
 		for file in files.iter() {
 			if self.lst_files.items().find(file).is_none() { // item not added yet?
-				let tag = match Tag::read(file) {
+				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
 						self.wnd.hwnd().MessageBox(
 							&format!("Tag reading failed:\n{}\n\n{}", file, e),
 							"Error",
 							co::MB::ICONERROR,
-						).unwrap();
-						return
+						)?;
+						return Ok(());
 					},
 				};
 
-				let idx = self.lst_files.items().add(file, None).unwrap();
-				self.lst_files.items().set_text(idx, 1,
-					&format!("{}", tag.original_padding())).unwrap();
-				self.tags.borrow_mut().insert(file.to_owned(), tag);
+				let idx = self.lst_files.items().add(file, None)?;
+				self.lst_files.items().set_text(idx, 1, &format!("{}", tag.original_padding()))?; // write padding
+				self.tags_cache.borrow_mut().insert(file.to_owned(), tag); // cache tag
 			}
 		}
+		Ok(())
 	}
 
-	pub(super) fn show_tag_frames(&self, tag: &Tag) {
+	pub(super) fn show_tag_frames(&self, tag: &Tag) -> Result<(), Box<dyn Error>> {
 		for frame in tag.frames().iter() {
-			let idx = self.lst_frames.items().add(frame.name4(), None).unwrap();
+			let items = self.lst_frames.items();
+			let idx = items.add(frame.name4(), None)?;
+
 			match frame.data() {
-				FrameData::Text(s) => self.lst_frames.items().set_text(idx, 1, s).unwrap(),
-				_ => {},
+				FrameData::Text(s) => items.set_text(idx, 1, s)?,
+				FrameData::MultiText(ss) => {},
+				FrameData::Comment(com) => items.set_text(idx, 1, &format!("[{}] {}", com.lang, com.text))?,
+				FrameData::Binary(bin) => items.set_text(idx, 1, &format_bytes(bin.len()))?,
 			}
 		}
+		Ok(())
 	}
 }

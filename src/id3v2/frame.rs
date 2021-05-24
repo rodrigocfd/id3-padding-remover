@@ -14,9 +14,7 @@ pub struct Frame {
 impl Frame {
 	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
 		let name4 = std::str::from_utf8(&src[0..4])?.to_string();
-		let original_size = util::synch_safe_decode(
-			u32::from_be_bytes(src[4..8].try_into()?),
-		) as usize + 10; // also count 10-byte tag header
+		let original_size = u32::from_be_bytes(src[4..8].try_into()?) as usize + 10; // also count 10-byte tag header
 
 		src = &src[10..original_size]; // skip frame header, truncate to frame size
 
