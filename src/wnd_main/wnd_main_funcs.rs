@@ -65,7 +65,13 @@ impl WndMain {
 
 			match frame.data() {
 				FrameData::Text(s) => items.set_text(idx, 1, s)?,
-				FrameData::MultiText(ss) => {},
+				FrameData::MultiText(ss) => {
+					items.set_text(idx, 1, &ss[0])?;
+					for i in 1..ss.len() {
+						let sub_idx = items.add("", None).unwrap();
+						items.set_text(sub_idx, 1, &ss[i]).unwrap();
+					}
+				},
 				FrameData::Comment(com) => items.set_text(idx, 1, &format!("[{}] {}", com.lang, com.text))?,
 				FrameData::Binary(bin) => items.set_text(idx, 1,
 					&format!("{} ({:.2}%)",
