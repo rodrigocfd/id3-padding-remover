@@ -2,9 +2,17 @@ use std::convert::TryInto;
 use std::error::Error;
 
 use super::FrameComment;
-use super::FrameData;
 use super::util;
 
+/// The data contained in a frame, which can be of various types.
+pub enum FrameData {
+	Text(String),
+	MultiText(Vec<String>),
+	Comment(FrameComment),
+	Binary(Vec<u8>),
+}
+
+/// A unit of data in an MP3 tag.
 pub struct Frame {
 	name4:         String,
 	original_size: usize,

@@ -2,6 +2,7 @@ use std::error::Error;
 
 use super::util;
 
+/// The COMM frame type.
 pub struct FrameComment {
 	pub lang: String,
 	pub text: String,
@@ -18,7 +19,7 @@ impl FrameComment {
 		src = &src[1..]; // skip encoding byte
 
 		// Retrieve 3-char language string, always ISO-8859-1.
-		let lang = std::str::from_utf8(&src[0..4])?.to_string();
+		let lang = util::parse_iso88591_strings(&src[0..4])?.remove(0);
 		src = &src[3..];
 
 		if src[0] == 0x00 {

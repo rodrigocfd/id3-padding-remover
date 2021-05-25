@@ -6,6 +6,7 @@ use winsafe::co;
 use super::Frame;
 use super::util;
 
+/// The MP3 file metadata.
 pub struct Tag {
 	frames:           Vec<Frame>,
 	original_size:    usize,

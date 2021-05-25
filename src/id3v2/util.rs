@@ -48,19 +48,19 @@ pub fn parse_any_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
 }
 
 pub fn parse_iso88591_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
-	let mut texts = Vec::with_capacity(1); // arbitrary
+	let mut texts: Vec<String> = Vec::with_capacity(1); // arbitrary
 	let mut buf16: Vec<u16> = Vec::default();
 
 	for str_block in src.split(|b| *b == 0x00).into_iter() {
 		buf16.clear();
 		buf16.reserve(str_block.len());
-		for chh in str_block.iter() {
-			buf16.push(*chh as _);
+		for ch in str_block.iter() {
+			buf16.push(*ch as _); // simple expansion from u8 to u16, for each char
 		}
 
 		let parsed_str = w::WString::from_wchars_slice(&buf16);
 		if !parsed_str.is_empty() {
-			texts.push(parsed_str.to_string());
+			texts.push(parsed_str.to_string_checked()?);
 		}
 	}
 
@@ -87,7 +87,7 @@ pub fn parse_unicode_strings(mut src: &[u8]) -> Result<Vec<String>, Box<dyn Erro
 	for str_block in src16.split(|b| *b == 0x0000).into_iter() {
 		let parsed_str = w::WString::from_wchars_slice(str_block);
 		if !parsed_str.is_empty() {
-			texts.push(parsed_str.to_string());
+			texts.push(parsed_str.to_string_checked()?);
 		}
 	}
 
