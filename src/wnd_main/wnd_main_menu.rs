@@ -37,6 +37,14 @@ impl WndMain {
 			}
 		});
 
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_EXCSEL, {
+			let lst_files = self.lst_files.clone();
+			move || {
+				lst_files.items().delete(
+					&lst_files.items().selected()).unwrap();
+			}
+		});
+
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMPAD, {
 			let selfc = self.clone();
 			move || {
