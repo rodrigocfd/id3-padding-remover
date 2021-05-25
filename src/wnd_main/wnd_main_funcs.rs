@@ -67,7 +67,11 @@ impl WndMain {
 				FrameData::Text(s) => items.set_text(idx, 1, s)?,
 				FrameData::MultiText(ss) => {},
 				FrameData::Comment(com) => items.set_text(idx, 1, &format!("[{}] {}", com.lang, com.text))?,
-				FrameData::Binary(bin) => items.set_text(idx, 1, &format_bytes(bin.len()))?,
+				FrameData::Binary(bin) => items.set_text(idx, 1,
+					&format!("{} ({:.2}%)",
+						&format_bytes(bin.len()),
+						(bin.len() as f32) * 100.0 / tag.original_size() as f32),
+				)?,
 			}
 		}
 		Ok(())
