@@ -105,19 +105,19 @@ impl WndMain {
 	}
 
 	pub(super) fn write_selected_tags(&self) -> Result<(), Box<dyn Error>> {
-		let mut tags_cache = self.tags_cache.borrow_mut();
-		let sel_idxs = self.lst_files.items().selected();
+		{
+			let mut tags_cache = self.tags_cache.borrow_mut();
 
-		for idx in sel_idxs.iter() {
-			let file = self.lst_files.items().text_str(*idx, 0);
-			let tag = tags_cache.get_mut(&file).unwrap();
-			tag.write(&file)?; // save tag to file, no padding is written
+			for idx in self.lst_files.items().selected().iter() {
+				let file = self.lst_files.items().text_str(*idx, 0);
+				let tag = tags_cache.get_mut(&file).unwrap();
+				tag.write(&file)?; // save tag to file, no padding is written
 
-			*tag = Tag::read(&file)?; // load tag back from file
-			self.lst_files.items().set_text(*idx, 1,
-				&format!("{}", tag.original_padding()))?; // update padding info
+				*tag = Tag::read(&file)?; // load tag back from file
+				self.lst_files.items().set_text(*idx, 1,
+					&format!("{}", tag.original_padding()))?; // update padding info
+			}
 		}
-
 		self.show_tag_frames()
 	}
 }

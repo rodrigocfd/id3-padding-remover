@@ -55,7 +55,18 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMART, {
 			let selfc = self.clone();
 			move || {
+				{
+					let mut tags_cache = selfc.tags_cache.borrow_mut();
 
+					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+						let tag = tags_cache.get_mut(file).unwrap();
+
+						if let Some(apic_idx) = tag.frames().iter().position(|f| f.name4() == "APIC") {
+							tag.frames_mut().remove(apic_idx);
+						}
+					}
+				}
+				selfc.write_selected_tags().unwrap();
 			}
 		});
 
