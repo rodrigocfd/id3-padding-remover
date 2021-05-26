@@ -18,9 +18,17 @@ impl Tag {
 		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ,
 			co::FILE_SHARE::READ, None, co::DISPOSITION::OPEN_EXISTING,
 			co::FILE_ATTRIBUTE::NORMAL, None)?;
-		let bytes = hfile.ReadFile(hfile.GetFileSizeEx()? as _, None)?;
+		let hmap = hfile.CreateFileMapping(None, co::PAGE::READONLY, None, None)?;
+		let hview = hmap.MapViewOfFile(co::FILE_MAP::READ, 0, None)?;
+
+		let mapped_slice = hview.as_slice(hfile.GetFileSizeEx()?);
+		let tag = Self::parse(mapped_slice)?;
+
+		hview.UnmapViewOfFile()?;
+		hmap.CloseHandle()?;
 		hfile.CloseHandle()?;
-		Self::parse(&bytes)
+
+		Ok(tag)
 	}
 
 	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
@@ -49,12 +57,18 @@ impl Tag {
 	}
 
 	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
-		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ | co::GENERIC::WRITE,
-			co::FILE_SHARE::NONE, None, co::DISPOSITION::OPEN_ALWAYS,
-			co::FILE_ATTRIBUTE::NORMAL, None)?;
-		hfile.SetEndOfFile()?; // truncate to zero
-		hfile.WriteFile(&self.serialize(), None)?;
-		hfile.CloseHandle()?;
+		// let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ | co::GENERIC::WRITE,
+		// 	co::FILE_SHARE::NONE, None, co::DISPOSITION::OPEN_ALWAYS,
+		// 	co::FILE_ATTRIBUTE::NORMAL, None)?;
+		// let hmap = hfile.CreateFileMapping(None, co::PAGE::READWRITE, None, None)?;
+		// let hview = hmap.MapViewOfFile(co::FILE_MAP::READ | co::FILE_MAP::WRITE, 0, None)?;
+
+
+		// hfile.WriteFile(&self.serialize(), None)?;
+
+		// hview.UnmapViewOfFile()?;
+		// hmap.CloseHandle()?;
+		// hfile.CloseHandle()?;
 		Ok(())
 	}
 
