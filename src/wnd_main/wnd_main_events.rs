@@ -72,22 +72,7 @@ impl WndMain {
 		self.lst_files.on().lvn_item_changed({
 			let selfc = self.clone();
 			move |_: &w::NMLISTVIEW| {
-				selfc.lst_frames.items().delete_all().unwrap();
-				let sel_files = selfc.lst_files.columns().selected_texts(0);
-				if sel_files.len() == 0 {
-					return;
-				}
-
-				if sel_files.len() == 1 {
-					let tags = selfc.tags_cache.borrow();
-					let tag = tags.get(&sel_files[0]).unwrap();
-					selfc.show_tag_frames(&tag).unwrap();
-
-				} else { // multiple selected items, just display a placeholder
-					selfc.lst_frames.items().add("", None).unwrap();
-					selfc.lst_frames.items().set_text(0, 1,
-						&format!("{} selected...", sel_files.len())).unwrap();
-				}
+				selfc.show_tag_frames().unwrap();
 			}
 		});
 	}

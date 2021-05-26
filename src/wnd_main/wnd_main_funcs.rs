@@ -59,28 +59,48 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn show_tag_frames(&self, tag: &Tag) -> Result<(), Box<dyn Error>> {
-		for frame in tag.frames().iter() {
-			let items = self.lst_frames.items();
-			let idx = items.add(frame.name4(), None)?;
+	pub(super) fn show_tag_frames(&self) -> Result<(), Box<dyn Error>> {
+		let lvitems = self.lst_frames.items();
+		lvitems.delete_all().unwrap();
 
-			match frame.data() {
-				FrameData::Text(s) => items.set_text(idx, 1, s)?,
-				FrameData::MultiText(ss) => {
-					items.set_text(idx, 1, &ss[0])?;
-					for i in 1..ss.len() {
-						let sub_idx = items.add("", None).unwrap();
-						items.set_text(sub_idx, 1, &ss[i]).unwrap();
-					}
-				},
-				FrameData::Comment(com) => items.set_text(idx, 1, &format!("[{}] {}", com.lang, com.text))?,
-				FrameData::Binary(bin) => items.set_text(idx, 1,
-					&format!("{} ({:.2}%)",
-						&format_bytes(bin.len()),
-						(bin.len() as f32) * 100.0 / tag.original_size() as f32),
-				)?,
+		let sel_files = self.lst_files.columns().selected_texts(0);
+
+		if sel_files.is_empty() { // nothing to do
+			return Ok(());
+
+		} else if sel_files.len() > 1 { // multiple selected items, just display a placeholder
+			lvitems.add("", None).unwrap();
+			lvitems.set_text(0, 1,
+				&format!("{} selected...", sel_files.len())).unwrap();
+
+		} else { // 1 single item selected, display its frames
+			let tags_cache = self.tags_cache.borrow();
+			let tag = tags_cache.get(&sel_files[0]).unwrap();
+
+			for frame in tag.frames().iter() {
+				let idx = lvitems.add(frame.name4(), None)?;
+
+				match frame.data() {
+					FrameData::Text(s) => lvitems.set_text(idx, 1, s)?,
+					FrameData::MultiText(ss) => {
+						lvitems.set_text(idx, 1, &ss[0])?;
+						for i in 1..ss.len() {
+							let sub_idx = lvitems.add("", None).unwrap();
+							lvitems.set_text(sub_idx, 1, &ss[i]).unwrap();
+						}
+					},
+					FrameData::Comment(com) => lvitems.set_text(idx, 1,
+						&format!("[{}] {}", com.lang, com.text),
+					)?,
+					FrameData::Binary(bin) => lvitems.set_text(idx, 1,
+						&format!("{} ({:.2}%)",
+							&format_bytes(bin.len()),
+							(bin.len() as f32) * 100.0 / tag.original_size() as f32),
+					)?,
+				}
 			}
 		}
+
 		Ok(())
 	}
 }
