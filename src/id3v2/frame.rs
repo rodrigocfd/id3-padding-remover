@@ -46,6 +46,7 @@ impl Frame {
 		&self.name4
 	}
 
+	/// Returns the original tag size, including 10-byte header.
 	pub fn original_size(&self) -> usize {
 		self.original_size
 	}

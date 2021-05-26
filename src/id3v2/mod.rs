@@ -1,5 +1,6 @@
 mod frame_comment;
 mod frame;
+mod mapped_file;
 mod tag;
 mod util;
 

@@ -1,9 +1,8 @@
 use std::convert::TryInto;
 use std::error::Error;
-use winsafe as w;
-use winsafe::co;
 
 use super::Frame;
+use super::mapped_file::{MappedFile, MappedFileAccess};
 use super::util;
 
 /// The MP3 file metadata.
@@ -15,20 +14,8 @@ pub struct Tag {
 
 impl Tag {
 	pub fn read(file: &str) -> Result<Self, Box<dyn Error>> {
-		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ,
-			co::FILE_SHARE::READ, None, co::DISPOSITION::OPEN_EXISTING,
-			co::FILE_ATTRIBUTE::NORMAL, None)?;
-		let hmap = hfile.CreateFileMapping(None, co::PAGE::READONLY, None, None)?;
-		let hview = hmap.MapViewOfFile(co::FILE_MAP::READ, 0, None)?;
-
-		let mapped_slice = hview.as_slice(hfile.GetFileSizeEx()?);
-		let tag = Self::parse(mapped_slice)?;
-
-		hview.UnmapViewOfFile()?;
-		hmap.CloseHandle()?;
-		hfile.CloseHandle()?;
-
-		Ok(tag)
+		let mapped_file = MappedFile::open(file, MappedFileAccess::Read)?;
+		Self::parse(mapped_file.as_slice())
 	}
 
 	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
@@ -40,10 +27,12 @@ impl Tag {
 		Ok(Self { frames, original_size, original_padding })
 	}
 
+	/// Returns the original tag size, including 10-byte header and padding.
 	pub fn original_size(&self) -> usize {
 		self.original_size
 	}
 
+	/// Returns the original padding size.
 	pub fn original_padding(&self) -> usize {
 		self.original_padding
 	}
@@ -57,18 +46,32 @@ impl Tag {
 	}
 
 	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
-		// let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ | co::GENERIC::WRITE,
-		// 	co::FILE_SHARE::NONE, None, co::DISPOSITION::OPEN_ALWAYS,
-		// 	co::FILE_ATTRIBUTE::NORMAL, None)?;
-		// let hmap = hfile.CreateFileMapping(None, co::PAGE::READWRITE, None, None)?;
-		// let hview = hmap.MapViewOfFile(co::FILE_MAP::READ | co::FILE_MAP::WRITE, 0, None)?;
+		let blob_new = self.serialize();
+		let mut mapped_file = MappedFile::open(file, MappedFileAccess::ReadWrite)?;
+		let file_size_old = mapped_file.size();
+		let tag_old = Self::parse(mapped_file.as_slice())?;
 
+		// Calculate size difference between new/old tags.
+		let diff = blob_new.len() as isize - tag_old.original_size() as isize;
 
-		// hfile.WriteFile(&self.serialize(), None)?;
+		if diff > 0 { // new tag is larger, we need to make room
+			mapped_file.resize(mapped_file.size() + diff as usize)?;
+		}
 
-		// hview.UnmapViewOfFile()?;
-		// hmap.CloseHandle()?;
-		// hfile.CloseHandle()?;
+		// Move the MP3 data block inside the file.
+		let hot_slice = mapped_file.as_mut_slice();
+		hot_slice.copy_within(
+			tag_old.original_size()..file_size_old,
+			(tag_old.original_size() as isize + diff) as _,
+		);
+
+		// Copy the new tag blob into the file room, no padding.
+		hot_slice[0..blob_new.len()].copy_from_slice(&blob_new);
+
+		if diff < 0 { // new tag is shorter, shrink
+			mapped_file.resize((mapped_file.size() as isize + diff) as _)?;
+		}
+
 		Ok(())
 	}
 
