@@ -47,7 +47,7 @@ impl WndMain {
 					let has_sel = selfc.lst_files.items().selected_count() > 0;
 
 					[ids::MNU_FILE_EXCSEL, ids::MNU_FILE_REMPAD, ids::MNU_FILE_REMART,
-						ids::MNU_FILE_REMRG, ids::MNU_FILE_PRXYEAR, ids::MNU_FILE_SIMPLEN,
+						ids::MNU_FILE_REMRG, ids::MNU_FILE_PRXYEAR, ids::MNU_FILE_CLRDIAC,
 					].iter()
 						.for_each(|id| {
 							p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel).unwrap();

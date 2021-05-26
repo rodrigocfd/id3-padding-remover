@@ -176,6 +176,31 @@ impl SerializedStrs {
 	}
 }
 
+pub fn clear_diacritics(s: &str) -> String {
+	const SRC: &str = "ÁáÀàÃãÂâÄäÉéÈèÊêËëÍíÌìÎîÏïÓóÒòÕõÔôÖöÚúÙùÛûÜüÇçÅåÐðÑñØøÝý";
+	const DST: &str = "AaAaAaAaAaEeEeEeEeIiIiIiIiOoOoOoOoOoUuUuUuUuCcAaDdNnOoYy";
+
+	let mut out = String::with_capacity(s.len());
+
+	for (_, ch) in s.chars().enumerate() {
+		let mut replaced = false;
+
+		for (diac_idx, diac_ch) in SRC.chars().enumerate() {
+			if ch == diac_ch {
+				out.push(DST.chars().nth(diac_idx).unwrap());
+				replaced = true;
+				break;
+			}
+		}
+
+		if !replaced {
+			out.push(ch);
+		}
+	}
+
+	out
+}
+
 pub fn format_bytes(num_bytes: usize) -> String {
 	if num_bytes < 1024 {
 		format!("{} bytes", num_bytes)

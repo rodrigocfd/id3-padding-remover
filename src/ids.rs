@@ -9,7 +9,7 @@ pub const MNU_FILE_REMPAD:  i32 = 203;
 pub const MNU_FILE_REMART:  i32 = 204;
 pub const MNU_FILE_REMRG:   i32 = 205;
 pub const MNU_FILE_PRXYEAR: i32 = 206;
-pub const MNU_FILE_SIMPLEN: i32 = 207;
+pub const MNU_FILE_CLRDIAC: i32 = 207;
 pub const MNU_FILE_ABOUT:   i32 = 208;
 
 pub const ACT_MAIN:         i32 = 300;
