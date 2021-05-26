@@ -45,6 +45,7 @@ impl Tag {
 		&mut self.frames
 	}
 
+	/// Replaces the tag in the given MP3 file with this one.
 	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
 		let blob_new = self.serialize();
 		let mut mapped_file = MappedFile::open(file, MappedFileAccess::ReadWrite)?;

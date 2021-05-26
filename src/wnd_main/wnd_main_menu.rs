@@ -95,7 +95,62 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_PRXYEAR, {
 			let selfc = self.clone();
 			move || {
+				{
+					let mut tags_cache = selfc.tags_cache.borrow_mut();
 
+					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+						let tag = tags_cache.get_mut(file).unwrap();
+						let frames = tag.frames_mut();
+
+						let year = match frames.iter().find(|f| f.name4() == "TYER") {
+							None => {
+								selfc.wnd.hwnd().MessageBox(
+									"Year frame not found.",
+									"No frame", co::MB::ICONEXCLAMATION).unwrap();
+								return
+							},
+							Some(year_frame) => match year_frame.data() {
+								FrameData::Text(text) => text.clone(),
+								_ => {
+									selfc.wnd.hwnd().MessageBox(
+										"Year frame has the wrong data type.",
+										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
+									return
+								},
+							},
+						};
+
+						match frames.iter_mut().find(|f| f.name4() == "TALB") {
+							None => {
+								selfc.wnd.hwnd().MessageBox(
+									"Album frame not found.",
+									"No frame", co::MB::ICONEXCLAMATION).unwrap();
+								return
+							},
+							Some(album_frame) => match album_frame.data_mut() {
+								FrameData::Text(text) => {
+									if text.starts_with(&year) {
+										let res = selfc.wnd.hwnd().MessageBox(
+											&format!("Album appears to have the year prefix: {}.\nContinue?", year),
+											"Verify action",
+											co::MB::ICONEXCLAMATION | co::MB::YESNO).unwrap();
+										if res != co::DLGID::YES {
+											return;
+										}
+									}
+									*text = format!("{} {}", year, text);
+								},
+								_ => {
+									selfc.wnd.hwnd().MessageBox(
+										"Album frame has the wrong data type.",
+										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
+									return
+								},
+							},
+						}
+					}
+				}
+				selfc.write_selected_tags().unwrap();
 			}
 		});
 

@@ -42,19 +42,27 @@ impl Frame {
 		Ok(Self { name4, original_size, data })
 	}
 
+	/// Returns the 4-character frame ID.
 	pub fn name4(&self) -> &str {
 		&self.name4
 	}
 
-	/// Returns the original tag size, including 10-byte header.
+	/// Returns the original frame size, including 10-byte header.
 	pub fn original_size(&self) -> usize {
 		self.original_size
 	}
 
+	/// Returns the data of the frame, which can be of various types.
 	pub fn data(&self) -> &FrameData {
 		&self.data
 	}
 
+	/// Returns the mutable data of the frame, which can be of various types.
+	pub fn data_mut(&mut self) -> &mut FrameData {
+		&mut self.data
+	}
+
+	/// Serializes the frame into bytes.
 	pub fn serialize(&self) -> Vec<u8> {
 		let frame_data = match &self.data {
 			FrameData::Text(text) => util::SerializedStrs::new(&[&text]).collect(),
