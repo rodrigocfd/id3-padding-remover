@@ -45,8 +45,13 @@ impl WndMain {
 			move |p: msg::wm::InitMenuPopup| {
 				if p.hmenu == selfc.lst_files.context_menu().unwrap() {
 					let has_sel = selfc.lst_files.items().selected_count() > 0;
-					p.hmenu.EnableMenuItem(w::IdPos::Id(ids::MNU_FILE_EXCSEL), has_sel).unwrap();
-					p.hmenu.EnableMenuItem(w::IdPos::Id(ids::MNU_FILE_REMPAD), has_sel).unwrap();
+
+					[ids::MNU_FILE_EXCSEL, ids::MNU_FILE_REMPAD, ids::MNU_FILE_REMART,
+						ids::MNU_FILE_REMRG, ids::MNU_FILE_PRXYEAR, ids::MNU_FILE_SIMPLEN,
+					].iter()
+						.for_each(|id| {
+							p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel).unwrap();
+						});
 				}
 			}
 		});

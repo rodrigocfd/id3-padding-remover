@@ -2,7 +2,6 @@ use winsafe as w;
 use winsafe::co;
 use winsafe::shell;
 
-use crate::id3v2::Tag;
 use crate::ids;
 use super::WndMain;
 
@@ -49,20 +48,48 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMPAD, {
 			let selfc = self.clone();
 			move || {
-				let mut tags_cache = selfc.tags_cache.borrow_mut();
-				let sel_idxs = selfc.lst_files.items().selected();
+				selfc.write_selected_tags().unwrap(); // simply writing will remove padding
+			}
+		});
 
-				for idx in sel_idxs.iter() {
-					let file = selfc.lst_files.items().text_str(*idx, 0);
-					let tag = tags_cache.get_mut(&file).unwrap();
-					tag.write(&file).unwrap(); // save tag to file, no padding is written
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMART, {
+			let selfc = self.clone();
+			move || {
 
-					*tag = Tag::read(&file).unwrap(); // load tag back from file
-					selfc.lst_files.items().set_text(*idx, 1,
-						&format!("{}", tag.original_padding())).unwrap(); // update padding info
-				}
+			}
+		});
 
-				selfc.show_tag_frames().unwrap();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMRG, {
+			let selfc = self.clone();
+			move || {
+
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_PRXYEAR, {
+			let selfc = self.clone();
+			move || {
+
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_SIMPLEN, {
+			let selfc = self.clone();
+			move || {
+
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_ABOUT, {
+			let wnd = self.wnd.clone();
+			move || {
+				wnd.hwnd().MessageBox(
+					"ID3 Padding Remover v2\n\
+					Writen in Rust with WinSafe library.\n\n\
+					Rodrigo César de Freitas Dias © 2021",
+					"About",
+					co::MB::ICONINFORMATION,
+				).unwrap();
 			}
 		});
 	}
