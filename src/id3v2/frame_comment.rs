@@ -42,4 +42,19 @@ impl FrameComment {
 
 		Ok(Self { lang, text: texts[0].clone() })
 	}
+
+	pub fn serialize_data(&self) -> Vec<u8> {
+		let buf_text = util::SerializedStrs::new(&[&self.text]);
+
+		let mut buf: Vec<u8> = Vec::with_capacity(1 + 3 + buf_text.data.len());
+		buf.push(buf_text.encoding_byte);
+		buf.extend(
+			self.lang.chars().enumerate()
+				.map(|(_, ch)| ch as u8),
+		);
+		buf.push(0x00);
+		buf.extend_from_slice(&buf_text.data);
+
+		buf
+	}
 }

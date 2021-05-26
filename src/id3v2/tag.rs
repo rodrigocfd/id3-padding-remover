@@ -48,6 +48,16 @@ impl Tag {
 		&mut self.frames
 	}
 
+	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
+		let (hfile, _) = w::HFILE::CreateFile(file, co::GENERIC::READ | co::GENERIC::WRITE,
+			co::FILE_SHARE::NONE, None, co::DISPOSITION::OPEN_ALWAYS,
+			co::FILE_ATTRIBUTE::NORMAL, None)?;
+		hfile.SetEndOfFile()?; // truncate to zero
+		hfile.WriteFile(&self.serialize(), None)?;
+		hfile.CloseHandle()?;
+		Ok(())
+	}
+
 	fn parse_header(src: &[u8]) -> Result<usize, Box<dyn Error>> {
 		// Check ID3 magic bytes.
 		let magic_str = ['I' as u8, 'D' as u8, '3' as u8];
@@ -79,7 +89,7 @@ impl Tag {
 	}
 
 	fn parse_all_frames(mut src: &[u8]) -> Result<(Vec<Frame>, usize), Box<dyn Error>> {
-		let mut frames = Vec::new();
+		let mut frames = Vec::default();
 		let mut original_padding = 0;
 
 		loop {
@@ -108,5 +118,21 @@ impl Tag {
 		}
 
 		Ok((frames, original_padding))
+	}
+
+	fn serialize(&self) -> Vec<u8> {
+		let mut frames_buf: Vec<u8> = Vec::with_capacity(100); // arbitrary
+		for f in self.frames.iter() {
+			frames_buf.extend_from_slice(&f.serialize());
+		}
+
+		let mut buf: Vec<u8> = Vec::with_capacity(10 + frames_buf.len());
+		buf.extend(&['I' as u8, 'D' as u8, '3' as u8]); // magic bytes
+		buf.extend_from_slice(&[0x03, 0x00]); // tag version
+		buf.push(0x00); // flags
+		buf.extend_from_slice(&util::synch_safe_encode(frames_buf.len() as _).to_be_bytes()); // tag size, minus header
+		buf.extend_from_slice(&frames_buf);
+
+		buf
 	}
 }

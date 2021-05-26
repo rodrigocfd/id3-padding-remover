@@ -53,4 +53,24 @@ impl Frame {
 	pub fn data(&self) -> &FrameData {
 		&self.data
 	}
+
+	pub fn serialize(&self) -> Vec<u8> {
+		let frame_data = match &self.data {
+			FrameData::Text(text) => util::SerializedStrs::new(&[&text]).collect(),
+			FrameData::MultiText(texts) => util::SerializedStrs::new(&texts).collect(),
+			FrameData::Comment(comm) => comm.serialize_data(),
+			FrameData::Binary(bin) => bin.clone(),
+		};
+
+		let mut buf: Vec<u8> = Vec::with_capacity(frame_data.len() + 10);
+		buf.extend(
+			self.name4.chars().enumerate()
+				.map(|(_, ch)| ch as u8),
+		);
+		buf.extend_from_slice(&(frame_data.len() as u32).to_be_bytes()); // size not counting 10-byte header
+		buf.extend_from_slice(&[0x00, 0x00]); // flags
+		buf.extend_from_slice(&frame_data);
+
+		buf
+	}
 }

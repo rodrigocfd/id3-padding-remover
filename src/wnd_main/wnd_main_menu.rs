@@ -49,6 +49,7 @@ impl WndMain {
 			let selfc = self.clone();
 			move || {
 
+
 			}
 		});
 	}

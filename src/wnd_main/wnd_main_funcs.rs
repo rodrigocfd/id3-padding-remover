@@ -35,8 +35,9 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
-	pub(super) fn add_files(&self, files: &Vec<String>) -> Result<(), Box<dyn Error>> {
-		for file in files.iter() {
+	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
+		for file_ref in files.iter() {
+			let file = file_ref.as_ref();
 			if self.lst_files.items().find(file).is_none() { // item not added yet?
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
