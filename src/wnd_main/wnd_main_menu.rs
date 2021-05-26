@@ -2,6 +2,7 @@ use winsafe as w;
 use winsafe::co;
 use winsafe::shell;
 
+use crate::id3v2::FrameData;
 use crate::ids;
 use super::WndMain;
 
@@ -60,10 +61,7 @@ impl WndMain {
 
 					for file in selfc.lst_files.columns().selected_texts(0).iter() {
 						let tag = tags_cache.get_mut(file).unwrap();
-
-						if let Some(apic_idx) = tag.frames().iter().position(|f| f.name4() == "APIC") {
-							tag.frames_mut().remove(apic_idx);
-						}
+						tag.frames_mut().retain(|f| f.name4() != "APIC");
 					}
 				}
 				selfc.write_selected_tags().unwrap();
@@ -73,7 +71,24 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMRG, {
 			let selfc = self.clone();
 			move || {
+				{
+					let mut tags_cache = selfc.tags_cache.borrow_mut();
 
+					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+						let tag = tags_cache.get_mut(file).unwrap();
+						tag.frames_mut().retain(|f| {
+							if f.name4() == "TXXX" {
+								if let FrameData::MultiText(texts) = f.data() {
+									if texts[0].starts_with("replaygain_") {
+										return false;
+									}
+								}
+							}
+							true
+						});
+					}
+				}
+				selfc.write_selected_tags().unwrap();
 			}
 		});
 
