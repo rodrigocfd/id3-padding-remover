@@ -63,6 +63,15 @@ impl WndMain {
 			}
 		});
 
+		self.wnd.on().wm_drop_files({
+			let selfc = self.clone();
+			move |p: msg::wm::DropFiles| {
+				selfc.add_files(
+					&p.hdrop.DragQueryFiles().unwrap(),
+				).unwrap();
+			}
+		});
+
 		self.lst_files.on().lvn_key_down({
 			let selfc = self.clone();
 			move |p: &w::NMLVKEYDOWN| {
