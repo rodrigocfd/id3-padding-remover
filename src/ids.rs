@@ -1,5 +1,7 @@
 //! Resource IDs.
 
+pub const TITLE:            &str = "ID3 Padding Remover";
+
 pub const ICO_FROG:         i32 = 101;
 
 pub const MNU_MAIN:         i32 = 200;

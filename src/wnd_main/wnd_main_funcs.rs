@@ -35,6 +35,15 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
+	pub fn titlebar_count(&self, is_pre_delete: bool) -> Result<(), Box<dyn Error>> {
+		let lvitems = self.lst_files.items();
+		let count = lvitems.count() - if is_pre_delete { 1 } else { 0 }; // LVN_DELETEITEM is fired before deletion
+		self.wnd.hwnd().SetWindowText(
+			&format!("{} ({}/{})", ids::TITLE, lvitems.selected_count(), count),
+		)?;
+		Ok(())
+	}
+
 	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
@@ -56,7 +65,7 @@ impl WndMain {
 				self.tags_cache.borrow_mut().insert(file.to_owned(), tag); // cache tag
 			}
 		}
-		Ok(())
+		self.titlebar_count(false)
 	}
 
 	pub(super) fn show_tag_frames(&self) -> Result<(), Box<dyn Error>> {

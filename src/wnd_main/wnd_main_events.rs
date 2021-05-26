@@ -24,6 +24,7 @@ impl WndMain {
 				]).unwrap();
 				selfc.lst_frames.columns().set_width_to_fill(1).unwrap();
 
+				selfc.titlebar_count(false).unwrap();
 				true
 			}
 		});
@@ -87,6 +88,16 @@ impl WndMain {
 			let selfc = self.clone();
 			move |_: &w::NMLISTVIEW| {
 				selfc.show_tag_frames().unwrap();
+				selfc.titlebar_count(false).unwrap();
+			}
+		});
+
+		self.lst_files.on().lvn_delete_item({
+			let selfc = self.clone();
+			move |p: &w::NMLISTVIEW| {
+				selfc.tags_cache.borrow_mut() // remove entry from cache
+					.remove(&selfc.lst_files.items().text_str(p.iItem as _, 0));
+				selfc.titlebar_count(true).unwrap();
 			}
 		});
 	}
