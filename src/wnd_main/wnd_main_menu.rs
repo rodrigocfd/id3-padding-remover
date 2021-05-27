@@ -53,9 +53,14 @@ impl WndMain {
 
 				let sel_count = selfc.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().MessageBox(
-						&format!("Padding removed from {} files.", sel_count),
-						"Done", co::MB::ICONINFORMATION).unwrap();
+					selfc.wnd.hwnd().TaskDialog(
+						None,
+						Some(ids::TITLE),
+						Some("Operation successful"),
+						Some(&format!("Padding removed from {} files.", sel_count)),
+						co::TDCBF::OK,
+						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+					).unwrap();
 				}
 			}
 		});
@@ -75,9 +80,14 @@ impl WndMain {
 
 				let sel_count = selfc.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().MessageBox(
-						&format!("Album art removed from {} files.", sel_count),
-						"Done", co::MB::ICONINFORMATION).unwrap();
+					selfc.wnd.hwnd().TaskDialog(
+						None,
+						Some(ids::TITLE),
+						Some("Operation successful"),
+						Some(&format!("Album art removed from {} files.", sel_count)),
+						co::TDCBF::OK,
+						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+					).unwrap();
 				}
 			}
 		});
@@ -106,9 +116,14 @@ impl WndMain {
 
 				let sel_count = selfc.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().MessageBox(
-						&format!("ReplayGain removed from {} files.", sel_count),
-						"Done", co::MB::ICONINFORMATION).unwrap();
+					selfc.wnd.hwnd().TaskDialog(
+						None,
+						Some(ids::TITLE),
+						Some("Operation successful"),
+						Some(&format!("ReplayGain removed from {} files.", sel_count)),
+						co::TDCBF::OK,
+						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+					).unwrap();
 				}
 			}
 		});
@@ -127,17 +142,25 @@ impl WndMain {
 							if let FrameData::Text(text) = year_frame.data() {
 								text.clone()
 							} else {
-								selfc.wnd.hwnd().MessageBox(
-									&format!("File: {}\n\n\"
-										Year frame has the wrong data type.", file),
-									"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
+								selfc.wnd.hwnd().TaskDialog(
+									None,
+									Some(ids::TITLE),
+									Some("Bad frame"),
+									Some(&format!("File: {}\n\nYear frame has the wrong data type.", file)),
+									co::TDCBF::OK,
+									w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
+								).unwrap();
 								return
 							}
 						} else {
-							selfc.wnd.hwnd().MessageBox(
-								&format!("File: {}\n\n\
-									Year frame not found.", file),
-								"No frame", co::MB::ICONEXCLAMATION).unwrap();
+							selfc.wnd.hwnd().TaskDialog(
+								None,
+								Some(ids::TITLE),
+								Some("Missing frame"),
+								Some(&format!("File: {}\n\nYear frame not found.", file)),
+								co::TDCBF::OK,
+								w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
+							).unwrap();
 							return
 						};
 
@@ -145,27 +168,39 @@ impl WndMain {
 							if let FrameData::Text(text) = album_frame.data_mut() {
 								text
 							} else {
-								selfc.wnd.hwnd().MessageBox(
-									&format!("File: {}\n\n\
-										Album frame has the wrong data type.", file),
-									"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
+								selfc.wnd.hwnd().TaskDialog(
+									None,
+									Some(ids::TITLE),
+									Some("Bad frame"),
+									Some(&format!("File: {}\n\nAlbum frame has the wrong data type.", file)),
+									co::TDCBF::OK,
+									w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
+								).unwrap();
 								return
 							}
 						} else {
-							selfc.wnd.hwnd().MessageBox(
-								&format!("File: {}\n\n\
-									Album frame not found.", file),
-								"No frame", co::MB::ICONEXCLAMATION).unwrap();
+							selfc.wnd.hwnd().TaskDialog(
+								None,
+								Some(ids::TITLE),
+								Some("Missing frame"),
+								Some(&format!("File: {}\n\nAlbum frame not found.", file)),
+								co::TDCBF::OK,
+								w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
+							).unwrap();
 							return
 						};
 
 						if album.starts_with(&year) {
-							let res = selfc.wnd.hwnd().MessageBox(
-								&format!("File: {}\n\n\
+							let res = selfc.wnd.hwnd().TaskDialog(
+								None,
+								Some(ids::TITLE),
+								Some("Dubious data"),
+								Some(&format!("File: {}\n\n\
 									Album appears to have the year prefix {}.\n\
-									Continue?", file, year),
-								"Verify action",
-								co::MB::ICONEXCLAMATION | co::MB::OKCANCEL).unwrap();
+									Continue anyway?", file, year)),
+								co::TDCBF::OK | co::TDCBF::CANCEL,
+								w::IdTdicon::Tdicon(co::TD_ICON::WARNING),
+							).unwrap();
 							if res != co::DLGID::OK {
 								return;
 							}
@@ -177,9 +212,14 @@ impl WndMain {
 
 				let sel_count = selfc.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().MessageBox(
-						&format!("Prefix saved in {} files.", sel_count),
-						"Done", co::MB::ICONINFORMATION).unwrap();
+					selfc.wnd.hwnd().TaskDialog(
+						None,
+						Some(ids::TITLE),
+						Some("Operation successful"),
+						Some(&format!("Prefix saved in {} files.", sel_count)),
+						co::TDCBF::OK,
+						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+					).unwrap();
 				}
 			}
 		});
@@ -215,12 +255,15 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_ABOUT, {
 			let wnd = self.wnd.clone();
 			move || {
-				wnd.hwnd().MessageBox(
-					"ID3 Padding Remover v2\n\
-					Writen in Rust with WinSafe library.\n\n\
-					Rodrigo César de Freitas Dias © 2021",
-					"About",
-					co::MB::ICONINFORMATION,
+				wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("About"),
+					Some("ID3 Padding Remover v2\n\
+						Writen in Rust with WinSafe library.\n\n\
+						Rodrigo César de Freitas Dias © 2021"),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
 				).unwrap();
 			}
 		});

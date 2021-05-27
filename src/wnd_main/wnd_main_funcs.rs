@@ -51,10 +51,13 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						self.wnd.hwnd().MessageBox(
-							&format!("Tag reading failed:\n{}\n\n{}", file, e),
-							"Error",
-							co::MB::ICONERROR,
+						self.wnd.hwnd().TaskDialog(
+							None,
+							Some(ids::TITLE),
+							Some("Tag reading failed"),
+							Some(&format!("File: {}\n\n{}", file, e)),
+							co::TDCBF::OK,
+							w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
 						)?;
 						return Ok(());
 					},
