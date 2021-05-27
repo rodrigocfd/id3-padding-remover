@@ -50,6 +50,13 @@ impl WndMain {
 			let selfc = self.clone();
 			move || {
 				selfc.write_selected_tags().unwrap(); // simply writing will remove padding
+
+				let sel_count = selfc.lst_files.items().selected_count();
+				if sel_count > 1 {
+					selfc.wnd.hwnd().MessageBox(
+						&format!("Padding removed from {} files.", sel_count),
+						"Done", co::MB::ICONINFORMATION).unwrap();
+				}
 			}
 		});
 
@@ -65,6 +72,13 @@ impl WndMain {
 					}
 				}
 				selfc.write_selected_tags().unwrap();
+
+				let sel_count = selfc.lst_files.items().selected_count();
+				if sel_count > 1 {
+					selfc.wnd.hwnd().MessageBox(
+						&format!("Album art removed from {} files.", sel_count),
+						"Done", co::MB::ICONINFORMATION).unwrap();
+				}
 			}
 		});
 
@@ -89,6 +103,13 @@ impl WndMain {
 					}
 				}
 				selfc.write_selected_tags().unwrap();
+
+				let sel_count = selfc.lst_files.items().selected_count();
+				if sel_count > 1 {
+					selfc.wnd.hwnd().MessageBox(
+						&format!("ReplayGain removed from {} files.", sel_count),
+						"Done", co::MB::ICONINFORMATION).unwrap();
+				}
 			}
 		});
 
@@ -105,7 +126,8 @@ impl WndMain {
 						let year = match frames.iter().find(|f| f.name4() == "TYER") {
 							None => {
 								selfc.wnd.hwnd().MessageBox(
-									"Year frame not found.",
+									&format!("File: {}\n\n\
+										Year frame not found.", file),
 									"No frame", co::MB::ICONEXCLAMATION).unwrap();
 								return
 							},
@@ -113,7 +135,8 @@ impl WndMain {
 								FrameData::Text(text) => text.clone(),
 								_ => {
 									selfc.wnd.hwnd().MessageBox(
-										"Year frame has the wrong data type.",
+										&format!("File: {}\n\n\"
+											Year frame has the wrong data type.", file),
 										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
 									return
 								},
@@ -123,7 +146,8 @@ impl WndMain {
 						match frames.iter_mut().find(|f| f.name4() == "TALB") {
 							None => {
 								selfc.wnd.hwnd().MessageBox(
-									"Album frame not found.",
+									&format!("File: {}\n\n\
+										Album frame not found.", file),
 									"No frame", co::MB::ICONEXCLAMATION).unwrap();
 								return
 							},
@@ -131,7 +155,9 @@ impl WndMain {
 								FrameData::Text(text) => {
 									if text.starts_with(&year) {
 										let res = selfc.wnd.hwnd().MessageBox(
-											&format!("Album appears to have the year prefix: {}.\nContinue?", year),
+											&format!("File: {}\n\n\
+												Album appears to have the year prefix {}.\n\
+												Continue?", file, year),
 											"Verify action",
 											co::MB::ICONEXCLAMATION | co::MB::YESNO).unwrap();
 										if res != co::DLGID::YES {
@@ -142,7 +168,8 @@ impl WndMain {
 								},
 								_ => {
 									selfc.wnd.hwnd().MessageBox(
-										"Album frame has the wrong data type.",
+										&format!("File: {}\n\n\
+											Album frame has the wrong data type.", file),
 										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
 									return
 								},
@@ -151,6 +178,13 @@ impl WndMain {
 					}
 				}
 				selfc.write_selected_tags().unwrap();
+
+				let sel_count = selfc.lst_files.items().selected_count();
+				if sel_count > 1 {
+					selfc.wnd.hwnd().MessageBox(
+						&format!("Prefix saved in {} files.", sel_count),
+						"Done", co::MB::ICONINFORMATION).unwrap();
+				}
 			}
 		});
 
