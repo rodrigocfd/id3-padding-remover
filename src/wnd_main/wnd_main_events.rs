@@ -67,9 +67,27 @@ impl WndMain {
 		self.wnd.on().wm_drop_files({
 			let selfc = self.clone();
 			move |p: msg::wm::DropFiles| {
-				selfc.add_files(
-					&p.hdrop.DragQueryFiles().unwrap(),
-				).unwrap();
+				let dropped_files = p.hdrop.DragQueryFiles().unwrap();
+				let mut all_files = Vec::with_capacity(dropped_files.len());
+
+				for mut file in dropped_files.into_iter() {
+					if w::GetFileAttributes(&file).unwrap().has(co::FILE_ATTRIBUTE::DIRECTORY) {
+						if !file.ends_with('\\') {
+							file.push('\\');
+						}
+						file.push_str("*.mp3");
+
+						for mp3 in w::HFINDFILE::ListAll(&file).unwrap() { // just search 1 level below
+							if mp3.to_lowercase().ends_with(".mp3") {
+								all_files.push(mp3);
+							}
+						}
+					} else if file.to_lowercase().ends_with(".mp3") {
+						all_files.push(file);
+					}
+				}
+
+				selfc.add_files(&all_files).unwrap();
 			}
 		});
 

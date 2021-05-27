@@ -47,6 +47,7 @@ impl WndMain {
 	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
+
 			if self.lst_files.items().find(file).is_none() { // item not added yet?
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
@@ -68,6 +69,8 @@ impl WndMain {
 				self.tags_cache.borrow_mut().insert(file.to_owned(), tag); // cache tag
 			}
 		}
+
+		self.lst_files.columns().set_width_to_fill(0).unwrap();
 		self.titlebar_count(false)
 	}
 
