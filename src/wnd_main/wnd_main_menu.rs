@@ -123,58 +123,54 @@ impl WndMain {
 						let tag = tags_cache.get_mut(file).unwrap();
 						let frames = tag.frames_mut();
 
-						let year = match frames.iter().find(|f| f.name4() == "TYER") {
-							None => {
+						let year = if let Some(year_frame) = frames.iter().find(|f| f.name4() == "TYER") {
+							if let FrameData::Text(text) = year_frame.data() {
+								text.clone()
+							} else {
 								selfc.wnd.hwnd().MessageBox(
-									&format!("File: {}\n\n\
-										Year frame not found.", file),
-									"No frame", co::MB::ICONEXCLAMATION).unwrap();
+									&format!("File: {}\n\n\"
+										Year frame has the wrong data type.", file),
+									"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
 								return
-							},
-							Some(year_frame) => match year_frame.data() {
-								FrameData::Text(text) => text.clone(),
-								_ => {
-									selfc.wnd.hwnd().MessageBox(
-										&format!("File: {}\n\n\"
-											Year frame has the wrong data type.", file),
-										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
-									return
-								},
-							},
+							}
+						} else {
+							selfc.wnd.hwnd().MessageBox(
+								&format!("File: {}\n\n\
+									Year frame not found.", file),
+								"No frame", co::MB::ICONEXCLAMATION).unwrap();
+							return
 						};
 
-						match frames.iter_mut().find(|f| f.name4() == "TALB") {
-							None => {
+						let album = if let Some(album_frame) = frames.iter_mut().find(|f| f.name4() == "TALB") {
+							if let FrameData::Text(text) = album_frame.data_mut() {
+								text
+							} else {
 								selfc.wnd.hwnd().MessageBox(
 									&format!("File: {}\n\n\
-										Album frame not found.", file),
-									"No frame", co::MB::ICONEXCLAMATION).unwrap();
+										Album frame has the wrong data type.", file),
+									"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
 								return
-							},
-							Some(album_frame) => match album_frame.data_mut() {
-								FrameData::Text(text) => {
-									if text.starts_with(&year) {
-										let res = selfc.wnd.hwnd().MessageBox(
-											&format!("File: {}\n\n\
-												Album appears to have the year prefix {}.\n\
-												Continue?", file, year),
-											"Verify action",
-											co::MB::ICONEXCLAMATION | co::MB::YESNO).unwrap();
-										if res != co::DLGID::YES {
-											return;
-										}
-									}
-									*text = format!("{} {}", year, text);
-								},
-								_ => {
-									selfc.wnd.hwnd().MessageBox(
-										&format!("File: {}\n\n\
-											Album frame has the wrong data type.", file),
-										"Bad frame", co::MB::ICONEXCLAMATION).unwrap();
-									return
-								},
-							},
+							}
+						} else {
+							selfc.wnd.hwnd().MessageBox(
+								&format!("File: {}\n\n\
+									Album frame not found.", file),
+								"No frame", co::MB::ICONEXCLAMATION).unwrap();
+							return
+						};
+
+						if album.starts_with(&year) {
+							let res = selfc.wnd.hwnd().MessageBox(
+								&format!("File: {}\n\n\
+									Album appears to have the year prefix {}.\n\
+									Continue?", file, year),
+								"Verify action",
+								co::MB::ICONEXCLAMATION | co::MB::OKCANCEL).unwrap();
+							if res != co::DLGID::OK {
+								return;
+							}
 						}
+						*album = format!("{} {}", year, album);
 					}
 				}
 				selfc.write_selected_tags().unwrap();
