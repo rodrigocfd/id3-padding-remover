@@ -46,9 +46,9 @@ impl MappedFile {
 		let mut new_self = Self {
 			access,
 			hfile,
-			hmap: w::HFILEMAP::NULL,
+			hmap:  w::HFILEMAP::NULL,
 			hview: w::HFILEMAPVIEW::NULL,
-			size: 0,
+			size:  0,
 		};
 		new_self.map_in_memory()?;
 		Ok(new_self)

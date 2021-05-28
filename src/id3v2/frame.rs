@@ -28,14 +28,14 @@ impl Frame {
 
 		let data = if name4 == "COMM" {
 			FrameData::Comment(FrameComment::parse(src)?)
-		} else if name4.chars().nth(0).unwrap() == 'T' {
+		} else if name4.chars().nth(0).unwrap() == 'T' { // text frame
 			let texts = util::parse_any_strings(src)?;
 			match texts.len() {
 				0 => return Err(format!("Frame {} contains no texts.", name4).into()),
 				1 => FrameData::Text(texts[0].clone()),
 				_ => FrameData::MultiText(texts),
 			}
-		} else {
+		} else { // anything else will be treated as raw binary
 			FrameData::Binary(src.to_vec())
 		};
 

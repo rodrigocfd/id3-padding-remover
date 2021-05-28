@@ -113,7 +113,9 @@ impl Tag {
 		loop {
 			if src.is_empty() { // end of tag, no padding found
 				break;
-			} else if util::is_all_zero(src) { // we entered a padding region after all frames
+			} else if src.iter().find(|b| **b != 0x00).is_none() {
+				// If the rest of the blob contains only zeros,
+				// we entered a padding region.
 				original_padding = src.len();
 				break;
 			}

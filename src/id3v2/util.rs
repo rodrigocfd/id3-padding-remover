@@ -33,15 +33,6 @@ pub fn synch_safe_decode(n: u32) -> u32 { // big-endian
 	out
 }
 
-pub fn is_all_zero(blob: &[u8]) -> bool {
-	for b in blob.iter() {
-		if *b != 0x00 {
-			return false;
-		}
-	}
-	true
-}
-
 pub fn parse_any_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
 	match src[0] {
 		0x00 => parse_iso88591_strings(&src[1..]), // skip encoding byte
