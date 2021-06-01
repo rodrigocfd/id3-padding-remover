@@ -17,3 +17,5 @@ pub struct WndMain {
 	resizer:    gui::Resizer,
 	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
 }
+
+pub enum PreDelete { Yes, No }

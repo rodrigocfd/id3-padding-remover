@@ -8,6 +8,7 @@ use winsafe::gui;
 
 use crate::id3v2::{format_bytes, FrameData, Tag};
 use crate::ids;
+use super::PreDelete;
 use super::WndMain;
 
 impl WndMain {
@@ -35,9 +36,12 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
-	pub fn titlebar_count(&self, is_pre_delete: bool) -> Result<(), Box<dyn Error>> {
+	pub fn titlebar_count(&self, moment: PreDelete) -> Result<(), Box<dyn Error>> {
 		let lvitems = self.lst_files.items();
-		let count = lvitems.count() - if is_pre_delete { 1 } else { 0 }; // LVN_DELETEITEM is fired before deletion
+		let count = lvitems.count() - match moment {
+			PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
+			PreDelete::No => 0,
+		};
 		self.wnd.hwnd().SetWindowText(
 			&format!("{} ({}/{})", ids::TITLE, lvitems.selected_count(), count),
 		)?;
@@ -71,7 +75,7 @@ impl WndMain {
 		}
 
 		self.lst_files.columns().set_width_to_fill(0).unwrap();
-		self.titlebar_count(false)
+		self.titlebar_count(PreDelete::No)
 	}
 
 	pub(super) fn show_tag_frames(&self) -> Result<(), Box<dyn Error>> {

@@ -3,6 +3,7 @@ use winsafe::co;
 use winsafe::msg;
 
 use crate::ids;
+use super::PreDelete;
 use super::WndMain;
 
 impl WndMain {
@@ -24,7 +25,7 @@ impl WndMain {
 				]).unwrap();
 				selfc.lst_frames.columns().set_width_to_fill(1).unwrap();
 
-				selfc.titlebar_count(false).unwrap();
+				selfc.titlebar_count(PreDelete::No).unwrap();
 				true
 			}
 		});
@@ -106,7 +107,7 @@ impl WndMain {
 			let selfc = self.clone();
 			move |_: &w::NMLISTVIEW| {
 				selfc.show_tag_frames().unwrap();
-				selfc.titlebar_count(false).unwrap();
+				selfc.titlebar_count(PreDelete::No).unwrap();
 			}
 		});
 
@@ -115,7 +116,7 @@ impl WndMain {
 			move |p: &w::NMLISTVIEW| {
 				selfc.tags_cache.borrow_mut() // remove entry from cache
 					.remove(&selfc.lst_files.items().text_str(p.iItem as _, 0));
-				selfc.titlebar_count(true).unwrap();
+				selfc.titlebar_count(PreDelete::Yes).unwrap();
 			}
 		});
 	}
