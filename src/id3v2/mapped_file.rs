@@ -1,11 +1,13 @@
 use winsafe as w;
 use winsafe::co;
 
+/// Access type for a `MappedFile`.
 pub enum MappedFileAccess {
 	Read,
 	ReadWrite,
 }
 
+/// Manages a memory-mapped file, which can be read/written through slices.
 pub struct MappedFile {
 	access: MappedFileAccess,
 	hfile:  w::HFILE,
@@ -23,6 +25,7 @@ impl Drop for MappedFile {
 }
 
 impl MappedFile {
+	/// Opens a file and maps it in memory according to the given permissions.
 	pub fn open(file_path: &str, access: MappedFileAccess) -> w::WinResult<Self> {
 		let (hfile, _) = w::HFILE::CreateFile(
 			file_path,
@@ -74,22 +77,27 @@ impl MappedFile {
 			None,
 		)?;
 
-		self.size = self.hfile.GetFileSizeEx()?;
+		self.size = self.hfile.GetFileSizeEx()?; // cache
 		Ok(())
 	}
 
+	/// Returns the size of the file. This value is cached.
 	pub fn size(&self) -> usize {
 		self.size
 	}
 
+	/// Returns a slice to the mapped memory.
 	pub fn as_slice(&self) -> &[u8] {
 		self.hview.as_slice(self.size)
 	}
 
+	/// Returns a mutable slice to the mapped memory.
 	pub fn as_mut_slice(&mut self) -> &mut [u8] {
 		self.hview.as_mut_slice(self.size)
 	}
 
+	/// Resizes the file, which will be remapped in memory. All slices must be
+	/// recreated.
 	pub fn resize(&mut self, num_bytes: usize) -> w::WinResult<()> {
 		self.hview.UnmapViewOfFile()?;
 		self.hmap.CloseHandle()?;
