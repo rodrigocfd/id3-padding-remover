@@ -7,7 +7,7 @@ use super::WndMain;
 impl WndMain {
 	pub(super) fn menu_events(&self) {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_OPEN, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
 				let fileo: shell::IFileOpenDialog = w::CoCreateInstance(
 					&shell::clsid::FileOpenDialog,
@@ -27,8 +27,8 @@ impl WndMain {
 
 				fileo.SetFileTypeIndex(0).unwrap();
 
-				if fileo.Show(selfc.wnd.hwnd()).unwrap() {
-					selfc.add_files(
+				if fileo.Show(self2.wnd.hwnd()).unwrap() {
+					self2.add_files(
 						&fileo.GetResults().unwrap()
 							.GetDisplayNames(co::SIGDN::FILESYSPATH).unwrap(),
 					).unwrap();
@@ -45,13 +45,13 @@ impl WndMain {
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMPAD, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
-				selfc.write_selected_tags().unwrap(); // simply writing will remove padding
+				self2.write_selected_tags().unwrap(); // simply writing will remove padding
 
-				let sel_count = selfc.lst_files.items().selected_count();
+				let sel_count = self2.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().TaskDialog(
+					self2.wnd.hwnd().TaskDialog(
 						None,
 						Some(ids::TITLE),
 						Some("Operation successful"),
@@ -64,21 +64,21 @@ impl WndMain {
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMART, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
 				{
-					let mut tags_cache = selfc.tags_cache.borrow_mut();
+					let mut tags_cache = self2.tags_cache.borrow_mut();
 
-					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+					for file in self2.lst_files.columns().selected_texts(0).iter() {
 						let tag = tags_cache.get_mut(file).unwrap();
 						tag.frames_mut().retain(|f| f.name4() != "APIC");
 					}
 				}
-				selfc.write_selected_tags().unwrap();
+				self2.write_selected_tags().unwrap();
 
-				let sel_count = selfc.lst_files.items().selected_count();
+				let sel_count = self2.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().TaskDialog(
+					self2.wnd.hwnd().TaskDialog(
 						None,
 						Some(ids::TITLE),
 						Some("Operation successful"),
@@ -91,12 +91,12 @@ impl WndMain {
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMRG, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
 				{
-					let mut tags_cache = selfc.tags_cache.borrow_mut();
+					let mut tags_cache = self2.tags_cache.borrow_mut();
 
-					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+					for file in self2.lst_files.columns().selected_texts(0).iter() {
 						let tag = tags_cache.get_mut(file).unwrap();
 						tag.frames_mut().retain(|f| {
 							if f.name4() == "TXXX" {
@@ -110,11 +110,11 @@ impl WndMain {
 						});
 					}
 				}
-				selfc.write_selected_tags().unwrap();
+				self2.write_selected_tags().unwrap();
 
-				let sel_count = selfc.lst_files.items().selected_count();
+				let sel_count = self2.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().TaskDialog(
+					self2.wnd.hwnd().TaskDialog(
 						None,
 						Some(ids::TITLE),
 						Some("Operation successful"),
@@ -127,12 +127,12 @@ impl WndMain {
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_PRXYEAR, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
 				{
-					let mut tags_cache = selfc.tags_cache.borrow_mut();
+					let mut tags_cache = self2.tags_cache.borrow_mut();
 
-					for file in selfc.lst_files.columns().selected_texts(0).iter() {
+					for file in self2.lst_files.columns().selected_texts(0).iter() {
 						let tag = tags_cache.get_mut(file).unwrap();
 						let frames = tag.frames_mut();
 
@@ -140,7 +140,7 @@ impl WndMain {
 							if let FrameData::Text(text) = year_frame.data() {
 								text.clone()
 							} else {
-								selfc.wnd.hwnd().TaskDialog(
+								self2.wnd.hwnd().TaskDialog(
 									None,
 									Some(ids::TITLE),
 									Some("Bad frame"),
@@ -151,7 +151,7 @@ impl WndMain {
 								return
 							}
 						} else {
-							selfc.wnd.hwnd().TaskDialog(
+							self2.wnd.hwnd().TaskDialog(
 								None,
 								Some(ids::TITLE),
 								Some("Missing frame"),
@@ -166,7 +166,7 @@ impl WndMain {
 							if let FrameData::Text(text) = album_frame.data_mut() {
 								text
 							} else {
-								selfc.wnd.hwnd().TaskDialog(
+								self2.wnd.hwnd().TaskDialog(
 									None,
 									Some(ids::TITLE),
 									Some("Bad frame"),
@@ -177,7 +177,7 @@ impl WndMain {
 								return
 							}
 						} else {
-							selfc.wnd.hwnd().TaskDialog(
+							self2.wnd.hwnd().TaskDialog(
 								None,
 								Some(ids::TITLE),
 								Some("Missing frame"),
@@ -189,7 +189,7 @@ impl WndMain {
 						};
 
 						if album.starts_with(&year) {
-							let res = selfc.wnd.hwnd().TaskDialog(
+							let res = self2.wnd.hwnd().TaskDialog(
 								None,
 								Some(ids::TITLE),
 								Some("Dubious data"),
@@ -206,11 +206,11 @@ impl WndMain {
 						*album = format!("{} {}", year, album);
 					}
 				}
-				selfc.write_selected_tags().unwrap();
+				self2.write_selected_tags().unwrap();
 
-				let sel_count = selfc.lst_files.items().selected_count();
+				let sel_count = self2.lst_files.items().selected_count();
 				if sel_count > 1 {
-					selfc.wnd.hwnd().TaskDialog(
+					self2.wnd.hwnd().TaskDialog(
 						None,
 						Some(ids::TITLE),
 						Some("Operation successful"),
@@ -223,15 +223,15 @@ impl WndMain {
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_CLRDIAC, {
-			let selfc = self.clone();
+			let self2 = self.clone();
 			move || {
-				let sel_idxs = selfc.lst_files.items().selected();
+				let sel_idxs = self2.lst_files.items().selected();
 
 				{
-					let mut tags_cache = selfc.tags_cache.borrow_mut();
+					let mut tags_cache = self2.tags_cache.borrow_mut();
 
 					for idx in sel_idxs.iter() {
-						let file = selfc.lst_files.items().text_str(*idx, 0);
+						let file = self2.lst_files.items().text_str(*idx, 0);
 						let file_new = clear_diacritics(&file);
 
 						let tag = tags_cache.remove(&file).unwrap();
@@ -240,11 +240,11 @@ impl WndMain {
 				}
 
 				for idx in sel_idxs.iter() {
-					let file = selfc.lst_files.items().text_str(*idx, 0);
+					let file = self2.lst_files.items().text_str(*idx, 0);
 					let file_new = clear_diacritics(&file);
 
 					// This triggers LVN_ITEMCHANGED, which will borrow tags_cache.
-					selfc.lst_files.items().set_text(*idx, 0, &file_new).unwrap();
+					self2.lst_files.items().set_text(*idx, 0, &file_new).unwrap();
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 			}

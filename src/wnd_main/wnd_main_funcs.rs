@@ -24,10 +24,10 @@ impl WndMain {
 		]);
 		let tags_cache = Rc::new(RefCell::new(HashMap::default()));
 
-		let selfc = Self { wnd, lst_files, lst_frames, resizer, tags_cache };
-		selfc.events();
-		selfc.menu_events();
-		selfc
+		let new_self = Self { wnd, lst_files, lst_frames, resizer, tags_cache };
+		new_self.events();
+		new_self.menu_events();
+		new_self
 	}
 
 	pub fn run(&self) -> w::WinResult<()> {
