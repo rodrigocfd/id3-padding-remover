@@ -1,6 +1,4 @@
-use winsafe as w;
-use winsafe::co;
-use winsafe::msg;
+use winsafe::{self as w, co, msg};
 
 use crate::ids;
 use super::PreDelete;

@@ -1,6 +1,4 @@
-use winsafe as w;
-use winsafe::co;
-use winsafe::shell;
+use winsafe::{self as w, co, shell};
 
 use crate::id3v2::{clear_diacritics, FrameData};
 use crate::ids;

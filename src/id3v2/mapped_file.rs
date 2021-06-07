@@ -1,5 +1,4 @@
-use winsafe as w;
-use winsafe::co;
+use winsafe::{self as w, co};
 
 /// Access type for a `MappedFile`.
 pub enum MappedFileAccess {

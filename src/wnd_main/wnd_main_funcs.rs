@@ -2,9 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use winsafe as w;
-use winsafe::co;
-use winsafe::gui;
+use winsafe::{self as w, co, gui};
 
 use crate::id3v2::{format_bytes, FrameData, Tag};
 use crate::ids;

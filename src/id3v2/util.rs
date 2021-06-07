@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use winsafe as w;
+use winsafe::{self as w};
 
 const BOM_LE: u16 = 0xfe_ff;
 const BOM_BE: u16 = 0xff_fe;
