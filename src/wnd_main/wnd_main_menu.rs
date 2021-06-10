@@ -52,17 +52,10 @@ impl WndMain {
 
 				self2.write_selected_tags().unwrap(); // simply writing will remove padding
 
-				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
-
-				self2.wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("Operation successful"),
-					Some(&format!("Padding removed from {} file(s) in {:.2} ms.",
-					self2.lst_files.items().selected_count(), dur)),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("Operation successful",
+					&format!("Padding removed from {} file(s) in {:.2} ms.",
+						self2.lst_files.items().selected_count(),
+						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
 			}
 		});
 
@@ -82,17 +75,10 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
-
-				self2.wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("Operation successful"),
-					Some(&format!("Album art removed from {} file(s) in {:.2} ms.",
-					self2.lst_files.items().selected_count(), dur)),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("Operation successful",
+					&format!("Album art removed from {} file(s) in {:.2} ms.",
+						self2.lst_files.items().selected_count(),
+						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
 			}
 		});
 
@@ -121,17 +107,10 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
-
-				self2.wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("Operation successful"),
-					Some(&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
-					self2.lst_files.items().selected_count(), dur)),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("Operation successful",
+					&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
+						self2.lst_files.items().selected_count(),
+						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
 			}
 		});
 
@@ -152,25 +131,13 @@ impl WndMain {
 							if let FrameData::Text(text) = year_frame.data() {
 								text.clone()
 							} else {
-								self2.wnd.hwnd().TaskDialog(
-									None,
-									Some(ids::TITLE),
-									Some("Bad frame"),
-									Some(&format!("File: {}\n\nYear frame has the wrong data type.", file)),
-									co::TDCBF::OK,
-									w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-								).unwrap();
+								self2.msg_err("Bad frame",
+									&format!("File: {}\n\nYear frame has the wrong data type.", file));
 								return
 							}
 						} else {
-							self2.wnd.hwnd().TaskDialog(
-								None,
-								Some(ids::TITLE),
-								Some("Missing frame"),
-								Some(&format!("File: {}\n\nYear frame not found.", file)),
-								co::TDCBF::OK,
-								w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-							).unwrap();
+							self2.msg_err("Missing frame",
+								&format!("File: {}\n\nYear frame not found.", file));
 							return
 						};
 
@@ -178,25 +145,13 @@ impl WndMain {
 							if let FrameData::Text(text) = album_frame.data_mut() {
 								text
 							} else {
-								self2.wnd.hwnd().TaskDialog(
-									None,
-									Some(ids::TITLE),
-									Some("Bad frame"),
-									Some(&format!("File: {}\n\nAlbum frame has the wrong data type.", file)),
-									co::TDCBF::OK,
-									w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-								).unwrap();
+								self2.msg_err("Bad frame",
+									&format!("File: {}\n\nAlbum frame has the wrong data type.", file));
 								return
 							}
 						} else {
-							self2.wnd.hwnd().TaskDialog(
-								None,
-								Some(ids::TITLE),
-								Some("Missing frame"),
-								Some(&format!("File: {}\n\nAlbum frame not found.", file)),
-								co::TDCBF::OK,
-								w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-							).unwrap();
+							self2.msg_err("Missing frame",
+								&format!("File: {}\n\nAlbum frame not found.", file));
 							return
 						};
 
@@ -220,17 +175,10 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
-
-				self2.wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("Operation successful"),
-					Some(&format!("Prefix saved in {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(), dur)),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("Operation successful",
+					&format!("Prefix saved in {} file(s) in {:.2} ms.",
+						self2.lst_files.items().selected_count(),
+						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
 			}
 		});
 
@@ -263,33 +211,20 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
-
-				self2.wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("Operation successful"),
-					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(), dur)),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("Operation successful",
+					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
+						sel_idxs.len(),
+						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_ABOUT, {
-			let wnd = self.wnd.clone();
+			let self2 = self.clone();
 			move || {
-				wnd.hwnd().TaskDialog(
-					None,
-					Some(ids::TITLE),
-					Some("About"),
-					Some("ID3 Padding Remover v2\n\
-						Writen in Rust with WinSafe library.\n\n\
-						Rodrigo César de Freitas Dias © 2021"),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-				).unwrap();
+				self2.msg_info("About",
+					"ID3 Padding Remover v2\n\
+					Writen in Rust with WinSafe library.\n\n\
+					Rodrigo César de Freitas Dias © 2021");
 			}
 		});
 	}

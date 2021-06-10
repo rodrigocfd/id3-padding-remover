@@ -54,14 +54,7 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						self.wnd.hwnd().TaskDialog(
-							None,
-							Some(ids::TITLE),
-							Some("Tag reading failed"),
-							Some(&format!("File: {}\n\n{}", file, e)),
-							co::TDCBF::OK,
-							w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-						)?;
+						self.msg_err("Tag reading failed", &format!("File: {}\n\n{}", file, e));
 						return Ok(());
 					},
 				};
@@ -137,5 +130,17 @@ impl WndMain {
 			}
 		}
 		self.show_tag_frames()
+	}
+
+	pub(super) fn msg_info(&self, caption: &str, text: &str) {
+		self.wnd.hwnd().TaskDialog(None, Some(ids::TITLE), Some(caption),
+			Some(text), co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+		).unwrap();
+	}
+
+	pub(super) fn msg_err(&self, caption: &str, text: &str) {
+		self.wnd.hwnd().TaskDialog(None, Some(ids::TITLE), Some(caption),
+			Some(text), co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
+		).unwrap();
 	}
 }
