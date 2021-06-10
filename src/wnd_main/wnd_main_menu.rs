@@ -47,25 +47,31 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMPAD, {
 			let self2 = self.clone();
 			move || {
+				let freq = w::QueryPerformanceFrequency().unwrap();
+				let t0 = w::QueryPerformanceCounter().unwrap();
+
 				self2.write_selected_tags().unwrap(); // simply writing will remove padding
 
-				let sel_count = self2.lst_files.items().selected_count();
-				if sel_count > 1 {
-					self2.wnd.hwnd().TaskDialog(
-						None,
-						Some(ids::TITLE),
-						Some("Operation successful"),
-						Some(&format!("Padding removed from {} files.", sel_count)),
-						co::TDCBF::OK,
-						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-					).unwrap();
-				}
+				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+
+				self2.wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("Operation successful"),
+					Some(&format!("Padding removed from {} file(s) in {:.2} ms.",
+					self2.lst_files.items().selected_count(), dur)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+				).unwrap();
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMART, {
 			let self2 = self.clone();
 			move || {
+				let freq = w::QueryPerformanceFrequency().unwrap();
+				let t0 = w::QueryPerformanceCounter().unwrap();
+
 				{
 					let mut tags_cache = self2.tags_cache.borrow_mut();
 
@@ -76,23 +82,26 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let sel_count = self2.lst_files.items().selected_count();
-				if sel_count > 1 {
-					self2.wnd.hwnd().TaskDialog(
-						None,
-						Some(ids::TITLE),
-						Some("Operation successful"),
-						Some(&format!("Album art removed from {} files.", sel_count)),
-						co::TDCBF::OK,
-						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-					).unwrap();
-				}
+				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+
+				self2.wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("Operation successful"),
+					Some(&format!("Album art removed from {} file(s) in {:.2} ms.",
+					self2.lst_files.items().selected_count(), dur)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+				).unwrap();
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMRG, {
 			let self2 = self.clone();
 			move || {
+				let freq = w::QueryPerformanceFrequency().unwrap();
+				let t0 = w::QueryPerformanceCounter().unwrap();
+
 				{
 					let mut tags_cache = self2.tags_cache.borrow_mut();
 
@@ -112,23 +121,26 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let sel_count = self2.lst_files.items().selected_count();
-				if sel_count > 1 {
-					self2.wnd.hwnd().TaskDialog(
-						None,
-						Some(ids::TITLE),
-						Some("Operation successful"),
-						Some(&format!("ReplayGain removed from {} files.", sel_count)),
-						co::TDCBF::OK,
-						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-					).unwrap();
-				}
+				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+
+				self2.wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("Operation successful"),
+					Some(&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
+					self2.lst_files.items().selected_count(), dur)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+				).unwrap();
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_PRXYEAR, {
 			let self2 = self.clone();
 			move || {
+				let freq = w::QueryPerformanceFrequency().unwrap();
+				let t0 = w::QueryPerformanceCounter().unwrap();
+
 				{
 					let mut tags_cache = self2.tags_cache.borrow_mut();
 
@@ -208,23 +220,26 @@ impl WndMain {
 				}
 				self2.write_selected_tags().unwrap();
 
-				let sel_count = self2.lst_files.items().selected_count();
-				if sel_count > 1 {
-					self2.wnd.hwnd().TaskDialog(
-						None,
-						Some(ids::TITLE),
-						Some("Operation successful"),
-						Some(&format!("Prefix saved in {} files.", sel_count)),
-						co::TDCBF::OK,
-						w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-					).unwrap();
-				}
+				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+
+				self2.wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("Operation successful"),
+					Some(&format!("Prefix saved in {} file(s) in {:.2} ms.",
+						self2.lst_files.items().selected_count(), dur)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+				).unwrap();
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_CLRDIAC, {
 			let self2 = self.clone();
 			move || {
+				let freq = w::QueryPerformanceFrequency().unwrap();
+				let t0 = w::QueryPerformanceCounter().unwrap();
+
 				let sel_idxs = self2.lst_files.items().selected();
 
 				{
@@ -247,6 +262,18 @@ impl WndMain {
 					self2.lst_files.items().set_text(*idx, 0, &file_new).unwrap();
 					w::MoveFile(&file, &file_new).unwrap();
 				}
+
+				let dur = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+
+				self2.wnd.hwnd().TaskDialog(
+					None,
+					Some(ids::TITLE),
+					Some("Operation successful"),
+					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
+						sel_idxs.len(), dur)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
+				).unwrap();
 			}
 		});
 
