@@ -22,6 +22,7 @@ impl WndMain {
 					("Value", 0),
 				]).unwrap();
 				self2.lst_frames.columns().set_width_to_fill(1).unwrap();
+				self2.lst_frames.hwnd().EnableWindow(false);
 
 				self2.titlebar_count(PreDelete::No).unwrap();
 				true

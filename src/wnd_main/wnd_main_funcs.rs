@@ -81,6 +81,7 @@ impl WndMain {
 		lvitems.delete_all().unwrap();
 
 		let sel_files = self.lst_files.columns().selected_texts(0);
+		self.lst_frames.hwnd().EnableWindow(!sel_files.is_empty());
 
 		if sel_files.is_empty() { // nothing to do
 			return Ok(());
