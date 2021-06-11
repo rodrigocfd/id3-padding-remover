@@ -12,7 +12,7 @@ use super::WndMain;
 impl WndMain {
 	pub fn new() -> Self {
 		let context_menu = w::HINSTANCE::NULL
-			.LoadMenu(w::IdStr::Id(ids::MNU_MAIN)).unwrap()
+			.LoadMenu(ids::MNU_MAIN).unwrap()
 			.GetSubMenu(0).unwrap();
 
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), Some(ids::ACT_MAIN));
