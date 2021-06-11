@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3fit/id3"
+	"sort"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
@@ -54,13 +55,24 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		mp3s, ok := ui.Prompt.OpenMultipleFiles(me.wnd,
-			[]shell.FilterSpec{
-				{Name: "MP3 audio files", Spec: "*.mp3"},
-				{Name: "All files", Spec: "*.*"},
-			})
+		fod, _ := shell.CoCreateIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
+		defer fod.Release()
 
-		if ok {
+		flags := fod.GetOptions()
+		fod.SetOptions(flags | co.FOS_FORCEFILESYSTEM | co.FOS_FILEMUSTEXIST | co.FOS_ALLOWMULTISELECT)
+
+		fod.SetFileTypes([]shell.FilterSpec{
+			{Name: "MP3 audio files", Spec: "*.mp3"},
+			{Name: "All files", Spec: "*.*"},
+		})
+		fod.SetFileTypeIndex(0)
+
+		if fod.Show(me.wnd.Hwnd()) {
+			shia := fod.GetResults()
+			defer shia.Release()
+
+			mp3s := shia.GetDisplayNames()
+			sort.Strings(mp3s)
 			me.addFilesToList(mp3s)
 		}
 	})
@@ -116,11 +128,11 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			frYerDyn := tag.FrameByName("TYER")
 
 			if frAlbDyn == nil {
-				ui.Prompt.MessageBox(me.wnd, "Album frame not found.",
-					"Missing frame", co.MB_ICONERROR)
+				me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Missing frame",
+					"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
 			} else if frYerDyn == nil {
-				ui.Prompt.MessageBox(me.wnd, "Year frame not found.",
-					"Missing frame", co.MB_ICONERROR)
+				me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Missing frame",
+					"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
 			}
 
 			frAlb, _ := frAlbDyn.(*id3.FrameText)
@@ -132,11 +144,11 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		ui.Prompt.MessageBox(me.wnd,
+		me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "About",
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.",
-			"About", co.MB_ICONINFORMATION)
+			co.TDCBF_OK, co.TD_ICON_INFORMATION)
 	})
 }

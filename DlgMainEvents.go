@@ -73,9 +73,9 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			ui.Prompt.MessageBox(me.wnd,
+			me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "No files added",
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
-				"No files added", co.MB_ICONEXCLAMATION)
+				co.TDCBF_OK, co.TD_ICON_WARNING)
 		} else {
 			me.addFilesToList(droppedMp3s)
 		}

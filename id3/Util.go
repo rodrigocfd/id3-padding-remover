@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"unicode/utf16"
 )
 
 type _UtilT struct{}
@@ -156,8 +157,8 @@ func (_UtilT) ParseUtf16Strings(src []byte) []string {
 // Tells if a string can be serialized as ASCII, otherwise must be UTF-16.
 func (_UtilT) IsStringAscii(s string) bool {
 	for _, ch := range s {
-		if ch > 255 {
-			return false // this character can't be serialized as ASCII
+		if int(ch) > 255 {
+			return false
 		}
 	}
 	return true
@@ -170,8 +171,8 @@ func (_UtilT) SerializeAnyStrings(strs []string) []byte {
 	for _, str := range strs {
 		if _Util.IsStringAscii(str) {
 			isAscii = true
-			totalChars += len(str)
 		}
+		totalChars += len([]rune(str))
 	}
 
 	var blob []byte
@@ -194,8 +195,18 @@ func (_UtilT) SerializeAsciiStrings(dest []byte, strs []string) {
 	for idx, str := range strs {
 		isLast := idx == len(strs)-1
 
-		copy(dest, []byte(str))
-		dest = dest[len(str):]
+		lenStr := len([]rune(str)) // https://stackoverflow.com/a/12668840/6923555
+		charsAscii := make([]byte, lenStr)
+		idx := 0
+		for _, ch := range str {
+			chAscii := byte(ch)
+			if chAscii > 0 { // in some cases, 1st char after diacritic is zero
+				charsAscii[idx] = chAscii
+				idx++
+			}
+		}
+		copy(dest, charsAscii)
+		dest = dest[lenStr:]
 
 		if !isLast {
 			dest[0] = 0x00 // null separator
@@ -209,8 +220,9 @@ func (_UtilT) SerializeUtf16StringsLE(dest []byte, strs []string) {
 	for idx, str := range strs {
 		isLast := idx == len(strs)-1
 
-		for _, ch := range str {
-			binary.LittleEndian.PutUint16(dest, uint16(ch))
+		chars16 := utf16.Encode([]rune(str))
+		for _, ch := range chars16 {
+			binary.LittleEndian.PutUint16(dest, ch)
 			dest = dest[2:]
 		}
 

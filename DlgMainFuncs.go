@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"id3fit/id3"
 
-	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 )
@@ -27,9 +26,9 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 	for i := 0; i < len(mp3s); i++ {
 		parseResult := <-channel
 		if parseResult.Err != nil { // if error, simply popup and move on
-			ui.Prompt.MessageBox(me.wnd,
+			me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Error parsing tag",
 				fmt.Sprintf("File:\n%s\n\n%s", parseResult.Mp3, parseResult.Err),
-				"Error parsing tag", co.MB_ICONERROR)
+				co.TDCBF_OK, co.TD_ICON_ERROR)
 		}
 
 		if _, found := me.lstFiles.Items().Find(parseResult.Mp3); !found { // file not yet in the list?
@@ -99,18 +98,17 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 		tag := me.cachedTags[selFilePath]
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			ui.Prompt.MessageBox(me.wnd,
-				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
-					selFilePath, err.Error()),
-				"Writing error", co.MB_ICONERROR)
+			me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Writing error",
+				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()),
+				co.TDCBF_OK, co.TD_ICON_ERROR)
 			break
 		}
 
 		reTag, err := id3.ParseTagFromFile(selFilePath) // parse newly saved tag
 		if err != nil {
-			ui.Prompt.MessageBox(me.wnd,
+			me.wnd.Hwnd().TaskDialog(0, "ID3Fit", "Error",
 				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()),
-				"Error", co.MB_ICONERROR)
+				co.TDCBF_OK, co.TD_ICON_ERROR)
 			break
 		}
 
