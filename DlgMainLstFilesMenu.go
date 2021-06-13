@@ -74,7 +74,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			shia := fod.GetResults()
 			defer shia.Release()
 
-			mp3s := shia.GetDisplayNames()
+			mp3s := shia.GetDisplayNames(co.SIGDN_FILESYSPATH)
 			sort.Strings(mp3s)
 			me.addFilesToList(mp3s)
 		}
