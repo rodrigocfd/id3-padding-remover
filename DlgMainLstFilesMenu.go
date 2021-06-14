@@ -10,6 +10,7 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 	"github.com/rodrigocfd/windigo/win/com/shell"
+	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
 const (
@@ -55,14 +56,12 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		fod, lerr := shell.CoCreateIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
-		if lerr != nil {
-			panic(lerr)
-		}
+		fod := shell.CoCreateIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
 		defer fod.Release()
 
 		flags := fod.GetOptions()
-		fod.SetOptions(flags | co.FOS_FORCEFILESYSTEM | co.FOS_FILEMUSTEXIST | co.FOS_ALLOWMULTISELECT)
+		fod.SetOptions(flags | shellco.FOS_FORCEFILESYSTEM |
+			shellco.FOS_FILEMUSTEXIST | shellco.FOS_ALLOWMULTISELECT)
 
 		fod.SetFileTypes([]shell.FilterSpec{
 			{Name: "MP3 audio files", Spec: "*.mp3"},
@@ -74,7 +73,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			shia := fod.GetResults()
 			defer shia.Release()
 
-			mp3s := shia.GetDisplayNames(co.SIGDN_FILESYSPATH)
+			mp3s := shia.GetDisplayNames(shellco.SIGDN_FILESYSPATH)
 			sort.Strings(mp3s)
 			me.addFilesToList(mp3s)
 		}
