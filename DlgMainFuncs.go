@@ -29,6 +29,8 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 
 				me.cachedTags[mp3] = tag // cache (or re-cache) the tag
 				me.lstFiles.Columns().SetWidthToFill(0)
+
+				me.updateMemoryStatus()
 			})
 		}
 	}()
@@ -81,6 +83,8 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(true)
 	me.lstValues.Columns().SetWidthToFill(1)
 	me.lstValues.Hwnd().EnableWindow(len(selPaths) > 0) // if no files selected, disable lstValues
+
+	me.updateMemoryStatus()
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles() {
@@ -110,6 +114,8 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 	}
 
 	me.displayTagsOfSelectedFiles() // refresh the frames display
+
+	me.updateMemoryStatus()
 }
 
 func (me *DlgMain) updateTitlebarCount(total int) {

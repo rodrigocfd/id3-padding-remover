@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgMain) eventsLstFiles() {
@@ -28,5 +29,11 @@ func (me *DlgMain) eventsLstFiles() {
 
 		delPath := me.lstFiles.Items().Text(int(p.IItem), 0)
 		delete(me.cachedTags, delPath) // remove tag from cache
+	})
+
+	me.lstFiles.On().LvnKeyDown(func(p *win.NMLVKEYDOWN) {
+		if p.WVKey == co.VK_DELETE {
+			me.wnd.Hwnd().SendMessage(co.WM_COMMAND, win.MAKEWPARAM(uint16(MNU_DELETE), 1), 0)
+		}
 	})
 }

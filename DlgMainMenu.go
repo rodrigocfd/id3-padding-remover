@@ -16,7 +16,6 @@ import (
 func createAccelTable() ui.AcceleratorTable {
 	return ui.NewAcceleratorTable().
 		AddChar('o', co.ACCELF_CONTROL, MNU_OPEN).
-		AddKey(co.VK_DELETE, co.ACCELF_NONE, MNU_DELETE).
 		AddKey(co.VK_F1, co.ACCELF_NONE, MNU_ABOUT)
 }
 
@@ -36,7 +35,7 @@ func createContextMenu() win.HMENU {
 	return hMenu
 }
 
-func (me *DlgMain) eventsLstFilesMenu() {
+func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		if p.Hmenu() == me.lstFiles.ContextMenu() {
 			p.Hmenu().EnableByCmdId(
