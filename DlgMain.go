@@ -2,6 +2,7 @@ package main
 
 import (
 	"id3fit/id3"
+	"runtime"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	runtime.LockOSThread()
 	NewDlgMain().Run()
 }
 

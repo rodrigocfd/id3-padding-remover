@@ -9,26 +9,27 @@ import (
 )
 
 func (me *DlgMain) addFilesToList(mp3s []string) {
-	go func() {
+	go func() { // launch a goroutine right away
 		for _, mp3 := range mp3s {
 			tag, lerr := id3.ParseTagFromFile(mp3)
 			if lerr != nil {
-				me.wnd.RunUiThread(func() { // simply inform error and keep moving
+				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
 					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Error parsing tag",
 						fmt.Sprintf("File:\n%s\n\n%s", mp3, lerr),
 						co.TDCBF_OK, co.TD_ICON_ERROR)
 				})
-			} else { // tag successfully parsed
-				me.wnd.RunUiThread(func() {
-					if _, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
-						me.lstFiles.Items().
-							AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
-					}
-
-					me.cachedTags[mp3] = tag // cache (or re-cache) the tag
-					me.lstFiles.Columns().SetWidthToFill(0)
-				})
+				continue
 			}
+
+			me.wnd.RunUiThread(func() {
+				if _, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
+					me.lstFiles.Items().
+						AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
+				}
+
+				me.cachedTags[mp3] = tag // cache (or re-cache) the tag
+				me.lstFiles.Columns().SetWidthToFill(0)
+			})
 		}
 	}()
 }
@@ -120,4 +121,17 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
 			APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
 	}
+}
+
+func (me *DlgMain) measureFileProcess(fun func()) {
+	freq := float64(win.QueryPerformanceFrequency())
+	t0 := float64(win.QueryPerformanceCounter())
+
+	fun()
+
+	me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Process finished",
+		fmt.Sprintf("%d file(s) saved in %.2f ms.",
+			me.lstFiles.Items().SelectedCount(),
+			((float64(win.QueryPerformanceCounter())-t0)/freq)*1000),
+		co.TDCBF_OK, co.TD_ICON_INFORMATION)
 }

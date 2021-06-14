@@ -76,63 +76,71 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
-		me.reSaveTagsOfSelectedFiles() // simply saving will remove the padding
+		me.measureFileProcess(func() {
+			me.reSaveTagsOfSelectedFiles() // simply saving will remove the padding
+		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
-		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-			tag := me.cachedTags[selFilePath]
-			tag.DeleteFrames(func(fr id3.Frame) bool {
-				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
-					return frMulti.IsReplayGain()
-				}
-				return false
-			})
-		}
+		me.measureFileProcess(func() {
+			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+				tag := me.cachedTags[selFilePath]
+				tag.DeleteFrames(func(fr id3.Frame) bool {
+					if frMulti, ok := fr.(*id3.FrameMultiText); ok {
+						return frMulti.IsReplayGain()
+					}
+					return false
+				})
+			}
 
-		me.reSaveTagsOfSelectedFiles()
+			me.reSaveTagsOfSelectedFiles()
+		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
-		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-			tag := me.cachedTags[selFilePath]
-			tag.DeleteFrames(func(frDyn id3.Frame) bool {
-				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
-					if frMulti.IsReplayGain() {
-						return true
+		me.measureFileProcess(func() {
+			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+				tag := me.cachedTags[selFilePath]
+				tag.DeleteFrames(func(frDyn id3.Frame) bool {
+					if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
+						if frMulti.IsReplayGain() {
+							return true
+						}
+					} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
+						if frBin.Name4() == "APIC" {
+							return true
+						}
 					}
-				} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
-					if frBin.Name4() == "APIC" {
-						return true
-					}
-				}
-				return false
-			})
-		}
+					return false
+				})
+			}
 
-		me.reSaveTagsOfSelectedFiles()
+			me.reSaveTagsOfSelectedFiles()
+		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-		for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-			tag := me.cachedTags[selFilePath]
-			frAlbDyn := tag.FrameByName("TALB")
-			frYerDyn := tag.FrameByName("TYER")
+		me.measureFileProcess(func() {
+			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
+				tag := me.cachedTags[selFilePath]
+				frAlbDyn := tag.FrameByName("TALB")
+				frYerDyn := tag.FrameByName("TYER")
 
-			if frAlbDyn == nil {
-				me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
-					"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
-			} else if frYerDyn == nil {
-				me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
-					"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
+				if frAlbDyn == nil {
+					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
+						"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
+				} else if frYerDyn == nil {
+					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
+						"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
+				}
+
+				frAlb, _ := frAlbDyn.(*id3.FrameText)
+				frYer, _ := frYerDyn.(*id3.FrameText)
+				frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
 			}
 
-			frAlb, _ := frAlbDyn.(*id3.FrameText)
-			frYer, _ := frYerDyn.(*id3.FrameText)
-			frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
-		}
-
-		me.reSaveTagsOfSelectedFiles()
+			me.reSaveTagsOfSelectedFiles()
+		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
