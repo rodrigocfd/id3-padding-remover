@@ -25,7 +25,7 @@ type DlgMain struct {
 
 func NewDlgMain() *DlgMain {
 	wnd := ui.NewWindowMainRaw(ui.WindowMainRawOpts{
-		Title:          "ID3 Fit",
+		Title:          APP_TITLE,
 		ClientAreaSize: win.SIZE{Cx: 700, Cy: 380},
 		IconId:         101,
 		AccelTable:     createAccelTable(),

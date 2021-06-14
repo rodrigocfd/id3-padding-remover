@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
@@ -41,7 +40,7 @@ func (me *DlgMain) eventsMain() {
 		return 0
 	})
 
-	me.wnd.On().WmSize(func(p wm.Size) {
+	me.wnd.On().WmSize(func(_ wm.Size) {
 		me.lstFiles.SetRedraw(false)
 		me.lstValues.SetRedraw(false)
 
@@ -67,13 +66,13 @@ func (me *DlgMain) eventsMain() {
 				} else {
 					droppedMp3s = append(droppedMp3s, subFiles...)
 				}
-			} else if strings.HasSuffix(strings.ToLower(path), ".mp3") { // not a folder, just a file
+			} else if win.Path.HasExtension(path, ".mp3") { // not a folder, just a file
 				droppedMp3s = append(droppedMp3s, path)
 			}
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "No files added",
+			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "No files added",
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
 				co.TDCBF_OK, co.TD_ICON_WARNING)
 		} else {

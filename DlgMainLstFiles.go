@@ -4,8 +4,6 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-const TIMER_LSTFILES uintptr = iota + 100
-
 func (me *DlgMain) eventsLstFiles() {
 	me.lstFiles.On().LvnInsertItem(func(_ *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstFiles.Items().Count())

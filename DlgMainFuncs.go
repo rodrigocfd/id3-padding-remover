@@ -14,7 +14,7 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 			tag, lerr := id3.ParseTagFromFile(mp3)
 			if lerr != nil {
 				me.wnd.RunUiThread(func() { // simply inform error and keep moving
-					me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Error parsing tag",
+					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Error parsing tag",
 						fmt.Sprintf("File:\n%s\n\n%s", mp3, lerr),
 						co.TDCBF_OK, co.TD_ICON_ERROR)
 				})
@@ -88,7 +88,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 		tag := me.cachedTags[selFilePath]
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Writing error",
+			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Writing error",
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()),
 				co.TDCBF_OK, co.TD_ICON_ERROR)
 			break
@@ -115,9 +115,9 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
-		me.wnd.Hwnd().SetWindowText("ID3 Fit")
+		me.wnd.Hwnd().SetWindowText(APP_TITLE)
 	} else {
-		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)",
-			me.lstFiles.Items().SelectedCount(), total))
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
+			APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
 	}
 }

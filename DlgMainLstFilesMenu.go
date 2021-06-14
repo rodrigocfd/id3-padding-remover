@@ -13,16 +13,6 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
-const (
-	MNU_OPEN int = iota + 1001
-	MNU_DELETE
-	MNU_REM_PAD
-	MNU_REM_RG
-	MNU_REM_RG_PIC
-	MNU_PREFIX_YEAR
-	MNU_ABOUT
-)
-
 func createAccelTable() ui.AcceleratorTable {
 	return ui.NewAcceleratorTable().
 		AddChar('o', co.ACCELF_CONTROL, MNU_OPEN).
@@ -130,10 +120,10 @@ func (me *DlgMain) eventsLstFilesMenu() {
 			frYerDyn := tag.FrameByName("TYER")
 
 			if frAlbDyn == nil {
-				me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Missing frame",
+				me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
 					"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
 			} else if frYerDyn == nil {
-				me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "Missing frame",
+				me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
 					"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
 			}
 
@@ -146,7 +136,7 @@ func (me *DlgMain) eventsLstFilesMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		me.wnd.Hwnd().TaskDialog(0, "ID3 Fit", "About",
+		me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "About",
 			"ID3 Fit 2.0.0\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
