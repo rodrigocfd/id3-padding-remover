@@ -9,7 +9,14 @@ impl WndMain {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
 			move |_: msg::wm::InitDialog| -> bool {
+				// Files list view.
 				self2.lst_frames.toggle_extended_style(true, co::LVS_EX::GRIDLINES);
+
+				// Since it doesn't have LVS_SHAREIMAGELISTS style, the image list
+				// will be automatically deleted by the list view.
+				let himgl = w::HIMAGELIST::Create(16, 16, co::ILC::COLOR32, 1, 1).unwrap();
+				himgl.AddIconFromShell(&["mp3"]).unwrap();
+				self2.lst_files.set_image_list(co::LVSIL::SMALL, himgl);
 
 				self2.lst_files.columns().add(&[
 					("File", 0),
@@ -17,6 +24,7 @@ impl WndMain {
 				]).unwrap();
 				self2.lst_files.columns().set_width_to_fill(0).unwrap();
 
+				// Frames list view.
 				self2.lst_frames.columns().add(&[
 					("Frame", 65),
 					("Value", 0),

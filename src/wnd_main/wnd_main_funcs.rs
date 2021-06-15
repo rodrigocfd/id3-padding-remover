@@ -59,7 +59,7 @@ impl WndMain {
 					},
 				};
 
-				let idx = self.lst_files.items().add(file, None)?;
+				let idx = self.lst_files.items().add(file, Some(0))?;
 				self.lst_files.items().set_text(idx, 1, &format!("{}", tag.original_padding()))?; // write padding
 				self.tags_cache.borrow_mut().insert(file.to_owned(), tag); // cache tag
 			}
