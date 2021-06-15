@@ -34,7 +34,7 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
-	pub fn titlebar_count(&self, moment: PreDelete) -> Result<(), Box<dyn Error>> {
+	pub(super) fn titlebar_count(&self, moment: PreDelete) -> Result<(), Box<dyn Error>> {
 		let lvitems = self.lst_files.items();
 		let count = lvitems.count() - match moment {
 			PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
