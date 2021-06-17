@@ -70,7 +70,7 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_DELETE, func(_ wm.Command) {
 		me.lstFiles.SetRedraw(false)
-		me.lstFiles.Items().Delete(me.lstFiles.Items().Selected()...) // will fire LVM_DELETEITEM
+		me.lstFiles.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
 		me.lstFiles.SetRedraw(true)
 	})
 
@@ -82,8 +82,8 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
 		me.measureFileProcess(func() {
-			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-				tag := me.cachedTags[selFilePath]
+			for _, selItem := range me.lstFiles.Items().Selected() {
+				tag := me.cachedTags[selItem.Text(0)]
 				tag.DeleteFrames(func(fr id3.Frame) bool {
 					if frMulti, ok := fr.(*id3.FrameMultiText); ok {
 						return frMulti.IsReplayGain()
@@ -98,8 +98,8 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
 		me.measureFileProcess(func() {
-			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-				tag := me.cachedTags[selFilePath]
+			for _, selItem := range me.lstFiles.Items().Selected() {
+				tag := me.cachedTags[selItem.Text(0)]
 				tag.DeleteFrames(func(frDyn id3.Frame) bool {
 					if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
 						if frMulti.IsReplayGain() {
@@ -120,8 +120,8 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
 		me.measureFileProcess(func() {
-			for _, selFilePath := range me.lstFiles.Columns().SelectedTexts(0) {
-				tag := me.cachedTags[selFilePath]
+			for _, selItem := range me.lstFiles.Items().Selected() {
+				tag := me.cachedTags[selItem.Text(0)]
 				frAlbDyn := tag.FrameByName("TALB")
 				frYerDyn := tag.FrameByName("TYER")
 
