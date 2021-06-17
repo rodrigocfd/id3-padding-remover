@@ -36,7 +36,7 @@ func NewDlgMain() *DlgMain {
 			co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
 	})
 
-	me := DlgMain{
+	me := &DlgMain{
 		wnd: wnd,
 		lstFiles: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
 			Position:         win.POINT{X: 6, Y: 6},
@@ -63,7 +63,7 @@ func NewDlgMain() *DlgMain {
 	me.eventsMain()
 	me.eventsLstFiles()
 	me.eventsMenu()
-	return &me
+	return me
 }
 
 func (me *DlgMain) Run() int {

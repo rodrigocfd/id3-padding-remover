@@ -122,20 +122,20 @@ func (me *DlgMain) eventsMenu() {
 		me.measureFileProcess(func() {
 			for _, selItem := range me.lstFiles.Items().Selected() {
 				tag := me.cachedTags[selItem.Text(0)]
-				frAlbDyn := tag.FrameByName("TALB")
-				frYerDyn := tag.FrameByName("TYER")
+				frAlbDyn, hasAlb := tag.FrameByName("TALB")
+				frYerDyn, hasYer := tag.FrameByName("TYER")
 
-				if frAlbDyn == nil {
+				if !hasAlb {
 					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
 						"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
-				} else if frYerDyn == nil {
+				} else if !hasYer {
 					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
 						"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
 				}
 
 				frAlb, _ := frAlbDyn.(*id3.FrameText)
 				frYer, _ := frYerDyn.(*id3.FrameText)
-				frAlb.SetText(fmt.Sprintf("%s %s", frYer.Text(), frAlb.Text()))
+				*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
 			}
 
 			me.reSaveTagsOfSelectedFiles()

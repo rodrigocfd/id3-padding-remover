@@ -1,97 +1,188 @@
 package id3
 
 import (
+	"bytes"
 	"encoding/binary"
+	"errors"
+	"fmt"
+	"id3fit/id3/util"
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
-// A tag is the metadata of a single MP3 file, composed of many frames.
+// Metadata of a single MP3 file, composed of many frames.
 type Tag struct {
-	totalTagSize int
-	paddingSize  int
-	frames       []Frame
+	originalSize    int
+	originalPadding int
+	frames          []Frame
 }
 
-// Reads the tag from an MP3 file.
-func ParseTagFromFile(mp3Path string) (*Tag, error) {
-	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
-	if err != nil {
-		return nil, err
+// Constructor; reads the tag from an MP3 file.
+func ReadTagFromFile(mp3Path string) (*Tag, error) {
+	fMap, e := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
+	if e != nil {
+		return nil, e
 	}
-	defer fMap.Close() // HotSlice() needs the file to remain open
+	defer fMap.Close()
 
-	return ParseTagFromBinary(fMap.HotSlice())
+	return ReadTagFromBinary(fMap.HotSlice())
 }
 
-// Reads the tag from a file stored as a binary blob.
-func ParseTagFromBinary(src []byte) (*Tag, error) {
-	totalTagSize, err := parseTagHeader(src)
-	if err != nil {
-		return nil, err
+// Constructor; reads the tag from a binary blob.
+func ReadTagFromBinary(src []byte) (*Tag, error) {
+	originalSize, lerr := _ParseTagHeader(src)
+	if lerr != nil {
+		return nil, lerr
 	}
+	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
 
-	src = src[10:totalTagSize] // skip 10-byte tag header; truncate to tag bounds
-	frames, paddingSize, err := parseAllFrames(src)
-	if err != nil {
-		return nil, err
+	frames, originalPadding, lerr := _ParseAllFrames(src)
+	if lerr != nil {
+		return nil, lerr
 	}
 
 	return &Tag{
-		totalTagSize: totalTagSize,
-		paddingSize:  paddingSize,
-		frames:       frames,
+		originalSize:    originalSize,
+		originalPadding: originalPadding,
+		frames:          frames,
 	}, nil
 }
 
-func (me *Tag) TotalTagSize() int { return me.totalTagSize }
-func (me *Tag) PaddingSize() int  { return me.paddingSize }
-func (me *Tag) Frames() []Frame   { return me.frames }
+func (me *Tag) OriginalSize() int    { return me.originalSize }
+func (me *Tag) OriginalPadding() int { return me.originalPadding }
+func (me *Tag) Frames() []Frame      { return me.frames }
+
+func (me *Tag) Serialize() []byte {
+	data := make([]byte, 0, 100) // arbitrary; all serialized frames
+	for _, frame := range me.frames {
+		data = append(data, frame.Serialize()...)
+	}
+
+	final := make([]byte, 0, 10+len(data))       // header
+	final = append(final, []byte("ID3")...)      // magic bytes
+	final = append(final, []byte{0x03, 0x00}...) // tag version
+	final = append(final, 0x00)                  // flags
+
+	synchSafeDataSize := util.SynchSafeEncode(uint32(len(data)))
+	final = util.AppendUint32(final, binary.BigEndian, synchSafeDataSize)
+
+	final = append(final, data...)
+	return final
+}
 
 func (me *Tag) SerializeToFile(mp3Path string) error {
-	// Serialize all frames.
-	serializedFrames := make([][]byte, len(me.frames))
-	tagSize := 0
-	for i := range me.frames {
-		serialized := me.frames[i].Serialize()
-		serializedFrames[i] = serialized
-		tagSize += len(serialized)
+	newTag := me.Serialize()
+
+	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_RW)
+	if err != nil {
+		return err
+	}
+	defer fout.Close()
+	fileMem := fout.HotSlice()
+
+	currentTag, err := ReadTagFromBinary(fileMem)
+	if err != nil {
+		return err
 	}
 
-	// Build the binary blob.
-	blob := make([]byte, 10, 10+tagSize)
-	copy(blob, []byte("ID3"))    // magic bytes
-	copy(blob[3:], []byte{3, 0}) // v2.3.0
+	diff := len(newTag) - currentTag.OriginalSize() // size difference between new/old tags
 
-	blob[5] = 0 // flags
-	binary.BigEndian.PutUint32(blob[6:], _Util.SynchSafeEncode(uint32(tagSize)))
-
-	for _, serialized := range serializedFrames {
-		blob = append(blob, serialized...)
+	if diff > 0 { // new tag is larger, we need to make room
+		if err := fout.Resize(fout.Size() + diff); err != nil {
+			return err
+		}
 	}
 
-	return me.writeTagToFile(mp3Path, blob)
+	// Move the MP3 data block inside the file, back or forth.
+	copy(fileMem[int(currentTag.OriginalSize())+diff:], fileMem[currentTag.OriginalSize():])
+
+	// Copy the new tag into the file, no padding.
+	copy(fileMem, newTag)
+
+	if diff < 0 { // new tag is shorter, shrink
+		if err := fout.Resize(fout.Size() + diff); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (me *Tag) DeleteFrames(userFunc func(fr Frame) bool) {
-	newFramesSlice := make([]Frame, 0, len(me.frames))
+func (me *Tag) DeleteFrames(fun func(f Frame) bool) {
+	newSlice := make([]Frame, 0, len(me.frames))
 
-	for _, fr := range me.frames {
-		willDelete := userFunc(fr)
+	for _, f := range me.frames {
+		willDelete := fun(f)
 		if !willDelete { // the new slice will contain the non-deleted tags
-			newFramesSlice = append(newFramesSlice, fr)
+			newSlice = append(newSlice, f)
 		}
 	}
 
-	me.frames = newFramesSlice
+	me.frames = newSlice // throw the old one away
 }
 
-func (me *Tag) FrameByName(name4 string) Frame {
-	for _, fr := range me.frames {
-		if fr.Name4() == name4 {
-			return fr
+func (me *Tag) FrameByName(name4 string) (Frame, bool) {
+	for _, f := range me.frames {
+		if f.Name4() == name4 {
+			return f, true
 		}
 	}
-	return nil // no such frame
+	return nil, false
+}
+
+func _ParseTagHeader(src []byte) (int, error) {
+	// Check ID3 magic bytes.
+	if !bytes.Equal(src[:3], []byte("ID3")) {
+		return 0, errors.New("No ID3 tag found.")
+	}
+
+	// Validate tag version 2.3.0.
+	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
+		return 0, errors.New(
+			fmt.Sprintf("Tag version 2.%d.%d is not supported, only 2.3.0.",
+				src[3], src[4]),
+		)
+	}
+
+	// Validate unsupported flags.
+	if (src[5] & 0b1000_0000) != 0 {
+		return 0, errors.New("Tag is unsynchronised, not supported.")
+	} else if (src[5] & 0b0100_0000) != 0 {
+		return 0, errors.New("Tag extended header not supported.")
+	}
+
+	// Read tag size.
+	originalSize := int(util.SynchSafeDecode(
+		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
+	) + 10)
+
+	return originalSize, nil
+}
+
+func _ParseAllFrames(src []byte) ([]Frame, int, error) {
+	frames := make([]Frame, 0, 6) // arbitrary capacity
+	padding := 0
+
+	for {
+		if len(src) == 0 { // end of tag, no padding found
+			break
+		} else if util.IsSliceZeroed(src) { // we entered a padding region after all frames
+			padding = len(src) // store padding size
+			break
+		}
+
+		newFrame, lerr := _ParseFrame(src)
+		if lerr != nil {
+			return nil, 0, lerr // error when parsing the frame
+		}
+		if newFrame.OriginalSize() > len(src) { // means the tag was serialized with error
+			return nil, 0, errors.New("Frame size is greater than real size.")
+		}
+		frames = append(frames, newFrame) // add the frame to our collection
+
+		src = src[newFrame.OriginalSize():] // now starts at 1st byte of next frame
+	}
+
+	return frames, padding, nil
 }

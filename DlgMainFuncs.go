@@ -11,7 +11,7 @@ import (
 func (me *DlgMain) addFilesToList(mp3s []string) {
 	go func() { // launch a goroutine right away
 		for _, mp3 := range mp3s {
-			tag, lerr := id3.ParseTagFromFile(mp3)
+			tag, lerr := id3.ReadTagFromFile(mp3)
 			if lerr != nil {
 				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
 					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Error parsing tag",
@@ -24,7 +24,7 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 			me.wnd.RunUiThread(func() {
 				if _, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
 					me.lstFiles.Items().
-						AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.PaddingSize())) // will fire LVN_INSERTITEM
+						AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.OriginalPadding())) // will fire LVN_INSERTITEM
 				}
 
 				me.cachedTags[mp3] = tag // cache (or re-cache) the tag
@@ -61,21 +61,21 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()))
 
 			case *id3.FrameText:
-				newItem.SetText(1, myFrame.Text())
+				newItem.SetText(1, *myFrame.Text())
 
 			case *id3.FrameMultiText:
-				newItem.SetText(1, myFrame.Texts()[0]) // 1st text
-				for i := 1; i < len(myFrame.Texts()); i++ {
-					me.lstValues.Items().Add("", myFrame.Texts()[i]) // subsequent
+				newItem.SetText(1, (*myFrame.Texts())[0]) // 1st text
+				for i := 1; i < len(*myFrame.Texts()); i++ {
+					me.lstValues.Items().Add("", (*myFrame.Texts())[i]) // subsequent
 				}
 
 			case *id3.FrameBinary:
-				binLen := uint64(len(myFrame.BinData()))
+				binLen := uint64(len(*myFrame.BinData()))
 				newItem.SetText(1,
 					fmt.Sprintf("%s (%.2f%%)",
 						win.Str.FmtBytes(binLen), // frame size
 						float64(binLen)*100/ // percent of whole tag size
-							float64(cachedTag.TotalTagSize())),
+							float64(cachedTag.OriginalSize())),
 				)
 			}
 		}
@@ -101,7 +101,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 			break
 		}
 
-		reTag, err := id3.ParseTagFromFile(selFilePath) // re-parse newly saved tag
+		reTag, err := id3.ReadTagFromFile(selFilePath) // re-parse newly saved tag
 		if err != nil {
 			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Re-parsing error",
 				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()),
@@ -111,7 +111,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 
 		me.cachedTags[selFilePath] = reTag // re-cache modified tag
 		selItem.SetText(1,
-			fmt.Sprintf("%d", reTag.PaddingSize())) // refresh padding size
+			fmt.Sprintf("%d", reTag.OriginalPadding())) // refresh padding size
 	}
 
 	me.displayTagsOfSelectedFiles() // refresh the frames display
