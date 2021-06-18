@@ -25,33 +25,36 @@ type DlgMain struct {
 }
 
 func NewDlgMain() *DlgMain {
-	wnd := ui.NewWindowMainRaw(ui.WindowMainRawOpts{
-		Title:          APP_TITLE,
-		ClientAreaSize: win.SIZE{Cx: 750, Cy: 340},
-		IconId:         ICO_MAIN,
-		AccelTable:     createAccelTable(),
-		ExStyles:       co.WS_EX_ACCEPTFILES,
-		Styles: co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
-			co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
-			co.WS_MAXIMIZEBOX | co.WS_SIZEBOX,
-	})
+	wnd := ui.NewWindowMain(
+		ui.WindowMainOpts().
+			Title(APP_TITLE).
+			ClientArea(win.SIZE{Cx: 750, Cy: 340}).
+			IconId(ICO_MAIN).
+			AccelTable(createAccelTable()).
+			WndStyles(co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
+				co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
+				co.WS_MAXIMIZEBOX | co.WS_SIZEBOX).
+			WndExStyles(co.WS_EX_ACCEPTFILES),
+	)
 
 	me := &DlgMain{
 		wnd: wnd,
-		lstFiles: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
-			Position:         win.POINT{X: 6, Y: 6},
-			Size:             win.SIZE{Cx: 488, Cy: 306},
-			ContextMenu:      createContextMenu(),
-			ListViewExStyles: co.LVS_EX_FULLROWSELECT,
-			ListViewStyles: co.LVS_REPORT | co.LVS_NOSORTHEADER |
-				co.LVS_SHOWSELALWAYS | co.LVS_SORTASCENDING,
-		}),
-		lstValues: ui.NewListViewRaw(wnd, ui.ListViewRawOpts{
-			Position:         win.POINT{X: 500, Y: 6},
-			Size:             win.SIZE{Cx: 242, Cy: 306},
-			ListViewExStyles: co.LVS_EX_GRIDLINES,
-			ListViewStyles:   co.LVS_REPORT | co.LVS_NOSORTHEADER,
-		}),
+		lstFiles: ui.NewListView(wnd,
+			ui.ListViewOpts().
+				Position(win.POINT{X: 6, Y: 6}).
+				Size(win.SIZE{Cx: 488, Cy: 306}).
+				ContextMenu(createContextMenu()).
+				CtrlExStyles(co.LVS_EX_FULLROWSELECT).
+				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER|
+					co.LVS_SHOWSELALWAYS|co.LVS_SORTASCENDING),
+		),
+		lstValues: ui.NewListView(wnd,
+			ui.ListViewOpts().
+				Position(win.POINT{X: 500, Y: 6}).
+				Size(win.SIZE{Cx: 242, Cy: 306}).
+				CtrlExStyles(co.LVS_EX_GRIDLINES).
+				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER),
+		),
 		resizer:    ui.NewResizer(wnd),
 		statusBar:  ui.NewStatusBar(wnd),
 		cachedTags: make(map[string]*id3.Tag),
