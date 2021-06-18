@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3fit/id3"
 	"sort"
+	"unsafe"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
@@ -143,11 +144,17 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
+		resourceSl := win.GetFileVersionInfo(win.HINSTANCE(0).GetModuleFileName())
+		versionSl, _ := win.VerQueryValue(resourceSl, "\\")
+		vsffi := (*win.VS_FIXEDFILEINFO)(unsafe.Pointer(&versionSl[0]))
+		v := vsffi.ProductVersion()
+
 		me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "About",
-			"ID3 Fit 2.0.0\n"+
+			fmt.Sprintf("ID3 Fit %d.%d.%d\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.",
+				v[0], v[1], v[2]),
 			co.TDCBF_OK, co.TD_ICON_INFORMATION)
 	})
 }

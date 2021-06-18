@@ -1,7 +1,5 @@
 package util
 
-import "encoding/binary"
-
 func SynchSafeEncode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7f)
 	for (mask ^ 0x7fff_ffff) != 0 {
@@ -31,16 +29,4 @@ func IsSliceZeroed(blob []byte) bool {
 		}
 	}
 	return true
-}
-
-func AppendUint32(dest []byte, encoding binary.ByteOrder, val uint32) []byte {
-	buf := [4]byte{}
-	encoding.PutUint32(buf[:], val)
-	return append(dest, buf[:]...)
-}
-
-func AppendUint16(dest []byte, encoding binary.ByteOrder, val uint16) []byte {
-	buf := [2]byte{}
-	encoding.PutUint16(buf[:], val)
-	return append(dest, buf[:]...)
 }

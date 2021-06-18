@@ -65,7 +65,7 @@ func (me *Tag) Serialize() []byte {
 	final = append(final, 0x00)                  // flags
 
 	synchSafeDataSize := util.SynchSafeEncode(uint32(len(data)))
-	final = util.AppendUint32(final, binary.BigEndian, synchSafeDataSize)
+	final = win.Bytes.Append32(final, binary.BigEndian, synchSafeDataSize)
 
 	final = append(final, data...)
 	return final

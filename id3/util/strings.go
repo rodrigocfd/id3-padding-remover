@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+
+	"github.com/rodrigocfd/windigo/win"
 )
 
 const _BOM_LE uint16 = 0xfeff
@@ -98,7 +100,7 @@ out:
 	blob = make([]byte, 0, estimatedLenBytes)
 
 	if isUnicode {
-		blob = AppendUint16(blob, binary.LittleEndian, _BOM_LE) // encode all strings as little-endian
+		blob = win.Bytes.Append16(blob, binary.LittleEndian, _BOM_LE) // encode all strings as little-endian
 	}
 
 	for _, oneString := range theStrings {
@@ -106,14 +108,14 @@ out:
 
 		for _, ch := range runeArr {
 			if isUnicode {
-				blob = AppendUint16(blob, binary.LittleEndian, uint16(ch))
+				blob = win.Bytes.Append16(blob, binary.LittleEndian, uint16(ch))
 			} else {
 				blob = append(blob, byte(ch))
 			}
 		}
 
 		if isUnicode { // all strings are null-terminated
-			blob = AppendUint16(blob, binary.LittleEndian, 0x0000)
+			blob = win.Bytes.Append16(blob, binary.LittleEndian, 0x0000)
 		} else {
 			blob = append(blob, 0x00)
 		}
