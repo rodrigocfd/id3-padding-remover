@@ -100,7 +100,7 @@ impl Tag {
 
 		// Read total tag size.
 		let total_tag_size = util::synch_safe_decode(
-			u32::from_be_bytes(src[6..10].try_into()?),
+			u32::from_be_bytes(src[6..10].try_into()?), // https://stackoverflow.com/a/50080940/6923555
 		) as usize + 10; // also count 10-byte tag header
 
 		Ok(total_tag_size)

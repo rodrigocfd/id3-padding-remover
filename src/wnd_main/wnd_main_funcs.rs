@@ -112,6 +112,7 @@ impl WndMain {
 			}
 		}
 
+		self.lst_frames.columns().set_width_to_fill(1).unwrap();
 		Ok(())
 	}
 
