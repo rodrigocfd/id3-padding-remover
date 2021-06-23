@@ -5,19 +5,18 @@ use std::rc::Rc;
 use winsafe::{self as w, co, gui};
 
 use crate::id3v2::{format_bytes, FrameData, Tag};
-use crate::ids;
-use super::PreDelete;
-use super::WndMain;
+use crate::ids::{APP_TITLE, main as id};
+use super::{PreDelete, WndMain};
 
 impl WndMain {
 	pub fn new() -> Self {
 		let context_menu = w::HINSTANCE::NULL
-			.LoadMenu(ids::MNU_MAIN).unwrap()
+			.LoadMenu(id::MNU_MAIN).unwrap()
 			.GetSubMenu(0).unwrap();
 
-		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), Some(ids::ACT_MAIN));
-		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, Some(context_menu));
-		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, None);
+		let wnd = gui::WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
+		let lst_files = gui::ListView::new_dlg(&wnd, id::LST_FILES, Some(context_menu));
+		let lst_frames = gui::ListView::new_dlg(&wnd, id::LST_FRAMES, None);
 		let resizer = gui::Resizer::new(&wnd, &[
 			(gui::Resz::Resize, gui::Resz::Resize, &[&lst_files]),
 			(gui::Resz::Repos, gui::Resz::Resize, &[&lst_frames]),
@@ -41,7 +40,7 @@ impl WndMain {
 			PreDelete::No => 0,
 		};
 		self.wnd.hwnd().SetWindowText(
-			&format!("{} ({}/{})", ids::TITLE, lvitems.selected_count(), count),
+			&format!("{} ({}/{})", APP_TITLE, lvitems.selected_count(), count),
 		)?;
 		Ok(())
 	}
@@ -54,7 +53,10 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						self.msg_err("Tag reading failed", &format!("File: {}\n\n{}", file, e));
+						self.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
+							Some("Tag reading failed"),
+							Some(&format!("File: {}\n\n{}", file, e)),
+							co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
 						return Ok(());
 					},
 				};
@@ -69,7 +71,7 @@ impl WndMain {
 		self.titlebar_count(PreDelete::No)
 	}
 
-	pub(super) fn show_tag_frames(&self) -> Result<(), Box<dyn Error>> {
+	pub(super) fn show_selected_tag_frames(&self) -> Result<(), Box<dyn Error>> {
 		let lvitems = self.lst_frames.items();
 		lvitems.delete_all().unwrap();
 
@@ -114,34 +116,5 @@ impl WndMain {
 
 		self.lst_frames.columns().set_width_to_fill(1).unwrap();
 		Ok(())
-	}
-
-	pub(super) fn write_selected_tags(&self) -> Result<(), Box<dyn Error>> {
-		{
-			let mut tags_cache = self.tags_cache.borrow_mut();
-
-			for idx in self.lst_files.items().selected().iter() {
-				let file = self.lst_files.items().text_str(*idx, 0);
-				let tag = tags_cache.get_mut(&file).unwrap();
-				tag.write(&file)?; // save tag to file, no padding is written
-
-				*tag = Tag::read(&file)?; // load tag back from file
-				self.lst_files.items().set_text(*idx, 1,
-					&format!("{}", tag.original_padding()))?; // update padding info
-			}
-		}
-		self.show_tag_frames()
-	}
-
-	pub(super) fn msg_info(&self, caption: &str, text: &str) {
-		self.wnd.hwnd().TaskDialog(None, Some(ids::TITLE), Some(caption),
-			Some(text), co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION),
-		).unwrap();
-	}
-
-	pub(super) fn msg_err(&self, caption: &str, text: &str) {
-		self.wnd.hwnd().TaskDialog(None, Some(ids::TITLE), Some(caption),
-			Some(text), co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR),
-		).unwrap();
 	}
 }

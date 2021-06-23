@@ -1,12 +1,14 @@
+use std::rc::Rc;
 use winsafe::{self as w, co, shell};
 
-use crate::id3v2::{clear_diacritics, FrameData};
-use crate::ids;
+use crate::id3v2::clear_diacritics;
+use crate::ids::{APP_TITLE, main as id};
+use crate::wnd_modify::WndModify;
 use super::WndMain;
 
 impl WndMain {
 	pub(super) fn menu_events(&self) {
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_OPEN, {
+		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_OPEN, {
 			let self2 = self.clone();
 			move || {
 				let fileo: shell::IFileOpenDialog = w::CoCreateInstance(
@@ -36,7 +38,7 @@ impl WndMain {
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_EXCSEL, {
+		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_EXCSEL, {
 			let lst_files = self.lst_files.clone();
 			move || {
 				lst_files.items().delete(
@@ -44,145 +46,27 @@ impl WndMain {
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMPAD, {
+		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_MODIFY, {
 			let self2 = self.clone();
 			move || {
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
+				let sel_files = self2.lst_files.columns().selected_texts(0);
 
-				self2.write_selected_tags().unwrap(); // simply writing will remove padding
-
-				self2.msg_info("Operation successful",
-					&format!("Padding removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(),
-						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
-			}
-		});
-
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMART, {
-			let self2 = self.clone();
-			move || {
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
-
-				{
-					let mut tags_cache = self2.tags_cache.borrow_mut();
-
-					for file in self2.lst_files.columns().selected_texts(0).iter() {
-						let tag = tags_cache.get_mut(file).unwrap();
-						tag.frames_mut().retain(|f| f.name4() != "APIC");
-					}
+				if sel_files.is_empty() {
+					self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
+						Some("No files"),
+						Some("There are no selected files to be modified."),
+						co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
+					return;
 				}
-				self2.write_selected_tags().unwrap();
 
-				self2.msg_info("Operation successful",
-					&format!("Album art removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(),
-						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
+				let wa = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
+				wa.show();
+
+				self2.show_selected_tag_frames().unwrap();
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_REMRG, {
-			let self2 = self.clone();
-			move || {
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
-
-				{
-					let mut tags_cache = self2.tags_cache.borrow_mut();
-
-					for file in self2.lst_files.columns().selected_texts(0).iter() {
-						let tag = tags_cache.get_mut(file).unwrap();
-						tag.frames_mut().retain(|f| {
-							if f.name4() == "TXXX" {
-								if let FrameData::MultiText(texts) = f.data() {
-									if texts[0].starts_with("replaygain_") {
-										return false;
-									}
-								}
-							}
-							true
-						});
-					}
-				}
-				self2.write_selected_tags().unwrap();
-
-				self2.msg_info("Operation successful",
-					&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(),
-						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
-			}
-		});
-
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_PRXYEAR, {
-			let self2 = self.clone();
-			move || {
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
-
-				{
-					let mut tags_cache = self2.tags_cache.borrow_mut();
-
-					for file in self2.lst_files.columns().selected_texts(0).iter() {
-						let tag = tags_cache.get_mut(file).unwrap();
-						let frames = tag.frames_mut();
-
-						let year = if let Some(year_frame) = frames.iter().find(|f| f.name4() == "TYER") {
-							if let FrameData::Text(text) = year_frame.data() {
-								text.clone()
-							} else {
-								self2.msg_err("Bad frame",
-									&format!("File: {}\n\nYear frame has the wrong data type.", file));
-								return
-							}
-						} else {
-							self2.msg_err("Missing frame",
-								&format!("File: {}\n\nYear frame not found.", file));
-							return
-						};
-
-						let album = if let Some(album_frame) = frames.iter_mut().find(|f| f.name4() == "TALB") {
-							if let FrameData::Text(text) = album_frame.data_mut() {
-								text
-							} else {
-								self2.msg_err("Bad frame",
-									&format!("File: {}\n\nAlbum frame has the wrong data type.", file));
-								return
-							}
-						} else {
-							self2.msg_err("Missing frame",
-								&format!("File: {}\n\nAlbum frame not found.", file));
-							return
-						};
-
-						if album.starts_with(&year) {
-							let res = self2.wnd.hwnd().TaskDialog(
-								None,
-								Some(ids::TITLE),
-								Some("Dubious data"),
-								Some(&format!("File: {}\n\n\
-									Album appears to have the year prefix {}.\n\
-									Continue anyway?", file, year)),
-								co::TDCBF::OK | co::TDCBF::CANCEL,
-								w::IdTdicon::Tdicon(co::TD_ICON::WARNING),
-							).unwrap();
-							if res != co::DLGID::OK {
-								return;
-							}
-						}
-						*album = format!("{} {}", year, album);
-					}
-				}
-				self2.write_selected_tags().unwrap();
-
-				self2.msg_info("Operation successful",
-					&format!("Prefix saved in {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(),
-						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
-			}
-		});
-
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_CLRDIAC, {
+		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_CLR_DIACR, {
 			let self2 = self.clone();
 			move || {
 				let freq = w::QueryPerformanceFrequency().unwrap();
@@ -211,14 +95,16 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				self2.msg_info("Operation successful",
-					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(),
-						((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0));
+				let t1 = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
+				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
+					Some("Operation successful"),
+					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.", sel_idxs.len(), t1)),
+					co::TDCBF::OK,
+					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FILE_ABOUT, {
+		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_ABOUT, {
 			let self2 = self.clone();
 			move || {
 				// Read version from resource.
@@ -230,11 +116,14 @@ impl WndMain {
 				let fi: &w::VS_FIXEDFILEINFO = unsafe { &*(fis.as_ptr() as *const w::VS_FIXEDFILEINFO) };
 				let ver = fi.dwFileVersion();
 
-				self2.msg_info("About", &format!(
-					"ID3 Padding Remover v{}.{}.{}\n\
-					Writen in Rust with WinSafe library.\n\n\
-					Rodrigo César de Freitas Dias © 2021",
-					ver[0], ver[1], ver[2]));
+				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
+					Some("About"),
+					Some(&format!(
+						"ID3 Padding Remover v{}.{}.{}\n\
+						Writen in Rust with WinSafe library.\n\n\
+						Rodrigo César de Freitas Dias © 2021",
+						ver[0], ver[1], ver[2])),
+					co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
 			}
 		});
 	}

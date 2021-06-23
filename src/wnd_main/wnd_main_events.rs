@@ -1,6 +1,6 @@
 use winsafe::{self as w, co, msg};
 
-use crate::ids;
+use crate::ids::main as id;
 use super::PreDelete;
 use super::WndMain;
 
@@ -55,20 +55,18 @@ impl WndMain {
 				if p.hmenu == self2.lst_files.context_menu().unwrap() {
 					let has_sel = self2.lst_files.items().selected_count() > 0;
 
-					[ids::MNU_FILE_EXCSEL, ids::MNU_FILE_REMPAD, ids::MNU_FILE_REMART,
-						ids::MNU_FILE_REMRG, ids::MNU_FILE_PRXYEAR, ids::MNU_FILE_CLRDIAC,
-					].iter()
-						.for_each(|id| {
+					[id::MNU_FILE_EXCSEL, id::MNU_FILE_MODIFY, id::MNU_FILE_CLR_DIACR]
+						.iter().for_each(|id| {
 							p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel).unwrap();
 						});
 				}
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), { // close on ESC
+		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), {
 			let wnd = self.wnd.clone();
 			move || {
-				wnd.hwnd().PostMessage(msg::wm::Close {}).unwrap();
+				wnd.hwnd().PostMessage(msg::wm::Close {}).unwrap(); // close on ESC
 			}
 		});
 
@@ -104,7 +102,7 @@ impl WndMain {
 			move |p: &w::NMLVKEYDOWN| {
 				if p.wVKey == co::VK::DELETE { // delete item on DEL
 					self2.wnd.hwnd().SendMessage(msg::wm::Command {
-						event: w::AccelMenuCtrl::Menu(ids::MNU_FILE_EXCSEL as _),
+						event: w::AccelMenuCtrl::Menu(id::MNU_FILE_EXCSEL as _),
 					});
 				}
 			}
@@ -113,7 +111,7 @@ impl WndMain {
 		self.lst_files.on().lvn_item_changed({
 			let self2 = self.clone();
 			move |_: &w::NMLISTVIEW| {
-				self2.show_tag_frames().unwrap();
+				self2.show_selected_tag_frames().unwrap();
 				self2.titlebar_count(PreDelete::No).unwrap();
 			}
 		});

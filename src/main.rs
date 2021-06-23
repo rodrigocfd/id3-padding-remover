@@ -3,6 +3,8 @@
 mod id3v2;
 mod ids;
 mod wnd_main;
+mod wnd_modify;
+
 use wnd_main::WndMain;
 
 fn main() {
