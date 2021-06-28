@@ -45,6 +45,16 @@ impl WndModify {
 		self.btn_ok.on().bn_clicked({
 			let self2 = self.clone();
 			move || {
+				if !self2.chk_rem_padding.is_checked() {
+					self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
+						Some("No operations"),
+						Some("There's no operation to be performed.\n\
+							Select at least one."),
+						co::TDCBF::OK,
+						w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
+					return;
+				}
+
 				let mut tags_cache = self2.tags_cache.borrow_mut();
 
 				for file in self2.files.iter() {
@@ -64,7 +74,7 @@ impl WndModify {
 								co::TDCBF::OK,
 								w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
 
-							self2.wnd.hwnd().EndDialog(0).unwrap();
+							self2.wnd.hwnd().EndDialog(0).unwrap(); // close after error
 						}
 					}
 				}
@@ -84,14 +94,14 @@ impl WndModify {
 					co::TDCBF::OK,
 					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
 
-				self2.wnd.hwnd().EndDialog(0).unwrap();
+				self2.wnd.hwnd().EndDialog(0).unwrap(); // close after process is finished
 			}
 		});
 
 		self.btn_cancel.on().bn_clicked({
 			let wnd = self.wnd.clone();
 			move || {
-				wnd.hwnd().EndDialog(0).unwrap();
+				wnd.hwnd().EndDialog(0).unwrap(); // close on Cancel
 			}
 		});
 	}
