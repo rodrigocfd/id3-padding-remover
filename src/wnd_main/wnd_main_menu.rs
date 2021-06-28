@@ -3,6 +3,7 @@ use winsafe::{self as w, co, shell};
 
 use crate::id3v2::clear_diacritics;
 use crate::ids::{APP_TITLE, main as id};
+use crate::util;
 use crate::wnd_modify::WndModify;
 use super::WndMain;
 
@@ -83,9 +84,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_CLR_DIACR, {
 			let self2 = self.clone();
 			move || {
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
-
+				let t0 = util::timer_start();
 				let sel_idxs = self2.lst_files.items().selected();
 
 				{
@@ -109,10 +108,10 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				let t1 = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
 				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
 					Some("Operation successful"),
-					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.", sel_idxs.len(), t1)),
+					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
+						sel_idxs.len(), util::timer_end_ms(t0))),
 					co::TDCBF::OK,
 					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
 			}

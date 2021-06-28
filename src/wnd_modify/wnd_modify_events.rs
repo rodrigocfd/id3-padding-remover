@@ -2,6 +2,7 @@ use winsafe::{self as w, co, msg};
 
 use crate::id3v2::Tag;
 use crate::ids::APP_TITLE;
+use crate::util;
 use super::WndModify;
 
 impl WndModify {
@@ -68,8 +69,7 @@ impl WndModify {
 					}
 				}
 
-				let freq = w::QueryPerformanceFrequency().unwrap();
-				let t0 = w::QueryPerformanceCounter().unwrap();
+				let t0 = util::timer_start();
 
 				for file in self2.files.iter() {
 					let tag = tags_cache.get_mut(file).unwrap();
@@ -77,10 +77,10 @@ impl WndModify {
 					*tag = Tag::read(file).unwrap(); // load tag back from file
 				}
 
-				let t1 = ((w::QueryPerformanceCounter().unwrap() - t0) as f64 / freq as f64) * 1000.0;
 				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
 					Some("Operation successful"),
-					Some(&format!("{} file(s) processed in {:.2} ms.", self2.files.len(), t1)),
+					Some(&format!("{} file(s) processed in {:.2} ms.",
+						self2.files.len(), util::timer_end_ms(t0))),
 					co::TDCBF::OK,
 					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
 
