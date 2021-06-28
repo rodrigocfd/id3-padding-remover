@@ -64,6 +64,18 @@ impl WndMain {
 				let wa = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
 				wa.show();
 
+				{
+					let tags_cache = self2.tags_cache.borrow();
+					let mut buf = w::WString::default();
+					for i in 0..self2.lst_files.items().count() {
+						self2.lst_files.items().text(i, 0, &mut buf);
+						let tag = tags_cache.get(&buf.to_string()).unwrap();
+
+						self2.lst_files.items().set_text(i, 1, // write new padding
+							&format!("{}", tag.original_padding())).unwrap();
+					}
+				}
+
 				self2.show_selected_tag_frames().unwrap();
 			}
 		});
