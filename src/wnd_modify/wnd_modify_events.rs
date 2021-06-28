@@ -62,6 +62,8 @@ impl WndModify {
 								Some(&err.to_string()),
 								co::TDCBF::OK,
 								w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
+
+							self2.wnd.hwnd().EndDialog(0).unwrap();
 						}
 					}
 				}
