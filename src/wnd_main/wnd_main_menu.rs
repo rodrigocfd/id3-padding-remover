@@ -19,7 +19,9 @@ impl WndMain {
 
 				fileo.SetOptions(
 					fileo.GetOptions().unwrap()
-						| co::FOS::FORCEFILESYSTEM | co::FOS::FILEMUSTEXIST | co::FOS::ALLOWMULTISELECT,
+						| shell::co::FOS::FORCEFILESYSTEM
+						| shell::co::FOS::FILEMUSTEXIST
+						| shell::co::FOS::ALLOWMULTISELECT,
 				).unwrap();
 
 				fileo.SetFileTypes(&[
@@ -32,7 +34,7 @@ impl WndMain {
 				if fileo.Show(self2.wnd.hwnd()).unwrap() {
 					self2.add_files(
 						&fileo.GetResults().unwrap()
-							.GetDisplayNames(co::SIGDN::FILESYSPATH).unwrap(),
+							.GetDisplayNames(shell::co::SIGDN::FILESYSPATH).unwrap(),
 					).unwrap();
 				}
 			}
