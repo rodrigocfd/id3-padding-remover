@@ -46,6 +46,8 @@ impl WndModify {
 			self.chk_rem_padding.set_check(true);
 		}
 		self.chk_rem_padding.hwnd().EnableWindow(!will_disable);
+
+		self.btn_ok.hwnd().EnableWindow(self.chk_rem_padding.is_checked());
 	}
 
 	pub(super) fn remove_replay_gain(&self, tag: &mut Tag) {

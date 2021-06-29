@@ -27,6 +27,11 @@ impl WndModify {
 			}
 		});
 
+		self.chk_rem_padding.on().bn_clicked({
+			let self2 = self.clone();
+			move || self2.enable_disable_rem_padding()
+		});
+
 		self.chk_rem_album.on().bn_clicked({
 			let self2 = self.clone();
 			move || self2.enable_disable_rem_padding()
@@ -45,16 +50,6 @@ impl WndModify {
 		self.btn_ok.on().bn_clicked({
 			let self2 = self.clone();
 			move || {
-				if !self2.chk_rem_padding.is_checked() {
-					self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-						Some("No operations"),
-						Some("There's no operation to be performed.\n\
-							Select at least one."),
-						co::TDCBF::OK,
-						w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
-					return;
-				}
-
 				let mut tags_cache = self2.tags_cache.borrow_mut();
 
 				for file in self2.files.iter() {
