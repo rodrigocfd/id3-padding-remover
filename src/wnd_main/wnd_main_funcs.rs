@@ -4,8 +4,9 @@ use std::error::Error;
 use std::rc::Rc;
 use winsafe::{self as w, co, gui};
 
-use crate::id3v2::{format_bytes, FrameData, Tag};
+use crate::id3v2::{FrameData, Tag};
 use crate::ids::{APP_TITLE, main as id};
+use crate::util;
 use super::{PreDelete, WndMain};
 
 impl WndMain {
@@ -107,7 +108,7 @@ impl WndMain {
 					)?,
 					FrameData::Binary(bin) => lvitems.set_text(idx, 1,
 						&format!("{} ({:.2}%)",
-							&format_bytes(bin.len()),
+							&util::format_bytes(bin.len()),
 							(bin.len() as f32) * 100.0 / tag.original_size() as f32),
 					)?,
 				}

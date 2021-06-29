@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::error::Error;
 
 use super::FrameComment;
-use super::util;
+use super::tag_util;
 
 /// The data contained in a frame, which can be of various types.
 pub enum FrameData {
@@ -29,7 +29,7 @@ impl Frame {
 		let data = if name4 == "COMM" {
 			FrameData::Comment(FrameComment::parse(src)?)
 		} else if name4.chars().nth(0).unwrap() == 'T' { // text frame
-			let texts = util::parse_any_strings(src)?;
+			let texts = tag_util::parse_any_strings(src)?;
 			match texts.len() {
 				0 => return Err(format!("Frame {} contains no texts.", name4).into()),
 				1 => FrameData::Text(texts[0].clone()),
@@ -65,8 +65,8 @@ impl Frame {
 	/// Serializes the frame into bytes.
 	pub fn serialize(&self) -> Vec<u8> {
 		let frame_data = match &self.data {
-			FrameData::Text(text) => util::SerializedStrs::new(&[&text]).collect(),
-			FrameData::MultiText(texts) => util::SerializedStrs::new(&texts).collect(),
+			FrameData::Text(text) => tag_util::SerializedStrs::new(&[&text]).collect(),
+			FrameData::MultiText(texts) => tag_util::SerializedStrs::new(&texts).collect(),
 			FrameData::Comment(comm) => comm.serialize_data(),
 			FrameData::Binary(bin) => bin.clone(),
 		};

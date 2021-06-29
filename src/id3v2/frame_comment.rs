@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use super::util;
+use super::tag_util;
 
 /// The COMM frame type.
 pub struct FrameComment {
@@ -19,7 +19,7 @@ impl FrameComment {
 		src = &src[1..]; // skip encoding byte
 
 		// Retrieve 3-char language string, always ISO-8859-1.
-		let lang = util::parse_iso88591_strings(&src[0..4])?.remove(0);
+		let lang = tag_util::parse_iso88591_strings(&src[0..4])?.remove(0);
 		src = &src[3..];
 
 		if src[0] == 0x00 {
@@ -28,9 +28,9 @@ impl FrameComment {
 
 		// Retrieve comment text.
 		let texts = if is_unicode {
-			util::parse_unicode_strings(src)?
+			tag_util::parse_unicode_strings(src)?
 		} else {
-			util::parse_iso88591_strings(src)?
+			tag_util::parse_iso88591_strings(src)?
 		};
 
 		if texts.len() > 1 {
@@ -44,7 +44,7 @@ impl FrameComment {
 	}
 
 	pub fn serialize_data(&self) -> Vec<u8> {
-		let buf_text = util::SerializedStrs::new(&[&self.text]);
+		let buf_text = tag_util::SerializedStrs::new(&[&self.text]);
 
 		let mut buf: Vec<u8> = Vec::with_capacity(1 + 3 + buf_text.data.len());
 		buf.push(buf_text.encoding_byte);

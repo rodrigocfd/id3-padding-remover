@@ -1,7 +1,6 @@
 use std::rc::Rc;
 use winsafe::{self as w, co, shell};
 
-use crate::id3v2::clear_diacritics;
 use crate::ids::{APP_TITLE, main as id};
 use crate::util;
 use crate::wnd_modify::WndModify;
@@ -92,7 +91,7 @@ impl WndMain {
 
 					for idx in sel_idxs.iter() {
 						let file = self2.lst_files.items().text_str(*idx, 0);
-						let file_new = clear_diacritics(&file);
+						let file_new = util::clear_diacritics(&file);
 
 						let tag = tags_cache.remove(&file).unwrap();
 						tags_cache.insert(file_new.clone(), tag);
@@ -101,7 +100,7 @@ impl WndMain {
 
 				for idx in sel_idxs.iter() {
 					let file = self2.lst_files.items().text_str(*idx, 0);
-					let file_new = clear_diacritics(&file);
+					let file_new = util::clear_diacritics(&file);
 
 					// This triggers LVN_ITEMCHANGED, which will borrow tags_cache.
 					self2.lst_files.items().set_text(*idx, 0, &file_new).unwrap();

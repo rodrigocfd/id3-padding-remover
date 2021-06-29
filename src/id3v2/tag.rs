@@ -1,9 +1,9 @@
 use std::convert::TryInto;
 use std::error::Error;
 
+use crate::mapped_file::{MappedFile, MappedFileAccess};
 use super::Frame;
-use super::mapped_file::{MappedFile, MappedFileAccess};
-use super::util;
+use super::tag_util;
 
 /// The MP3 file metadata.
 pub struct Tag {
@@ -99,7 +99,7 @@ impl Tag {
 		}
 
 		// Read total tag size.
-		let total_tag_size = util::synch_safe_decode(
+		let total_tag_size = tag_util::synch_safe_decode(
 			u32::from_be_bytes(src[6..10].try_into()?), // https://stackoverflow.com/a/50080940/6923555
 		) as usize + 10; // also count 10-byte tag header
 
@@ -150,7 +150,7 @@ impl Tag {
 		buf.extend(&['I' as u8, 'D' as u8, '3' as u8]); // magic bytes
 		buf.extend_from_slice(&[0x03, 0x00]); // tag version
 		buf.push(0x00); // flags
-		buf.extend_from_slice(&util::synch_safe_encode(frames_buf.len() as _).to_be_bytes()); // tag size, minus header
+		buf.extend_from_slice(&tag_util::synch_safe_encode(frames_buf.len() as _).to_be_bytes()); // tag size, minus header
 		buf.extend_from_slice(&frames_buf);
 
 		buf
