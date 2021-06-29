@@ -62,8 +62,10 @@ impl WndMain {
 					},
 				};
 
-				let idx = self.lst_files.items().add(file, Some(0))?;
-				self.lst_files.items().set_text(idx, 1, &format!("{}", tag.original_padding()))?; // write padding
+				self.lst_files.items().add(&[
+					file,
+					&format!("{}", tag.original_padding()), // write padding
+				], Some(0))?;
 				self.tags_cache.borrow_mut().insert(file.to_owned(), tag); // cache tag
 			}
 		}
@@ -83,24 +85,27 @@ impl WndMain {
 			return Ok(());
 
 		} else if sel_files.len() > 1 { // multiple selected items, just display a placeholder
-			lvitems.add("", None).unwrap();
-			lvitems.set_text(0, 1,
-				&format!("{} selected...", sel_files.len())).unwrap();
+			lvitems.add(&[
+				"",
+				&format!("{} selected...", sel_files.len()),
+			], None).unwrap();
 
 		} else { // 1 single item selected, display its frames
 			let tags_cache = self.tags_cache.borrow();
 			let tag = tags_cache.get(&sel_files[0]).unwrap();
 
 			for frame in tag.frames().iter() {
-				let idx = lvitems.add(frame.name4(), None)?;
+				let idx = lvitems.add(&[frame.name4()], None)?;
 
 				match frame.data() {
 					FrameData::Text(s) => lvitems.set_text(idx, 1, s)?,
 					FrameData::MultiText(ss) => {
 						lvitems.set_text(idx, 1, &ss[0])?;
 						for i in 1..ss.len() {
-							let sub_idx = lvitems.add("", None).unwrap();
-							lvitems.set_text(sub_idx, 1, &ss[i]).unwrap();
+							lvitems.add(&[
+								"",
+								&ss[i],
+							], None).unwrap();
 						}
 					},
 					FrameData::Comment(com) => lvitems.set_text(idx, 1,
