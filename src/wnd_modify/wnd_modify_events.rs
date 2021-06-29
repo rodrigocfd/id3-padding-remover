@@ -50,6 +50,11 @@ impl WndModify {
 		self.btn_ok.on().bn_clicked({
 			let self2 = self.clone();
 			move || {
+				self2.wnd.hwnd().EnumChildWindows(|hchild| { // disable all children
+					hchild.EnableWindow(false);
+					true
+				});
+
 				let mut tags_cache = self2.tags_cache.borrow_mut();
 
 				for file in self2.files.iter() {
