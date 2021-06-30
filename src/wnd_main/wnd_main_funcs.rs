@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use winsafe::{self as w, co, gui};
+use winsafe::{self as w, gui};
 
 use crate::id3v2::{FrameData, Tag};
 use crate::ids::{APP_TITLE, main as id};
@@ -54,10 +54,8 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						self.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-							Some("Tag reading failed"),
-							Some(&format!("File: {}\n\n{}", file, e)),
-							co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
+						util::msg::err(self.wnd.hwnd(), "Tag reading failed",
+							&format!("File: {}\n\n{}", file, e));
 						return Ok(());
 					},
 				};

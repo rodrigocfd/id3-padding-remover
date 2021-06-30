@@ -1,7 +1,6 @@
-use winsafe::{self as w, co, msg};
+use winsafe::{co, msg};
 
 use crate::id3v2::Tag;
-use crate::ids::APP_TITLE;
 use crate::util;
 use super::WndModify;
 
@@ -57,7 +56,7 @@ impl WndModify {
 
 				let mut tags_cache = self2.tags_cache.borrow_mut();
 
-				for file in self2.files.iter() {
+				for file in self2.files.iter() { // execute the chosen operations on each file
 					let mut tag = tags_cache.get_mut(file).unwrap();
 
 					if self2.chk_rem_album.is_checked() {
@@ -68,12 +67,7 @@ impl WndModify {
 					}
 					if self2.chk_prefix_year.is_checked() {
 						if let Err(err) = self2.prefix_year(&mut tag, file) {
-							self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-								Some("Operation error"),
-								Some(&err.to_string()),
-								co::TDCBF::OK,
-								w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
-
+							util::msg::err(self2.wnd.hwnd(), "Operation error", &err.to_string());
 							self2.wnd.hwnd().EndDialog(0).unwrap(); // close after error
 						}
 					}
@@ -87,12 +81,9 @@ impl WndModify {
 					*tag = Tag::read(file).unwrap(); // load tag back from file
 				}
 
-				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-					Some("Operation successful"),
-					Some(&format!("{} file(s) processed in {:.2} ms.",
-						self2.files.len(), util::timer_end_ms(t0))),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
+				util::msg::info(self2.wnd.hwnd(), "Operation successful",
+					&format!("{} file(s) processed in {:.2} ms.",
+						self2.files.len(), util::timer_end_ms(t0)));
 
 				self2.wnd.hwnd().EndDialog(0).unwrap(); // close after process is finished
 			}

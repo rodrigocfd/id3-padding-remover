@@ -2,10 +2,11 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use winsafe::{self as w, co, gui};
+use winsafe::{co, gui};
 
 use crate::id3v2::{FrameData, Tag};
-use crate::ids::{APP_TITLE, modify as id};
+use crate::ids::modify as id;
+use crate::util;
 use super::WndModify;
 
 impl WndModify {
@@ -87,13 +88,11 @@ impl WndModify {
 		};
 
 		if album.starts_with(&year) {
-			if self.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-				Some("Dubious data"),
-				Some(&format!("File:\n{}\n\n\
-					Album appears to have the year prefix:\n{}.\n\n\
-					Continue anyway?", file, album)),
-				co::TDCBF::OK | co::TDCBF::CANCEL,
-				w::IdTdicon::Tdicon(co::TD_ICON::WARNING)).unwrap() != co::DLGID::OK
+			if util::msg::ok_cancel(self.wnd.hwnd(), "Dubious data",
+				&format!("File:\n{}\n\n\
+					Album appears to have the year prefix:\n{}\n\n\
+					Continue anyway?",
+					file, album)) != co::DLGID::OK
 			{
 				return Ok(()); // skip processing
 			}

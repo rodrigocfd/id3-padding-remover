@@ -51,3 +51,43 @@ pub fn format_bytes(num_bytes: usize) -> String {
 		format!("{:.2} PB", (num_bytes as f64) / 1024.0 / 1024.0 / 1024.0 / 1024.0 / 1024.0)
 	}
 }
+
+pub mod msg {
+	use winsafe::{self as w, co};
+
+	use crate::ids;
+
+	pub fn err(hwnd: w::HWND, title: &str, body: &str) {
+		base(hwnd, title, body, co::TDCBF::OK, co::TD_ICON::ERROR);
+	}
+
+	pub fn info(hwnd: w::HWND, title: &str, body: &str) {
+		base(hwnd, title, body, co::TDCBF::OK, co::TD_ICON::INFORMATION);
+	}
+
+	pub fn ok_cancel(hwnd: w::HWND, title: &str, body: &str) -> co::DLGID {
+		base(hwnd, title, body, co::TDCBF::OK | co::TDCBF::CANCEL, co::TD_ICON::WARNING)
+	}
+
+	fn base(hwnd: w::HWND, title: &str, body: &str,
+		btns: co::TDCBF, ico: co::TD_ICON) -> co::DLGID
+	{
+		let mut tdc = w::TASKDIALOGCONFIG::default();
+		tdc.hwndParent = hwnd;
+		tdc.dwFlags = co::TDF::ALLOW_DIALOG_CANCELLATION;
+		tdc.dwCommonButtons = btns;
+		tdc.set_hMainIcon(w::HiconIdTdicon::Tdicon(ico));
+
+		let mut title_bar = w::WString::from_str(ids::APP_TITLE);
+		tdc.set_pszWindowTitle(Some(&mut title_bar));
+
+		let mut title = w::WString::from_str(title);
+		tdc.set_pszMainInstruction(Some(&mut title));
+
+		let mut body = w::WString::from_str(body);
+		tdc.set_pszContent(Some(&mut body));
+
+		let (res, _) = w::TaskDialogIndirect(&mut tdc, None).unwrap();
+		res
+	}
+}

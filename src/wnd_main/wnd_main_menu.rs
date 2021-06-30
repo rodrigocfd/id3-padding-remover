@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use winsafe::{self as w, co, shell};
 
-use crate::ids::{APP_TITLE, main as id};
+use crate::ids::main as id;
 use crate::util;
 use crate::wnd_modify::WndModify;
 use super::WndMain;
@@ -54,10 +54,8 @@ impl WndMain {
 				let sel_files = self2.lst_files.columns().selected_texts(0);
 
 				if sel_files.is_empty() {
-					self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-						Some("No files"),
-						Some("There are no selected files to be modified."),
-						co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::ERROR)).unwrap();
+					util::msg::err(self2.wnd.hwnd(), "No files",
+						"There are no selected files to be modified.");
 					return;
 				}
 
@@ -107,12 +105,9 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-					Some("Operation successful"),
-					Some(&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(), util::timer_end_ms(t0))),
-					co::TDCBF::OK,
-					w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
+				util::msg::info(self2.wnd.hwnd(), "Operation successful",
+					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
+						sel_idxs.len(), util::timer_end_ms(t0)));
 			}
 		});
 
@@ -128,14 +123,12 @@ impl WndMain {
 				let fi: &w::VS_FIXEDFILEINFO = unsafe { &*(fis.as_ptr() as *const w::VS_FIXEDFILEINFO) };
 				let ver = fi.dwFileVersion();
 
-				self2.wnd.hwnd().TaskDialog(None, Some(APP_TITLE),
-					Some("About"),
-					Some(&format!(
+				util::msg::info(self2.wnd.hwnd(), "About",
+					&format!(
 						"ID3 Padding Remover v{}.{}.{}\n\
 						Writen in Rust with WinSafe library.\n\n\
 						Rodrigo César de Freitas Dias © 2021",
-						ver[0], ver[1], ver[2])),
-					co::TDCBF::OK, w::IdTdicon::Tdicon(co::TD_ICON::INFORMATION)).unwrap();
+						ver[0], ver[1], ver[2]));
 			}
 		});
 	}
