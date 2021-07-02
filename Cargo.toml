@@ -10,7 +10,7 @@ codegen-units = 1
 #panic = "abort"
 
 [dependencies]
-winsafe = { path = "../winsafe" }
+winsafe = { path = "../winsafe", features = ["shell"] }
 
 # https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes
 # RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-pc-windows-msvc

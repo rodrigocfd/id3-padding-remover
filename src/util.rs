@@ -52,10 +52,8 @@ pub fn format_bytes(num_bytes: usize) -> String {
 	}
 }
 
-pub mod msg {
+pub mod prompt {
 	use winsafe::{self as w, co};
-
-	use crate::ids;
 
 	pub fn err(hwnd: w::HWND, title: &str, body: &str) {
 		base(hwnd, title, body, co::TDCBF::OK, co::TD_ICON::ERROR);
@@ -78,11 +76,8 @@ pub mod msg {
 		tdc.dwCommonButtons = btns;
 		tdc.set_hMainIcon(w::HiconIdTdicon::Tdicon(ico));
 
-		let mut title_bar = w::WString::from_str(ids::APP_TITLE);
-		tdc.set_pszWindowTitle(Some(&mut title_bar));
-
 		let mut title = w::WString::from_str(title);
-		tdc.set_pszMainInstruction(Some(&mut title));
+		tdc.set_pszWindowTitle(Some(&mut title));
 
 		let mut body = w::WString::from_str(body);
 		tdc.set_pszContent(Some(&mut body));

@@ -54,7 +54,7 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						util::msg::err(self.wnd.hwnd(), "Tag reading failed",
+						util::prompt::err(self.wnd.hwnd(), "Tag reading failed",
 							&format!("File: {}\n\n{}", file, e));
 						return Ok(());
 					},

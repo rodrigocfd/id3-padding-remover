@@ -54,7 +54,7 @@ impl WndMain {
 				let sel_files = self2.lst_files.columns().selected_texts(0);
 
 				if sel_files.is_empty() {
-					util::msg::err(self2.wnd.hwnd(), "No files",
+					util::prompt::err(self2.wnd.hwnd(), "No files",
 						"There are no selected files to be modified.");
 					return;
 				}
@@ -105,7 +105,7 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				util::msg::info(self2.wnd.hwnd(), "Operation successful",
+				util::prompt::info(self2.wnd.hwnd(), "Operation successful",
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
 						sel_idxs.len(), util::timer_end_ms(t0)));
 			}
@@ -123,7 +123,7 @@ impl WndMain {
 				let fi: &w::VS_FIXEDFILEINFO = unsafe { &*(fis.as_ptr() as *const w::VS_FIXEDFILEINFO) };
 				let ver = fi.dwFileVersion();
 
-				util::msg::info(self2.wnd.hwnd(), "About",
+				util::prompt::info(self2.wnd.hwnd(), "About",
 					&format!(
 						"ID3 Padding Remover v{}.{}.{}\n\
 						Writen in Rust with WinSafe library.\n\n\
