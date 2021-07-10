@@ -2,7 +2,6 @@
 
 mod id3v2;
 mod ids;
-mod mapped_file;
 mod util;
 mod wnd_main;
 mod wnd_modify;

@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::error::Error;
+use winsafe as w;
 
-use crate::mapped_file::{MappedFile, MappedFileAccess};
 use super::Frame;
 use super::tag_util;
 
@@ -14,7 +14,7 @@ pub struct Tag {
 
 impl Tag {
 	pub fn read(file: &str) -> Result<Self, Box<dyn Error>> {
-		let mapped_file = MappedFile::open(file, MappedFileAccess::Read)?;
+		let mapped_file = w::MappedFile::open(file, w::MappedFileAccess::Read)?;
 		Self::parse(mapped_file.as_slice())
 	}
 
@@ -48,7 +48,7 @@ impl Tag {
 	/// Replaces the tag in the given MP3 file with this one.
 	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
 		let blob_new = self.serialize();
-		let mut mapped_file = MappedFile::open(file, MappedFileAccess::ReadWrite)?;
+		let mut mapped_file = w::MappedFile::open(file, w::MappedFileAccess::ReadWrite)?;
 		let file_size_old = mapped_file.size();
 		let tag_old = Self::parse(mapped_file.as_slice())?;
 
