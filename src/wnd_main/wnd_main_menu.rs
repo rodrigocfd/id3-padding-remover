@@ -29,7 +29,7 @@ impl WndMain {
 					("All files", "*.*"),
 				]).unwrap();
 
-				fileo.SetFileTypeIndex(0).unwrap();
+				fileo.SetFileTypeIndex(1).unwrap();
 
 				if fileo.Show(self2.wnd.hwnd()).unwrap() {
 					self2.add_files(
@@ -81,7 +81,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_CLR_DIACR, {
 			let self2 = self.clone();
 			move || {
-				let t0 = util::timer_start();
+				let clock = util::Timer::start();
 				let sel_idxs = self2.lst_files.items().selected();
 
 				{
@@ -107,7 +107,7 @@ impl WndMain {
 
 				util::prompt::info(self2.wnd.hwnd(), "Operation successful",
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(), util::timer_end_ms(t0)));
+						sel_idxs.len(), clock.now_ms()));
 			}
 		});
 
@@ -119,9 +119,8 @@ impl WndMain {
 				let mut res_buf = Vec::default();
 				w::GetFileVersionInfo(&exe_name, &mut res_buf).unwrap();
 
-				let fis = w::VarQueryValue(&res_buf, "\\").unwrap();
-				let fi: &w::VS_FIXEDFILEINFO = unsafe { &*(fis.as_ptr() as *const w::VS_FIXEDFILEINFO) };
-				let ver = fi.dwFileVersion();
+				let vsffi = unsafe { w::VarQueryValue::<w::VS_FIXEDFILEINFO>(&res_buf, "\\").unwrap() };
+				let ver = vsffi.dwFileVersion();
 
 				util::prompt::info(self2.wnd.hwnd(), "About",
 					&format!(
