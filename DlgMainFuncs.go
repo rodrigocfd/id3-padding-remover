@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"id3fit/id3"
+	"id3fit/prompt"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgMain) addFilesToList(mp3s []string) {
@@ -14,9 +14,8 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 			tag, lerr := id3.ReadTagFromFile(mp3)
 			if lerr != nil {
 				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
-					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Error parsing tag",
-						fmt.Sprintf("File:\n%s\n\n%s", mp3, lerr),
-						co.TDCBF_OK, co.TD_ICON_ERROR)
+					prompt.Error(me.wnd, "Error parsing tag",
+						fmt.Sprintf("File:\n%s\n\n%s", mp3, lerr))
 				})
 				continue
 			}
@@ -58,7 +57,7 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 			switch myFrame := frameDyn.(type) {
 			case *id3.FrameComment:
 				newItem.SetText(1,
-					fmt.Sprintf("[%s] %s", myFrame.Lang(), myFrame.Text()))
+					fmt.Sprintf("[%s] %s", *myFrame.Lang(), *myFrame.Text()))
 
 			case *id3.FrameText:
 				newItem.SetText(1, *myFrame.Text())
@@ -95,17 +94,15 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 		tag := me.cachedTags[selFilePath]
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Writing error",
-				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()),
-				co.TDCBF_OK, co.TD_ICON_ERROR)
+			prompt.Error(me.wnd, "Writing error",
+				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()))
 			break
 		}
 
 		reTag, err := id3.ReadTagFromFile(selFilePath) // re-parse newly saved tag
 		if err != nil {
-			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Re-parsing error",
-				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()),
-				co.TDCBF_OK, co.TD_ICON_ERROR)
+			prompt.Error(me.wnd, "Re-parsing error",
+				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()))
 			break
 		}
 
@@ -136,9 +133,10 @@ func (me *DlgMain) measureFileProcess(fun func()) {
 
 	fun()
 
-	me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Process finished",
+	prompt.Info(me.wnd, "Process finished",
 		fmt.Sprintf("%d file(s) saved in %.2f ms.",
 			me.lstFiles.Items().SelectedCount(),
-			((float64(win.QueryPerformanceCounter())-t0)/freq)*1000),
-		co.TDCBF_OK, co.TD_ICON_INFORMATION)
+			((float64(win.QueryPerformanceCounter())-t0)/freq)*1000,
+		),
+	)
 }

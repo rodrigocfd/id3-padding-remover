@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"id3fit/prompt"
 
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -62,9 +63,8 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "No files added",
-				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)),
-				co.TDCBF_OK, co.TD_ICON_WARNING)
+			prompt.Error(me.wnd, "No files added",
+				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
 			me.addFilesToList(droppedMp3s)
 		}
