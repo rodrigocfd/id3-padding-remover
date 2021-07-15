@@ -39,15 +39,17 @@ impl WndModify {
 	}
 
 	pub(super) fn enable_disable_rem_padding(&self) {
+		// "Remove padding" checkbox will be disabled?
 		let will_disable = self.chk_rem_album.is_checked()
 			|| self.chk_rem_rg.is_checked()
 			|| self.chk_prefix_year.is_checked();
 
 		if will_disable {
-			self.chk_rem_padding.set_check(true);
+			self.chk_rem_padding.set_check(true); // padding removal is then always performed
 		}
 		self.chk_rem_padding.hwnd().EnableWindow(!will_disable);
 
+		// If won't removing padding, there's nothing to do, so we can't run.
 		self.btn_ok.hwnd().EnableWindow(self.chk_rem_padding.is_checked());
 	}
 
