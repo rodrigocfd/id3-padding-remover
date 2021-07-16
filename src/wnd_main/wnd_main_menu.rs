@@ -64,12 +64,10 @@ impl WndMain {
 
 				{
 					let tags_cache = self2.tags_cache.borrow();
-					let mut buf = w::WString::default();
-					for i in 0..self2.lst_files.items().count() {
-						self2.lst_files.items().text(i, 0, &mut buf);
-						let tag = tags_cache.get(&buf.to_string()).unwrap();
-
-						self2.lst_files.items().set_text(i, 1, // write new padding
+					for idx in self2.lst_files.items().selected().iter() {
+						let sel_file = self2.lst_files.items().text(*idx, 0);
+						let tag = tags_cache.get(&sel_file).unwrap();
+						self2.lst_files.items().set_text(*idx, 1, // write new padding
 							&format!("{}", tag.original_padding())).unwrap();
 					}
 				}
@@ -88,7 +86,7 @@ impl WndMain {
 					let mut tags_cache = self2.tags_cache.borrow_mut();
 
 					for idx in sel_idxs.iter() {
-						let file = self2.lst_files.items().text_str(*idx, 0);
+						let file = self2.lst_files.items().text(*idx, 0);
 						let file_new = util::clear_diacritics(&file);
 
 						let tag = tags_cache.remove(&file).unwrap();
@@ -97,7 +95,7 @@ impl WndMain {
 				}
 
 				for idx in sel_idxs.iter() {
-					let file = self2.lst_files.items().text_str(*idx, 0);
+					let file = self2.lst_files.items().text(*idx, 0);
 					let file_new = util::clear_diacritics(&file);
 
 					// This triggers LVN_ITEMCHANGED, which will borrow tags_cache.

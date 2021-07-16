@@ -120,7 +120,7 @@ impl WndMain {
 			let self2 = self.clone();
 			move |p: &w::NMLISTVIEW| {
 				self2.tags_cache.borrow_mut() // remove entry from cache
-					.remove(&self2.lst_files.items().text_str(p.iItem as _, 0));
+					.remove(&self2.lst_files.items().text(p.iItem as _, 0));
 				self2.titlebar_count(PreDelete::Yes).unwrap();
 			}
 		});
