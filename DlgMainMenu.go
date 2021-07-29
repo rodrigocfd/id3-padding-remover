@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3fit/id3"
+	"id3fit/prompt"
 	"sort"
 	"unsafe"
 
@@ -46,7 +47,7 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		fod := shell.CoCreateIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
+		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
 		defer fod.Release()
 
 		flags := fod.GetOptions()
@@ -127,11 +128,9 @@ func (me *DlgMain) eventsMenu() {
 				frYerDyn, hasYer := tag.FrameByName("TYER")
 
 				if !hasAlb {
-					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
-						"Album frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
+					prompt.Error(me.wnd, "Missing frame", "Album frame not found.")
 				} else if !hasYer {
-					me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "Missing frame",
-						"Year frame not found.", co.TDCBF_OK, co.TD_ICON_ERROR)
+					prompt.Error(me.wnd, "Missing frame", "Year frame not found.")
 				}
 
 				frAlb, _ := frAlbDyn.(*id3.FrameText)
@@ -149,12 +148,11 @@ func (me *DlgMain) eventsMenu() {
 		vsffi := (*win.VS_FIXEDFILEINFO)(unsafe.Pointer(&versionSl[0]))
 		v := vsffi.ProductVersion()
 
-		me.wnd.Hwnd().TaskDialog(0, APP_TITLE, "About",
+		prompt.Info(me.wnd, "About",
 			fmt.Sprintf("ID3 Fit %d.%d.%d\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.",
-				v[0], v[1], v[2]),
-			co.TDCBF_OK, co.TD_ICON_INFORMATION)
+				v[0], v[1], v[2]))
 	})
 }

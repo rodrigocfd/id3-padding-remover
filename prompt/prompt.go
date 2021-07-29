@@ -7,19 +7,19 @@ import (
 )
 
 func Error(parent ui.AnyParent, title, body string) {
-	base(parent, title, body, co.TDCBF_OK, co.TD_ICON_ERROR)
+	_Base(parent, title, body, co.TDCBF_OK, co.TD_ICON_ERROR)
 }
 
 func Info(parent ui.AnyParent, title, body string) {
-	base(parent, title, body, co.TDCBF_OK, co.TD_ICON_INFORMATION)
+	_Base(parent, title, body, co.TDCBF_OK, co.TD_ICON_INFORMATION)
 }
 
 func OkCancel(parent ui.AnyParent, title, body string) co.ID {
-	return base(parent, title, body,
+	return _Base(parent, title, body,
 		co.TDCBF_OK|co.TDCBF_CANCEL, co.TD_ICON_WARNING)
 }
 
-func base(parent ui.AnyParent,
+func _Base(parent ui.AnyParent,
 	title, body string, btns co.TDCBF, ico co.TD_ICON) co.ID {
 
 	tdc := win.TASKDIALOGCONFIG{}
