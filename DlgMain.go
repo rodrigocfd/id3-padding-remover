@@ -70,7 +70,6 @@ func NewDlgMain() *DlgMain {
 }
 
 func (me *DlgMain) Run() int {
-	defer me.lstFiles.ImageList(co.LVSIL_SMALL).Destroy()
 	defer me.lstFiles.ContextMenu().DestroyMenu()
 
 	return me.wnd.RunAsMain()

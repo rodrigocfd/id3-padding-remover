@@ -12,6 +12,7 @@ import (
 func (me *DlgMain) eventsMain() {
 	me.wnd.On().WmCreate(func(_ wm.Create) int {
 		// File icon image list.
+		// ListView doesn't have LVS_SHAREIMAGELISTS, so it'll be automatically destroyed.
 		hImgList := win.ImageListCreate(16, 16, co.ILC_COLOR32, 1, 1)
 		hImgList.AddIconFromShell("mp3")
 		me.lstFiles.SetImageList(co.LVSIL_SMALL, hImgList)
