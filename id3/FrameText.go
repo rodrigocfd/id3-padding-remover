@@ -9,12 +9,9 @@ type FrameText struct {
 	text string
 }
 
-// Constructor.
-func _ParseFrameText(base _FrameBase, texts []string) (*FrameText, error) {
-	return &FrameText{
-		_FrameBase: base,
-		text:       texts[0],
-	}, nil
+func (me *FrameText) parse(base *_FrameBase, texts []string) {
+	me._FrameBase = *base
+	me.text = texts[0]
 }
 
 func (me *FrameText) Text() *string { return &me.text }

@@ -12,11 +12,10 @@ type FrameComment struct {
 	text string
 }
 
-// Constructor.
-func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
+func (me *FrameComment) parse(base *_FrameBase, src []byte) error {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
-		return nil, errors.New(
+		return errors.New(
 			fmt.Sprintf("Unrecognized comment text encoding: %02x.", src[0]))
 	}
 	isUnicode := src[0] == 0x01
@@ -39,15 +38,14 @@ func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
 	}
 
 	if len(texts) > 1 {
-		return nil, errors.New(
+		return errors.New(
 			fmt.Sprintf("Comment frame with multiple texts: %d.", len(texts)))
 	}
 
-	return &FrameComment{
-		_FrameBase: base,
-		lang:       lang,
-		text:       texts[0],
-	}, nil
+	me._FrameBase = *base
+	me.lang = lang
+	me.text = texts[0]
+	return nil
 }
 
 func (me *FrameComment) Lang() *string { return &me.lang }

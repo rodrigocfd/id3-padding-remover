@@ -20,33 +20,42 @@ type Tag struct {
 
 // Constructor; reads the tag from an MP3 file.
 func ReadTagFromFile(mp3Path string) (*Tag, error) {
-	fMap, e := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
-	if e != nil {
-		return nil, e
-	}
-	defer fMap.Close()
-
-	return ReadTagFromBinary(fMap.HotSlice())
+	tag := &Tag{}
+	return tag, tag.readFromFile(mp3Path)
 }
 
 // Constructor; reads the tag from a binary blob.
 func ReadTagFromBinary(src []byte) (*Tag, error) {
-	originalSize, lerr := _ParseTagHeader(src)
-	if lerr != nil {
-		return nil, lerr
+	tag := &Tag{}
+	return tag, tag.readFromBinary(src)
+}
+
+func (me *Tag) readFromFile(mp3Path string) error {
+	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
+	if err != nil {
+		return err
+	}
+	defer fMap.Close()
+
+	return me.readFromBinary(fMap.HotSlice())
+}
+
+func (me *Tag) readFromBinary(src []byte) error {
+	originalSize, err := me.parseTagHeader(src)
+	if err != nil {
+		return err
 	}
 	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
 
-	frames, originalPadding, lerr := _ParseAllFrames(src)
-	if lerr != nil {
-		return nil, lerr
+	frames, originalPadding, err := me.parseAllFrames(src)
+	if err != nil {
+		return err
 	}
 
-	return &Tag{
-		originalSize:    originalSize,
-		originalPadding: originalPadding,
-		frames:          frames,
-	}, nil
+	me.originalSize = originalSize
+	me.originalPadding = originalPadding
+	me.frames = frames
+	return nil
 }
 
 func (me *Tag) OriginalSize() int    { return me.originalSize }
@@ -131,7 +140,7 @@ func (me *Tag) FrameByName(name4 string) (Frame, bool) {
 	return nil, false
 }
 
-func _ParseTagHeader(src []byte) (int, error) {
+func (me *Tag) parseTagHeader(src []byte) (int, error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return 0, errors.New("No ID3 tag found.")
@@ -160,7 +169,7 @@ func _ParseTagHeader(src []byte) (int, error) {
 	return originalSize, nil
 }
 
-func _ParseAllFrames(src []byte) ([]Frame, int, error) {
+func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 	frames := make([]Frame, 0, 6) // arbitrary capacity
 	padding := 0
 

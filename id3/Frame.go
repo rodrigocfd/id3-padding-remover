@@ -16,11 +16,14 @@ type Frame interface {
 
 // Constructor.
 func _ParseFrame(src []byte) (Frame, error) {
-	frameBase := _ParseFrameBase(src)
+	frameBase := &_FrameBase{}
+	frameBase.parse(src)
 	src = src[10:frameBase.OriginalSize()] // skip frame header, truncate to frame size
 
 	if frameBase.Name4() == "COMM" {
-		return _ParseFrameComment(frameBase, src)
+		frameComment := &FrameComment{}
+		err := frameComment.parse(frameBase, src)
+		return frameComment, err
 
 	} else if frameBase.Name4()[0] == 'T' {
 		texts, e := util.ParseAnyStrings(src)
@@ -33,13 +36,19 @@ func _ParseFrame(src []byte) (Frame, error) {
 				fmt.Sprintf("Frame %s contains no texts.", frameBase.Name4()))
 
 		} else if len(texts) == 1 {
-			return _ParseFrameText(frameBase, texts)
+			frameText := &FrameText{}
+			frameText.parse(frameBase, texts)
+			return frameText, nil
 
 		} else {
-			return _ParseFrameMultiText(frameBase, texts)
+			frameMultiText := &FrameMultiText{}
+			err := frameMultiText.parse(frameBase, texts)
+			return frameMultiText, err
 		}
 	}
 
 	// Anything else is treated as raw binary.
-	return _ParseFrameBinary(frameBase, src)
+	frameBinary := &FrameBinary{}
+	frameBinary.parse(frameBase, src)
+	return frameBinary, nil
 }

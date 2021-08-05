@@ -5,15 +5,12 @@ type FrameBinary struct {
 	binData []byte
 }
 
-// Constructor.
-func _ParseFrameBinary(base _FrameBase, src []byte) (*FrameBinary, error) {
+func (me *FrameBinary) parse(base *_FrameBase, src []byte) {
 	theData := make([]byte, len(src))
 	copy(theData, src) // simply store bytes
 
-	return &FrameBinary{
-		_FrameBase: base,
-		binData:    theData,
-	}, nil
+	me._FrameBase = *base
+	me.binData = theData
 }
 
 func (me *FrameBinary) BinData() *[]byte { return &me.binData }

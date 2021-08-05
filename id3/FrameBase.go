@@ -11,12 +11,9 @@ type _FrameBase struct {
 	originalSize int
 }
 
-// Constructor.
-func _ParseFrameBase(src []byte) _FrameBase {
-	return _FrameBase{
-		name4:        string(src[0:4]),
-		originalSize: int(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header
-	}
+func (me *_FrameBase) parse(src []byte) {
+	me.name4 = string(src[0:4])
+	me.originalSize = int(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
 }
 
 func (me *_FrameBase) Name4() string     { return me.name4 }
