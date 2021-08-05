@@ -75,8 +75,8 @@ func SerializeStrings(theStrings []string) (encodingByte byte, blob []byte) {
 	estimatedLenBytes := 0
 
 out:
-	for _, oneString := range theStrings {
-		runeArr := []rune(oneString)
+	for _, oneString := range theStrings { // just to check if it will be Unicode
+		runeArr := []rune(oneString) // convert to rune slice
 		estimatedLenBytes += len(runeArr)
 
 		for _, ch := range runeArr {
@@ -100,13 +100,15 @@ out:
 	blob = make([]byte, 0, estimatedLenBytes)
 
 	if isUnicode {
-		blob = win.Bytes.Append16(blob, binary.LittleEndian, _BOM_LE) // encode all strings as little-endian
+		// Append the BOM bytes.
+		// All strings will be encoded as little-endian.
+		blob = win.Bytes.Append16(blob, binary.LittleEndian, _BOM_LE)
 	}
 
 	for _, oneString := range theStrings {
-		runeArr := []rune(oneString)
+		runeArr := []rune(oneString) // convert to rune slice
 
-		for _, ch := range runeArr {
+		for _, ch := range runeArr { // append each character to final blob
 			if isUnicode {
 				blob = win.Bytes.Append16(blob, binary.LittleEndian, uint16(ch))
 			} else {

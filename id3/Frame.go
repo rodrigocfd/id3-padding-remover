@@ -26,9 +26,9 @@ func _ParseFrame(src []byte) (Frame, error) {
 		return frameComment, err
 
 	} else if frameBase.Name4()[0] == 'T' {
-		texts, e := util.ParseAnyStrings(src)
-		if e != nil {
-			return nil, e
+		texts, err := util.ParseAnyStrings(src)
+		if err != nil {
+			return nil, err
 		}
 
 		if len(texts) == 0 {
@@ -45,10 +45,11 @@ func _ParseFrame(src []byte) (Frame, error) {
 			err := frameMultiText.parse(frameBase, texts)
 			return frameMultiText, err
 		}
-	}
 
-	// Anything else is treated as raw binary.
-	frameBinary := &FrameBinary{}
-	frameBinary.parse(frameBase, src)
-	return frameBinary, nil
+	} else {
+		// Anything else is treated as raw binary.
+		frameBinary := &FrameBinary{}
+		frameBinary.parse(frameBase, src)
+		return frameBinary, nil
+	}
 }

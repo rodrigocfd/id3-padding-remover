@@ -18,13 +18,13 @@ type Tag struct {
 	frames          []Frame
 }
 
-// Constructor; reads the tag from an MP3 file.
+// Public constructor; reads the tag from an MP3 file.
 func ReadTagFromFile(mp3Path string) (*Tag, error) {
 	tag := &Tag{}
 	return tag, tag.readFromFile(mp3Path)
 }
 
-// Constructor; reads the tag from a binary blob.
+// Public constructor; reads the tag from a binary blob.
 func ReadTagFromBinary(src []byte) (*Tag, error) {
 	tag := &Tag{}
 	return tag, tag.readFromBinary(src)
