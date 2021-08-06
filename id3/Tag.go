@@ -30,34 +30,6 @@ func ReadTagFromBinary(src []byte) (*Tag, error) {
 	return tag, tag.readFromBinary(src)
 }
 
-func (me *Tag) readFromFile(mp3Path string) error {
-	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
-	if err != nil {
-		return err
-	}
-	defer fMap.Close()
-
-	return me.readFromBinary(fMap.HotSlice())
-}
-
-func (me *Tag) readFromBinary(src []byte) error {
-	originalSize, err := me.parseTagHeader(src)
-	if err != nil {
-		return err
-	}
-	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
-
-	frames, originalPadding, err := me.parseAllFrames(src)
-	if err != nil {
-		return err
-	}
-
-	me.originalSize = originalSize
-	me.originalPadding = originalPadding
-	me.frames = frames
-	return nil
-}
-
 func (me *Tag) OriginalSize() int    { return me.originalSize }
 func (me *Tag) OriginalPadding() int { return me.originalPadding }
 func (me *Tag) Frames() []Frame      { return me.frames }
@@ -167,6 +139,34 @@ func (me *Tag) parseTagHeader(src []byte) (int, error) {
 	) + 10)
 
 	return originalSize, nil
+}
+
+func (me *Tag) readFromFile(mp3Path string) error {
+	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
+	if err != nil {
+		return err
+	}
+	defer fMap.Close()
+
+	return me.readFromBinary(fMap.HotSlice())
+}
+
+func (me *Tag) readFromBinary(src []byte) error {
+	originalSize, err := me.parseTagHeader(src)
+	if err != nil {
+		return err
+	}
+	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
+
+	frames, originalPadding, err := me.parseAllFrames(src)
+	if err != nil {
+		return err
+	}
+
+	me.originalSize = originalSize
+	me.originalPadding = originalPadding
+	me.frames = frames
+	return nil
 }
 
 func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
