@@ -20,7 +20,6 @@ type DlgMain struct {
 	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         ui.ListView
 	resizer           ui.Resizer
-	statusBar         ui.StatusBar
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
@@ -28,7 +27,7 @@ func NewDlgMain() *DlgMain {
 	wnd := ui.NewWindowMain(
 		ui.WindowMainOpts().
 			Title(APP_TITLE).
-			ClientArea(win.SIZE{Cx: 750, Cy: 340}).
+			ClientArea(win.SIZE{Cx: 750, Cy: 320}).
 			IconId(ICO_MAIN).
 			AccelTable(createAccelTable()).
 			WndStyles(co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
@@ -56,7 +55,6 @@ func NewDlgMain() *DlgMain {
 				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER),
 		),
 		resizer:    ui.NewResizer(wnd),
-		statusBar:  ui.NewStatusBar(wnd),
 		cachedTags: make(map[string]*id3.Tag),
 	}
 

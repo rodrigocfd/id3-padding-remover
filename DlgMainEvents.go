@@ -26,15 +26,6 @@ func (me *DlgMain) eventsMain() {
 		me.lstValues.Columns().SetWidthToFill(1)
 		me.lstValues.Hwnd().EnableWindow(false)
 
-		// Status bar.
-		me.statusBar.Parts().AddResizable(4, 2, 3, 3)
-		me.statusBar.Parts().SetAllTexts(
-			"Alloc: 0 MB",
-			"Accum alloc: 0 MB",
-			"Obtained: 0 MB",
-			"GC cycles: 0",
-		)
-
 		return 0
 	})
 

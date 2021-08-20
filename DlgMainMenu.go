@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3fit/id3"
 	"id3fit/prompt"
+	"runtime"
 	"sort"
 	"unsafe"
 
@@ -148,11 +149,21 @@ func (me *DlgMain) eventsMenu() {
 		vsffi := (*win.VS_FIXEDFILEINFO)(unsafe.Pointer(&versionSl[0]))
 		v := vsffi.ProductVersion()
 
+		memStats := runtime.MemStats{}
+		runtime.ReadMemStats(&memStats)
+
 		prompt.Info(me.wnd, "About",
 			fmt.Sprintf("ID3 Fit %d.%d.%d\n"+
 				"Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
-				"This application was written in Go with Windigo library.",
-				v[0], v[1], v[2]))
+				"This application was written in Go with Windigo library.\n\n"+
+				"Alloc mem: %s\n"+
+				"GC cycles: %d\n"+
+				"Next GC: %s\n"+
+				"Heap sys: %s",
+				v[0], v[1], v[2],
+				win.Str.FmtBytes(memStats.HeapAlloc), memStats.NumGC,
+				win.Str.FmtBytes(memStats.NextGC), win.Str.FmtBytes(memStats.HeapSys),
+			))
 	})
 }

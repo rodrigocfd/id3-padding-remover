@@ -11,11 +11,11 @@ import (
 func (me *DlgMain) addFilesToList(mp3s []string) {
 	go func() { // launch a goroutine right away
 		for _, mp3 := range mp3s {
-			tag, lerr := id3.ReadTagFromFile(mp3)
-			if lerr != nil {
+			tag, err := id3.ReadTagFromFile(mp3)
+			if err != nil {
 				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
 					prompt.Error(me.wnd, "Error parsing tag",
-						fmt.Sprintf("File:\n%s\n\n%s", mp3, lerr))
+						fmt.Sprintf("File:\n%s\n\n%s", mp3, err))
 				})
 				continue
 			}
@@ -32,7 +32,6 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 
 		me.wnd.RunUiThread(func() {
 			me.lstFiles.Columns().SetWidthToFill(0)
-			me.updateMemoryStatus()
 		})
 	}()
 }
@@ -84,8 +83,6 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.SetRedraw(true)
 	me.lstValues.Columns().SetWidthToFill(1)
 	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
-
-	me.updateMemoryStatus()
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles() {
@@ -112,8 +109,6 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 	}
 
 	me.displayTagsOfSelectedFiles() // refresh the frames display
-
-	me.updateMemoryStatus()
 }
 
 func (me *DlgMain) updateTitlebarCount(total int) {

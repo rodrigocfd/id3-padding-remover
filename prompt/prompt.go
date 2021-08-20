@@ -22,14 +22,14 @@ func OkCancel(parent ui.AnyParent, title, body string) co.ID {
 func _Base(parent ui.AnyParent,
 	title, body string, btns co.TDCBF, ico co.TD_ICON) co.ID {
 
-	tdc := win.TASKDIALOGCONFIG{}
+	var tdc win.TASKDIALOGCONFIG
 	tdc.SetCbSize()
-	*tdc.HwndParent() = parent.Hwnd()
-	*tdc.DwFlags() = co.TDF_ALLOW_DIALOG_CANCELLATION
-	*tdc.DwCommonButtons() = btns
-	*tdc.HMainIcon() = ico
-	*tdc.PszWindowTitle() = win.Str.ToUint16Ptr(title)
-	*tdc.PszContent() = win.Str.ToUint16Ptr(body)
+	tdc.SetHwndParent(parent.Hwnd())
+	tdc.SetDwFlags(co.TDF_ALLOW_DIALOG_CANCELLATION)
+	tdc.SetDwCommonButtons(btns)
+	tdc.SetHMainIcon(ico)
+	tdc.SetPszWindowTitle(title)
+	tdc.SetPszContent(body)
 
 	return win.TaskDialogIndirect(&tdc)
 }
