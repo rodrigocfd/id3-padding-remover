@@ -5,7 +5,6 @@ import (
 	"id3fit/id3"
 	"id3fit/prompt"
 	"runtime"
-	"sort"
 	"unsafe"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -60,7 +59,7 @@ func (me *DlgMain) eventsMenu() {
 
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
-			sort.Strings(mp3s)
+			win.Path.Sort(mp3s)
 			me.addFilesToList(mp3s)
 		}
 	})
