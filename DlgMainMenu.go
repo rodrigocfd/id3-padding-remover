@@ -56,13 +56,10 @@ func (me *DlgMain) eventsMenu() {
 			{Name: "MP3 audio files", Spec: "*.mp3"},
 			{Name: "All files", Spec: "*.*"},
 		})
-		fod.SetFileTypeIndex(0)
+		fod.SetFileTypeIndex(1)
 
 		if fod.Show(me.wnd.Hwnd()) {
-			shia := fod.GetResults()
-			defer shia.Release()
-
-			mp3s := shia.GetDisplayNames(shellco.SIGDN_FILESYSPATH)
+			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
 			sort.Strings(mp3s)
 			me.addFilesToList(mp3s)
 		}
