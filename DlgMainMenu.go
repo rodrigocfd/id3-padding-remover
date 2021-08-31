@@ -23,19 +23,16 @@ func createAccelTable() ui.AcceleratorTable {
 }
 
 func createContextMenu() win.HMENU {
-	hMenu := win.CreatePopupMenu()
-
-	hMenu.AddItem(MNU_OPEN, "&Open files...\tCtrl+O")
-	hMenu.AddItem(MNU_DELETE, "&Delete from list\tDel")
-	hMenu.AddSeparator()
-	hMenu.AddItem(MNU_REM_PAD, "Remove &padding")
-	hMenu.AddItem(MNU_REM_RG, "Remove Replay&Gain")
-	hMenu.AddItem(MNU_REM_RG_PIC, "Remove ReplayGain and p&ic")
-	hMenu.AddItem(MNU_PREFIX_YEAR, "Prefix album with &year")
-	hMenu.AddSeparator()
-	hMenu.AddItem(MNU_ABOUT, "&About...\tF1")
-
-	return hMenu
+	return win.CreatePopupMenu().
+		AddItem(MNU_OPEN, "&Open files...\tCtrl+O").
+		AddItem(MNU_DELETE, "&Delete from list\tDel").
+		AddSeparator().
+		AddItem(MNU_REM_PAD, "Remove &padding").
+		AddItem(MNU_REM_RG, "Remove Replay&Gain").
+		AddItem(MNU_REM_RG_PIC, "Remove ReplayGain and p&ic").
+		AddItem(MNU_PREFIX_YEAR, "Prefix album with &year").
+		AddSeparator().
+		AddItem(MNU_ABOUT, "&About...\tF1")
 }
 
 func (me *DlgMain) eventsMenu() {
