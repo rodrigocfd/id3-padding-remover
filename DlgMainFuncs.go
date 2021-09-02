@@ -14,7 +14,7 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 			tag, err := id3.ReadTagFromFile(mp3)
 			if err != nil {
 				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
-					prompt.Error(me.wnd, "Error parsing tag",
+					prompt.Error(me.wnd, "Error parsing tag", "",
 						fmt.Sprintf("File:\n%s\n\n%s", mp3, err))
 				})
 				continue
@@ -91,14 +91,14 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles() {
 		tag := me.cachedTags[selFilePath]
 
 		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			prompt.Error(me.wnd, "Writing error",
+			prompt.Error(me.wnd, "Writing error", "",
 				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()))
 			break
 		}
 
 		reTag, err := id3.ReadTagFromFile(selFilePath) // re-parse newly saved tag
 		if err != nil {
-			prompt.Error(me.wnd, "Re-parsing error",
+			prompt.Error(me.wnd, "Re-parsing error", "",
 				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()))
 			break
 		}
@@ -128,7 +128,7 @@ func (me *DlgMain) measureFileProcess(fun func()) {
 
 	fun()
 
-	prompt.Info(me.wnd, "Process finished",
+	prompt.Info(me.wnd, "Process finished", "Success",
 		fmt.Sprintf("%d file(s) saved in %.2f ms.",
 			me.lstFiles.Items().SelectedCount(),
 			((float64(win.QueryPerformanceCounter())-t0)/freq)*1000,

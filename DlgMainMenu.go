@@ -122,9 +122,9 @@ func (me *DlgMain) eventsMenu() {
 				frYerDyn, hasYer := tag.FrameByName("TYER")
 
 				if !hasAlb {
-					prompt.Error(me.wnd, "Missing frame", "Album frame not found.")
+					prompt.Error(me.wnd, "Missing frame", "", "Album frame not found.")
 				} else if !hasYer {
-					prompt.Error(me.wnd, "Missing frame", "Year frame not found.")
+					prompt.Error(me.wnd, "Missing frame", "", "Year frame not found.")
 				}
 
 				frAlb, _ := frAlbDyn.(*id3.FrameText)
@@ -146,15 +146,14 @@ func (me *DlgMain) eventsMenu() {
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",
-			fmt.Sprintf("ID3 Fit %d.%d.%d\n"+
-				"Rodrigo César de Freitas Dias\n"+
+			fmt.Sprintf("ID3 Fit %d.%d.%d", v[0], v[1], v[2]),
+			fmt.Sprintf("Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
 				"Alloc mem: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s\n"+
 				"Heap sys: %s",
-				v[0], v[1], v[2],
 				win.Str.FmtBytes(memStats.HeapAlloc), memStats.NumGC,
 				win.Str.FmtBytes(memStats.NextGC), win.Str.FmtBytes(memStats.HeapSys),
 			))
