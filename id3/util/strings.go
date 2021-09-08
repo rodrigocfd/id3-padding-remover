@@ -3,10 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
-
-	"github.com/rodrigocfd/windigo/win"
 )
 
 const _BOM_LE uint16 = 0xfeff
@@ -22,8 +19,7 @@ func ParseAnyStrings(src []byte) ([]string, error) {
 		// Encoding is Unicode, may have 2-byte BOM.
 		return ParseUnicodeStrings(src[1:]), nil
 	default:
-		return nil, errors.New(
-			fmt.Sprintf("Unrecognized text encoding: %02x.", src[0]))
+		return nil, fmt.Errorf("Unrecognized text encoding: %02x.", src[0])
 	}
 }
 
@@ -102,7 +98,7 @@ out:
 	if isUnicode {
 		// Append the BOM bytes.
 		// All strings will be encoded as little-endian.
-		blob = win.Bytes.Append16(blob, binary.LittleEndian, _BOM_LE)
+		blob = Append16(blob, binary.LittleEndian, _BOM_LE)
 	}
 
 	for _, oneString := range theStrings {
@@ -110,14 +106,14 @@ out:
 
 		for _, ch := range runeArr { // append each character to final blob
 			if isUnicode {
-				blob = win.Bytes.Append16(blob, binary.LittleEndian, uint16(ch))
+				blob = Append16(blob, binary.LittleEndian, uint16(ch))
 			} else {
 				blob = append(blob, byte(ch))
 			}
 		}
 
 		if isUnicode { // all strings are null-terminated
-			blob = win.Bytes.Append16(blob, binary.LittleEndian, 0x0000)
+			blob = Append16(blob, binary.LittleEndian, 0x0000)
 		} else {
 			blob = append(blob, 0x00)
 		}

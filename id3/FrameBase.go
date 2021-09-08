@@ -2,8 +2,7 @@ package id3
 
 import (
 	"encoding/binary"
-
-	"github.com/rodrigocfd/windigo/win"
+	"id3fit/id3/util"
 )
 
 type _FrameBase struct {
@@ -23,8 +22,8 @@ func (me *_FrameBase) serializeHeader(totalFrameSize int) []byte {
 	blob := make([]byte, 0, 10) // header is 10 bytes
 	blob = append(blob, []byte(me.name4)...)
 
-	blob = win.Bytes.Append32(blob, binary.BigEndian, uint32(totalFrameSize-10)) // without 10-byte header
+	blob = util.Append32(blob, binary.BigEndian, uint32(totalFrameSize-10)) // without 10-byte header
 
-	blob = win.Bytes.Append16(blob, binary.BigEndian, 0x0000) // flags
+	blob = util.Append16(blob, binary.BigEndian, 0x0000) // flags
 	return blob
 }
