@@ -1,7 +1,6 @@
 package id3
 
 import (
-	"errors"
 	"fmt"
 	"id3fit/id3/util"
 )
@@ -12,11 +11,10 @@ type FrameComment struct {
 	text string
 }
 
-func (me *FrameComment) parse(base *_FrameBase, src []byte) error {
+func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
-		return errors.New(
-			fmt.Sprintf("Unrecognized comment text encoding: %02x.", src[0]))
+		return fmt.Errorf("Unrecognized comment text encoding: %02x.", src[0])
 	}
 	isUnicode := src[0] == 0x01
 	src = src[1:] // skip encoding byte
@@ -38,11 +36,10 @@ func (me *FrameComment) parse(base *_FrameBase, src []byte) error {
 	}
 
 	if len(texts) > 1 {
-		return errors.New(
-			fmt.Sprintf("Comment frame with multiple texts: %d.", len(texts)))
+		return fmt.Errorf("Comment frame with multiple texts: %d.", len(texts))
 	}
 
-	me._FrameBase = *base
+	me._FrameBase = base
 	me.lang = lang
 	me.text = texts[0]
 	return nil

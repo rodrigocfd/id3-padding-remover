@@ -181,9 +181,9 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 			break
 		}
 
-		newFrame, lerr := _ParseFrame(src)
-		if lerr != nil {
-			return nil, 0, lerr // error when parsing the frame
+		newFrame, err := _ParseFrame(src)
+		if err != nil {
+			return nil, 0, err // error when parsing the frame
 		}
 		if newFrame.OriginalSize() > len(src) { // means the tag was serialized with error
 			return nil, 0, errors.New("Frame size is greater than real size.")

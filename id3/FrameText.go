@@ -9,8 +9,8 @@ type FrameText struct {
 	text string
 }
 
-func (me *FrameText) parse(base *_FrameBase, texts []string) {
-	me._FrameBase = *base
+func (me *FrameText) parse(base _FrameBase, texts []string) {
+	me._FrameBase = base
 	me.text = texts[0]
 }
 

@@ -1,7 +1,7 @@
 package id3
 
 import (
-	"errors"
+	"encoding/binary"
 	"fmt"
 	"id3fit/id3/util"
 )
@@ -16,7 +16,7 @@ type Frame interface {
 
 // Constructor.
 func _ParseFrame(src []byte) (Frame, error) {
-	frameBase := &_FrameBase{}
+	frameBase := _FrameBase{}
 	frameBase.parse(src)
 	src = src[10:frameBase.OriginalSize()] // skip frame header, truncate to frame size
 
@@ -32,8 +32,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 		}
 
 		if len(texts) == 0 {
-			return nil, errors.New(
-				fmt.Sprintf("Frame %s contains no texts.", frameBase.Name4()))
+			return nil, fmt.Errorf("Frame %s contains no texts.", frameBase.Name4())
 
 		} else if len(texts) == 1 {
 			frameText := &FrameText{}
@@ -52,4 +51,29 @@ func _ParseFrame(src []byte) (Frame, error) {
 		frameBinary.parse(frameBase, src)
 		return frameBinary, nil
 	}
+}
+
+//------------------------------------------------------------------------------
+
+type _FrameBase struct {
+	name4        string
+	originalSize int
+}
+
+func (me *_FrameBase) parse(src []byte) {
+	me.name4 = string(src[0:4])
+	me.originalSize = int(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
+}
+
+func (me *_FrameBase) Name4() string     { return me.name4 }
+func (me *_FrameBase) OriginalSize() int { return me.originalSize }
+
+func (me *_FrameBase) serializeHeader(totalFrameSize int) []byte {
+	blob := make([]byte, 0, 10) // header is 10 bytes
+	blob = append(blob, []byte(me.name4)...)
+
+	blob = util.Append32(blob, binary.BigEndian, uint32(totalFrameSize-10)) // without 10-byte header
+
+	blob = util.Append16(blob, binary.BigEndian, 0x0000) // flags
+	return blob
 }

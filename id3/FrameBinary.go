@@ -5,11 +5,11 @@ type FrameBinary struct {
 	binData []byte
 }
 
-func (me *FrameBinary) parse(base *_FrameBase, src []byte) {
+func (me *FrameBinary) parse(base _FrameBase, src []byte) {
 	theData := make([]byte, len(src))
 	copy(theData, src) // simply store bytes
 
-	me._FrameBase = *base
+	me._FrameBase = base
 	me.binData = theData
 }
 
