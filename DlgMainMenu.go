@@ -57,6 +57,10 @@ func (me *DlgMain) eventsMenu() {
 		})
 		fod.SetFileTypeIndex(1)
 
+		shiDir, _ := shell.NewShellItem(win.GetCurrentDirectory())
+		defer shiDir.Release()
+		fod.SetFolder(&shiDir)
+
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
 			win.Path.Sort(mp3s)
