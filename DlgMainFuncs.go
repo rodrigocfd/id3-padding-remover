@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"id3fit/id3"
 	"id3fit/prompt"
+	"strconv"
 
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *DlgMain) addFilesToList(mp3s []string) {
+func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	type Result struct {
 		Mp3 string
 		Err error
@@ -17,7 +18,7 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 
 	go func() {
 		resultChan := make(chan Result, len(mp3s))
-		results := make([]Result, 0, len(mp3s))
+		results := make([]Result, 0, len(mp3s)) // processing results
 
 		for _, mp3 := range mp3s {
 			go func(mp3 string) {
@@ -39,14 +40,20 @@ func (me *DlgMain) addFilesToList(mp3s []string) {
 					prompt.Error(me.wnd, "Error parsing tag", "",
 						fmt.Sprintf("File:\n%s\n\n%s", resu.Mp3, resu.Err))
 				} else {
-					if _, found := me.lstFiles.Items().Find(resu.Mp3); !found { // file not added yet?
+					if item, found := me.lstFiles.Items().Find(resu.Mp3); !found { // file not added yet?
 						me.lstFiles.Items().
-							AddWithIcon(0, resu.Mp3, fmt.Sprintf("%d", resu.Tag.OriginalPadding())) // will fire LVN_INSERTITEM
+							AddWithIcon(0, resu.Mp3, strconv.Itoa(resu.Tag.OriginalPadding())) // will fire LVN_INSERTITEM
+					} else {
+						item.SetText(1, strconv.Itoa(resu.Tag.OriginalPadding())) // update padding info
 					}
 					me.cachedTags[resu.Mp3] = resu.Tag // cache (or re-cache) the tag
 				}
 			}
 			me.lstFiles.Columns().SetWidthToFill(0)
+			me.displayTagsOfSelectedFiles()
+			if onFinish != nil {
+				onFinish()
+			}
 		})
 	}()
 }
@@ -100,30 +107,57 @@ func (me *DlgMain) displayTagsOfSelectedFiles() {
 	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
 }
 
-func (me *DlgMain) reSaveTagsOfSelectedFiles() {
-	for _, selItem := range me.lstFiles.Items().Selected() {
-		selFilePath := selItem.Text(0)
-		tag := me.cachedTags[selFilePath]
-
-		if err := tag.SerializeToFile(selFilePath); err != nil { // simply rewrite tag, no padding is written
-			prompt.Error(me.wnd, "Writing error", "",
-				fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", selFilePath, err.Error()))
-			break
-		}
-
-		reTag, err := id3.ReadTagFromFile(selFilePath) // re-parse newly saved tag
-		if err != nil {
-			prompt.Error(me.wnd, "Re-parsing error", "",
-				fmt.Sprintf("Failed to rescan saved file:\n%s\n\n%s", selFilePath, err.Error()))
-			break
-		}
-
-		me.cachedTags[selFilePath] = reTag // re-cache modified tag
-		selItem.SetText(1,
-			fmt.Sprintf("%d", reTag.OriginalPadding())) // refresh padding size
+func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
+	type Unit struct {
+		Mp3 string
+		Tag *id3.Tag
+	}
+	type Result struct {
+		Mp3 string
+		Err error
 	}
 
-	me.displayTagsOfSelectedFiles() // refresh the frames display
+	selUnits := make([]Unit, 0, me.lstFiles.Items().SelectedCount())
+	for _, selItem := range me.lstFiles.Items().Selected() {
+		selMp3 := selItem.Text(0)
+		selUnits = append(selUnits, Unit{ // prepare data to be worked upon
+			Mp3: selMp3,
+			Tag: me.cachedTags[selMp3],
+		})
+	}
+
+	go func() {
+		resultChan := make(chan Result, len(selUnits))
+		results := make([]Result, 0, len(selUnits)) // processing results
+
+		for i := range selUnits {
+			go func(i int) {
+				selUnit := selUnits[i]
+				err := selUnit.Tag.SerializeToFile(selUnit.Mp3)
+				resultChan <- Result{ // send all results in parallel
+					Mp3: selUnit.Mp3,
+					Err: err,
+				}
+			}(i)
+		}
+		for i := 0; i < len(selUnits); i++ {
+			results = append(results, <-resultChan) // receive all results
+		}
+
+		me.wnd.RunUiThread(func() {
+			reCachedMp3s := make([]string, 0, len(results))
+
+			for _, resu := range results { // analyze all results
+				if resu.Err != nil {
+					prompt.Error(me.wnd, "Writing error", "",
+						fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", resu.Mp3, resu.Err.Error()))
+				} else {
+					reCachedMp3s = append(reCachedMp3s, resu.Mp3)
+				}
+			}
+			me.addFilesToList(reCachedMp3s, onFinish)
+		})
+	}()
 }
 
 func (me *DlgMain) updateTitlebarCount(total int) {
@@ -137,16 +171,14 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	}
 }
 
-func (me *DlgMain) measureFileJob(fun func()) {
+func (me *DlgMain) tellElapsedTime(initCounter int64, numFiles int) {
 	freq := float64(win.QueryPerformanceFrequency())
-	t0 := float64(win.QueryPerformanceCounter())
-
-	fun()
+	t0 := float64(initCounter)
+	tFinal := float64(win.QueryPerformanceCounter())
 
 	prompt.Info(me.wnd, "Process finished", "Success",
-		fmt.Sprintf("%d file(s) saved in %.2f ms.",
-			me.lstFiles.Items().SelectedCount(),
-			((float64(win.QueryPerformanceCounter())-t0)/freq)*1000,
+		fmt.Sprintf("%d file(s) processed in %.2f ms.",
+			numFiles, ((tFinal-t0)/freq)*1000,
 		),
 	)
 }

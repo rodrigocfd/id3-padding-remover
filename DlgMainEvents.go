@@ -58,7 +58,10 @@ func (me *DlgMain) eventsMain() {
 			prompt.Error(me.wnd, "No files added", "",
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			me.addFilesToList(droppedMp3s)
+			t0 := win.QueryPerformanceCounter()
+			me.addFilesToList(droppedMp3s, func() {
+				me.tellElapsedTime(t0, len(droppedMp3s))
+			})
 		}
 	})
 }

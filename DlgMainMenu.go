@@ -64,7 +64,11 @@ func (me *DlgMain) eventsMenu() {
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
 			win.Path.Sort(mp3s)
-			me.addFilesToList(mp3s)
+
+			t0 := win.QueryPerformanceCounter()
+			me.addFilesToList(mp3s, func() {
+				me.tellElapsedTime(t0, len(mp3s))
+			})
 		}
 	})
 
@@ -75,68 +79,78 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
-		me.measureFileJob(func() {
-			me.reSaveTagsOfSelectedFiles() // simply saving will remove the padding
+		t0 := win.QueryPerformanceCounter()
+		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
+			me.tellElapsedTime(t0, me.lstFiles.Items().SelectedCount())
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
-		me.measureFileJob(func() {
-			for _, selItem := range me.lstFiles.Items().Selected() {
-				tag := me.cachedTags[selItem.Text(0)]
-				tag.DeleteFrames(func(fr id3.Frame) bool {
-					if frMulti, ok := fr.(*id3.FrameMultiText); ok {
-						return frMulti.IsReplayGain()
-					}
-					return false
-				})
-			}
+		t0 := win.QueryPerformanceCounter()
+		selItems := me.lstFiles.Items().Selected()
 
-			me.reSaveTagsOfSelectedFiles()
+		for _, selItem := range selItems {
+			tag := me.cachedTags[selItem.Text(0)]
+			tag.DeleteFrames(func(fr id3.Frame) bool {
+				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
+					return frMulti.IsReplayGain()
+				}
+				return false
+			})
+		}
+
+		me.reSaveTagsOfSelectedFiles(func() {
+			me.tellElapsedTime(t0, len(selItems))
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
-		me.measureFileJob(func() {
-			for _, selItem := range me.lstFiles.Items().Selected() {
-				tag := me.cachedTags[selItem.Text(0)]
-				tag.DeleteFrames(func(frDyn id3.Frame) bool {
-					if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
-						if frMulti.IsReplayGain() {
-							return true
-						}
-					} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
-						if frBin.Name4() == "APIC" {
-							return true
-						}
-					}
-					return false
-				})
-			}
+		t0 := win.QueryPerformanceCounter()
+		selItems := me.lstFiles.Items().Selected()
 
-			me.reSaveTagsOfSelectedFiles()
+		for _, selItem := range selItems {
+			tag := me.cachedTags[selItem.Text(0)]
+			tag.DeleteFrames(func(frDyn id3.Frame) bool {
+				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
+					if frMulti.IsReplayGain() {
+						return true
+					}
+				} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
+					if frBin.Name4() == "APIC" {
+						return true
+					}
+				}
+				return false
+			})
+		}
+
+		me.reSaveTagsOfSelectedFiles(func() {
+			me.tellElapsedTime(t0, len(selItems))
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-		me.measureFileJob(func() {
-			for _, selItem := range me.lstFiles.Items().Selected() {
-				tag := me.cachedTags[selItem.Text(0)]
-				frAlbDyn, hasAlb := tag.FrameByName("TALB")
-				frYerDyn, hasYer := tag.FrameByName("TYER")
+		t0 := win.QueryPerformanceCounter()
+		selItems := me.lstFiles.Items().Selected()
 
-				if !hasAlb {
-					prompt.Error(me.wnd, "Missing frame", "", "Album frame not found.")
-				} else if !hasYer {
-					prompt.Error(me.wnd, "Missing frame", "", "Year frame not found.")
-				}
+		for _, selItem := range selItems {
+			tag := me.cachedTags[selItem.Text(0)]
+			frAlbDyn, hasAlb := tag.FrameByName("TALB")
+			frYerDyn, hasYer := tag.FrameByName("TYER")
 
-				frAlb, _ := frAlbDyn.(*id3.FrameText)
-				frYer, _ := frYerDyn.(*id3.FrameText)
-				*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
+			if !hasAlb {
+				prompt.Error(me.wnd, "Missing frame", "", "Album frame not found.")
+			} else if !hasYer {
+				prompt.Error(me.wnd, "Missing frame", "", "Year frame not found.")
 			}
 
-			me.reSaveTagsOfSelectedFiles()
+			frAlb, _ := frAlbDyn.(*id3.FrameText)
+			frYer, _ := frYerDyn.(*id3.FrameText)
+			*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
+		}
+
+		me.reSaveTagsOfSelectedFiles(func() {
+			me.tellElapsedTime(t0, len(selItems))
 		})
 	})
 
