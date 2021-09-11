@@ -23,7 +23,7 @@ func _Base(parent ui.AnyParent,
 	title, header, body string,
 	btns co.TDCBF, ico co.TD_ICON) co.ID {
 
-	var tdc win.TASKDIALOGCONFIG
+	tdc := win.TASKDIALOGCONFIG{}
 	tdc.SetCbSize()
 	tdc.SetHwndParent(parent.Hwnd())
 	tdc.SetDwFlags(co.TDF_ALLOW_DIALOG_CANCELLATION)

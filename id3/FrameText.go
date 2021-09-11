@@ -9,12 +9,12 @@ type FrameText struct {
 	text string
 }
 
+func (me *FrameText) Text() *string { return &me.text }
+
 func (me *FrameText) parse(base _FrameBase, texts []string) {
 	me._FrameBase = base
 	me.text = texts[0]
 }
-
-func (me *FrameText) Text() *string { return &me.text }
 
 func (me *FrameText) Serialize() []byte {
 	encodingByte, data := util.SerializeStrings([]string{me.text})

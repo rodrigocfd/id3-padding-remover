@@ -122,7 +122,7 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	}
 }
 
-func (me *DlgMain) measureFileProcess(fun func()) {
+func (me *DlgMain) measureFileJob(fun func()) {
 	freq := float64(win.QueryPerformanceFrequency())
 	t0 := float64(win.QueryPerformanceCounter())
 

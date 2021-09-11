@@ -11,6 +11,9 @@ type FrameComment struct {
 	text string
 }
 
+func (me *FrameComment) Lang() *string { return &me.lang }
+func (me *FrameComment) Text() *string { return &me.text }
+
 func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
@@ -44,9 +47,6 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	me.text = texts[0]
 	return nil
 }
-
-func (me *FrameComment) Lang() *string { return &me.lang }
-func (me *FrameComment) Text() *string { return &me.text }
 
 func (me *FrameComment) Serialize() []byte {
 	encodingByte, data := util.SerializeStrings([]string{me.text})

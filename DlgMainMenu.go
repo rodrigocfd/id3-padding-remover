@@ -75,13 +75,13 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
-		me.measureFileProcess(func() {
+		me.measureFileJob(func() {
 			me.reSaveTagsOfSelectedFiles() // simply saving will remove the padding
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
-		me.measureFileProcess(func() {
+		me.measureFileJob(func() {
 			for _, selItem := range me.lstFiles.Items().Selected() {
 				tag := me.cachedTags[selItem.Text(0)]
 				tag.DeleteFrames(func(fr id3.Frame) bool {
@@ -97,7 +97,7 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
-		me.measureFileProcess(func() {
+		me.measureFileJob(func() {
 			for _, selItem := range me.lstFiles.Items().Selected() {
 				tag := me.cachedTags[selItem.Text(0)]
 				tag.DeleteFrames(func(frDyn id3.Frame) bool {
@@ -119,7 +119,7 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-		me.measureFileProcess(func() {
+		me.measureFileJob(func() {
 			for _, selItem := range me.lstFiles.Items().Selected() {
 				tag := me.cachedTags[selItem.Text(0)]
 				frAlbDyn, hasAlb := tag.FrameByName("TALB")

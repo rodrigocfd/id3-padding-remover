@@ -6,7 +6,6 @@ import (
 
 // Appends an uint16 onto a []byte, returning the newly allocated slice.
 func Append16(dest []byte, encoding binary.ByteOrder, val uint16) []byte {
-
 	buf := [2]byte{}
 	encoding.PutUint16(buf[:], val)
 	return append(dest, buf[:]...)
@@ -14,7 +13,6 @@ func Append16(dest []byte, encoding binary.ByteOrder, val uint16) []byte {
 
 // Appends an uint32 onto a []byte, returning the newly allocated slice.
 func Append32(dest []byte, encoding binary.ByteOrder, val uint32) []byte {
-
 	buf := [4]byte{}
 	encoding.PutUint32(buf[:], val)
 	return append(dest, buf[:]...)

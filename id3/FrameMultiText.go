@@ -11,6 +11,8 @@ type FrameMultiText struct {
 	texts []string
 }
 
+func (me *FrameMultiText) Texts() *[]string { return &me.texts }
+
 func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
 	if len(texts) < 2 {
 		return errors.New("Bad multi-text frame with only 1 text.")
@@ -20,8 +22,6 @@ func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
 	me.texts = texts
 	return nil
 }
-
-func (me *FrameMultiText) Texts() *[]string { return &me.texts }
 
 func (me *FrameMultiText) Serialize() []byte {
 	encodingByte, data := util.SerializeStrings(me.texts)
