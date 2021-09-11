@@ -4,36 +4,51 @@ import (
 	"fmt"
 	"id3fit/id3"
 	"id3fit/prompt"
+	"sync"
 
 	"github.com/rodrigocfd/windigo/win"
 )
 
 func (me *DlgMain) addFilesToList(mp3s []string) {
-	go func() { // launch a goroutine right away
-		for _, mp3 := range mp3s {
+	type Result struct {
+		Mp3 string
+		Err error
+		Tag *id3.Tag
+	}
+
+	wait := sync.WaitGroup{}
+	mutex := sync.Mutex{}
+	results := make([]Result, 0, len(mp3s))
+
+	for _, mp3 := range mp3s {
+		wait.Add(1)
+		go func(mp3 string) {
+			defer wait.Done()
 			tag, err := id3.ReadTagFromFile(mp3)
-			if err != nil {
-				me.wnd.RunUiThread(func() { // simply inform error and proceed to next mp3
-					prompt.Error(me.wnd, "Error parsing tag", "",
-						fmt.Sprintf("File:\n%s\n\n%s", mp3, err))
-				})
-				continue
-			}
-
-			me.wnd.RunUiThread(func() {
-				if _, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
-					me.lstFiles.Items().
-						AddWithIcon(0, mp3, fmt.Sprintf("%d", tag.OriginalPadding())) // will fire LVN_INSERTITEM
-				}
-
-				me.cachedTags[mp3] = tag // cache (or re-cache) the tag
+			mutex.Lock()
+			results = append(results, Result{
+				Mp3: mp3,
+				Err: err,
+				Tag: tag,
 			})
-		}
+			mutex.Unlock()
+		}(mp3)
+	}
+	wait.Wait()
 
-		me.wnd.RunUiThread(func() {
-			me.lstFiles.Columns().SetWidthToFill(0)
-		})
-	}()
+	for _, resu := range results {
+		if resu.Err != nil {
+			prompt.Error(me.wnd, "Error parsing tag", "",
+				fmt.Sprintf("File:\n%s\n\n%s", resu.Mp3, resu.Err))
+		} else {
+			if _, found := me.lstFiles.Items().Find(resu.Mp3); !found { // file not added yet?
+				me.lstFiles.Items().
+					AddWithIcon(0, resu.Mp3, fmt.Sprintf("%d", resu.Tag.OriginalPadding())) // will fire LVN_INSERTITEM
+			}
+			me.cachedTags[resu.Mp3] = resu.Tag // cache (or re-cache) the tag
+		}
+	}
+	me.lstFiles.Columns().SetWidthToFill(0)
 }
 
 func (me *DlgMain) displayTagsOfSelectedFiles() {
