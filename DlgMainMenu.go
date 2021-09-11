@@ -169,11 +169,17 @@ func (me *DlgMain) eventsMenu() {
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
 				"Alloc mem: %s\n"+
+				"Alloc sys: %s\n"+
+				"Alloc idle: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s\n"+
-				"Heap sys: %s",
-				win.Str.FmtBytes(memStats.HeapAlloc), memStats.NumGC,
-				win.Str.FmtBytes(memStats.NextGC), win.Str.FmtBytes(memStats.HeapSys),
+				"Alloc objs: %d",
+				win.Str.FmtBytes(memStats.HeapAlloc),
+				win.Str.FmtBytes(memStats.HeapSys),
+				win.Str.FmtBytes(memStats.HeapIdle),
+				memStats.NumGC,
+				win.Str.FmtBytes(memStats.NextGC),
+				memStats.HeapObjects,
 			))
 	})
 }
