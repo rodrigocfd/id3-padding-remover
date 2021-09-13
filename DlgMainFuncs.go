@@ -18,7 +18,7 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 
 	go func() {
 		resultChan := make(chan Result, len(mp3s))
-		results := make([]Result, 0, len(mp3s)) // processing results
+		results := make([]Result, 0, len(mp3s)) // will receive processing results
 
 		for _, mp3 := range mp3s {
 			go func(mp3 string) {
@@ -128,7 +128,7 @@ func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
 
 	go func() {
 		resultChan := make(chan Result, len(selUnits))
-		results := make([]Result, 0, len(selUnits)) // processing results
+		results := make([]Result, 0, len(selUnits)) // will receive processing results
 
 		for i := range selUnits {
 			go func(i int) {

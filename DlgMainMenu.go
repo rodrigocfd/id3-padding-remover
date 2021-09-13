@@ -158,13 +158,13 @@ func (me *DlgMain) eventsMenu() {
 		resourceSl := win.GetFileVersionInfo(win.HINSTANCE(0).GetModuleFileName())
 		versionSl, _ := win.VerQueryValue(resourceSl, "\\")
 		vsffi := (*win.VS_FIXEDFILEINFO)(unsafe.Pointer(&versionSl[0]))
-		v := vsffi.ProductVersion()
+		vMaj, vMin, vPat, _ := vsffi.ProductVersion()
 
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",
-			fmt.Sprintf("ID3 Fit %d.%d.%d", v[0], v[1], v[2]),
+			fmt.Sprintf("ID3 Fit %d.%d.%d", vMaj, vMin, vPat),
 			fmt.Sprintf("Rodrigo César de Freitas Dias\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
