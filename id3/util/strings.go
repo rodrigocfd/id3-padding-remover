@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"unsafe"
 )
 
 const _BOM_LE uint16 = 0xfeff
@@ -48,14 +49,26 @@ func ParseUnicodeStrings(src []byte) []string {
 		src = src[:len(src)-1]
 	}
 
-	strBlocks := bytes.Split(src, []byte{0x00})
-	texts := make([]string, 0, len(strBlocks))
+	src16 := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
+	strBlocks16 := Split16(src16, 0x0000)
+	texts := make([]string, 0, len(strBlocks16))
 
-	for _, block := range strBlocks {
-		endianDecoder, block := _GetDecoderFromBom(block)
-		runes := make([]rune, 0, len(block)/2)
-		for i := 0; i < len(block); i += 2 {
-			runes = append(runes, rune(endianDecoder.Uint16(block[i:]))) // raw conversion
+	for _, block16 := range strBlocks16 {
+		// Unicode strings should always start with BOM, but just in case we
+		// have a faulty one, use little-endian as default.
+		var endianDecoder binary.ByteOrder = binary.LittleEndian
+		if block16[0] == _BOM_LE || block16[0] == _BOM_BE {
+			if block16[0] == _BOM_BE { // we have a big-endian string, change our decoder
+				endianDecoder = binary.BigEndian
+			}
+			block16 = block16[1:] // skip BOM
+		}
+
+		runes := make([]rune, 0, len(block16))
+		block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2)
+
+		for i := 0; i < len(block8); i += 2 {
+			runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
 		}
 		parsedText := string(runes) // then convert []rune to string
 		if parsedText != "" {
@@ -120,20 +133,4 @@ out:
 	}
 
 	return
-}
-
-func _GetDecoderFromBom(src []byte) (binary.ByteOrder, []byte) {
-	// Unicode strings should always start with BOM, but just in case we have a
-	// faulty one, use little-endian as default.
-	var endianDecoder binary.ByteOrder = binary.LittleEndian
-
-	bom := binary.LittleEndian.Uint16(src)
-	if bom == _BOM_LE || bom == _BOM_BE { // BOM mark found
-		if bom == _BOM_BE { // we have a big-endian string, change our decoder
-			endianDecoder = binary.BigEndian
-		}
-		src = src[2:] // skip BOM
-	}
-
-	return endianDecoder, src
 }
