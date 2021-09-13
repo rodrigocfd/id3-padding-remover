@@ -118,26 +118,33 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 	return frames, padding, nil
 }
 
-func (me *Tag) Serialize() []byte {
+func (me *Tag) Serialize() ([]byte, error) {
 	data := make([]byte, 0, 100) // arbitrary; all serialized frames
 	for _, frame := range me.frames {
-		data = append(data, frame.Serialize()...)
+		frameData, err := frame.Serialize()
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, frameData...)
 	}
 
 	final := make([]byte, 0, 10+len(data))       // header
 	final = append(final, []byte("ID3")...)      // magic bytes
-	final = append(final, []byte{0x03, 0x00}...) // tag version
+	final = append(final, []byte{0x03, 0x00}...) // tag version 2.3.0
 	final = append(final, 0x00)                  // flags
 
 	synchSafeDataSize := util.SynchSafeEncode(uint32(len(data)))
 	final = util.Append32(final, binary.BigEndian, synchSafeDataSize)
 
 	final = append(final, data...)
-	return final
+	return final, nil
 }
 
 func (me *Tag) SerializeToFile(mp3Path string) error {
-	newTag := me.Serialize()
+	newTag, err := me.Serialize()
+	if err != nil {
+		return err
+	}
 
 	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_RW)
 	if err != nil {

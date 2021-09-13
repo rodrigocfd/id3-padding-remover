@@ -48,11 +48,14 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	return nil
 }
 
-func (me *FrameComment) Serialize() []byte {
+func (me *FrameComment) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings([]string{me.text})
 	totalFrameSize := 10 + 1 + 3 + len(data) // header + encodingByte + lang
 
-	header := me._FrameBase.serializeHeader(totalFrameSize)
+	header, err := me._FrameBase.serializeHeader(totalFrameSize)
+	if err != nil {
+		return nil, err
+	}
 
 	final := make([]byte, 0, totalFrameSize)
 	final = append(final, header...)
@@ -61,5 +64,5 @@ func (me *FrameComment) Serialize() []byte {
 	final = append(final, 0x00)
 	final = append(final, data...)
 
-	return final
+	return final, nil
 }

@@ -16,16 +16,19 @@ func (me *FrameText) parse(base _FrameBase, texts []string) {
 	me.text = texts[0]
 }
 
-func (me *FrameText) Serialize() []byte {
+func (me *FrameText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings([]string{me.text})
 	totalFrameSize := 10 + 1 + len(data) // header + encodingByte
 
-	header := me._FrameBase.serializeHeader(totalFrameSize)
+	header, err := me._FrameBase.serializeHeader(totalFrameSize)
+	if err != nil {
+		return nil, err
+	}
 
 	final := make([]byte, 0, totalFrameSize)
 	final = append(final, header...)
 	final = append(final, encodingByte)
 	final = append(final, data...)
 
-	return final
+	return final, nil
 }

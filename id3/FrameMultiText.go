@@ -23,18 +23,21 @@ func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
 	return nil
 }
 
-func (me *FrameMultiText) Serialize() []byte {
+func (me *FrameMultiText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings(me.texts)
 	totalFrameSize := 10 + 1 + len(data) // header + encodingByte
 
-	header := me._FrameBase.serializeHeader(totalFrameSize)
+	header, err := me._FrameBase.serializeHeader(totalFrameSize)
+	if err != nil {
+		return nil, err
+	}
 
 	final := make([]byte, 0, totalFrameSize)
 	final = append(final, header...)
 	final = append(final, encodingByte)
 	final = append(final, data...)
 
-	return final
+	return final, nil
 }
 
 func (me *FrameMultiText) IsReplayGain() bool {

@@ -11,7 +11,7 @@ import (
 type Frame interface {
 	Name4() string
 	OriginalSize() int
-	Serialize() []byte
+	Serialize() ([]byte, error)
 }
 
 // Constructor.
@@ -22,8 +22,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 
 	if frameBase.Name4() == "COMM" {
 		frameComment := &FrameComment{}
-		err := frameComment.parse(frameBase, src)
-		return frameComment, err
+		return frameComment, frameComment.parse(frameBase, src)
 
 	} else if frameBase.Name4()[0] == 'T' {
 		texts, err := util.ParseAnyStrings(src)
@@ -41,8 +40,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 
 		} else {
 			frameMultiText := &FrameMultiText{}
-			err := frameMultiText.parse(frameBase, texts)
-			return frameMultiText, err
+			return frameMultiText, frameMultiText.parse(frameBase, texts)
 		}
 
 	} else {
@@ -68,12 +66,16 @@ func (me *_FrameBase) parse(src []byte) {
 func (me *_FrameBase) Name4() string     { return me.name4 }
 func (me *_FrameBase) OriginalSize() int { return me.originalSize }
 
-func (me *_FrameBase) serializeHeader(totalFrameSize int) []byte {
+func (me *_FrameBase) serializeHeader(totalFrameSize int) ([]byte, error) {
+	if len(me.name4) != 4 {
+		return nil, fmt.Errorf("Bad frame name: %s.", me.name4)
+	}
+
 	blob := make([]byte, 0, 10) // header is 10 bytes
 	blob = append(blob, []byte(me.name4)...)
 
 	blob = util.Append32(blob, binary.BigEndian, uint32(totalFrameSize-10)) // without 10-byte header
 
 	blob = util.Append16(blob, binary.BigEndian, 0x0000) // flags
-	return blob
+	return blob, nil
 }
