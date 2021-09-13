@@ -49,6 +49,10 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 }
 
 func (me *FrameComment) Serialize() ([]byte, error) {
+	if len(me.lang) != 3 {
+		return nil, fmt.Errorf("Bad lang: %s.", me.lang)
+	}
+
 	encodingByte, data := util.SerializeStrings([]string{me.text})
 	totalFrameSize := 10 + 1 + 3 + len(data) // header + encodingByte + lang
 
@@ -59,7 +63,7 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 
 	final := make([]byte, 0, totalFrameSize)
 	final = append(final, header...)
-	final = append(final, encodingByte)
+	final = append(final, encodingByte) // encoding byte goes before lang
 	final = append(final, []byte(me.lang)...)
 	final = append(final, 0x00)
 	final = append(final, data...)
