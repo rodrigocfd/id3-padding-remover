@@ -172,14 +172,12 @@ func (me *DlgMain) eventsMenu() {
 				"Alloc sys: %s\n"+
 				"Alloc idle: %s\n"+
 				"GC cycles: %d\n"+
-				"Next GC: %s\n"+
-				"Alloc objs: %d",
+				"Next GC: %s",
 				win.Str.FmtBytes(memStats.HeapAlloc),
 				win.Str.FmtBytes(memStats.HeapSys),
 				win.Str.FmtBytes(memStats.HeapIdle),
 				memStats.NumGC,
 				win.Str.FmtBytes(memStats.NextGC),
-				memStats.HeapObjects,
 			))
 	})
 }
