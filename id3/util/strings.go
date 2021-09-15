@@ -7,8 +7,10 @@ import (
 	"unsafe"
 )
 
-const _BOM_LE uint16 = 0xfeff
-const _BOM_BE uint16 = 0xfffe
+const (
+	_BOM_LE uint16 = 0xfeff
+	_BOM_BE uint16 = 0xfffe
+)
 
 // Parses one or more null-separated strings, ISO-8859-1 or Unicode.
 func ParseAnyStrings(src []byte) ([]string, error) {

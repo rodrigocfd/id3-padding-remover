@@ -35,7 +35,7 @@ func ReadTagFromBinary(src []byte) (*Tag, error) {
 }
 
 func (me *Tag) readFromFile(mp3Path string) error {
-	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_READ)
+	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_READ)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 		return err
 	}
 
-	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_MODE_RW)
+	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILEMAP_RW)
 	if err != nil {
 		return err
 	}
