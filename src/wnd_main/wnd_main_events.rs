@@ -14,7 +14,7 @@ impl WndMain {
 
 				// Since it doesn't have LVS_SHAREIMAGELISTS style, the image list
 				// will be automatically deleted by the list view.
-				let himgl = w::HIMAGELIST::Create(16, 16, co::ILC::COLOR32, 1, 1).unwrap();
+				let himgl = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1).unwrap();
 				himgl.AddIconFromShell(&["mp3"]).unwrap();
 				self2.lst_files.set_image_list(co::LVSIL::SMALL, himgl);
 

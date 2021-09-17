@@ -90,7 +90,7 @@ impl WndModify {
 		};
 
 		if album.starts_with(&year) {
-			if util::prompt::ok_cancel(self.wnd.hwnd(), "Dubious data",
+			if util::prompt::ok_cancel(self.wnd.hwnd(), "Dubious data", None,
 				&format!("File:\n{}\n\n\
 					Album appears to already have the year prefix:\n{}\n\n\
 					Continue anyway?",

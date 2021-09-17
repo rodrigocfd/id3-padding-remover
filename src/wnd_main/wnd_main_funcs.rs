@@ -12,7 +12,7 @@ use super::{PreDelete, WndMain};
 impl WndMain {
 	pub fn new() -> Self {
 		let context_menu = w::HINSTANCE::NULL
-			.LoadMenu(id::MNU_MAIN).unwrap()
+			.LoadMenu(w::IdStr::Id(id::MNU_MAIN)).unwrap()
 			.GetSubMenu(0).unwrap();
 
 		let wnd = gui::WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
@@ -47,6 +47,8 @@ impl WndMain {
 	}
 
 	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
+		let clock = util::Timer::start();
+
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
 
@@ -54,7 +56,8 @@ impl WndMain {
 				let tag = match Tag::read(file) { // parse the tag from file
 					Ok(tag) => tag,
 					Err(e) => {
-						util::prompt::err(self.wnd.hwnd(), "Tag reading failed",
+						util::prompt::err(self.wnd.hwnd(),
+							"Tag reading failed", Some("Error"),
 							&format!("File: {}\n\n{}", file, e));
 						return Ok(());
 					},
@@ -69,7 +72,12 @@ impl WndMain {
 		}
 
 		self.lst_files.columns().set_width_to_fill(0).unwrap();
-		self.titlebar_count(PreDelete::No)
+		self.titlebar_count(PreDelete::No)?;
+
+		util::prompt::info(self.wnd.hwnd(),
+			"Operation successful", Some("Success"),
+			&format!("{} file(s) loaded in {:.2} ms.", files.len(), clock.now_ms()));
+		Ok(())
 	}
 
 	pub(super) fn show_selected_tag_frames(&self) -> Result<(), Box<dyn Error>> {

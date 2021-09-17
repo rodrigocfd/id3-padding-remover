@@ -67,7 +67,8 @@ impl WndModify {
 					}
 					if self2.chk_prefix_year.is_checked() {
 						if let Err(err) = self2.prefix_year(&mut tag, file) {
-							util::prompt::err(self2.wnd.hwnd(), "Operation error", &err.to_string());
+							util::prompt::err(self2.wnd.hwnd(),
+								"Operation error", Some("Error"), &err.to_string());
 							self2.wnd.hwnd().EndDialog(0).unwrap(); // close after error
 						}
 					}
@@ -81,7 +82,8 @@ impl WndModify {
 					*tag = Tag::read(file).unwrap(); // load tag back from file
 				}
 
-				util::prompt::info(self2.wnd.hwnd(), "Operation successful",
+				util::prompt::info(self2.wnd.hwnd(),
+					"Operation successful", Some("Success"),
 					&format!("{} file(s) processed in {:.2} ms.",
 						self2.files.len(), clock.now_ms()));
 

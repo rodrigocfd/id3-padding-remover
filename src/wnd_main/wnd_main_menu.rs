@@ -31,6 +31,9 @@ impl WndMain {
 
 				fileo.SetFileTypeIndex(1).unwrap();
 
+				let sh_dir = shell::IShellItem::from_path(&w::GetCurrentDirectory().unwrap()).unwrap();
+				fileo.SetFolder(&sh_dir).unwrap();
+
 				if fileo.Show(self2.wnd.hwnd()).unwrap() {
 					self2.add_files(
 						&fileo.GetResults().unwrap()
@@ -54,7 +57,7 @@ impl WndMain {
 				let sel_files = self2.lst_files.columns().selected_texts(0);
 
 				if sel_files.is_empty() {
-					util::prompt::err(self2.wnd.hwnd(), "No files",
+					util::prompt::err(self2.wnd.hwnd(), "No files", None,
 						"There are no selected files to be modified.");
 					return;
 				}
@@ -103,7 +106,8 @@ impl WndMain {
 					w::MoveFile(&file, &file_new).unwrap();
 				}
 
-				util::prompt::info(self2.wnd.hwnd(), "Operation successful",
+				util::prompt::info(self2.wnd.hwnd(),
+					"Operation successful", Some("Success"),
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
 						sel_idxs.len(), clock.now_ms()));
 			}
@@ -120,12 +124,12 @@ impl WndMain {
 				let vsffi = unsafe { w::VarQueryValue::<w::VS_FIXEDFILEINFO>(&res_buf, "\\").unwrap() };
 				let ver = vsffi.dwFileVersion();
 
-				util::prompt::info(self2.wnd.hwnd(), "About",
-					&format!(
-						"ID3 Padding Remover v{}.{}.{}\n\
-						Writen in Rust with WinSafe library.\n\n\
-						Rodrigo César de Freitas Dias © 2021",
-						ver[0], ver[1], ver[2]));
+				util::prompt::info(self2.wnd.hwnd(),
+					"About",
+					Some(&format!("ID3 Padding Remover v{}.{}.{}",
+						ver[0], ver[1], ver[2])),
+					"Writen in Rust with WinSafe library.\n\
+					Rodrigo César de Freitas Dias © 2021");
 			}
 		});
 	}
