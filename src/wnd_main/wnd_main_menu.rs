@@ -62,8 +62,8 @@ impl WndMain {
 					return;
 				}
 
-				let wa = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
-				wa.show();
+				let pop = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
+				pop.show();
 
 				{
 					let tags_cache = self2.tags_cache.borrow();
@@ -85,25 +85,23 @@ impl WndMain {
 				let clock = util::Timer::start();
 				let sel_idxs = self2.lst_files.items().selected();
 
-				{
-					let mut tags_cache = self2.tags_cache.borrow_mut();
-
-					for idx in sel_idxs.iter() {
-						let file = self2.lst_files.items().text(*idx, 0);
-						let file_new = util::clear_diacritics(&file);
-
-						let tag = tags_cache.remove(&file).unwrap();
-						tags_cache.insert(file_new.clone(), tag);
-					}
-				}
-
-				for idx in sel_idxs.iter() {
+				for idx in self2.lst_files.items().selected().iter() {
 					let file = self2.lst_files.items().text(*idx, 0);
-					let file_new = util::clear_diacritics(&file);
+					let file_clean = util::clear_diacritics(&file); // generate clean name
 
-					// This triggers LVN_ITEMCHANGED, which will borrow tags_cache.
-					self2.lst_files.items().set_text(*idx, 0, &file_new).unwrap();
-					w::MoveFile(&file, &file_new).unwrap();
+					if file == file_clean { continue; } // if name didn't change, skip it
+
+					{
+						// Isolated scope because changing the item triggers
+						// LVN_ITEMCHANGED, which will also borrow tags_cache.
+
+						let mut tags_cache = self2.tags_cache.borrow_mut();
+						let tag = tags_cache.remove(&file).unwrap();
+						tags_cache.insert(file_clean.clone(), tag); // reinsert tag under clean name
+					}
+
+					self2.lst_files.items().set_text(*idx, 0, &file_clean).unwrap(); // change item
+					w::MoveFile(&file, &file_clean).unwrap(); // rename file on disk
 				}
 
 				util::prompt::info(self2.wnd.hwnd(),
