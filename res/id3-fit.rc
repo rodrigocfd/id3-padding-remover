@@ -121,6 +121,7 @@ END
 ACC_MAIN ACCELERATORS
 BEGIN
     "O",            MNU_FILES_OPEN,         VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          MNU_FILES_ABOUT,        VIRTKEY, NOINVERT
 END
 
 #endif    // English (United States) resources

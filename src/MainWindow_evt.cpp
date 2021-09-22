@@ -14,16 +14,14 @@ void MainWindow::onInitDialog()
 	iconsList.loadShellIcon({L"mp3"});
 
 	ListView lvFiles{hWnd(), LST_FILES};
-	lvFiles.columns.add(L"Files", 0)
-		.add(L"Padding", 60)
-		.stretch(0);
+	lvFiles.columns.add({{L"Files", 0}, {L"Padding", 60}});
+	lvFiles.columns.stretch(0);
 	lvFiles.setImageList(iconsList, LVSIL_SMALL);
 
 	ListView lvFrames{hWnd(), LST_FRAMES};
 	lvFrames.setExtendedStyle(true, LVS_EX_GRIDLINES);
-	lvFrames.columns.add(L"Frame", 65)
-		.add(L"Value", 0)
-		.stretch(1);
+	lvFrames.columns.add({{L"Frame", 65}, {L"Value", 0}});
+	lvFrames.columns.stretch(1);
 }
 
 void MainWindow::onFilesOpen()
@@ -69,5 +67,16 @@ void MainWindow::onFilesOpen()
 
 void MainWindow::onFilesAbout()
 {
+	TASKDIALOGCONFIG tdc = {0};
+	tdc.cbSize = sizeof(TASKDIALOGCONFIG);
+	tdc.hwndParent = hWnd();
+	tdc.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION;
+	tdc.dwCommonButtons = TDCBF_OK_BUTTON;
+	tdc.pszMainIcon = TD_INFORMATION_ICON;
+	tdc.pszWindowTitle = L"About";
+	tdc.pszMainInstruction = L"ID3 Fit";
+	tdc.pszContent = L"Rodrigo César de Freitas Dias (C) 2012-2021\n"
+		L"Written in C++20 with the Core library.";
 
+	TaskDialogIndirect(&tdc, nullptr, nullptr, nullptr);
 }
