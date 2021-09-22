@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\core\core\com.h" />
     <ClInclude Include="..\core\core\CustomControl.h" />
     <ClInclude Include="..\core\core\Dialog.h" />
     <ClInclude Include="..\core\core\File.h" />
@@ -184,6 +185,7 @@
     <ClInclude Include="src\MainWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\core\core\com.cpp" />
     <ClCompile Include="..\core\core\CustomControl.cpp" />
     <ClCompile Include="..\core\core\Dialog.cpp" />
     <ClCompile Include="..\core\core\File.cpp" />
@@ -200,8 +202,9 @@
     <ClCompile Include="..\core\core\NativeControl.cpp" />
     <ClCompile Include="..\core\core\str.cpp" />
     <ClCompile Include="..\core\core\WindowThread.cpp" />
-    <ClCompile Include="src\MainWindow_cto.cpp" />
+    <ClCompile Include="src\MainWindow_pro.cpp" />
     <ClCompile Include="src\MainWindow_evt.cpp" />
+    <ClCompile Include="src\MainWindow_fun.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc" />

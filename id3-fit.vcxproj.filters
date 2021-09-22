@@ -71,9 +71,12 @@
     <ClInclude Include="..\core\core\WindowThread.h">
       <Filter>Win Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\core\core\com.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\MainWindow_cto.cpp">
+    <ClCompile Include="src\MainWindow_pro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\FileMapped.cpp">
@@ -125,6 +128,12 @@
       <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="src\MainWindow_evt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\com.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainWindow_fun.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

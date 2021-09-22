@@ -1,5 +1,6 @@
 
 #include <core/MainDialog.h>
+#include <core/com.h>
 #include <core/ImageList.h>
 #include <core/Menu.h>
 
@@ -9,6 +10,7 @@ public:
 	MainWindow();
 
 private:
+	core::ComLibrary comLib;
 	core::ImageList iconsList;
 	core::Menu appMenu;
 
@@ -16,4 +18,6 @@ private:
 	void onInitDialog();
 	void onFilesOpen();
 	void onFilesAbout();
+
+	void addFilesToList(const std::vector<std::wstring>& mp3s);
 };
