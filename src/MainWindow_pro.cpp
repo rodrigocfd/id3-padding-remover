@@ -14,7 +14,7 @@ MainWindow::~MainWindow()
 }
 
 MainWindow::MainWindow()
-	: MainDialog{DLG_MAIN, ICO_FROG, 0},
+	: MainDialog{DLG_MAIN, ICO_FROG, ACC_MAIN},
 		iconsList{SIZE{16, 16}},
 		appMenu{MNU_FILES}
 {
