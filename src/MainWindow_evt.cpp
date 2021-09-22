@@ -1,9 +1,11 @@
 
 #include <core/com.h>
 #include <core/ListView.h>
+#include <core/str.h>
 #include "MainWindow.h"
 #include <ShObjIdl_core.h> // IFileDialog et al
 #include "../res/resource.h"
+#pragma comment(lib, "Version.lib")
 using std::vector;
 using std::wstring;
 using core::ComPtr;
@@ -67,6 +69,22 @@ void MainWindow::onFilesOpen()
 
 void MainWindow::onFilesAbout()
 {
+	wchar_t exePath[MAX_PATH + 1] = {0};
+	GetModuleFileName(nullptr, exePath, ARRAYSIZE(exePath));
+
+	DWORD szUnderlying = GetFileVersionInfoSize(exePath, nullptr);
+	vector<BYTE> underlying(szUnderlying, 0x00);
+	GetFileVersionInfo(exePath, 0, szUnderlying, &underlying[0]);
+
+	VS_FIXEDFILEINFO *verInfo = nullptr;
+	UINT szVerInfo = {0};
+	VerQueryValue(&underlying[0], L"\\", (void**)&verInfo, &szVerInfo);
+
+	wstring content = core::str::Format(L"ID3 Fit v%d.%d.%d",
+		HIWORD(verInfo->dwProductVersionMS),
+		LOWORD(verInfo->dwProductVersionMS),
+		HIWORD(verInfo->dwProductVersionLS));
+
 	TASKDIALOGCONFIG tdc = {0};
 	tdc.cbSize = sizeof(TASKDIALOGCONFIG);
 	tdc.hwndParent = hWnd();
@@ -74,7 +92,7 @@ void MainWindow::onFilesAbout()
 	tdc.dwCommonButtons = TDCBF_OK_BUTTON;
 	tdc.pszMainIcon = TD_INFORMATION_ICON;
 	tdc.pszWindowTitle = L"About";
-	tdc.pszMainInstruction = L"ID3 Fit";
+	tdc.pszMainInstruction = content.c_str();
 	tdc.pszContent = L"Rodrigo César de Freitas Dias (C) 2012-2021\n"
 		L"Written in C++20 with the Core library.";
 
