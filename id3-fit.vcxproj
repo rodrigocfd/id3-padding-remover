@@ -168,11 +168,18 @@
     <ClInclude Include="..\core\core\File.h" />
     <ClInclude Include="..\core\core\FileMapped.h" />
     <ClInclude Include="..\core\core\Font.h" />
+    <ClInclude Include="..\core\core\Icon.h" />
+    <ClInclude Include="..\core\core\ImageList.h" />
+    <ClInclude Include="..\core\core\Ini.h" />
     <ClInclude Include="..\core\core\internals.h" />
+    <ClInclude Include="..\core\core\ListView.h" />
     <ClInclude Include="..\core\core\MainDialog.h" />
+    <ClInclude Include="..\core\core\Menu.h" />
     <ClInclude Include="..\core\core\ModalDialog.h" />
+    <ClInclude Include="..\core\core\NativeControl.h" />
     <ClInclude Include="..\core\core\str.h" />
     <ClInclude Include="..\core\core\Window.h" />
+    <ClInclude Include="..\core\core\WindowThread.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\MainWindow.h" />
   </ItemGroup>
@@ -182,11 +189,19 @@
     <ClCompile Include="..\core\core\File.cpp" />
     <ClCompile Include="..\core\core\FileMapped.cpp" />
     <ClCompile Include="..\core\core\Font.cpp" />
+    <ClCompile Include="..\core\core\Icon.cpp" />
+    <ClCompile Include="..\core\core\ImageList.cpp" />
+    <ClCompile Include="..\core\core\Ini.cpp" />
     <ClCompile Include="..\core\core\internals.cpp" />
+    <ClCompile Include="..\core\core\ListView.cpp" />
     <ClCompile Include="..\core\core\MainDialog.cpp" />
+    <ClCompile Include="..\core\core\Menu.cpp" />
     <ClCompile Include="..\core\core\ModalDialog.cpp" />
+    <ClCompile Include="..\core\core\NativeControl.cpp" />
     <ClCompile Include="..\core\core\str.cpp" />
-    <ClCompile Include="src\MainWindow.cpp" />
+    <ClCompile Include="..\core\core\WindowThread.cpp" />
+    <ClCompile Include="src\MainWindow_cto.cpp" />
+    <ClCompile Include="src\MainWindow_evt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc" />

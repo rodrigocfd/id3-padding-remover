@@ -96,6 +96,22 @@ END
 // remains consistent on all systems.
 ICO_FROG                ICON                    "foul-bachelor-frog.ico"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MNU_FILES MENU
+BEGIN
+    POPUP "Files"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            MNU_FILES_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "&About...\tF1",               MNU_FILES_ABOUT
+    END
+END
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 

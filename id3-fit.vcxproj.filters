@@ -9,7 +9,7 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Core">
+    <Filter Include="Win Core">
       <UniqueIdentifier>{2fa1cd95-ed50-4e5a-81a8-f76de8de2616}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -17,70 +17,115 @@
     <ClInclude Include="src\MainWindow.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\core\core\CustomControl.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\Dialog.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\File.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\FileMapped.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\Font.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\internals.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\MainDialog.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\ModalDialog.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\str.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\core\Window.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="res\resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\core\core\CustomControl.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Dialog.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\File.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\FileMapped.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Font.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Icon.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\ImageList.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Ini.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\internals.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\ListView.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\MainDialog.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Menu.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\ModalDialog.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\NativeControl.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\str.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\Window.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\core\WindowThread.h">
+      <Filter>Win Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\MainWindow.cpp">
+    <ClCompile Include="src\MainWindow_cto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\core\core\CustomControl.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\core\Dialog.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\core\File.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\core\core\FileMapped.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\Font.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\Icon.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\ImageList.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\Ini.cpp">
+      <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\internals.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\ListView.cpp">
+      <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\MainDialog.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\Menu.cpp">
+      <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\ModalDialog.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\core\str.cpp">
-      <Filter>Core</Filter>
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\WindowThread.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\CustomControl.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\Dialog.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\File.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\core\NativeControl.cpp">
+      <Filter>Win Core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainWindow_evt.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
