@@ -30,7 +30,7 @@ impl WndMain {
 		new_self
 	}
 
-	pub fn run(&self) -> w::WinResult<()> {
+	pub fn run(&self) -> w::ErrResult<i32> {
 		self.wnd.run_main(None)
 	}
 

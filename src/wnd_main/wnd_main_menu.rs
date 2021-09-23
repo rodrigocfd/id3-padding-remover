@@ -36,10 +36,11 @@ impl WndMain {
 
 				if fileo.Show(self2.wnd.hwnd()).unwrap() {
 					self2.add_files(
-						&fileo.GetResults().unwrap()
-							.GetDisplayNames(shell::co::SIGDN::FILESYSPATH).unwrap(),
-					).unwrap();
+						&fileo.GetResults()?
+							.GetDisplayNames(shell::co::SIGDN::FILESYSPATH)?,
+					)?;
 				}
+				Ok(())
 			}
 		});
 
@@ -47,7 +48,8 @@ impl WndMain {
 			let lst_files = self.lst_files.clone();
 			move || {
 				lst_files.items().delete(
-					&lst_files.items().selected()).unwrap();
+					&lst_files.items().selected())?;
+				Ok(())
 			}
 		});
 
@@ -59,7 +61,7 @@ impl WndMain {
 				if sel_files.is_empty() {
 					util::prompt::err(self2.wnd.hwnd(), "No files", None,
 						"There are no selected files to be modified.");
-					return;
+					return Ok(());
 				}
 
 				let pop = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
@@ -71,11 +73,12 @@ impl WndMain {
 						let sel_file = self2.lst_files.items().text(*idx, 0);
 						let tag = tags_cache.get(&sel_file).unwrap();
 						self2.lst_files.items().set_text(*idx, 1, // write new padding
-							&format!("{}", tag.original_padding())).unwrap();
+							&format!("{}", tag.original_padding()))?;
 					}
 				}
 
-				self2.show_selected_tag_frames().unwrap();
+				self2.show_selected_tag_frames()?;
+				Ok(())
 			}
 		});
 
@@ -100,14 +103,15 @@ impl WndMain {
 						tags_cache.insert(file_clean.clone(), tag); // reinsert tag under clean name
 					}
 
-					self2.lst_files.items().set_text(*idx, 0, &file_clean).unwrap(); // change item
-					w::MoveFile(&file, &file_clean).unwrap(); // rename file on disk
+					self2.lst_files.items().set_text(*idx, 0, &file_clean)?; // change item
+					w::MoveFile(&file, &file_clean)?; // rename file on disk
 				}
 
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
 						sel_idxs.len(), clock.now_ms()));
+				Ok(())
 			}
 		});
 
@@ -115,11 +119,11 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				// Read version from resource.
-				let exe_name = w::HINSTANCE::NULL.GetModuleFileName().unwrap();
+				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 				let mut res_buf = Vec::default();
-				w::GetFileVersionInfo(&exe_name, &mut res_buf).unwrap();
+				w::GetFileVersionInfo(&exe_name, &mut res_buf)?;
 
-				let vsffi = unsafe { w::VarQueryValue::<w::VS_FIXEDFILEINFO>(&res_buf, "\\").unwrap() };
+				let vsffi = unsafe { w::VarQueryValue::<w::VS_FIXEDFILEINFO>(&res_buf, "\\")? };
 				let ver = vsffi.dwFileVersion();
 
 				util::prompt::info(self2.wnd.hwnd(),
@@ -128,6 +132,7 @@ impl WndMain {
 						ver[0], ver[1], ver[2])),
 					"Writen in Rust with WinSafe library.\n\
 					Rodrigo César de Freitas Dias © 2021");
+				Ok(())
 			}
 		});
 	}

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use winsafe::{co, gui};
+use winsafe::{self as w, co, gui};
 
 use crate::id3v2::{FrameData, Tag};
 use crate::ids::modify as id;
@@ -38,7 +38,7 @@ impl WndModify {
 		self.wnd.show_modal().unwrap();
 	}
 
-	pub(super) fn enable_disable_rem_padding(&self) {
+	pub(super) fn enable_disable_rem_padding(&self) -> w::ErrResult<()> {
 		// "Remove padding" checkbox will be disabled?
 		let will_disable = self.chk_rem_album.is_checked()
 			|| self.chk_rem_rg.is_checked()
@@ -51,6 +51,7 @@ impl WndModify {
 
 		// If won't removing padding, there's nothing to do, so we can't run.
 		self.btn_ok.hwnd().EnableWindow(self.chk_rem_padding.is_checked());
+		Ok(())
 	}
 
 	pub(super) fn remove_replay_gain(&self, tag: &mut Tag) {

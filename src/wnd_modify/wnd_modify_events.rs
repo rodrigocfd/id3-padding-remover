@@ -1,4 +1,4 @@
-use winsafe::{co, msg};
+use winsafe::co;
 
 use crate::id3v2::Tag;
 use crate::util;
@@ -8,21 +8,22 @@ impl WndModify {
 	pub(super) fn events(&self) {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
-			move |_: msg::wm::InitDialog| {
+			move |_| {
 				self2.wnd.hwnd().SetWindowText(
 					&format!("Modify {} file(s)", self2.files.len()),
-				).unwrap();
+				)?;
 
 				self2.chk_rem_padding.set_check(true);
 
-				true
+				Ok(true)
 			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), {
 			let wnd = self.wnd.clone();
 			move || {
-				wnd.hwnd().EndDialog(0).unwrap(); // close on ESC
+				wnd.hwnd().EndDialog(0)?; // close on ESC
+				Ok(())
 			}
 		});
 
@@ -69,7 +70,7 @@ impl WndModify {
 						if let Err(err) = self2.prefix_year(&mut tag, file) {
 							util::prompt::err(self2.wnd.hwnd(),
 								"Operation error", Some("Error"), &err.to_string());
-							self2.wnd.hwnd().EndDialog(0).unwrap(); // close after error
+							self2.wnd.hwnd().EndDialog(0)?; // close after error
 						}
 					}
 				}
@@ -78,8 +79,8 @@ impl WndModify {
 
 				for file in self2.files.iter() {
 					let tag = tags_cache.get_mut(file).unwrap();
-					tag.write(file).unwrap();        // save tag to file, no padding is written
-					*tag = Tag::read(file).unwrap(); // load tag back from file
+					tag.write(file)?;        // save tag to file, no padding is written
+					*tag = Tag::read(file)?; // load tag back from file
 				}
 
 				util::prompt::info(self2.wnd.hwnd(),
@@ -87,14 +88,16 @@ impl WndModify {
 					&format!("{} file(s) processed in {:.2} ms.",
 						self2.files.len(), clock.now_ms()));
 
-				self2.wnd.hwnd().EndDialog(0).unwrap(); // close after process is finished
+				self2.wnd.hwnd().EndDialog(0)?; // close after process is finished
+				Ok(())
 			}
 		});
 
 		self.btn_cancel.on().bn_clicked({
 			let wnd = self.wnd.clone();
 			move || {
-				wnd.hwnd().EndDialog(0).unwrap(); // close on Cancel
+				wnd.hwnd().EndDialog(0)?; // close on Cancel
+				Ok(())
 			}
 		});
 	}
