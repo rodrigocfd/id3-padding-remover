@@ -1,4 +1,4 @@
-use std::error::Error;
+use winsafe::BoxResult;
 
 use super::tag_util;
 
@@ -9,7 +9,7 @@ pub struct FrameComment {
 }
 
 impl FrameComment {
-	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
+	pub fn parse(mut src: &[u8]) -> BoxResult<Self> {
 		if src[0] != 0x00 && src[1] != 0x01 {
 			return Err(
 				format!("Unrecognized comment encoding: {:#04x}.", src[0]).into(),

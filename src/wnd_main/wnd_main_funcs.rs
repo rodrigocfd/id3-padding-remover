@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::error::Error;
 use std::rc::Rc;
-use winsafe::{self as w, gui};
+use winsafe::{self as w, gui, BoxResult};
 
 use crate::id3v2::{FrameData, Tag};
 use crate::ids::{APP_TITLE, main as id};
@@ -10,7 +10,7 @@ use crate::util;
 use super::{PreDelete, WndMain};
 
 impl WndMain {
-	pub fn new() -> w::ErrResult<Self> {
+	pub fn new() -> BoxResult<Self> {
 		let context_menu = w::HINSTANCE::NULL
 			.LoadMenu(w::IdStr::Id(id::MNU_MAIN))?
 			.GetSubMenu(0).unwrap();
@@ -30,7 +30,7 @@ impl WndMain {
 		Ok(new_self)
 	}
 
-	pub fn run(&self) -> w::ErrResult<i32> {
+	pub fn run(&self) -> BoxResult<i32> {
 		self.wnd.run_main(None)
 	}
 

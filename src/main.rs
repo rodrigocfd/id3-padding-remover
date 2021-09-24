@@ -15,6 +15,6 @@ fn main() {
 	}
 }
 
-fn run_app() -> w::ErrResult<i32> {
+fn run_app() -> w::BoxResult<i32> {
 	wnd_main::WndMain::new()?.run()
 }

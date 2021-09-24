@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use winsafe::{self as w};
+use winsafe::{self as w, BoxResult};
 
 const BOM_LE: u16 = 0xfe_ff;
 const BOM_BE: u16 = 0xff_fe;
@@ -33,7 +31,7 @@ pub fn synch_safe_decode(n: u32) -> u32 { // big-endian
 	out
 }
 
-pub fn parse_any_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn parse_any_strings(src: &[u8]) -> BoxResult<Vec<String>> {
 	match src[0] {
 		0x00 => parse_iso88591_strings(&src[1..]), // skip encoding byte
 		0x01 => parse_unicode_strings(&src[1..]),
@@ -41,7 +39,7 @@ pub fn parse_any_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
 	}
 }
 
-pub fn parse_iso88591_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn parse_iso88591_strings(src: &[u8]) -> BoxResult<Vec<String>> {
 	let mut texts: Vec<String> = Vec::with_capacity(1); // arbitrary
 	let mut buf16: Vec<u16> = Vec::default();
 
@@ -61,7 +59,7 @@ pub fn parse_iso88591_strings(src: &[u8]) -> Result<Vec<String>, Box<dyn Error>>
 	Ok(texts)
 }
 
-pub fn parse_unicode_strings(mut src: &[u8]) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn parse_unicode_strings(mut src: &[u8]) -> BoxResult<Vec<String>> {
 	if (src.len() & 1) != 0 {
 		// Length is not even, something is not quite right.
 		// We'll simply discard the last byte and hope for the best.

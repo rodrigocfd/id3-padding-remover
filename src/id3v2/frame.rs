@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-use std::error::Error;
+use winsafe::BoxResult;
 
 use super::FrameComment;
 use super::tag_util;
@@ -20,7 +20,7 @@ pub struct Frame {
 }
 
 impl Frame {
-	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
+	pub fn parse(mut src: &[u8]) -> BoxResult<Self> {
 		let name4 = std::str::from_utf8(&src[0..4])?.to_string();
 		let original_size = u32::from_be_bytes(src[4..8].try_into()?) as usize + 10; // also count 10-byte tag header
 

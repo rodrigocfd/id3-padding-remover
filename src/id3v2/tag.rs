@@ -1,6 +1,5 @@
 use std::convert::TryInto;
-use std::error::Error;
-use winsafe as w;
+use winsafe::{self as w, BoxResult};
 
 use super::Frame;
 use super::tag_util;
@@ -13,12 +12,12 @@ pub struct Tag {
 }
 
 impl Tag {
-	pub fn read(file: &str) -> Result<Self, Box<dyn Error>> {
+	pub fn read(file: &str) -> BoxResult<Self> {
 		let mapped_file = w::MappedFile::open(file, w::MappedFileAccess::Read)?;
 		Self::parse(mapped_file.as_slice())
 	}
 
-	pub fn parse(mut src: &[u8]) -> Result<Self, Box<dyn Error>> {
+	pub fn parse(mut src: &[u8]) -> BoxResult<Self> {
 		let original_size = Self::parse_header(src)?;
 		src = &src[10..original_size]; // skip 10-byte tag header; truncate to tag bounds
 
@@ -46,7 +45,7 @@ impl Tag {
 	}
 
 	/// Replaces the tag in the given MP3 file with this one.
-	pub fn write(&self, file: &str) -> Result<(), Box<dyn Error>> {
+	pub fn write(&self, file: &str) -> BoxResult<()> {
 		let blob_new = self.serialize();
 		let mut mapped_file = w::MappedFile::open(file, w::MappedFileAccess::ReadWrite)?;
 		let file_size_old = mapped_file.size();
@@ -76,7 +75,7 @@ impl Tag {
 		Ok(())
 	}
 
-	fn parse_header(src: &[u8]) -> Result<usize, Box<dyn Error>> {
+	fn parse_header(src: &[u8]) -> BoxResult<usize> {
 		// Check ID3 magic bytes.
 		let magic_str = ['I' as u8, 'D' as u8, '3' as u8];
 		if src[..3] != magic_str {
@@ -106,7 +105,7 @@ impl Tag {
 		Ok(total_tag_size)
 	}
 
-	fn parse_all_frames(mut src: &[u8]) -> Result<(Vec<Frame>, usize), Box<dyn Error>> {
+	fn parse_all_frames(mut src: &[u8]) -> BoxResult<(Vec<Frame>, usize)> {
 		let mut frames = Vec::default();
 		let mut original_padding = 0;
 
