@@ -7,11 +7,14 @@ mod wnd_main;
 mod wnd_modify;
 
 use winsafe as w;
-use wnd_main::WndMain;
 
 fn main() {
-	if let Err(e) = WndMain::new().run() {
+	if let Err(e) = run_app() {
 		util::prompt::err(w::HWND::NULL,
 			"Oops...", Some("Uncaught error"), &e.to_string());
 	}
+}
+
+fn run_app() -> w::ErrResult<i32> {
+	wnd_main::WndMain::new()?.run()
 }

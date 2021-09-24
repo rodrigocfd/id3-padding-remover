@@ -34,8 +34,8 @@ impl WndModify {
 		new_self
 	}
 
-	pub fn show(&self) {
-		self.wnd.show_modal().unwrap();
+	pub fn show(&self) -> w::WinResult<i32> {
+		self.wnd.show_modal()
 	}
 
 	pub(super) fn enable_disable_rem_padding(&self) -> w::ErrResult<()> {
@@ -95,7 +95,7 @@ impl WndModify {
 				&format!("File:\n{}\n\n\
 					Album appears to already have the year prefix:\n{}\n\n\
 					Continue anyway?",
-					file, album)) != co::DLGID::OK
+					file, album))? != co::DLGID::OK
 			{
 				return Ok(()); // skip processing
 			}

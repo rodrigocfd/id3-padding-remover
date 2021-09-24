@@ -15,26 +15,26 @@ impl WndMain {
 					&shell::clsid::FileOpenDialog,
 					None,
 					co::CLSCTX::INPROC_SERVER,
-				).unwrap();
+				)?;
 
 				fileo.SetOptions(
-					fileo.GetOptions().unwrap()
+					fileo.GetOptions()?
 						| shell::co::FOS::FORCEFILESYSTEM
 						| shell::co::FOS::FILEMUSTEXIST
 						| shell::co::FOS::ALLOWMULTISELECT,
-				).unwrap();
+				)?;
 
 				fileo.SetFileTypes(&[
 					("MP3 audio files", "*.mp3"),
 					("All files", "*.*"),
-				]).unwrap();
+				])?;
 
-				fileo.SetFileTypeIndex(1).unwrap();
+				fileo.SetFileTypeIndex(1)?;
 
-				let sh_dir = shell::IShellItem::from_path(&w::GetCurrentDirectory().unwrap()).unwrap();
-				fileo.SetFolder(&sh_dir).unwrap();
+				// let sh_dir = shell::IShellItem::from_path(&w::GetCurrentDirectory()?)?;
+				// fileo.SetFolder(&sh_dir)?;
 
-				if fileo.Show(self2.wnd.hwnd()).unwrap() {
+				if fileo.Show(self2.wnd.hwnd())? {
 					self2.add_files(
 						&fileo.GetResults()?
 							.GetDisplayNames(shell::co::SIGDN::FILESYSPATH)?,
@@ -65,7 +65,7 @@ impl WndMain {
 				}
 
 				let pop = WndModify::new(&self2.wnd, self2.tags_cache.clone(), Rc::new(sel_files));
-				pop.show();
+				pop.show()?;
 
 				{
 					let tags_cache = self2.tags_cache.borrow();
@@ -85,7 +85,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_CLR_DIACR, {
 			let self2 = self.clone();
 			move || {
-				let clock = util::Timer::start();
+				let clock = util::Timer::start()?;
 				let sel_idxs = self2.lst_files.items().selected();
 
 				for idx in self2.lst_files.items().selected().iter() {
@@ -110,7 +110,7 @@ impl WndMain {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(), clock.now_ms()));
+						sel_idxs.len(), clock.now_ms()?));
 				Ok(())
 			}
 		});

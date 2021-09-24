@@ -57,9 +57,9 @@ impl WndMain {
 					let has_sel = self2.lst_files.items().selected_count() > 0;
 
 					[id::MNU_FILE_EXCSEL, id::MNU_FILE_MODIFY, id::MNU_FILE_CLR_DIACR]
-						.iter().for_each(|id| {
-							p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel).unwrap(); // FIXME
-						});
+						.iter()
+						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel))
+						.collect::<Result<Vec<_>, _>>()?;
 				}
 				Ok(())
 			}

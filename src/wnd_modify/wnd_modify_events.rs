@@ -75,7 +75,7 @@ impl WndModify {
 					}
 				}
 
-				let clock = util::Timer::start();
+				let clock = util::Timer::start()?;
 
 				for file in self2.files.iter() {
 					let tag = tags_cache.get_mut(file).unwrap();
@@ -86,7 +86,7 @@ impl WndModify {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("{} file(s) processed in {:.2} ms.",
-						self2.files.len(), clock.now_ms()));
+						self2.files.len(), clock.now_ms()?));
 
 				self2.wnd.hwnd().EndDialog(0)?; // close after process is finished
 				Ok(())

@@ -3,14 +3,14 @@ use winsafe as w;
 pub struct Timer(i64);
 
 impl Timer {
-	pub fn start() -> Self {
-		Self(w::QueryPerformanceCounter().unwrap())
+	pub fn start() -> w::WinResult<Self> {
+		Ok( Self(w::QueryPerformanceCounter()?) )
 	}
 
-	pub fn now_ms(&self) -> f64 {
-		let freq = w::QueryPerformanceFrequency().unwrap();
-		let t1 = w::QueryPerformanceCounter().unwrap();
-		((t1 - self.0) as f64 / freq as f64) * 1000.0
+	pub fn now_ms(&self) -> w::WinResult<f64> {
+		let freq = w::QueryPerformanceFrequency()?;
+		let t1 = w::QueryPerformanceCounter()?;
+		Ok( ((t1 - self.0) as f64 / freq as f64) * 1000.0 )
 	}
 }
 
@@ -66,12 +66,14 @@ pub mod prompt {
 		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::INFORMATION);
 	}
 
-	pub fn ok_cancel(hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> co::DLGID {
+	pub fn ok_cancel(
+		hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> w::WinResult<co::DLGID>
+	{
 		base(hwnd, title, instruc, body, co::TDCBF::OK | co::TDCBF::CANCEL, co::TD_ICON::WARNING)
 	}
 
 	fn base(hwnd: w::HWND, title: &str, instruc: Option<&str>,
-		body: &str, btns: co::TDCBF, ico: co::TD_ICON) -> co::DLGID
+		body: &str, btns: co::TDCBF, ico: co::TD_ICON) -> w::WinResult<co::DLGID>
 	{
 		let mut tdc = w::TASKDIALOGCONFIG::default();
 		tdc.hwndParent = hwnd;
@@ -88,7 +90,7 @@ pub mod prompt {
 		let mut body = w::WString::from_str(body);
 		tdc.set_pszContent(Some(&mut body));
 
-		let (res, _) = w::TaskDialogIndirect(&mut tdc, None).unwrap();
-		res
+		let (res, _) = w::TaskDialogIndirect(&mut tdc, None)?;
+		Ok(res)
 	}
 }

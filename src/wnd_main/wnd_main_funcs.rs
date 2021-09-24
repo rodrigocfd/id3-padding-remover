@@ -10,9 +10,9 @@ use crate::util;
 use super::{PreDelete, WndMain};
 
 impl WndMain {
-	pub fn new() -> Self {
+	pub fn new() -> w::ErrResult<Self> {
 		let context_menu = w::HINSTANCE::NULL
-			.LoadMenu(w::IdStr::Id(id::MNU_MAIN)).unwrap()
+			.LoadMenu(w::IdStr::Id(id::MNU_MAIN))?
 			.GetSubMenu(0).unwrap();
 
 		let wnd = gui::WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
@@ -27,7 +27,7 @@ impl WndMain {
 		let new_self = Self { wnd, lst_files, lst_frames, resizer, tags_cache };
 		new_self.events();
 		new_self.menu_events();
-		new_self
+		Ok(new_self)
 	}
 
 	pub fn run(&self) -> w::ErrResult<i32> {
@@ -47,7 +47,7 @@ impl WndMain {
 	}
 
 	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
-		let clock = util::Timer::start();
+		let clock = util::Timer::start()?;
 
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
@@ -71,18 +71,18 @@ impl WndMain {
 			}
 		}
 
-		self.lst_files.columns().set_width_to_fill(0).unwrap();
+		self.lst_files.columns().set_width_to_fill(0)?;
 		self.titlebar_count(PreDelete::No)?;
 
 		util::prompt::info(self.wnd.hwnd(),
 			"Operation successful", Some("Success"),
-			&format!("{} file(s) loaded in {:.2} ms.", files.len(), clock.now_ms()));
+			&format!("{} file(s) loaded in {:.2} ms.", files.len(), clock.now_ms()?));
 		Ok(())
 	}
 
 	pub(super) fn show_selected_tag_frames(&self) -> Result<(), Box<dyn Error>> {
 		let lvitems = self.lst_frames.items();
-		lvitems.delete_all().unwrap();
+		lvitems.delete_all()?;
 
 		let sel_files = self.lst_files.columns().selected_texts(0);
 		self.lst_frames.hwnd().EnableWindow(!sel_files.is_empty());
@@ -94,7 +94,7 @@ impl WndMain {
 			lvitems.add(&[
 				"",
 				&format!("{} selected...", sel_files.len()),
-			], None).unwrap();
+			], None)?;
 
 		} else { // 1 single item selected, display its frames
 			let tags_cache = self.tags_cache.borrow();
@@ -111,7 +111,7 @@ impl WndMain {
 							lvitems.add(&[
 								"",
 								&ss[i],
-							], None).unwrap();
+							], None)?;
 						}
 					},
 					FrameData::Comment(com) => lvitems.set_text(idx, 1,
@@ -126,7 +126,7 @@ impl WndMain {
 			}
 		}
 
-		self.lst_frames.columns().set_width_to_fill(1).unwrap();
+		self.lst_frames.columns().set_width_to_fill(1)?;
 		Ok(())
 	}
 }
