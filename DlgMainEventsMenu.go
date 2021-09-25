@@ -15,14 +15,12 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
-func createAccelTable() ui.AcceleratorTable {
-	return ui.NewAcceleratorTable().
+func createAccelTableAndMenu() (ui.AcceleratorTable, win.HMENU) {
+	hAccel := ui.NewAcceleratorTable().
 		AddChar('o', co.ACCELF_CONTROL, MNU_OPEN).
 		AddKey(co.VK_F1, co.ACCELF_NONE, MNU_ABOUT)
-}
 
-func createContextMenu() win.HMENU {
-	return win.CreatePopupMenu().
+	hMenu := win.CreatePopupMenu().
 		AddItem(MNU_OPEN, "&Open files...\tCtrl+O").
 		AddItem(MNU_DELETE, "&Delete from list\tDel").
 		AddSeparator().
@@ -32,6 +30,8 @@ func createContextMenu() win.HMENU {
 		AddItem(MNU_PREFIX_YEAR, "Prefix album with &year").
 		AddSeparator().
 		AddItem(MNU_ABOUT, "&About...\tF1")
+
+	return hAccel, hMenu
 }
 
 func (me *DlgMain) eventsMenu() {

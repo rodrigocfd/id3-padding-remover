@@ -27,12 +27,14 @@ type DlgMain struct {
 }
 
 func NewDlgMain() *DlgMain {
+	hAccel, hCtxMenu := createAccelTableAndMenu()
+
 	wnd := ui.NewWindowMain(
 		ui.WindowMainOpts().
 			Title(APP_TITLE).
 			ClientArea(win.SIZE{Cx: 750, Cy: 320}).
 			IconId(ICO_MAIN).
-			AccelTable(createAccelTable()).
+			AccelTable(hAccel).
 			WndStyles(co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
 				co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
 				co.WS_MAXIMIZEBOX | co.WS_SIZEBOX).
@@ -45,7 +47,7 @@ func NewDlgMain() *DlgMain {
 			ui.ListViewOpts().
 				Position(win.POINT{X: 6, Y: 6}).
 				Size(win.SIZE{Cx: 488, Cy: 306}).
-				ContextMenu(createContextMenu()).
+				ContextMenu(hCtxMenu).
 				CtrlExStyles(co.LVS_EX_FULLROWSELECT).
 				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER|
 					co.LVS_SHOWSELALWAYS|co.LVS_SORTASCENDING),
@@ -77,20 +79,22 @@ func (me *DlgMain) Run() int {
 }
 
 func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
-	type Result struct {
-		Mp3 string
-		Err error
-		Tag *id3.Tag
-	}
-
 	go func() {
+		type Result struct {
+			Mp3 string
+			Err error
+			Tag *id3.Tag
+		}
+
+		// Parse all tags from files in parallel.
+
 		resultChan := make(chan Result, len(mp3s))
 		results := make([]Result, 0, len(mp3s)) // will receive processing results
 
 		for _, mp3 := range mp3s {
 			go func(mp3 string) {
 				tag, err := id3.ReadTagFromFile(mp3)
-				resultChan <- Result{ // send all results in parallel
+				resultChan <- Result{ // send all results to channel
 					Mp3: mp3,
 					Err: err,
 					Tag: tag,
@@ -98,11 +102,13 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 			}(mp3)
 		}
 		for i := 0; i < len(mp3s); i++ {
-			results = append(results, <-resultChan) // receive all results
+			results = append(results, <-resultChan) // receive all results from channel
 		}
 
+		// Back to UI thread, display results.
+
 		me.wnd.RunUiThread(func() {
-			for _, resu := range results { // analyze all results
+			for _, resu := range results {
 				if resu.Err != nil {
 					prompt.Error(me.wnd, "Error parsing tag", "",
 						fmt.Sprintf("File:\n%s\n\n%s", resu.Mp3, resu.Err))
