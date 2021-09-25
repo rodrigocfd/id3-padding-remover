@@ -18,7 +18,7 @@ func (me *DlgMain) eventsLstFiles() {
 				func(msElapsed uint32) {
 					me.wnd.Hwnd().KillTimer(TIMER_LSTFILES)
 					me.updateTitlebarCount(me.lstFiles.Items().Count())
-					me.displayTagsOfSelectedFiles()
+					me.displayFramesOfSelectedFiles()
 					me.lstFilesSelLocked = false
 				})
 		}
