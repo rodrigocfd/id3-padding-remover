@@ -15,7 +15,7 @@ func (me *DlgMain) eventsLstFiles() {
 			me.lstFilesSelLocked = true
 
 			me.wnd.Hwnd().SetTimer(TIMER_LSTFILES, 50, // wait between LVM_ITEMCHANGED updates
-				func(msElapsed uint32) {
+				func(_ uint32) {
 					me.wnd.Hwnd().KillTimer(TIMER_LSTFILES)
 					me.updateTitlebarCount(me.lstFiles.Items().Count())
 					me.displayFramesOfSelectedFiles()

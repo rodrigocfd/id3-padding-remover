@@ -47,9 +47,10 @@ func (me *DlgMain) eventsMenu() {
 		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
 		defer fod.Release()
 
-		flags := fod.GetOptions()
-		fod.SetOptions(flags | shellco.FOS_FORCEFILESYSTEM |
-			shellco.FOS_FILEMUSTEXIST | shellco.FOS_ALLOWMULTISELECT)
+		fod.SetOptions(fod.GetOptions() |
+			shellco.FOS_FORCEFILESYSTEM |
+			shellco.FOS_FILEMUSTEXIST |
+			shellco.FOS_ALLOWMULTISELECT)
 
 		fod.SetFileTypes([]shell.FilterSpec{
 			{Name: "MP3 audio files", Spec: "*.mp3"},
