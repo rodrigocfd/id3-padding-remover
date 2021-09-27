@@ -60,7 +60,7 @@ impl WndMain {
 
 				if sel_files.is_empty() {
 					util::prompt::err(self2.wnd.hwnd(), "No files", None,
-						"There are no selected files to be modified.");
+						"There are no selected files to be modified.")?;
 					return Ok(());
 				}
 
@@ -110,7 +110,7 @@ impl WndMain {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("Diacritics removed from {} file name(s) in {:.2} ms.",
-						sel_idxs.len(), clock.now_ms()?));
+						sel_idxs.len(), clock.now_ms()?))?;
 				Ok(())
 			}
 		});
@@ -131,7 +131,7 @@ impl WndMain {
 					Some(&format!("ID3 Padding Remover v{}.{}.{}",
 						ver[0], ver[1], ver[2])),
 					"Writen in Rust with WinSafe library.\n\
-					Rodrigo César de Freitas Dias © 2021");
+					Rodrigo César de Freitas Dias © 2021")?;
 				Ok(())
 			}
 		});

@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::error::Error;
 use std::rc::Rc;
 use winsafe::{self as w, co, gui, BoxResult};
 
@@ -67,7 +66,7 @@ impl WndModify {
 		});
 	}
 
-	pub(super) fn prefix_year(&self, tag: &mut Tag, file: &str) -> Result<(), Box<dyn Error>> {
+	pub(super) fn prefix_year(&self, tag: &mut Tag, file: &str) -> BoxResult<()> {
 		let frames = tag.frames_mut();
 
 		let year = if let Some(year_frame) = frames.iter().find(|f| f.name4() == "TYER") {

@@ -58,12 +58,16 @@ pub fn format_bytes(num_bytes: usize) -> String {
 pub mod prompt {
 	use winsafe::{self as w, co};
 
-	pub fn err(hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) {
-		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::ERROR);
+	pub fn err(
+		hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> w::WinResult<co::DLGID>
+	{
+		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::ERROR)
 	}
 
-	pub fn info(hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) {
-		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::INFORMATION);
+	pub fn info(
+		hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> w::WinResult<co::DLGID>
+	{
+		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::INFORMATION)
 	}
 
 	pub fn ok_cancel(

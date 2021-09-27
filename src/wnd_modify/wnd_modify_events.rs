@@ -69,7 +69,7 @@ impl WndModify {
 					if self2.chk_prefix_year.is_checked() {
 						if let Err(err) = self2.prefix_year(&mut tag, file) {
 							util::prompt::err(self2.wnd.hwnd(),
-								"Operation error", Some("Error"), &err.to_string());
+								"Operation error", Some("Error"), &err.to_string())?;
 							self2.wnd.hwnd().EndDialog(0)?; // close after error
 						}
 					}
@@ -86,7 +86,7 @@ impl WndModify {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("{} file(s) processed in {:.2} ms.",
-						self2.files.len(), clock.now_ms()?));
+						self2.files.len(), clock.now_ms()?))?;
 
 				self2.wnd.hwnd().EndDialog(0)?; // close after process is finished
 				Ok(())

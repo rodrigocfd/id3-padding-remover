@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::error::Error;
 use std::rc::Rc;
 use winsafe::{self as w, gui, BoxResult};
 
@@ -34,7 +33,7 @@ impl WndMain {
 		self.wnd.run_main(None)
 	}
 
-	pub(super) fn titlebar_count(&self, moment: PreDelete) -> Result<(), Box<dyn Error>> {
+	pub(super) fn titlebar_count(&self, moment: PreDelete) -> BoxResult<()> {
 		let lvitems = self.lst_files.items();
 		let count = lvitems.count() - match moment {
 			PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
@@ -46,7 +45,7 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> Result<(), Box<dyn Error>> {
+	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> BoxResult<()> {
 		let clock = util::Timer::start()?;
 
 		for file_ref in files.iter() {
@@ -58,7 +57,7 @@ impl WndMain {
 					Err(e) => {
 						util::prompt::err(self.wnd.hwnd(),
 							"Tag reading failed", Some("Error"),
-							&format!("File: {}\n\n{}", file, e));
+							&format!("File: {}\n\n{}", file, e))?;
 						return Ok(());
 					},
 				};
@@ -76,11 +75,11 @@ impl WndMain {
 
 		util::prompt::info(self.wnd.hwnd(),
 			"Operation successful", Some("Success"),
-			&format!("{} file(s) loaded in {:.2} ms.", files.len(), clock.now_ms()?));
+			&format!("{} file(s) loaded in {:.2} ms.", files.len(), clock.now_ms()?))?;
 		Ok(())
 	}
 
-	pub(super) fn show_selected_tag_frames(&self) -> Result<(), Box<dyn Error>> {
+	pub(super) fn show_selected_tag_frames(&self) -> BoxResult<()> {
 		let lvitems = self.lst_frames.items();
 		lvitems.delete_all()?;
 

@@ -11,7 +11,7 @@ use winsafe as w;
 fn main() {
 	if let Err(e) = run_app() {
 		util::prompt::err(w::HWND::NULL,
-			"Oops...", Some("Uncaught error"), &e.to_string());
+			"Oops...", Some("Uncaught error"), &e.to_string()).unwrap();
 	}
 }
 
