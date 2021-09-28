@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 fn main() {
-	const RES: &str = "resources/id3-padding-remover.res";
+	const RES: &str = "resources/id3-fit.res";
 
 	// Create a copy of .res file, and append .lib extension.
 	// This is necessary because of a limitation in the toolchain.

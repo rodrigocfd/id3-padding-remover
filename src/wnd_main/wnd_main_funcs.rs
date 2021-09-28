@@ -47,6 +47,7 @@ impl WndMain {
 
 	pub(super) fn add_files<S: AsRef<str>>(&self, files: &[S]) -> BoxResult<()> {
 		let clock = util::Timer::start()?;
+		self.lst_files.set_redraw(false);
 
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
@@ -70,6 +71,7 @@ impl WndMain {
 			}
 		}
 
+		self.lst_files.set_redraw(true);
 		self.lst_files.columns().set_width_to_fill(0)?;
 		self.titlebar_count(PreDelete::No)?;
 

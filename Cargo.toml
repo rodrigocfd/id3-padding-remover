@@ -1,5 +1,5 @@
 [package]
-name = "id3-padding-remover"
+name = "id3-fit"
 version = "2.1.0"
 authors = ["Rodrigo Cesar de Freitas Dias <rcesar@gmail.com>"]
 edition = "2018"

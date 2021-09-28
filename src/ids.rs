@@ -1,6 +1,6 @@
 //! Resource IDs.
 
-pub const APP_TITLE: &str = "ID3 Padding Remover";
+pub const APP_TITLE: &str = "ID3 Fit";
 
 pub mod main {
 	pub const ICO_FROG:           u16 = 101;

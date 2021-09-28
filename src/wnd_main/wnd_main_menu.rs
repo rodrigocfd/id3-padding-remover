@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use winsafe::{self as w, co, shell};
 
-use crate::ids::main as id;
+use crate::ids::{APP_TITLE, main as id};
 use crate::util;
 use crate::wnd_modify::WndModify;
 use super::WndMain;
@@ -128,8 +128,8 @@ impl WndMain {
 
 				util::prompt::info(self2.wnd.hwnd(),
 					"About",
-					Some(&format!("ID3 Padding Remover v{}.{}.{}",
-						ver[0], ver[1], ver[2])),
+					Some(&format!("{} v{}.{}.{}",
+						APP_TITLE, ver[0], ver[1], ver[2])),
 					"Writen in Rust with WinSafe library.\n\
 					Rodrigo César de Freitas Dias © 2021")?;
 				Ok(())

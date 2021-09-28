@@ -10,7 +10,7 @@ impl WndMain {
 			let self2 = self.clone();
 			move |_| {
 				// Files list view.
-				self2.lst_frames.toggle_extended_style(true, co::LVS_EX::GRIDLINES);
+				self2.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
 
 				// Since it doesn't have LVS_SHAREIMAGELISTS style, the image list
 				// will be automatically deleted by the list view.
