@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use winsafe::{self as w, co, shell};
 
-use crate::ids::{APP_TITLE, main as id};
+use crate::ids::main as id;
 use crate::util;
 use crate::wnd_modify::WndModify;
 use super::WndMain;
@@ -118,22 +118,21 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_ABOUT, {
 			let self2 = self.clone();
 			move || {
-				// Read version from resource.
 				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
-				let mut res_buf = Vec::default();
-				w::GetFileVersionInfo(&exe_name, &mut res_buf)?;
-
-				let vsffi = unsafe { w::VarQueryValue::<w::VS_FIXEDFILEINFO>(&res_buf, "\\")? };
-				let ver = vsffi.dwFileVersion();
+				let ri = w::ResourceInfo::read_from(&exe_name)?;
+				let ver = ri.fixed_file_info().unwrap().dwFileVersion();
+				let (lang, cp) = ri.langs_and_code_pages().unwrap()[0];
 
 				util::prompt::info(self2.wnd.hwnd(),
 					"About",
 					Some(&format!("{} v{}.{}.{}",
-						APP_TITLE, ver[0], ver[1], ver[2])),
-					"Writen in Rust with WinSafe library.\n\
-					Rodrigo César de Freitas Dias © 2021")?;
+						ri.product_name(lang, cp).unwrap(), ver[0], ver[1], ver[2])),
+					&format!("Writen in Rust with WinSafe library.\n{}",
+						ri.legal_copyright(lang, cp).unwrap()),
+				)?;
 				Ok(())
 			}
 		});
 	}
 }
+

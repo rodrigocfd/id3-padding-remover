@@ -55,6 +55,13 @@ pub fn format_bytes(num_bytes: usize) -> String {
 	}
 }
 
+pub fn app_name() -> w::WinResult<String> {
+	let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
+	let ri = w::ResourceInfo::read_from(&exe_name)?;
+	let (lang, cp) = ri.langs_and_code_pages().unwrap()[0];
+	Ok(ri.product_name(lang, cp).unwrap())
+}
+
 pub mod prompt {
 	use winsafe::{self as w, co};
 

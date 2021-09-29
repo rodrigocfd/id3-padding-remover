@@ -4,7 +4,7 @@ use std::rc::Rc;
 use winsafe::{self as w, gui, BoxResult};
 
 use crate::id3v2::{FrameData, Tag};
-use crate::ids::{APP_TITLE, main as id};
+use crate::ids::main as id;
 use crate::util;
 use super::{PreDelete, WndMain};
 
@@ -22,8 +22,9 @@ impl WndMain {
 			(gui::Resz::Repos, gui::Resz::Resize, &[&lst_frames]),
 		]);
 		let tags_cache = Rc::new(RefCell::new(HashMap::default()));
+		let app_name = util::app_name()?;
 
-		let new_self = Self { wnd, lst_files, lst_frames, resizer, tags_cache };
+		let new_self = Self { wnd, lst_files, lst_frames, resizer, tags_cache, app_name };
 		new_self.events();
 		new_self.menu_events();
 		Ok(new_self)
@@ -34,13 +35,13 @@ impl WndMain {
 	}
 
 	pub(super) fn titlebar_count(&self, moment: PreDelete) -> BoxResult<()> {
-		let lvitems = self.lst_files.items();
-		let count = lvitems.count() - match moment {
+		let lv_items = self.lst_files.items();
+		let count = lv_items.count() - match moment {
 			PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
 			PreDelete::No => 0,
 		};
 		self.wnd.hwnd().SetWindowText(
-			&format!("{} ({}/{})", APP_TITLE, lvitems.selected_count(), count),
+			&format!("{} ({}/{})", self.app_name, lv_items.selected_count(), count),
 		)?;
 		Ok(())
 	}

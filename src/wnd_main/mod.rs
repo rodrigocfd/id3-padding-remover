@@ -16,6 +16,7 @@ pub struct WndMain {
 	lst_frames: gui::ListView,
 	resizer:    gui::Resizer,
 	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
+	app_name:   String,
 }
 
 pub enum PreDelete { Yes, No }
