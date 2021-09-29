@@ -6,6 +6,7 @@ use winsafe::{self as w, gui, BoxResult};
 use crate::id3v2::{FrameData, Tag};
 use crate::ids::main as id;
 use crate::util;
+use crate::wnd_fields::WndFields;
 use super::{PreDelete, WndMain};
 
 impl WndMain {
@@ -16,54 +17,18 @@ impl WndMain {
 
 		let wnd = gui::WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
 		let lst_files = gui::ListView::new_dlg(&wnd, id::LST_FILES, Some(context_menu));
-
-		let chk_artist = gui::CheckBox::new_dlg(&wnd, id::CHK_ARTIST);
-		let txt_artist = gui::Edit::new_dlg(&wnd, id::TXT_ARTIST);
-		let chk_title = gui::CheckBox::new_dlg(&wnd, id::CHK_TITLE);
-		let txt_title = gui::Edit::new_dlg(&wnd, id::TXT_TITLE);
-		let chk_album = gui::CheckBox::new_dlg(&wnd, id::CHK_ALBUM);
-		let txt_album = gui::Edit::new_dlg(&wnd, id::TXT_ALBUM);
-		let chk_track = gui::CheckBox::new_dlg(&wnd, id::CHK_TRACK);
-		let txt_track = gui::Edit::new_dlg(&wnd, id::TXT_TRACK);
-		let chk_date = gui::CheckBox::new_dlg(&wnd, id::CHK_DATE);
-		let txt_date = gui::Edit::new_dlg(&wnd, id::TXT_DATE);
-		let chk_genre = gui::CheckBox::new_dlg(&wnd, id::CHK_GENRE);
-		let cmb_genre = gui::ComboBox::new_dlg(&wnd, id::CMB_GENRE);
-		let chk_composer = gui::CheckBox::new_dlg(&wnd, id::CHK_COMPOSER);
-		let txt_composer = gui::Edit::new_dlg(&wnd, id::TXT_COMPOSER);
-		let chk_comment = gui::CheckBox::new_dlg(&wnd, id::CHK_COMMENT);
-		let txt_comment = gui::Edit::new_dlg(&wnd, id::TXT_COMMENT);
-		let btn_save = gui::Button::new_dlg(&wnd, id::BTN_SAVE);
-
+		let wnd_fields = WndFields::new(&wnd, w::POINT::new(496, 8));
 		let lst_frames = gui::ListView::new_dlg(&wnd, id::LST_FRAMES, None);
 		let resizer = gui::Resizer::new(&wnd, &[
 			(gui::Resz::Resize, gui::Resz::Resize, &[&lst_files]),
-			(gui::Resz::Repos, gui::Resz::Nothing, &[
-				&chk_artist, &txt_artist,
-				&chk_title, &txt_title,
-				&chk_album, &txt_album,
-				&chk_track, &txt_track,
-				&chk_date, &txt_date,
-				&chk_genre, &cmb_genre,
-				&chk_composer, &txt_composer,
-				&chk_comment, &txt_comment, &btn_save,
-			]),
+			(gui::Resz::Repos, gui::Resz::Nothing, &[&wnd_fields]),
 			(gui::Resz::Repos, gui::Resz::Resize, &[&lst_frames]),
 		]);
 		let tags_cache = Rc::new(RefCell::new(HashMap::default()));
 		let app_name = util::app_name()?;
 
 		let new_self = Self {
-			wnd, lst_files,
-			chk_artist, txt_artist,
-			chk_title, txt_title,
-			chk_album, txt_album,
-			chk_track, txt_track,
-			chk_date, txt_date,
-			chk_genre, cmb_genre,
-			chk_composer, txt_composer,
-			chk_comment, txt_comment, btn_save,
-			lst_frames, resizer, tags_cache, app_name,
+			wnd, lst_files, wnd_fields, lst_frames, resizer, tags_cache, app_name,
 		};
 		new_self.events();
 		new_self.menu_events();
@@ -131,8 +96,8 @@ impl WndMain {
 		let sel_files = self.lst_files.columns().selected_texts(0);
 		self.lst_frames.hwnd().EnableWindow(!sel_files.is_empty());
 
-		if sel_files.is_empty() { // nothing to do
-			return Ok(());
+		if sel_files.is_empty() {
+			// Nothing to do.
 
 		} else if sel_files.len() > 1 { // multiple selected items, just display a placeholder
 			lvitems.add(&[

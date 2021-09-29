@@ -69,24 +69,20 @@ impl WndModify {
 	pub(super) fn prefix_year(&self, tag: &mut Tag, file: &str) -> BoxResult<()> {
 		let frames = tag.frames_mut();
 
-		let year = if let Some(year_frame) = frames.iter().find(|f| f.name4() == "TYER") {
-			if let FrameData::Text(text) = year_frame.data() {
-				text.clone()
-			} else {
-				return Err(format!("File: {}\n\nYear frame has the wrong data type.", file).into())
-			}
-		} else {
-			return Err(format!("File: {}\n\nYear frame not found.", file).into())
+		let year = match frames.iter()
+			.find(|f| f.name4() == "TYER")
+			.ok_or_else(|| format!("File: {}\n\nYear frame not found.", file))?
+			.data() {
+			FrameData::Text(text) => text.clone(),
+			_ => return Err(format!("File: {}\n\nYear frame has the wrong data type.", file).into()),
 		};
 
-		let album = if let Some(album_frame) = frames.iter_mut().find(|f| f.name4() == "TALB") {
-			if let FrameData::Text(text) = album_frame.data_mut() {
-				text
-			} else {
-				return Err(format!("File: {}\n\nAlbum frame has the wrong data type.", file).into())
-			}
-		} else {
-			return Err(format!("File: {}\n\nAlbum frame not found.", file).into())
+		let album = match frames.iter_mut()
+			.find(|f| f.name4() == "TALB")
+			.ok_or_else(|| format!("File: {}\n\nAlbum frame not found.", file))?
+			.data_mut() {
+			FrameData::Text(text) => text,
+			_ => return Err(format!("File: {}\n\nAlbum frame not found.", file).into()),
 		};
 
 		if album.starts_with(&year) {

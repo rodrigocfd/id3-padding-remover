@@ -31,17 +31,14 @@ impl WndModify {
 			let self2 = self.clone();
 			move || self2.enable_disable_rem_padding()
 		});
-
 		self.chk_rem_album.on().bn_clicked({
 			let self2 = self.clone();
 			move || self2.enable_disable_rem_padding()
 		});
-
 		self.chk_rem_rg.on().bn_clicked({
 			let self2 = self.clone();
 			move || self2.enable_disable_rem_padding()
 		});
-
 		self.chk_prefix_year.on().bn_clicked({
 			let self2 = self.clone();
 			move || self2.enable_disable_rem_padding()

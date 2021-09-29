@@ -3,6 +3,7 @@
 mod id3v2;
 mod ids;
 mod util;
+mod wnd_fields;
 mod wnd_main;
 mod wnd_modify;
 
