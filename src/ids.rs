@@ -14,7 +14,25 @@ pub mod main {
 
 	pub const DLG_MAIN:           u16 = 1000;
 	pub const LST_FILES:          u16 = 1001;
-	pub const LST_FRAMES:         u16 = 1002;
+	pub const CHK_ARTIST:         u16 = 1002;
+	pub const TXT_ARTIST:         u16 = 1003;
+	pub const CHK_TITLE:          u16 = 1004;
+	pub const TXT_TITLE:          u16 = 1005;
+	pub const CHK_ALBUM:          u16 = 1006;
+	pub const TXT_ALBUM:          u16 = 1007;
+	pub const CHK_TRACK:          u16 = 1008;
+	pub const TXT_TRACK:          u16 = 1009;
+	pub const CHK_DATE:           u16 = 1010;
+	pub const TXT_DATE:           u16 = 1011;
+	pub const CHK_GENRE:          u16 = 1012;
+	pub const CMB_GENRE:          u16 = 1013;
+	pub const CHK_COMPOSER:       u16 = 1014;
+	pub const TXT_COMPOSER:       u16 = 1015;
+	pub const CHK_COMMENT:        u16 = 1016;
+	pub const TXT_COMMENT:        u16 = 1017;
+	pub const BTN_SAVE:           u16 = 1018;
+
+	pub const LST_FRAMES:         u16 = 1019;
 }
 
 pub mod modify {
