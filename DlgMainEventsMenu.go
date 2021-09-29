@@ -5,7 +5,6 @@ import (
 	"id3fit/id3"
 	"id3fit/prompt"
 	"runtime"
-	"unsafe"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
@@ -156,17 +155,20 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		resourceSl := win.GetFileVersionInfo(win.HINSTANCE(0).GetModuleFileName())
-		versionSl, _ := win.VerQueryValue(resourceSl, "\\")
-		vsffi := (*win.VS_FIXEDFILEINFO)(unsafe.Pointer(&versionSl[0]))
-		vMaj, vMin, vPat, _ := vsffi.ProductVersion()
+		ri, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
+		vsf, _ := ri.FixedFileInfo()
+		vMaj, vMin, vPat, _ := vsf.ProductVersion()
+
+		block0 := ri.Blocks()[0]
+		company, _ := ri.CompanyName(block0.LangId, block0.CodePage)
+		copyRite, _ := ri.LegalCopyright(block0.LangId, block0.CodePage)
 
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",
 			fmt.Sprintf("ID3 Fit %d.%d.%d", vMaj, vMin, vPat),
-			fmt.Sprintf("Rodrigo César de Freitas Dias\n"+
+			fmt.Sprintf("%s - %s\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
 				"Alloc mem: %s\n"+
@@ -174,6 +176,7 @@ func (me *DlgMain) eventsMenu() {
 				"Alloc idle: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s",
+				company, copyRite,
 				win.Str.FmtBytes(memStats.HeapAlloc),
 				win.Str.FmtBytes(memStats.HeapSys),
 				win.Str.FmtBytes(memStats.HeapIdle),
