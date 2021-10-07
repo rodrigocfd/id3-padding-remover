@@ -22,7 +22,6 @@ type DlgMain struct {
 	lstFiles          ui.ListView
 	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         ui.ListView
-	resizer           ui.Resizer
 	cachedTags        map[string]*id3.Tag // for each file currently in the list
 }
 
@@ -47,6 +46,8 @@ func NewDlgMain() *DlgMain {
 			ui.ListViewOpts().
 				Position(win.POINT{X: 6, Y: 6}).
 				Size(win.SIZE{Cx: 488, Cy: 306}).
+				Horz(ui.HORZ_RESIZE).
+				Vert(ui.VERT_RESIZE).
 				ContextMenu(hCtxMenu).
 				CtrlExStyles(co.LVS_EX_FULLROWSELECT).
 				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER|
@@ -56,15 +57,13 @@ func NewDlgMain() *DlgMain {
 			ui.ListViewOpts().
 				Position(win.POINT{X: 500, Y: 6}).
 				Size(win.SIZE{Cx: 242, Cy: 306}).
+				Horz(ui.HORZ_REPOS).
+				Vert(ui.VERT_RESIZE).
 				CtrlExStyles(co.LVS_EX_GRIDLINES).
 				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER),
 		),
-		resizer:    ui.NewResizer(wnd),
 		cachedTags: make(map[string]*id3.Tag),
 	}
-
-	me.resizer.Add(ui.RESZ_RESIZE, ui.RESZ_RESIZE, me.lstFiles).
-		Add(ui.RESZ_REPOS, ui.RESZ_RESIZE, me.lstValues)
 
 	me.eventsMain()
 	me.eventsLstFiles()
