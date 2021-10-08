@@ -1,6 +1,7 @@
 package id3
 
 import (
+	"fmt"
 	"id3fit/id3/util"
 )
 
@@ -22,7 +23,7 @@ func (me *FrameText) Serialize() ([]byte, error) {
 
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("serializing FrameText header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)

@@ -17,7 +17,7 @@ func (me *FrameComment) Text() *string { return &me.text }
 func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
-		return fmt.Errorf("Unrecognized comment text encoding: %02x.", src[0])
+		return fmt.Errorf("unrecognized comment text encoding: %02x", src[0])
 	}
 	isUnicode := src[0] == 0x01
 	src = src[1:] // skip encoding byte
@@ -39,7 +39,7 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	}
 
 	if len(texts) > 1 {
-		return fmt.Errorf("Comment frame with multiple texts: %d.", len(texts))
+		return fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
 
 	me._FrameBase = base
@@ -50,7 +50,7 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 
 func (me *FrameComment) Serialize() ([]byte, error) {
 	if len(me.lang) != 3 {
-		return nil, fmt.Errorf("Bad lang: %s.", me.lang)
+		return nil, fmt.Errorf("bad lang: %s", me.lang)
 	}
 
 	encodingByte, data := util.SerializeStrings([]string{me.text})
@@ -58,7 +58,7 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("serializing FrameComment header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)

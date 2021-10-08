@@ -1,5 +1,7 @@
 package id3
 
+import "fmt"
+
 type FrameBinary struct {
 	_FrameBase
 	binData []byte
@@ -19,7 +21,7 @@ func (me *FrameBinary) Serialize() ([]byte, error) {
 	totalFrameSize := 10 + len(me.binData) // include header
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("serializing FrameBinary header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)

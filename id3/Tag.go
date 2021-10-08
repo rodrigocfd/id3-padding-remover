@@ -3,7 +3,6 @@ package id3
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"id3fit/id3/util"
 
@@ -31,7 +30,7 @@ func ReadTagFromBinary(src []byte) (*Tag, error) { return (&Tag{}).readFromBinar
 func (me *Tag) readFromFile(mp3Path string) (*Tag, error) {
 	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_READ_EXISTING)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("opening file to read: %w", err)
 	}
 	defer fMap.Close()
 
@@ -41,13 +40,13 @@ func (me *Tag) readFromFile(mp3Path string) (*Tag, error) {
 func (me *Tag) readFromBinary(src []byte) (*Tag, error) {
 	originalSize, err := me.parseTagHeader(src)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing tag header: %w", err)
 	}
 	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
 
 	frames, originalPadding, err := me.parseAllFrames(src)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing all frames: %w", err)
 	}
 
 	me.originalSize = originalSize
@@ -59,22 +58,21 @@ func (me *Tag) readFromBinary(src []byte) (*Tag, error) {
 func (me *Tag) parseTagHeader(src []byte) (int, error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, errors.New("No ID3 tag found.")
+		return 0, fmt.Errorf("no ID3 tag found")
 	}
 
 	// Validate tag version 2.3.0.
 	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
-		return 0, errors.New(
-			fmt.Sprintf("Tag version 2.%d.%d is not supported, only 2.3.0.",
-				src[3], src[4]),
-		)
+		return 0, fmt.Errorf(
+			"tag version 2.%d.%d is not supported, only 2.3.0",
+			src[3], src[4])
 	}
 
 	// Validate unsupported flags.
 	if (src[5] & 0b1000_0000) != 0 {
-		return 0, errors.New("Tag is unsynchronised, not supported.")
+		return 0, fmt.Errorf("unsynchronised tag not supported")
 	} else if (src[5] & 0b0100_0000) != 0 {
-		return 0, errors.New("Tag extended header not supported.")
+		return 0, fmt.Errorf("tag extended header not supported")
 	}
 
 	// Read tag size.
@@ -99,10 +97,10 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 
 		newFrame, err := _ParseFrame(src)
 		if err != nil {
-			return nil, 0, err // error when parsing the frame
+			return nil, 0, fmt.Errorf("parsing frames: %w", err) // error when parsing the frame
 		}
 		if newFrame.OriginalSize() > len(src) { // means the tag was serialized with error
-			return nil, 0, errors.New("Frame size is greater than real size.")
+			return nil, 0, fmt.Errorf("frame size is greater than real size")
 		}
 		frames = append(frames, newFrame) // add the frame to our collection
 
@@ -117,7 +115,7 @@ func (me *Tag) Serialize() ([]byte, error) {
 	for _, frame := range me.frames {
 		frameData, err := frame.Serialize()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("serializing to string: %w", err)
 		}
 		data = append(data, frameData...)
 	}
@@ -137,26 +135,26 @@ func (me *Tag) Serialize() ([]byte, error) {
 func (me *Tag) SerializeToFile(mp3Path string) error {
 	newTag, err := me.Serialize()
 	if err != nil {
-		return err
+		return fmt.Errorf("serializing tag: %w", err)
 	}
 
 	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_RW_EXISTING)
 	if err != nil {
-		return err
+		return fmt.Errorf("opening file to serialize: %w", err)
 	}
 	defer fout.Close()
 	fileMem := fout.HotSlice()
 
 	currentTag, err := ReadTagFromBinary(fileMem)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading tag: %w", err)
 	}
 
 	diff := len(newTag) - currentTag.OriginalSize() // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
 		if err := fout.Resize(fout.Size() + diff); err != nil {
-			return err
+			return fmt.Errorf("increasing file room: %w", err)
 		}
 	}
 
@@ -168,7 +166,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 
 	if diff < 0 { // new tag is shorter, shrink
 		if err := fout.Resize(fout.Size() + diff); err != nil {
-			return err
+			return fmt.Errorf("decreasing file room: %w", err)
 		}
 	}
 

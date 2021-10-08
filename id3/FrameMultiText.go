@@ -1,7 +1,7 @@
 package id3
 
 import (
-	"errors"
+	"fmt"
 	"id3fit/id3/util"
 	"strings"
 )
@@ -15,7 +15,7 @@ func (me *FrameMultiText) Texts() *[]string { return &me.texts }
 
 func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
 	if len(texts) < 2 {
-		return errors.New("Bad multi-text frame with only 1 text.")
+		return fmt.Errorf("bad multi-text frame with only 1 text")
 	}
 
 	me._FrameBase = base
@@ -29,7 +29,7 @@ func (me *FrameMultiText) Serialize() ([]byte, error) {
 
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("serializing FrameMultiText header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)

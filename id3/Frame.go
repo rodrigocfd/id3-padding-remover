@@ -68,7 +68,7 @@ func (me *_FrameBase) OriginalSize() int { return me.originalSize }
 
 func (me *_FrameBase) serializeHeader(totalFrameSize int) ([]byte, error) {
 	if len(me.name4) != 4 {
-		return nil, fmt.Errorf("Bad frame name: %s.", me.name4)
+		return nil, fmt.Errorf("frame name length is not 4 [%s]", me.name4)
 	}
 
 	blob := make([]byte, 0, 10) // header is 10 bytes
