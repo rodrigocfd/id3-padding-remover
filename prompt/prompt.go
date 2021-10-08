@@ -28,7 +28,7 @@ func _Base(parent ui.AnyParent,
 	tdc.SetHwndParent(parent.Hwnd())
 	tdc.SetDwFlags(co.TDF_ALLOW_DIALOG_CANCELLATION)
 	tdc.SetDwCommonButtons(btns)
-	tdc.SetHMainIcon(ico)
+	tdc.SetHMainIcon(win.TdcIconTdi(ico))
 	tdc.SetPszWindowTitle(title)
 	if header != "" {
 		tdc.SetPszMainInstruction(header)
