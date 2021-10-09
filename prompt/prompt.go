@@ -6,21 +6,21 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
-func Error(parent ui.AnyParent, title, header, body string) {
+func Error(parent ui.AnyParent, title string, header win.StrOrNil, body string) {
 	_Base(parent, title, header, body, co.TDCBF_OK, co.TD_ICON_ERROR)
 }
 
-func Info(parent ui.AnyParent, title, header, body string) {
+func Info(parent ui.AnyParent, title string, header win.StrOrNil, body string) {
 	_Base(parent, title, header, body, co.TDCBF_OK, co.TD_ICON_INFORMATION)
 }
 
-func OkCancel(parent ui.AnyParent, title, header, body string) co.ID {
+func OkCancel(parent ui.AnyParent, title string, header win.StrOrNil, body string) co.ID {
 	return _Base(parent, title, header, body,
 		co.TDCBF_OK|co.TDCBF_CANCEL, co.TD_ICON_WARNING)
 }
 
 func _Base(parent ui.AnyParent,
-	title, header, body string,
+	title string, header win.StrOrNil, body string,
 	btns co.TDCBF, ico co.TD_ICON) co.ID {
 
 	tdc := win.TASKDIALOGCONFIG{}
@@ -30,8 +30,8 @@ func _Base(parent ui.AnyParent,
 	tdc.SetDwCommonButtons(btns)
 	tdc.SetHMainIcon(win.TdcIconTdi(ico))
 	tdc.SetPszWindowTitle(title)
-	if header != "" {
-		tdc.SetPszMainInstruction(header)
+	if header, ok := header.(win.StrVal); ok {
+		tdc.SetPszMainInstruction(string(header))
 	}
 	tdc.SetPszContent(body)
 

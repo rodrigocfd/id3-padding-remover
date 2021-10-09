@@ -79,7 +79,7 @@ func (me *DlgMain) Run() int {
 
 func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	go func() {
-		type Result struct {
+		type OutputData struct {
 			Mp3 string
 			Err error
 			Tag *id3.Tag
@@ -87,13 +87,13 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 
 		// Parse all tags from files in parallel.
 
-		resultChan := make(chan Result, len(mp3s))
-		results := make([]Result, 0, len(mp3s)) // will receive processing results
+		processChan := make(chan OutputData, len(mp3s))
+		outputUnits := make([]OutputData, 0, len(mp3s)) // will receive processing results
 
 		for _, mp3 := range mp3s {
 			go func(mp3 string) {
 				tag, err := id3.ReadTagFromFile(mp3)
-				resultChan <- Result{ // send all results to channel
+				processChan <- OutputData{ // send all results to channel
 					Mp3: mp3,
 					Err: err,
 					Tag: tag,
@@ -101,15 +101,15 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 			}(mp3)
 		}
 		for i := 0; i < len(mp3s); i++ {
-			results = append(results, <-resultChan) // receive all results from channel
+			outputUnits = append(outputUnits, <-processChan) // receive all results from channel
 		}
 
 		// Back to UI thread, display results.
 
 		me.wnd.RunUiThread(func() {
-			for _, resu := range results {
+			for _, resu := range outputUnits {
 				if resu.Err != nil {
-					prompt.Error(me.wnd, "Error parsing tag", "",
+					prompt.Error(me.wnd, "Error parsing tag", nil,
 						fmt.Sprintf("File:\n%s\n\n%s", resu.Mp3, resu.Err))
 				} else {
 					if item, found := me.lstFiles.Items().Find(resu.Mp3); !found { // file not added yet?
@@ -180,51 +180,52 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
-	type Unit struct {
+	type InputData struct {
 		Mp3 string
 		Tag *id3.Tag
 	}
-	type Result struct {
+	type OutputData struct {
 		Mp3 string
 		Err error
 	}
 
-	selUnits := make([]Unit, 0, me.lstFiles.Items().SelectedCount())
+	inputUnits := make([]InputData, 0, me.lstFiles.Items().SelectedCount())
 	for _, selItem := range me.lstFiles.Items().Selected() {
 		selMp3 := selItem.Text(0)
-		selUnits = append(selUnits, Unit{ // prepare data to be worked upon
+		inputUnits = append(inputUnits, InputData{ // prepare data to be worked upon
 			Mp3: selMp3,
 			Tag: me.cachedTags[selMp3],
 		})
 	}
 
 	go func() {
-		resultChan := make(chan Result, len(selUnits))
-		results := make([]Result, 0, len(selUnits)) // will receive processing results
+		processChan := make(chan OutputData, len(inputUnits))
+		outputUnits := make([]OutputData, 0, len(inputUnits)) // will receive processing results
 
-		for i := range selUnits {
+		for i := range inputUnits {
 			go func(i int) {
-				selUnit := selUnits[i]
+				selUnit := inputUnits[i]
 				err := selUnit.Tag.SerializeToFile(selUnit.Mp3)
-				resultChan <- Result{ // send all results in parallel
+				processChan <- OutputData{ // send all results in parallel
 					Mp3: selUnit.Mp3,
 					Err: err,
 				}
 			}(i)
 		}
-		for i := 0; i < len(selUnits); i++ {
-			results = append(results, <-resultChan) // receive all results
+		for i := 0; i < len(inputUnits); i++ {
+			outputUnits = append(outputUnits, <-processChan) // receive all results
 		}
 
 		me.wnd.RunUiThread(func() {
-			reCachedMp3s := make([]string, 0, len(results))
+			reCachedMp3s := make([]string, 0, len(outputUnits))
 
-			for _, resu := range results { // analyze all results
-				if resu.Err != nil {
-					prompt.Error(me.wnd, "Writing error", "",
-						fmt.Sprintf("Failed to write tag to:\n%s\n\n%s", resu.Mp3, resu.Err.Error()))
+			for _, outputUnit := range outputUnits { // analyze all results
+				if outputUnit.Err != nil {
+					prompt.Error(me.wnd, "Writing error", nil,
+						fmt.Sprintf("Failed to write tag to:\n%s\n\n%s",
+							outputUnit.Mp3, outputUnit.Err.Error()))
 				} else {
-					reCachedMp3s = append(reCachedMp3s, resu.Mp3)
+					reCachedMp3s = append(reCachedMp3s, outputUnit.Mp3)
 				}
 			}
 			me.addFilesToList(reCachedMp3s, onFinish)
@@ -248,7 +249,7 @@ func (me *DlgMain) tellElapsedTime(initCounter int64, numFiles int) {
 	t0 := float64(initCounter)
 	tFinal := float64(win.QueryPerformanceCounter())
 
-	prompt.Info(me.wnd, "Process finished", "Success",
+	prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 		fmt.Sprintf("%d file(s) processed in %.2f ms.",
 			numFiles, ((tFinal-t0)/freq)*1000,
 		),

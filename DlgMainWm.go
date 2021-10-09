@@ -55,7 +55,7 @@ func (me *DlgMain) eventsMain() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			prompt.Error(me.wnd, "No files added", "",
+			prompt.Error(me.wnd, "No files added", nil,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
 			t0 := win.QueryPerformanceCounter()
