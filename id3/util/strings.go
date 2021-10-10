@@ -31,6 +31,10 @@ func ParseIso88591Strings(src []byte) []string {
 	texts := make([]string, 0, len(strBlocks))
 
 	for _, block := range strBlocks {
+		if len(block) == 0 {
+			continue // bytes.Split() may result in empty blocks; skip these
+		}
+
 		runes := make([]rune, 0, len(block))
 		for _, ch := range block {
 			runes = append(runes, rune(ch)) // convert byte to rune
