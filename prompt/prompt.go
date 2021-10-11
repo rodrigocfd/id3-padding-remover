@@ -30,7 +30,7 @@ func _Base(parent ui.AnyParent,
 	tdc.SetDwCommonButtons(btns)
 	tdc.SetHMainIcon(win.TdcIconTdi(ico))
 	tdc.SetPszWindowTitle(title)
-	if header, ok := header.(win.StrVal); ok {
+	if header, ok := header.(win.StrVal); ok { // not nil?
 		tdc.SetPszMainInstruction(string(header))
 	}
 	tdc.SetPszContent(body)

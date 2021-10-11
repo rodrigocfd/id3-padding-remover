@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3fit/prompt"
+	"id3fit/timecount"
 
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -40,7 +41,7 @@ func (me *DlgMain) eventsMain() {
 
 	me.wnd.On().WmDropFiles(func(p wm.DropFiles) {
 		droppedFiles := p.Hdrop().GetFilesAndFinish()
-		droppedMp3s := make([]string, 0, len(droppedFiles))
+		droppedMp3s := make([]string, 0, len(droppedFiles)) // MP3 files effectively found
 
 		for _, path := range droppedFiles {
 			if win.Path.IsFolder(path) { // if a folder, add all MP3 directly within
@@ -58,9 +59,11 @@ func (me *DlgMain) eventsMain() {
 			prompt.Error(me.wnd, "No files added", nil,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			t0 := win.QueryPerformanceCounter()
+			t0 := timecount.New()
 			me.addFilesToList(droppedMp3s, func() {
-				me.tellElapsedTime(t0, len(droppedMp3s))
+				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+					fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
+						len(droppedMp3s), t0.ElapsedMs()))
 			})
 		}
 	})

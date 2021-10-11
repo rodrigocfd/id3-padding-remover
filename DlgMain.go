@@ -176,14 +176,14 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	me.lstValues.SetRedraw(false)
 	me.lstValues.Items().DeleteAll() // clear all tag displays
 
-	selItems := me.lstFiles.Items().Selected()
+	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
-	if len(selItems) > 1 { // multiple files selected, no tags are shown
+	if len(selMp3s) > 1 { // multiple files selected, no tags are shown
 		me.lstValues.Items().
-			Add("", fmt.Sprintf("%d selected...", len(selItems)))
+			Add("", fmt.Sprintf("%d selected...", len(selMp3s)))
 
-	} else if len(selItems) == 1 { // only 1 file selected, we display its tag
-		cachedTag := me.cachedTags[selItems[0].Text(0)]
+	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
+		cachedTag := me.cachedTags[selMp3s[0]]
 
 		for _, frameDyn := range cachedTag.Frames() { // read each frame of the tag
 			newItem := me.lstValues.Items().
@@ -218,7 +218,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 
 	me.lstValues.SetRedraw(true)
 	me.lstValues.Columns().SetWidthToFill(1)
-	me.lstValues.Hwnd().EnableWindow(len(selItems) > 0) // if no files selected, disable lstValues
+	me.lstValues.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
 }
 
 // func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
@@ -276,17 +276,16 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 // }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
+	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+
 	go func() { // launch a separated thread
 		halted := false
-		selMp3s := make([]string, 0, me.lstFiles.Items().SelectedCount())
 
-		for _, selItem := range me.lstFiles.Items().Selected() {
-			mp3 := selItem.Text(0)
-			selMp3s = append(selMp3s, mp3)
-			tag := me.cachedTags[mp3]
-			if err := tag.SerializeToFile(mp3); err != nil {
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
+			if err := tag.SerializeToFile(selMp3); err != nil {
 				prompt.Error(me.wnd, "Writing error", nil,
-					fmt.Sprintf("Failed to write tag to:\n%sn\n\n%s", mp3, err.Error()))
+					fmt.Sprintf("Failed to write tag to:\n%sn\n\n%s", selMp3, err.Error()))
 				halted = true // nothing else will be done
 				break
 			}
@@ -311,16 +310,4 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
 			APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
 	}
-}
-
-func (me *DlgMain) tellElapsedTime(initCounter int64, numFiles int) {
-	freq := float64(win.QueryPerformanceFrequency())
-	t0 := float64(initCounter)
-	tFinal := float64(win.QueryPerformanceCounter())
-
-	prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-		fmt.Sprintf("%d file(s) processed in %.2f ms.",
-			numFiles, ((tFinal-t0)/freq)*1000,
-		),
-	)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3fit/id3"
 	"id3fit/prompt"
+	"id3fit/timecount"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -65,9 +66,11 @@ func (me *DlgMain) eventsMenu() {
 			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
 			win.Path.Sort(mp3s)
 
-			t0 := win.QueryPerformanceCounter()
+			t0 := timecount.New()
 			me.addFilesToList(mp3s, func() {
-				me.tellElapsedTime(t0, len(mp3s))
+				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+					fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
+						len(mp3s), t0.ElapsedMs()))
 			})
 		}
 	})
@@ -79,18 +82,20 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
-		t0 := win.QueryPerformanceCounter()
+		t0 := timecount.New()
 		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
-			me.tellElapsedTime(t0, me.lstFiles.Items().SelectedCount())
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
+					me.lstFiles.Items().SelectedCount(), t0.ElapsedMs()))
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
-		t0 := win.QueryPerformanceCounter()
-		selItems := me.lstFiles.Items().Selected()
+		t0 := timecount.New()
+		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
-		for _, selItem := range selItems {
-			tag := me.cachedTags[selItem.Text(0)]
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
 			tag.DeleteFrames(func(fr id3.Frame) bool {
 				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
 					return frMulti.IsReplayGain()
@@ -100,16 +105,18 @@ func (me *DlgMain) eventsMenu() {
 		}
 
 		me.reSaveTagsOfSelectedFiles(func() {
-			me.tellElapsedTime(t0, len(selItems))
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
-		t0 := win.QueryPerformanceCounter()
-		selItems := me.lstFiles.Items().Selected()
+		t0 := timecount.New()
+		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
-		for _, selItem := range selItems {
-			tag := me.cachedTags[selItem.Text(0)]
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
 			tag.DeleteFrames(func(frDyn id3.Frame) bool {
 				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
 					if frMulti.IsReplayGain() {
@@ -125,16 +132,18 @@ func (me *DlgMain) eventsMenu() {
 		}
 
 		me.reSaveTagsOfSelectedFiles(func() {
-			me.tellElapsedTime(t0, len(selItems))
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("ReplayGain and album art removed from %d file(s) n %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
 		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-		t0 := win.QueryPerformanceCounter()
-		selItems := me.lstFiles.Items().Selected()
+		t0 := timecount.New()
+		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
-		for _, selItem := range selItems {
-			tag := me.cachedTags[selItem.Text(0)]
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
 			frAlbDyn, hasAlb := tag.FrameByName("TALB")
 			frYerDyn, hasYer := tag.FrameByName("TYER")
 
@@ -150,7 +159,9 @@ func (me *DlgMain) eventsMenu() {
 		}
 
 		me.reSaveTagsOfSelectedFiles(func() {
-			me.tellElapsedTime(t0, len(selItems))
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("%d title(s) prefixed with year in %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
 		})
 	})
 
