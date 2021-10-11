@@ -62,7 +62,7 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 	}
 
 	final := make([]byte, 0, totalFrameSize)
-	final = append(final, header...)
+	final = append(final, header...)    // 10-byte header
 	final = append(final, encodingByte) // encoding byte goes before lang
 	final = append(final, []byte(me.lang)...)
 	final = append(final, 0x00)

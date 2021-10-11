@@ -111,24 +111,24 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 }
 
 func (me *Tag) Serialize() ([]byte, error) {
-	data := make([]byte, 0, 100) // arbitrary; all serialized frames
+	framesBlob := make([]byte, 0, 100) // arbitrary; all serialized frames
 	for _, frame := range me.frames {
-		frameData, err := frame.Serialize()
-		if err != nil {
+		if frameData, err := frame.Serialize(); err != nil {
 			return nil, fmt.Errorf("serializing to string: %w", err)
+		} else {
+			framesBlob = append(framesBlob, frameData...) // append the frame bytes to the big blob
 		}
-		data = append(data, frameData...)
 	}
 
-	final := make([]byte, 0, 10+len(data))       // header
+	final := make([]byte, 0, 10+len(framesBlob)) // header + serialized frames
 	final = append(final, []byte("ID3")...)      // magic bytes
 	final = append(final, []byte{0x03, 0x00}...) // tag version 2.3.0
 	final = append(final, 0x00)                  // flags
 
-	synchSafeDataSize := util.SynchSafeEncode(uint32(len(data)))
+	synchSafeDataSize := util.SynchSafeEncode(uint32(len(framesBlob)))
 	final = util.Append32(final, binary.BigEndian, synchSafeDataSize)
 
-	final = append(final, data...)
+	final = append(final, framesBlob...)
 	return final, nil
 }
 
@@ -143,11 +143,11 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 		return fmt.Errorf("opening file to serialize: %w", err)
 	}
 	defer fout.Close()
-	fileMem := fout.HotSlice()
+	foutMem := fout.HotSlice()
 
-	currentTag, err := ReadTagFromBinary(fileMem)
+	currentTag, err := ReadTagFromBinary(foutMem)
 	if err != nil {
-		return fmt.Errorf("reading tag: %w", err)
+		return fmt.Errorf("reading current tag: %w", err)
 	}
 
 	diff := len(newTag) - currentTag.OriginalSize() // size difference between new/old tags
@@ -159,10 +159,10 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	}
 
 	// Move the MP3 data block inside the file, back or forth.
-	copy(fileMem[int(currentTag.OriginalSize())+diff:], fileMem[currentTag.OriginalSize():])
+	copy(foutMem[int(currentTag.OriginalSize())+diff:], foutMem[currentTag.OriginalSize():])
 
 	// Copy the new tag into the file, no padding.
-	copy(fileMem, newTag)
+	copy(foutMem, newTag)
 
 	if diff < 0 { // new tag is shorter, shrink
 		if err := fout.Resize(fout.Size() + diff); err != nil {

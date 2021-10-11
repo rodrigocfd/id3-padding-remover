@@ -18,15 +18,15 @@ func (me *FrameBinary) parse(base _FrameBase, src []byte) {
 }
 
 func (me *FrameBinary) Serialize() ([]byte, error) {
-	totalFrameSize := 10 + len(me.binData) // include header
+	totalFrameSize := 10 + len(me.binData) // header + data
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
 		return nil, fmt.Errorf("serializing FrameBinary header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)
-	final = append(final, header...)
-	final = append(final, me.binData...)
+	final = append(final, header...)     // 10-byte header
+	final = append(final, me.binData...) // binary data as-is
 
 	return final, nil
 }

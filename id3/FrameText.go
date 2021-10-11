@@ -27,7 +27,7 @@ func (me *FrameText) Serialize() ([]byte, error) {
 	}
 
 	final := make([]byte, 0, totalFrameSize)
-	final = append(final, header...)
+	final = append(final, header...) // 10-byte header
 	final = append(final, encodingByte)
 	final = append(final, data...)
 
