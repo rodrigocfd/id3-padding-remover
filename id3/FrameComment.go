@@ -54,7 +54,7 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 	}
 
 	encodingByte, data := util.SerializeStrings([]string{me.text})
-	totalFrameSize := 10 + 1 + 3 + len(data) // header + encodingByte + lang
+	totalFrameSize := 10 + 1 + 3 + 1 + len(data) // header + encodingByte + lang + sep
 
 	header, err := me._FrameBase.serializeHeader(totalFrameSize)
 	if err != nil {
@@ -65,7 +65,7 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 	final = append(final, header...)    // 10-byte header
 	final = append(final, encodingByte) // encoding byte goes before lang
 	final = append(final, []byte(me.lang)...)
-	final = append(final, 0x00)
+	final = append(final, 0x00) // sep for content description, which is not written here
 	final = append(final, data...)
 
 	return final, nil
