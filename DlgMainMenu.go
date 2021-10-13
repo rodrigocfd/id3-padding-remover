@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3fit/id3v2"
+	"id3fit/ids"
 	"id3fit/prompt"
 	"id3fit/timecount"
 	"runtime"
@@ -17,19 +18,19 @@ import (
 
 func createAccelTableAndMenu() (ui.AcceleratorTable, win.HMENU) {
 	hAccel := ui.NewAcceleratorTable().
-		AddChar('o', co.ACCELF_CONTROL, MNU_OPEN).
-		AddKey(co.VK_F1, co.ACCELF_NONE, MNU_ABOUT)
+		AddChar('o', co.ACCELF_CONTROL, ids.MNU_OPEN).
+		AddKey(co.VK_F1, co.ACCELF_NONE, ids.MNU_ABOUT)
 
 	hMenu := win.CreatePopupMenu().
-		AddItem(MNU_OPEN, "&Open files...\tCtrl+O").
-		AddItem(MNU_DELETE, "&Delete from list\tDel").
+		AddItem(ids.MNU_OPEN, "&Open files...\tCtrl+O").
+		AddItem(ids.MNU_DELETE, "&Delete from list\tDel").
 		AddSeparator().
-		AddItem(MNU_REM_PAD, "Remove &padding").
-		AddItem(MNU_REM_RG, "Remove Replay&Gain").
-		AddItem(MNU_REM_RG_PIC, "Remove ReplayGain and p&ic").
-		AddItem(MNU_PREFIX_YEAR, "Prefix album with &year").
+		AddItem(ids.MNU_REM_PAD, "Remove &padding").
+		AddItem(ids.MNU_REM_RG, "Remove Replay&Gain").
+		AddItem(ids.MNU_REM_RG_PIC, "Remove ReplayGain and p&ic").
+		AddItem(ids.MNU_PREFIX_YEAR, "Prefix album with &year").
 		AddSeparator().
-		AddItem(MNU_ABOUT, "&About...\tF1")
+		AddItem(ids.MNU_ABOUT, "&About...\tF1")
 
 	return hAccel, hMenu
 }
@@ -39,11 +40,12 @@ func (me *DlgMain) eventsMenu() {
 		if p.Hmenu() == me.lstFiles.ContextMenu() {
 			p.Hmenu().EnableByCmdId(
 				me.lstFiles.Items().SelectedCount() > 0, // 1 or more files currently selected
-				MNU_DELETE, MNU_PREFIX_YEAR, MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC)
+				ids.MNU_DELETE, ids.MNU_PREFIX_YEAR,
+				ids.MNU_REM_PAD, ids.MNU_REM_RG, ids.MNU_REM_RG_PIC)
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_OPEN, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
 		defer fod.Release()
 
@@ -75,13 +77,13 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_DELETE, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_DELETE, func(_ wm.Command) {
 		me.lstFiles.SetRedraw(false)
 		me.lstFiles.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
 		me.lstFiles.SetRedraw(true)
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_PAD, func(_ wm.Command) {
 		t0 := timecount.New()
 		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
@@ -90,7 +92,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_RG, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
@@ -111,7 +113,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_RG_PIC, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
@@ -138,7 +140,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_PREFIX_YEAR, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
@@ -165,7 +167,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_ABOUT, func(_ wm.Command) {
 		resNfo, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
 		vsf, _ := resNfo.FixedFileInfo()
 		vMaj, vMin, vPat, _ := vsf.ProductVersion()

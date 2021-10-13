@@ -1,4 +1,4 @@
-package main
+package ids
 
 const (
 	APP_TITLE = "ID3 Fit"
@@ -23,5 +23,5 @@ const (
 )
 
 const (
-	TIMER_LSTFILES uintptr = 100
+	TIMER_LSTFILES uintptr = iota + 100
 )

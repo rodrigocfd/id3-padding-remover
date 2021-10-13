@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"id3fit/id3v2"
+	"id3fit/ids"
 	"id3fit/prompt"
 	"runtime"
 	"strconv"
@@ -30,9 +31,9 @@ func NewDlgMain() *DlgMain {
 
 	wnd := ui.NewWindowMain(
 		ui.WindowMainOpts().
-			Title(APP_TITLE).
+			Title(ids.APP_TITLE).
 			ClientArea(win.SIZE{Cx: 750, Cy: 320}).
-			IconId(ICO_MAIN).
+			IconId(ids.ICO_MAIN).
 			AccelTable(hAccel).
 			WndStyles(co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
 				co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
@@ -305,9 +306,9 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
-		me.wnd.Hwnd().SetWindowText(APP_TITLE)
+		me.wnd.Hwnd().SetWindowText(ids.APP_TITLE)
 	} else {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
-			APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
+			ids.APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
 	}
 }
