@@ -1,4 +1,4 @@
-package id3
+package id3v2
 
 import "fmt"
 

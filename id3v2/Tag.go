@@ -1,10 +1,10 @@
-package id3
+package id3v2
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"id3fit/id3/util"
+	"id3fit/id3v2/util"
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"

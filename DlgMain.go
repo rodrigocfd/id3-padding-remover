@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"id3fit/id3"
+	"id3fit/id3v2"
 	"id3fit/prompt"
 	"runtime"
 	"strconv"
@@ -22,7 +22,7 @@ type DlgMain struct {
 	lstFiles          ui.ListView
 	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
 	lstValues         ui.ListView
-	cachedTags        map[string]*id3.Tag // for each file currently in the list
+	cachedTags        map[string]*id3v2.Tag // for each file currently in the list
 }
 
 func NewDlgMain() *DlgMain {
@@ -62,7 +62,7 @@ func NewDlgMain() *DlgMain {
 				CtrlExStyles(co.LVS_EX_GRIDLINES).
 				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER),
 		),
-		cachedTags: make(map[string]*id3.Tag),
+		cachedTags: make(map[string]*id3v2.Tag),
 	}
 
 	me.eventsMain()
@@ -135,7 +135,7 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 		halted := false
 
 		for _, mp3 := range mp3s {
-			tag, err := id3.ReadTagFromFile(mp3) // read all files sequentially
+			tag, err := id3v2.ReadTagFromFile(mp3) // read all files sequentially
 			if err != nil {
 				me.wnd.RunUiThread(func() {
 					prompt.Error(me.wnd, "Error parsing tag", nil,
@@ -190,20 +190,20 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 				Add(frameDyn.Name4()) // add new item, first column displays frame name
 
 			switch myFrame := frameDyn.(type) {
-			case *id3.FrameComment:
+			case *id3v2.FrameComment:
 				newItem.SetText(1,
 					fmt.Sprintf("[%s] %s", *myFrame.Lang(), *myFrame.Text()))
 
-			case *id3.FrameText:
+			case *id3v2.FrameText:
 				newItem.SetText(1, *myFrame.Text())
 
-			case *id3.FrameMultiText:
+			case *id3v2.FrameMultiText:
 				newItem.SetText(1, (*myFrame.Texts())[0]) // 1st text
 				for i := 1; i < len(*myFrame.Texts()); i++ {
 					me.lstValues.Items().Add("", (*myFrame.Texts())[i]) // subsequent
 				}
 
-			case *id3.FrameBinary:
+			case *id3v2.FrameBinary:
 				binLen := uint64(len(*myFrame.BinData()))
 				newItem.SetText(1,
 					fmt.Sprintf("%s (%.2f%%)",

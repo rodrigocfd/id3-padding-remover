@@ -1,8 +1,8 @@
-package id3
+package id3v2
 
 import (
 	"fmt"
-	"id3fit/id3/util"
+	"id3fit/id3v2/util"
 	"strings"
 )
 

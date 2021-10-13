@@ -1,9 +1,9 @@
-package id3
+package id3v2
 
 import (
 	"encoding/binary"
 	"fmt"
-	"id3fit/id3/util"
+	"id3fit/id3v2/util"
 )
 
 // Frame is polymorphic: the underlying type will expose the methods to access

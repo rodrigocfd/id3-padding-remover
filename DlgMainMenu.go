@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"id3fit/id3"
+	"id3fit/id3v2"
 	"id3fit/prompt"
 	"id3fit/timecount"
 	"runtime"
@@ -96,8 +96,8 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(fr id3.Frame) bool {
-				if frMulti, ok := fr.(*id3.FrameMultiText); ok {
+			tag.DeleteFrames(func(fr id3v2.Frame) bool {
+				if frMulti, ok := fr.(*id3v2.FrameMultiText); ok {
 					return frMulti.IsReplayGain()
 				}
 				return false
@@ -117,12 +117,12 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(frDyn id3.Frame) bool {
-				if frMulti, ok := frDyn.(*id3.FrameMultiText); ok {
+			tag.DeleteFrames(func(frDyn id3v2.Frame) bool {
+				if frMulti, ok := frDyn.(*id3v2.FrameMultiText); ok {
 					if frMulti.IsReplayGain() {
 						return true
 					}
-				} else if frBin, ok := frDyn.(*id3.FrameBinary); ok {
+				} else if frBin, ok := frDyn.(*id3v2.FrameBinary); ok {
 					if frBin.Name4() == "APIC" {
 						return true
 					}
@@ -153,8 +153,8 @@ func (me *DlgMain) eventsMenu() {
 				prompt.Error(me.wnd, "Missing frame", nil, "Year frame not found.")
 			}
 
-			frAlb, _ := frAlbDyn.(*id3.FrameText)
-			frYer, _ := frYerDyn.(*id3.FrameText)
+			frAlb, _ := frAlbDyn.(*id3v2.FrameText)
+			frYer, _ := frYerDyn.(*id3v2.FrameText)
 			*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
 		}
 
@@ -166,13 +166,13 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		ri, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
-		vsf, _ := ri.FixedFileInfo()
+		resNfo, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
+		vsf, _ := resNfo.FixedFileInfo()
 		vMaj, vMin, vPat, _ := vsf.ProductVersion()
 
-		block0 := ri.Blocks()[0]
-		company, _ := ri.CompanyName(block0.LangId, block0.CodePage)
-		copyRite, _ := ri.LegalCopyright(block0.LangId, block0.CodePage)
+		block0 := resNfo.Blocks()[0]
+		company, _ := resNfo.CompanyName(block0.LangId, block0.CodePage)
+		copyRite, _ := resNfo.LegalCopyright(block0.LangId, block0.CodePage)
 
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
