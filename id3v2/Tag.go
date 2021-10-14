@@ -20,6 +20,10 @@ type Tag struct {
 func (me *Tag) OriginalSize() int    { return me.originalSize }
 func (me *Tag) OriginalPadding() int { return me.originalPadding }
 func (me *Tag) Frames() []Frame      { return me.frames }
+func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
+
+// Public constructor.
+func NewEmptyTag() *Tag { return &Tag{} }
 
 // Public constructor; reads the tag from an MP3 file.
 func ReadTagFromFile(mp3Path string) (*Tag, error) { return (&Tag{}).readFromFile(mp3Path) }
@@ -58,7 +62,7 @@ func (me *Tag) readFromBinary(src []byte) (*Tag, error) {
 func (me *Tag) parseTagHeader(src []byte) (int, error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, fmt.Errorf("no ID3 tag found")
+		return 0, &ErrorNoTagFound{}
 	}
 
 	// Validate tag version 2.3.0.
@@ -133,9 +137,13 @@ func (me *Tag) Serialize() ([]byte, error) {
 }
 
 func (me *Tag) SerializeToFile(mp3Path string) error {
-	newTag, err := me.Serialize()
-	if err != nil {
-		return fmt.Errorf("serializing tag: %w", err)
+	newTag := []byte{} // if tag is empty, this will actually remove any existing tag
+	if !me.IsEmpty() {
+		if theNewTag, err := me.Serialize(); err != nil {
+			return fmt.Errorf("serializing tag: %w", err)
+		} else {
+			newTag = theNewTag
+		}
 	}
 
 	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_RW_EXISTING)

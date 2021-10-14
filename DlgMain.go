@@ -137,7 +137,9 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 
 		for _, mp3 := range mp3s {
 			tag, err := id3v2.ReadTagFromFile(mp3) // read all files sequentially
-			if err != nil {
+			if _, ok := err.(*id3v2.ErrorNoTagFound); ok {
+				tag = id3v2.NewEmptyTag()
+			} else if err != nil {
 				me.wnd.RunUiThread(func() {
 					prompt.Error(me.wnd, "Error parsing tag", nil,
 						fmt.Sprintf("File:\n%s\n\n%s", mp3, err))
@@ -156,11 +158,16 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 			me.lstFiles.SetRedraw(false)
 			for _, mp3 := range mp3s {
 				tag := me.cachedTags[mp3]
+
+				padding := "N/A"
+				if !tag.IsEmpty() {
+					padding = strconv.Itoa(tag.OriginalPadding())
+				}
+
 				if item, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
-					me.lstFiles.Items().
-						AddWithIcon(0, mp3, strconv.Itoa(tag.OriginalPadding()))
+					me.lstFiles.Items().AddWithIcon(0, mp3, padding)
 				} else {
-					item.SetText(1, strconv.Itoa(tag.OriginalPadding())) // update padding
+					item.SetText(1, padding) // update padding
 				}
 			}
 			me.lstFiles.SetRedraw(true)
