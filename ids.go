@@ -1,12 +1,14 @@
-package ids
+package main
 
 const (
 	APP_TITLE = "ID3 Fit"
 	ICO_MAIN  = 101
+	ACC_MAIN  = 102
 )
 
 const (
-	LST_FILES = iota + 1001
+	DLG_MAIN = iota + 1000
+	LST_MP3S
 	LST_FRAMES
 )
 
@@ -17,8 +19,8 @@ const (
 	MNU_REM_PAD
 	MNU_REM_RG
 	MNU_REM_RG_PIC
-	MNU_PREFIX_YEAR
-	MNU_CLEAR_DIACR
+	MNU_RENAME
+	MNU_RENAME_PREFIX
 	MNU_ABOUT
 )
 

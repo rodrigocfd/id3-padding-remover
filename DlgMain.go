@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
+	"id3fit/dlgfields"
 	"id3fit/id3v2"
-	"id3fit/ids"
 	"id3fit/prompt"
 	"runtime"
 	"strconv"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func main() {
@@ -19,61 +18,33 @@ func main() {
 }
 
 type DlgMain struct {
-	wnd               ui.WindowMain
-	lstFiles          ui.ListView
-	lstFilesSelLocked bool // LVN_ITEMCHANGED is scheduled to fire
-	lstValues         ui.ListView
-	cachedTags        map[string]*id3v2.Tag // for each file currently in the list
+	wnd              ui.WindowMain
+	lstMp3s          ui.ListView
+	lstMp3sSelLocked bool // LVN_ITEMCHANGED is scheduled to fire?
+	dlgFields        *dlgfields.DlgFields
+	lstFrames        ui.ListView
+	cachedTags       map[string]*id3v2.Tag // for each file currently in the list
 }
 
 func NewDlgMain() *DlgMain {
-	hAccel, hCtxMenu := createAccelTableAndMenu()
-
-	wnd := ui.NewWindowMain(
-		ui.WindowMainOpts().
-			Title(ids.APP_TITLE).
-			ClientArea(win.SIZE{Cx: 750, Cy: 320}).
-			IconId(ids.ICO_MAIN).
-			AccelTable(hAccel).
-			WndStyles(co.WS_CAPTION | co.WS_SYSMENU | co.WS_CLIPCHILDREN |
-				co.WS_BORDER | co.WS_VISIBLE | co.WS_MINIMIZEBOX |
-				co.WS_MAXIMIZEBOX | co.WS_SIZEBOX).
-			WndExStyles(co.WS_EX_ACCEPTFILES),
-	)
+	wnd := ui.NewWindowMainDlg(DLG_MAIN, ICO_MAIN, ACC_MAIN)
 
 	me := &DlgMain{
-		wnd: wnd,
-		lstFiles: ui.NewListView(wnd,
-			ui.ListViewOpts().
-				Position(win.POINT{X: 6, Y: 6}).
-				Size(win.SIZE{Cx: 488, Cy: 306}).
-				Horz(ui.HORZ_RESIZE).
-				Vert(ui.VERT_RESIZE).
-				ContextMenu(hCtxMenu).
-				CtrlExStyles(co.LVS_EX_FULLROWSELECT).
-				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER|
-					co.LVS_SHOWSELALWAYS|co.LVS_SORTASCENDING),
-		),
-		lstValues: ui.NewListView(wnd,
-			ui.ListViewOpts().
-				Position(win.POINT{X: 500, Y: 6}).
-				Size(win.SIZE{Cx: 242, Cy: 306}).
-				Horz(ui.HORZ_REPOS).
-				Vert(ui.VERT_RESIZE).
-				CtrlExStyles(co.LVS_EX_GRIDLINES).
-				CtrlStyles(co.LVS_REPORT|co.LVS_NOSORTHEADER),
-		),
+		wnd:        wnd,
+		lstMp3s:    ui.NewListViewDlg(wnd, LST_MP3S, ui.HORZ_RESIZE, ui.VERT_RESIZE, MNU_MAIN),
+		dlgFields:  dlgfields.NewDlgFields(wnd, win.POINT{X: 496, Y: 10}, ui.HORZ_NONE, ui.VERT_NONE),
+		lstFrames:  ui.NewListViewDlg(wnd, LST_FRAMES, ui.HORZ_REPOS, ui.VERT_RESIZE, 0),
 		cachedTags: make(map[string]*id3v2.Tag),
 	}
 
-	me.eventsMain()
+	me.eventsWm()
 	me.eventsLstFiles()
 	me.eventsMenu()
 	return me
 }
 
 func (me *DlgMain) Run() int {
-	defer me.lstFiles.ContextMenu().DestroyMenu()
+	defer me.lstMp3s.ContextMenu().DestroyMenu()
 
 	return me.wnd.RunAsMain()
 }
@@ -102,7 +73,7 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 		}
 
 		me.wnd.RunUiThread(func() {
-			me.lstFiles.SetRedraw(false)
+			me.lstMp3s.SetRedraw(false)
 			for _, mp3 := range mp3s {
 				tag := me.cachedTags[mp3]
 
@@ -111,14 +82,14 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 					padding = strconv.Itoa(tag.OriginalPadding())
 				}
 
-				if item, found := me.lstFiles.Items().Find(mp3); !found { // file not added yet?
-					me.lstFiles.Items().AddWithIcon(0, mp3, padding)
+				if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
+					me.lstMp3s.Items().AddWithIcon(0, mp3, padding)
 				} else {
 					item.SetText(1, padding) // update padding
 				}
 			}
-			me.lstFiles.SetRedraw(true)
-			me.lstFiles.Columns().SetWidthToFill(0)
+			me.lstMp3s.SetRedraw(true)
+			me.lstMp3s.Columns().SetWidthToFill(0)
 
 			if onFinish != nil {
 				onFinish()
@@ -128,20 +99,20 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 }
 
 func (me *DlgMain) displayFramesOfSelectedFiles() {
-	me.lstValues.SetRedraw(false)
-	me.lstValues.Items().DeleteAll() // clear all tag displays
+	me.lstFrames.SetRedraw(false)
+	me.lstFrames.Items().DeleteAll() // clear all tag displays
 
-	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 	if len(selMp3s) > 1 { // multiple files selected, no tags are shown
-		me.lstValues.Items().
+		me.lstFrames.Items().
 			Add("", fmt.Sprintf("%d selected...", len(selMp3s)))
 
 	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
 		cachedTag := me.cachedTags[selMp3s[0]]
 
 		for _, frameDyn := range cachedTag.Frames() { // read each frame of the tag
-			newItem := me.lstValues.Items().
+			newItem := me.lstFrames.Items().
 				Add(frameDyn.Name4()) // add new item, first column displays frame name
 
 			switch myFrame := frameDyn.(type) {
@@ -155,7 +126,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 			case *id3v2.FrameMultiText:
 				newItem.SetText(1, (*myFrame.Texts())[0]) // 1st text
 				for i := 1; i < len(*myFrame.Texts()); i++ {
-					me.lstValues.Items().Add("", (*myFrame.Texts())[i]) // subsequent
+					me.lstFrames.Items().Add("", (*myFrame.Texts())[i]) // subsequent
 				}
 
 			case *id3v2.FrameBinary:
@@ -171,13 +142,19 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 
 	}
 
-	me.lstValues.SetRedraw(true)
-	me.lstValues.Columns().SetWidthToFill(1)
-	me.lstValues.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
+	me.lstFrames.SetRedraw(true)
+	me.lstFrames.Columns().SetWidthToFill(1)
+	me.lstFrames.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
+
+	selTags := make([]*id3v2.Tag, 0, len(selMp3s))
+	for _, selMp3 := range selMp3s {
+		selTags = append(selTags, me.cachedTags[selMp3])
+	}
+	me.dlgFields.Feed(selTags)
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
-	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 	go func() { // launch a separated thread
 		halted := false
@@ -206,9 +183,9 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	// Total is not computed here because LVN_DELETEITEM notification is sent
 	// before the item is actually deleted, so the count would be wrong.
 	if total == 0 {
-		me.wnd.Hwnd().SetWindowText(ids.APP_TITLE)
+		me.wnd.Hwnd().SetWindowText(APP_TITLE)
 	} else {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
-			ids.APP_TITLE, me.lstFiles.Items().SelectedCount(), total))
+			APP_TITLE, me.lstMp3s.Items().SelectedCount(), total))
 	}
 }

@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"id3fit/id3v2"
-	"id3fit/ids"
 	"id3fit/prompt"
 	"id3fit/timecount"
 	"runtime"
 
-	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
@@ -16,36 +14,18 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
-func createAccelTableAndMenu() (ui.AcceleratorTable, win.HMENU) {
-	hAccel := ui.NewAcceleratorTable().
-		AddChar('o', co.ACCELF_CONTROL, ids.MNU_OPEN).
-		AddKey(co.VK_F1, co.ACCELF_NONE, ids.MNU_ABOUT)
-
-	hMenu := win.CreatePopupMenu().
-		AddItem(ids.MNU_OPEN, "&Open files...\tCtrl+O").
-		AddItem(ids.MNU_DELETE, "&Delete from list\tDel").
-		AddSeparator().
-		AddItem(ids.MNU_REM_PAD, "Remove &padding").
-		AddItem(ids.MNU_REM_RG, "Remove Replay&Gain").
-		AddItem(ids.MNU_REM_RG_PIC, "Remove ReplayGain and p&ic").
-		AddItem(ids.MNU_PREFIX_YEAR, "Prefix album with &year").
-		AddSeparator().
-		AddItem(ids.MNU_ABOUT, "&About...\tF1")
-
-	return hAccel, hMenu
-}
-
 func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
-		if p.Hmenu() == me.lstFiles.ContextMenu() {
+		if p.Hmenu() == me.lstMp3s.ContextMenu() {
 			p.Hmenu().EnableByCmdId(
-				me.lstFiles.Items().SelectedCount() > 0, // 1 or more files currently selected
-				ids.MNU_DELETE, ids.MNU_PREFIX_YEAR,
-				ids.MNU_REM_PAD, ids.MNU_REM_RG, ids.MNU_REM_RG_PIC)
+				me.lstMp3s.Items().SelectedCount() > 0, // 1 or more files currently selected
+				MNU_DELETE,
+				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC,
+				MNU_RENAME, MNU_RENAME_PREFIX)
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_OPEN, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
 		defer fod.Release()
 
@@ -77,24 +57,24 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_DELETE, func(_ wm.Command) {
-		me.lstFiles.SetRedraw(false)
-		me.lstFiles.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
-		me.lstFiles.SetRedraw(true)
+	me.wnd.On().WmCommandAccelMenu(MNU_DELETE, func(_ wm.Command) {
+		me.lstMp3s.SetRedraw(false)
+		me.lstMp3s.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
+		me.lstMp3s.SetRedraw(true)
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_PAD, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
 		t0 := timecount.New()
 		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
-					me.lstFiles.Items().SelectedCount(), t0.ElapsedMs()))
+					me.lstMp3s.Items().SelectedCount(), t0.ElapsedMs()))
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_RG, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
@@ -113,9 +93,9 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_REM_RG_PIC, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
@@ -140,34 +120,42 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_PREFIX_YEAR, func(_ wm.Command) {
-		t0 := timecount.New()
-		selMp3s := me.lstFiles.Columns().SelectedTexts(0)
+	// me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
+	// 	t0 := timecount.New()
+	// 	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
 
-		for _, selMp3 := range selMp3s {
-			tag := me.cachedTags[selMp3]
-			frAlbDyn, hasAlb := tag.FrameByName("TALB")
-			frYerDyn, hasYer := tag.FrameByName("TYER")
+	// 	for _, selMp3 := range selMp3s {
+	// 		tag := me.cachedTags[selMp3]
+	// 		frAlbDyn, hasAlb := tag.FrameByName("TALB")
+	// 		frYerDyn, hasYer := tag.FrameByName("TYER")
 
-			if !hasAlb {
-				prompt.Error(me.wnd, "Missing frame", nil, "Album frame not found.")
-			} else if !hasYer {
-				prompt.Error(me.wnd, "Missing frame", nil, "Year frame not found.")
-			}
+	// 		if !hasAlb {
+	// 			prompt.Error(me.wnd, "Missing frame", nil, "Album frame not found.")
+	// 		} else if !hasYer {
+	// 			prompt.Error(me.wnd, "Missing frame", nil, "Year frame not found.")
+	// 		}
 
-			frAlb, _ := frAlbDyn.(*id3v2.FrameText)
-			frYer, _ := frYerDyn.(*id3v2.FrameText)
-			*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
-		}
+	// 		frAlb, _ := frAlbDyn.(*id3v2.FrameText)
+	// 		frYer, _ := frYerDyn.(*id3v2.FrameText)
+	// 		*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
+	// 	}
 
-		me.reSaveTagsOfSelectedFiles(func() {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-				fmt.Sprintf("%d title(s) prefixed with year in %.2f ms.",
-					len(selMp3s), t0.ElapsedMs()))
-		})
+	// 	me.reSaveTagsOfSelectedFiles(func() {
+	// 		prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+	// 			fmt.Sprintf("%d title(s) prefixed with year in %.2f ms.",
+	// 				len(selMp3s), t0.ElapsedMs()))
+	// 	})
+	// })
+
+	me.wnd.On().WmCommandAccelMenu(MNU_RENAME, func(_ wm.Command) {
+
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_ABOUT, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_RENAME_PREFIX, func(_ wm.Command) {
+
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
 		resNfo, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
 		vsf, _ := resNfo.FixedFileInfo()
 		vMaj, vMin, vPat, _ := vsf.ProductVersion()

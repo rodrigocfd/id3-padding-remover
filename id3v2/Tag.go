@@ -202,3 +202,15 @@ func (me *Tag) FrameByName(name4 string) (Frame, bool) {
 	}
 	return nil, false
 }
+
+func (me *Tag) TextFrameByName(name4 string) (*FrameText, bool) {
+	if f, has := me.FrameByName(name4); has {
+		if ft, ok := f.(*FrameText); ok {
+			return ft, true
+		} else {
+			return nil, false
+		}
+	} else {
+		return nil, false
+	}
+}
