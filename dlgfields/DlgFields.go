@@ -78,33 +78,32 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 			chks[c].SetCheckStateAndTrigger(co.BST_UNCHECKED)
 		}
 	} else {
-		names4 := []string{"TPE1", "TIT2", "TALB", "TRCK", "TYER", "TCON", "TCOM"}
+		names4 := []string{"TPE1", "TIT2", "TALB", "TRCK", "TYER", "TCON", "TCOM", "COMM"}
 
 		for n := 0; n < len(names4); n++ {
-			if theFrame, ok := tags[0].TextFrameByName(names4[n]); ok {
-				firstStr := *theFrame.Text()
+			if firstText, ok := tags[0].TextByName(names4[n]); ok {
 				sameStr := true
 
-				for t := 1; t < len(tags); t++ {
-					if otherFrame, ok := tags[t].TextFrameByName(names4[n]); ok {
-						otherStr := *otherFrame.Text()
-						if otherStr != firstStr {
+				for t := 1; t < len(tags); t++ { // subsequent tags
+					if otherText, ok := tags[t].TextByName(names4[n]); ok {
+						if otherText != firstText {
 							sameStr = false
 							break
 						}
-					} else {
+					} else { // frame absent in subsequent tag
 						sameStr = false
 						break
 					}
 				}
 
 				if sameStr {
-					inps[n].Hwnd().SetWindowText(firstStr)
+					inps[n].Hwnd().SetWindowText(firstText)
 					chks[n].SetCheckStateAndTrigger(co.BST_CHECKED)
 				} else {
 					inps[n].Hwnd().SetWindowText("")
 					chks[n].SetCheckStateAndTrigger(co.BST_UNCHECKED)
 				}
+
 			} else { // frame absent in first tag
 				inps[n].Hwnd().SetWindowText("")
 				chks[n].SetCheckStateAndTrigger(co.BST_UNCHECKED)

@@ -203,14 +203,17 @@ func (me *Tag) FrameByName(name4 string) (Frame, bool) {
 	return nil, false
 }
 
-func (me *Tag) TextFrameByName(name4 string) (*FrameText, bool) {
-	if f, has := me.FrameByName(name4); has {
-		if ft, ok := f.(*FrameText); ok {
-			return ft, true
-		} else {
-			return nil, false
+func (me *Tag) TextByName(name4 string) (string, bool) {
+	if frDyn, has := me.FrameByName(name4); has {
+		switch fr := frDyn.(type) {
+		case *FrameText:
+			return *fr.Text(), true
+		case *FrameComment:
+			return *fr.Text(), true
+		default:
+			return "", false // other types not considered
 		}
-	} else {
-		return nil, false
+	} else { // frame not found
+		return "", false
 	}
 }
