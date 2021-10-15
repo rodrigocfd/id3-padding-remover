@@ -29,7 +29,8 @@ type DlgFields struct {
 	txtComment  ui.Edit
 	btnSave     ui.Button
 
-	onSaveCb func(t0 timecount.TimeCount)
+	onSaveCb   func(t0 timecount.TimeCount)
+	tagsLoaded []*id3v2.Tag
 }
 
 func NewDlgFields(
@@ -111,9 +112,12 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 			}
 		}
 	}
+
+	me.tagsLoaded = tags
 }
 
 func (me *DlgFields) checksAndInputs() (chks []ui.CheckBox, inps []ui.AnyNativeControl) {
+	// Note: This must be in sync with id3v2.TextFieldConsts().
 	chks = []ui.CheckBox{me.chkArtist, me.chkTitle, me.chkAlbum,
 		me.chkTrack, me.chkYear, me.chkGenre, me.chkComposer, me.chkComment}
 	inps = []ui.AnyNativeControl{me.txtArtist, me.txtTitle, me.txtAlbum,
