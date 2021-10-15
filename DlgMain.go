@@ -32,7 +32,7 @@ func NewDlgMain() *DlgMain {
 	me := &DlgMain{
 		wnd:        wnd,
 		lstMp3s:    ui.NewListViewDlg(wnd, LST_MP3S, ui.HORZ_RESIZE, ui.VERT_RESIZE, MNU_MAIN),
-		dlgFields:  dlgfields.NewDlgFields(wnd, win.POINT{X: 496, Y: 10}, ui.HORZ_NONE, ui.VERT_NONE),
+		dlgFields:  dlgfields.NewDlgFields(wnd, win.POINT{X: 496, Y: 10}, ui.HORZ_REPOS, ui.VERT_NONE),
 		lstFrames:  ui.NewListViewDlg(wnd, LST_FRAMES, ui.HORZ_REPOS, ui.VERT_RESIZE, 0),
 		cachedTags: make(map[string]*id3v2.Tag),
 	}
