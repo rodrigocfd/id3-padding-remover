@@ -1,6 +1,8 @@
 package id3v2
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type FrameBinary struct {
 	_FrameBase
@@ -9,12 +11,16 @@ type FrameBinary struct {
 
 func (me *FrameBinary) BinData() *[]byte { return &me.binData }
 
+func (me *FrameBinary) new(base _FrameBase, binData []byte) {
+	me._FrameBase = base
+	me.binData = binData
+}
+
 func (me *FrameBinary) parse(base _FrameBase, src []byte) {
 	theData := make([]byte, len(src))
 	copy(theData, src) // simply store bytes
 
-	me._FrameBase = base
-	me.binData = theData
+	me.new(base, theData)
 }
 
 func (me *FrameBinary) Serialize() ([]byte, error) {

@@ -69,7 +69,12 @@ func (me *DlgMain) eventsWm() {
 		}
 	})
 
-	me.dlgFields.OnSave(func() {
-
+	me.dlgFields.OnSave(func(t0 timecount.TimeCount) {
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		me.addFilesToList(selMp3s, func() {
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("%d file(s) saved in %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
+		})
 	})
 }

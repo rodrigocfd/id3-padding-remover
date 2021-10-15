@@ -31,7 +31,7 @@ func _ParseFrame(src []byte) (Frame, error) {
 		}
 
 		if len(texts) == 0 {
-			return nil, fmt.Errorf("Frame %s contains no texts.", frameBase.Name4())
+			return nil, fmt.Errorf("Frame %s contains no texts", frameBase.Name4())
 
 		} else if len(texts) == 1 {
 			frameText := &FrameText{}
@@ -56,6 +56,11 @@ func _ParseFrame(src []byte) (Frame, error) {
 type _FrameBase struct {
 	name4        string
 	originalSize int
+}
+
+func (me *_FrameBase) new(name4 string) {
+	me.name4 = name4
+	me.originalSize = 0
 }
 
 func (me *_FrameBase) parse(src []byte) {

@@ -14,6 +14,12 @@ type FrameComment struct {
 func (me *FrameComment) Lang() *string { return &me.lang }
 func (me *FrameComment) Text() *string { return &me.text }
 
+func (me *FrameComment) new(base _FrameBase, lang, text string) {
+	me._FrameBase = base
+	me.lang = lang
+	me.text = text
+}
+
 func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
@@ -42,9 +48,7 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 		return fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
 
-	me._FrameBase = base
-	me.lang = lang
-	me.text = texts[0]
+	me.new(base, lang, texts[0])
 	return nil
 }
 

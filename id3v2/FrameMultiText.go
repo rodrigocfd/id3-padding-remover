@@ -13,13 +13,17 @@ type FrameMultiText struct {
 
 func (me *FrameMultiText) Texts() *[]string { return &me.texts }
 
+func (me *FrameMultiText) new(base _FrameBase, texts []string) {
+	me._FrameBase = base
+	me.texts = texts
+}
+
 func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
 	if len(texts) < 2 {
 		return fmt.Errorf("bad multi-text frame with only 1 text")
 	}
 
-	me._FrameBase = base
-	me.texts = texts
+	me.new(base, texts)
 	return nil
 }
 

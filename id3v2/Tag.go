@@ -194,7 +194,7 @@ func (me *Tag) DeleteFrames(fun func(f Frame) bool) {
 	me.frames = newSlice // throw the old one away
 }
 
-func (me *Tag) FrameByName(name4 string) (Frame, bool) {
+func (me *Tag) FrameByName4(name4 string) (Frame, bool) {
 	for _, f := range me.frames {
 		if f.Name4() == name4 {
 			return f, true
@@ -203,17 +203,59 @@ func (me *Tag) FrameByName(name4 string) (Frame, bool) {
 	return nil, false
 }
 
-func (me *Tag) TextByName(name4 string) (string, bool) {
-	if frDyn, has := me.FrameByName(name4); has {
+func (me *Tag) TextByName4(name4 TEXT) (string, bool) {
+	if frDyn, has := me.FrameByName4(string(name4)); has {
 		switch fr := frDyn.(type) {
 		case *FrameText:
 			return *fr.Text(), true
 		case *FrameComment:
 			return *fr.Text(), true
 		default:
-			return "", false // other types not considered
+			panic(fmt.Sprintf("Cannot retrieve text from frame %s.", name4))
 		}
 	} else { // frame not found
 		return "", false
+	}
+}
+
+func (me *Tag) SetTextByName4(name4 TEXT, text string) {
+	if frDyn, has := me.FrameByName4(string(name4)); has {
+		switch fr := frDyn.(type) {
+		case *FrameText:
+			if text == "" { // empty text will delete the frame
+				me.DeleteFrames(func(f Frame) bool {
+					return f.Name4() == string(name4)
+				})
+			} else {
+				*fr.Text() = text
+			}
+		case *FrameComment:
+			if text == "" { // empty text will delete the frame
+				me.DeleteFrames(func(f Frame) bool {
+					return f.Name4() == string(name4)
+				})
+			} else {
+				*fr.Text() = text
+			}
+		default:
+			panic(fmt.Sprintf("Cannot set text on frame %s.", name4))
+		}
+
+	} else { // frame does not exist yet
+		var newFrame Frame
+		frBase := _FrameBase{}
+		frBase.new(string(name4))
+
+		if name4 == TEXT_COMMENT {
+			frComment := &FrameComment{}
+			frComment.new(frBase, "eng", text)
+			newFrame = frComment
+		} else {
+			frText := &FrameText{}
+			frText.new(frBase, text)
+			newFrame = frText
+		}
+
+		me.frames = append(me.frames, newFrame)
 	}
 }

@@ -12,9 +12,13 @@ type FrameText struct {
 
 func (me *FrameText) Text() *string { return &me.text }
 
-func (me *FrameText) parse(base _FrameBase, texts []string) {
+func (me *FrameText) new(base _FrameBase, text string) {
 	me._FrameBase = base
-	me.text = texts[0]
+	me.text = text
+}
+
+func (me *FrameText) parse(base _FrameBase, texts []string) {
+	me.new(base, texts[0])
 }
 
 func (me *FrameText) Serialize() ([]byte, error) {

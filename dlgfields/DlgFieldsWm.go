@@ -1,6 +1,8 @@
 package dlgfields
 
 import (
+	"id3fit/timecount"
+
 	"github.com/rodrigocfd/windigo/ui"
 )
 
@@ -24,8 +26,12 @@ func (me *DlgFields) eventsWm() {
 	}
 
 	me.btnSave.On().BnClicked(func() {
+		t0 := timecount.New()
+
+		//...
+
 		if me.onSaveCb != nil {
-			me.onSaveCb()
+			me.onSaveCb(t0)
 		}
 	})
 }

@@ -2,6 +2,7 @@ package dlgfields
 
 import (
 	"id3fit/id3v2"
+	"id3fit/timecount"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
@@ -28,7 +29,7 @@ type DlgFields struct {
 	txtComment  ui.Edit
 	btnSave     ui.Button
 
-	onSaveCb func()
+	onSaveCb func(t0 timecount.TimeCount)
 }
 
 func NewDlgFields(
@@ -62,7 +63,7 @@ func NewDlgFields(
 	return me
 }
 
-func (me *DlgFields) OnSave(cb func()) {
+func (me *DlgFields) OnSave(cb func(t0 timecount.TimeCount)) {
 	me.onSaveCb = cb
 }
 
@@ -78,14 +79,14 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 			chks[c].SetCheckStateAndTrigger(co.BST_UNCHECKED)
 		}
 	} else {
-		names4 := []string{"TPE1", "TIT2", "TALB", "TRCK", "TYER", "TCON", "TCOM", "COMM"}
+		names4 := id3v2.TextFieldConsts()
 
 		for n := 0; n < len(names4); n++ {
-			if firstText, ok := tags[0].TextByName(names4[n]); ok {
+			if firstText, ok := tags[0].TextByName4(names4[n]); ok {
 				sameStr := true
 
 				for t := 1; t < len(tags); t++ { // subsequent tags
-					if otherText, ok := tags[t].TextByName(names4[n]); ok {
+					if otherText, ok := tags[t].TextByName4(names4[n]); ok {
 						if otherText != firstText {
 							sameStr = false
 							break
