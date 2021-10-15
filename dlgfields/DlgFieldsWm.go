@@ -5,18 +5,31 @@ import (
 	"id3fit/timecount"
 
 	"github.com/rodrigocfd/windigo/ui"
+	"github.com/rodrigocfd/windigo/ui/wm"
+	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgFields) eventsWm() {
-	chks, inps := me.checksAndInputs()
+	CHKS, INPS := me.checksAndInputs()
 
-	for i, chk := range chks {
+	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
+		genresPath := win.Path.ExePath() + "\\genres.txt"
+		fin, _ := win.OpenFileMapped(genresPath, co.OPEN_FILE_READ_EXISTING)
+		genres := fin.ReadLines()
+		fin.Close()
+		me.cmbGenre.Items().Add(genres...)
+
+		return true
+	})
+
+	for i, chk := range CHKS {
 		func(i int, chk ui.CheckBox) {
 			chk.On().BnClicked(func() {
-				inps[i].Hwnd().EnableWindow(chk.IsChecked()) // enable/disable input with checkbox
+				INPS[i].Hwnd().EnableWindow(chk.IsChecked()) // enable/disable input with checkbox
 
 				atLeastOneEnabled := false
-				for _, inp := range inps {
+				for _, inp := range INPS {
 					if inp.Hwnd().IsWindowEnabled() {
 						atLeastOneEnabled = true
 						break
@@ -31,12 +44,12 @@ func (me *DlgFields) eventsWm() {
 		t0 := timecount.New()
 		fields := id3v2.TextFieldConsts()
 
-		for i := 0; i < len(chks); i++ {
-			if !chks[i].IsChecked() {
+		for i := 0; i < len(CHKS); i++ {
+			if !CHKS[i].IsChecked() {
 				continue
 			}
 
-			newText := inps[i].Hwnd().GetWindowText()
+			newText := INPS[i].Hwnd().GetWindowText()
 			for _, tag := range me.tagsLoaded {
 				// Empty text will delete the frame.
 				// Tags are not flushed to disk here, it's DlgMain's job.
