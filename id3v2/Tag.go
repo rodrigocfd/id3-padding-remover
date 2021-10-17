@@ -26,37 +26,49 @@ func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
 func NewEmptyTag() *Tag { return &Tag{} }
 
 // Public constructor; reads the tag from an MP3 file.
-func ReadTagFromFile(mp3Path string) (*Tag, error) { return (&Tag{}).readFromFile(mp3Path) }
+func ReadTagFromFile(mp3Path string) (*Tag, error) {
+	me := &Tag{}
+	if err := me.readFromFile(mp3Path); err != nil {
+		return nil, err
+	}
+	return me, nil
+}
 
 // Public constructor; reads the tag from a binary blob.
-func ReadTagFromBinary(src []byte) (*Tag, error) { return (&Tag{}).readFromBinary(src) }
+func ReadTagFromBinary(src []byte) (*Tag, error) {
+	me := &Tag{}
+	if err := me.readFromBinary(src); err != nil {
+		return nil, err
+	}
+	return me, nil
+}
 
-func (me *Tag) readFromFile(mp3Path string) (*Tag, error) {
+func (me *Tag) readFromFile(mp3Path string) error {
 	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_READ_EXISTING)
 	if err != nil {
-		return nil, fmt.Errorf("opening file to read: %w", err)
+		return fmt.Errorf("opening file to read: %w", err)
 	}
 	defer fMap.Close()
 
 	return me.readFromBinary(fMap.HotSlice())
 }
 
-func (me *Tag) readFromBinary(src []byte) (*Tag, error) {
+func (me *Tag) readFromBinary(src []byte) error {
 	originalSize, err := me.parseTagHeader(src)
 	if err != nil {
-		return nil, fmt.Errorf("parsing tag header: %w", err)
+		return fmt.Errorf("parsing tag header: %w", err)
 	}
 	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
 
 	frames, originalPadding, err := me.parseAllFrames(src)
 	if err != nil {
-		return nil, fmt.Errorf("parsing all frames: %w", err)
+		return fmt.Errorf("parsing all frames: %w", err)
 	}
 
 	me.originalSize = originalSize
 	me.originalPadding = originalPadding
 	me.frames = frames
-	return me, nil
+	return nil
 }
 
 func (me *Tag) parseTagHeader(src []byte) (int, error) {
