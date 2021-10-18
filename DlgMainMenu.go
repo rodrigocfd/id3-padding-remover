@@ -153,33 +153,6 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	// me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
-	// 	t0 := timecount.New()
-	// 	selMp3s := me.lstFiles.Columns().SelectedTexts(0)
-
-	// 	for _, selMp3 := range selMp3s {
-	// 		tag := me.cachedTags[selMp3]
-	// 		frAlbDyn, hasAlb := tag.FrameByName("TALB")
-	// 		frYerDyn, hasYer := tag.FrameByName("TYER")
-
-	// 		if !hasAlb {
-	// 			prompt.Error(me.wnd, "Missing frame", nil, "Album frame not found.")
-	// 		} else if !hasYer {
-	// 			prompt.Error(me.wnd, "Missing frame", nil, "Year frame not found.")
-	// 		}
-
-	// 		frAlb, _ := frAlbDyn.(*id3v2.FrameText)
-	// 		frYer, _ := frYerDyn.(*id3v2.FrameText)
-	// 		*frAlb.Text() = fmt.Sprintf("%s %s", *frYer.Text(), *frAlb.Text())
-	// 	}
-
-	// 	me.reSaveTagsOfSelectedFiles(func() {
-	// 		prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-	// 			fmt.Sprintf("%d title(s) prefixed with year in %.2f ms.",
-	// 				len(selMp3s), t0.ElapsedMs()))
-	// 	})
-	// })
-
 	me.wnd.On().WmCommandAccelMenu(MNU_RENAME, func(_ wm.Command) {
 		t0 := timecount.New()
 		if err := me.renameSelectedFiles(false); err != nil {
