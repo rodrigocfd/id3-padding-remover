@@ -21,7 +21,7 @@ func (me *DlgMain) eventsMenu() {
 				me.lstMp3s.Items().SelectedCount() > 0, // 1 or more files currently selected
 				MNU_DELETE,
 				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC,
-				MNU_RENAME, MNU_RENAME_PREFIX)
+				MNU_COPY, MNU_RENAME, MNU_RENAME_PREFIX)
 		}
 	})
 
@@ -115,9 +115,42 @@ func (me *DlgMain) eventsMenu() {
 
 		me.reSaveTagsOfSelectedFiles(func() {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-				fmt.Sprintf("ReplayGain and album art removed from %d file(s) n %.2f ms.",
+				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		})
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_COPY, func(_ wm.Command) {
+		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
+		defer fod.Release()
+
+		fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
+
+		if fod.Show(me.wnd.Hwnd()) {
+			newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
+			var newCopiedFiles []string
+			t0 := timecount.New()
+
+			for _, selMp3 := range me.lstMp3s.Columns().SelectedTexts(0) {
+				fileName := win.Path.GetFileName(selMp3)
+				newPath := fmt.Sprintf("%s\\%s", newFolder, fileName)
+				if win.Path.Exists(newPath) {
+					prompt.Error(me.wnd, "File already exists", nil,
+						fmt.Sprintf("File already exists:\n%s", newPath))
+					continue
+				}
+				win.CopyFile(selMp3, newPath, false)
+				newCopiedFiles = append(newCopiedFiles, newPath)
+			}
+
+			me.addFilesToList(newCopiedFiles, func() {
+				if len(newCopiedFiles) > 0 {
+					prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+						fmt.Sprintf("%d file(s) copied and parsed back in %.2f ms.",
+							len(newCopiedFiles), t0.ElapsedMs()))
+				}
+			})
+		}
 	})
 
 	// me.wnd.On().WmCommandAccelMenu(MNU_PREFIX_YEAR, func(_ wm.Command) {
