@@ -10,16 +10,15 @@ type FrameText struct {
 	text string
 }
 
+// Constructor.
+func _NewFrameText(base _FrameBase, text string) *FrameText {
+	return &FrameText{
+		_FrameBase: base,
+		text:       text,
+	}
+}
+
 func (me *FrameText) Text() *string { return &me.text }
-
-func (me *FrameText) new(base _FrameBase, text string) {
-	me._FrameBase = base
-	me.text = text
-}
-
-func (me *FrameText) parse(base _FrameBase, texts []string) {
-	me.new(base, texts[0])
-}
 
 func (me *FrameText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings([]string{me.text})

@@ -9,19 +9,23 @@ type FrameBinary struct {
 	binData []byte
 }
 
-func (me *FrameBinary) BinData() *[]byte { return &me.binData }
-
-func (me *FrameBinary) new(base _FrameBase, binData []byte) {
-	me._FrameBase = base
-	me.binData = binData
+// Constructor.
+func _NewFrameBinary(base _FrameBase, binData []byte) *FrameBinary {
+	return &FrameBinary{
+		_FrameBase: base,
+		binData:    binData,
+	}
 }
 
-func (me *FrameBinary) parse(base _FrameBase, src []byte) {
+// Constructor.
+func _ParseFrameBinary(base _FrameBase, src []byte) *FrameBinary {
 	theData := make([]byte, len(src))
 	copy(theData, src) // simply store bytes
 
-	me.new(base, theData)
+	return _NewFrameBinary(base, theData)
 }
+
+func (me *FrameBinary) BinData() *[]byte { return &me.binData }
 
 func (me *FrameBinary) Serialize() ([]byte, error) {
 	totalFrameSize := 10 + len(me.binData) // header + data

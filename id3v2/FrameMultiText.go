@@ -11,21 +11,18 @@ type FrameMultiText struct {
 	texts []string
 }
 
-func (me *FrameMultiText) Texts() *[]string { return &me.texts }
-
-func (me *FrameMultiText) new(base _FrameBase, texts []string) {
-	me._FrameBase = base
-	me.texts = texts
-}
-
-func (me *FrameMultiText) parse(base _FrameBase, texts []string) error {
+// Constructor.
+func _NewFrameMultiText(base _FrameBase, texts []string) (*FrameMultiText, error) {
 	if len(texts) < 2 {
-		return fmt.Errorf("bad multi-text frame with only 1 text")
+		return nil, fmt.Errorf("bad multi-text frame with only 1 text")
 	}
-
-	me.new(base, texts)
-	return nil
+	return &FrameMultiText{
+		_FrameBase: base,
+		texts:      texts,
+	}, nil
 }
+
+func (me *FrameMultiText) Texts() *[]string { return &me.texts }
 
 func (me *FrameMultiText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings(me.texts)

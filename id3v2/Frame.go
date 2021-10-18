@@ -16,13 +16,11 @@ type Frame interface {
 
 // Constructor.
 func _ParseFrame(src []byte) (Frame, error) {
-	frameBase := _FrameBase{}
-	frameBase.parse(src)
+	frameBase := _ParseFrameBase(src)
 	src = src[10:frameBase.OriginalSize()] // skip frame header, truncate to frame size
 
 	if frameBase.Name4() == "COMM" {
-		frameComment := &FrameComment{}
-		return frameComment, frameComment.parse(frameBase, src)
+		return _ParseFrameComment(frameBase, src)
 
 	} else if frameBase.Name4()[0] == 'T' {
 		texts, err := util.ParseAnyStrings(src)
@@ -32,22 +30,15 @@ func _ParseFrame(src []byte) (Frame, error) {
 
 		if len(texts) == 0 {
 			return nil, fmt.Errorf("Frame %s contains no texts", frameBase.Name4())
-
 		} else if len(texts) == 1 {
-			frameText := &FrameText{}
-			frameText.parse(frameBase, texts)
-			return frameText, nil
-
+			return _NewFrameText(frameBase, texts[0]), nil
 		} else {
-			frameMultiText := &FrameMultiText{}
-			return frameMultiText, frameMultiText.parse(frameBase, texts)
+			return _NewFrameMultiText(frameBase, texts)
 		}
 
 	} else {
 		// Anything else is treated as raw binary.
-		frameBinary := &FrameBinary{}
-		frameBinary.parse(frameBase, src)
-		return frameBinary, nil
+		return _ParseFrameBinary(frameBase, src), nil
 	}
 }
 
@@ -58,14 +49,20 @@ type _FrameBase struct {
 	originalSize int
 }
 
-func (me *_FrameBase) new(name4 string) {
-	me.name4 = name4
-	me.originalSize = 0
+// Constructor.
+func _MakeFrameBase(name4 string) _FrameBase {
+	return _FrameBase{
+		name4:        name4,
+		originalSize: 0,
+	}
 }
 
-func (me *_FrameBase) parse(src []byte) {
-	me.name4 = string(src[0:4])
-	me.originalSize = int(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
+// Constructor.
+func _ParseFrameBase(src []byte) _FrameBase {
+	return _FrameBase{
+		name4:        string(src[0:4]),
+		originalSize: int(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header
+	}
 }
 
 func (me *_FrameBase) Name4() string     { return me.name4 }

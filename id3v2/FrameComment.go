@@ -11,19 +11,20 @@ type FrameComment struct {
 	text string
 }
 
-func (me *FrameComment) Lang() *string { return &me.lang }
-func (me *FrameComment) Text() *string { return &me.text }
-
-func (me *FrameComment) new(base _FrameBase, lang, text string) {
-	me._FrameBase = base
-	me.lang = lang
-	me.text = text
+// Constructor.
+func _NewFrameComment(base _FrameBase, lang, text string) *FrameComment {
+	return &FrameComment{
+		_FrameBase: base,
+		lang:       lang,
+		text:       text,
+	}
 }
 
-func (me *FrameComment) parse(base _FrameBase, src []byte) error {
+// Constructor.
+func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
-		return fmt.Errorf("unrecognized comment text encoding: %02x", src[0])
+		return nil, fmt.Errorf("unrecognized comment text encoding: %02x", src[0])
 	}
 	isUnicode := src[0] == 0x01
 	src = src[1:] // skip encoding byte
@@ -45,12 +46,14 @@ func (me *FrameComment) parse(base _FrameBase, src []byte) error {
 	}
 
 	if len(texts) > 1 {
-		return fmt.Errorf("comment frame with multiple texts: %d", len(texts))
+		return nil, fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
 
-	me.new(base, lang, texts[0])
-	return nil
+	return _NewFrameComment(base, lang, texts[0]), nil
 }
+
+func (me *FrameComment) Lang() *string { return &me.lang }
+func (me *FrameComment) Text() *string { return &me.text }
 
 func (me *FrameComment) Serialize() ([]byte, error) {
 	if len(me.lang) != 3 {

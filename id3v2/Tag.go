@@ -17,24 +17,19 @@ type Tag struct {
 	frames          []Frame
 }
 
-func (me *Tag) OriginalSize() int    { return me.originalSize }
-func (me *Tag) OriginalPadding() int { return me.originalPadding }
-func (me *Tag) Frames() []Frame      { return me.frames }
-func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
-
-// Public constructor.
+// Constructor.
 func NewEmptyTag() *Tag { return &Tag{} }
 
-// Public constructor; reads the tag from an MP3 file.
+// Constructor; reads the tag from an MP3 file.
 func ReadTagFromFile(mp3Path string) (*Tag, error) {
-	me := &Tag{}
+	me := NewEmptyTag()
 	if err := me.readFromFile(mp3Path); err != nil {
 		return nil, err
 	}
 	return me, nil
 }
 
-// Public constructor; reads the tag from a binary blob.
+// Constructor; reads the tag from a binary blob.
 func ReadTagFromBinary(src []byte) (*Tag, error) {
 	me := &Tag{}
 	if err := me.readFromBinary(src); err != nil {
@@ -42,6 +37,11 @@ func ReadTagFromBinary(src []byte) (*Tag, error) {
 	}
 	return me, nil
 }
+
+func (me *Tag) OriginalSize() int    { return me.originalSize }
+func (me *Tag) OriginalPadding() int { return me.originalPadding }
+func (me *Tag) Frames() []Frame      { return me.frames }
+func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
 
 func (me *Tag) readFromFile(mp3Path string) error {
 	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_READ_EXISTING)
@@ -255,17 +255,12 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 
 	} else { // frame does not exist yet
 		var newFrame Frame
-		frBase := _FrameBase{}
-		frBase.new(string(name4))
+		frBase := _MakeFrameBase(string(name4))
 
 		if name4 == TEXT_COMMENT {
-			frComment := &FrameComment{}
-			frComment.new(frBase, "eng", text)
-			newFrame = frComment
+			newFrame = _NewFrameComment(frBase, "eng", text)
 		} else {
-			frText := &FrameText{}
-			frText.new(frBase, text)
-			newFrame = frText
+			newFrame = _NewFrameText(frBase, text)
 		}
 
 		me.frames = append(me.frames, newFrame)
