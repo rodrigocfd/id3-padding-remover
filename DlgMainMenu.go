@@ -194,15 +194,14 @@ func (me *DlgMain) eventsMenu() {
 		vMaj, vMin, vPat, _ := vsf.ProductVersion()
 
 		block0 := resNfo.Blocks()[0]
-		company, _ := resNfo.CompanyName(block0.LangId, block0.CodePage)
-		copyRite, _ := resNfo.LegalCopyright(block0.LangId, block0.CodePage)
+		productName, _ := resNfo.ProductName(block0.LangId, block0.CodePage)
 
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",
-			win.StrVal(fmt.Sprintf("ID3 Fit %d.%d.%d", vMaj, vMin, vPat)),
-			fmt.Sprintf("%s - %s\n"+
+			win.StrVal(fmt.Sprintf("%s %d.%d.%d", productName, vMaj, vMin, vPat)),
+			fmt.Sprintf("Rodrigo César de Freitas Dias (C) 2021\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
 				"Alloc mem: %s\n"+
@@ -210,7 +209,6 @@ func (me *DlgMain) eventsMenu() {
 				"Alloc idle: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s",
-				company, copyRite,
 				win.Str.FmtBytes(memStats.HeapAlloc),
 				win.Str.FmtBytes(memStats.HeapSys),
 				win.Str.FmtBytes(memStats.HeapIdle),
