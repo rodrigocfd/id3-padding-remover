@@ -142,14 +142,17 @@ func (me *DlgMain) eventsMenu() {
 			t0 := timecount.New()
 
 			for _, selMp3 := range me.lstMp3s.Columns().SelectedTexts(0) {
-				fileName := win.Path.GetFileName(selMp3)
-				newPath := fmt.Sprintf("%s\\%s", newFolder, fileName)
+				newPath := fmt.Sprintf("%s\\%s",
+					newFolder, win.Path.GetFileName(selMp3))
 				if win.Path.Exists(newPath) {
 					prompt.Error(me.wnd, "File already exists", nil,
 						fmt.Sprintf("File already exists:\n%s", newPath))
 					continue
 				}
-				win.CopyFile(selMp3, newPath, false)
+				if err := win.CopyFile(selMp3, newPath, false); err != nil {
+					prompt.Error(me.wnd, "File copy error", nil, err.Error())
+					continue
+				}
 				newCopiedFiles = append(newCopiedFiles, newPath)
 			}
 

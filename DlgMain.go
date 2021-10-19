@@ -192,9 +192,7 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 }
 
 func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
-	selItems := me.lstMp3s.Items().Selected()
-
-	for _, selItem := range selItems {
+	for _, selItem := range me.lstMp3s.Items().Selected() {
 		selMp3 := selItem.Text(0)
 		theTag := me.cachedTags[selMp3]
 
@@ -219,12 +217,12 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 
 		var newPath string
 		if withTrackPrefix {
-			trackNo, err := strconv.Atoi(track)
-			if err != nil {
+			if trackNo, err := strconv.Atoi(track); err != nil {
 				return 0, fmt.Errorf("invalid track format: %s", track)
+			} else {
+				newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
+					win.Path.GetPath(selMp3), trackNo, artist, title)
 			}
-			newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
-				win.Path.GetPath(selMp3), trackNo, artist, title)
 		} else {
 			newPath = fmt.Sprintf("%s\\%s - %s.mp3",
 				win.Path.GetPath(selMp3), artist, title)
@@ -241,6 +239,5 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 			}
 		}
 	}
-
 	return
 }
