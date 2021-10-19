@@ -191,7 +191,7 @@ func (me *DlgMain) updateTitlebarCount(total int) {
 	}
 }
 
-func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) error {
+func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
 	selItems := me.lstMp3s.Items().Selected()
 
 	for _, selItem := range selItems {
@@ -202,26 +202,26 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) error {
 		if withTrackPrefix {
 			trackStr, has := theTag.TextByName4(id3v2.TEXT_TRACK)
 			if !has {
-				return fmt.Errorf("track frame absent")
+				return 0, fmt.Errorf("track frame absent")
 			}
 			track = trackStr
 		}
 
 		artist, has := theTag.TextByName4(id3v2.TEXT_ARTIST)
 		if !has {
-			return fmt.Errorf("artist frame absent")
+			return 0, fmt.Errorf("artist frame absent")
 		}
 
 		title, has := theTag.TextByName4(id3v2.TEXT_TITLE)
 		if !has {
-			return fmt.Errorf("title frame absent")
+			return 0, fmt.Errorf("title frame absent")
 		}
 
 		var newPath string
 		if withTrackPrefix {
 			trackNo, err := strconv.Atoi(track)
 			if err != nil {
-				return fmt.Errorf("invalid track format: %s", track)
+				return 0, fmt.Errorf("invalid track format: %s", track)
 			}
 			newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
 				win.Path.GetPath(selMp3), trackNo, artist, title)
@@ -234,12 +234,13 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) error {
 			delete(me.cachedTags, selMp3)
 			me.cachedTags[newPath] = theTag // re-insert tag under new name
 			selItem.SetText(0, newPath)     // rename list view item
+			renamedCount++
 
 			if err := win.MoveFile(selMp3, newPath); err != nil {
-				return fmt.Errorf("failed to rename:\n%s\nto\n%s", selMp3, newPath)
+				return 0, fmt.Errorf("failed to rename:\n%s\nto\n%s", selMp3, newPath)
 			}
 		}
 	}
 
-	return nil
+	return
 }

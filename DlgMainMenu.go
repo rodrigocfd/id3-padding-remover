@@ -26,7 +26,12 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
-		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
+		fod := shell.NewIFileOpenDialog(
+			win.CoCreateInstance(
+				shellco.CLSID_FileOpenDialog, nil,
+				co.CLSCTX_INPROC_SERVER,
+				shellco.IID_IFileOpenDialog),
+		)
 		defer fod.Release()
 
 		fod.SetOptions(fod.GetOptions() |
@@ -121,7 +126,12 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_COPY, func(_ wm.Command) {
-		fod := shell.NewIFileOpenDialog(co.CLSCTX_INPROC_SERVER)
+		fod := shell.NewIFileOpenDialog(
+			win.CoCreateInstance(
+				shellco.CLSID_FileOpenDialog, nil,
+				co.CLSCTX_INPROC_SERVER,
+				shellco.IID_IFileOpenDialog),
+		)
 		defer fod.Release()
 
 		fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
@@ -155,23 +165,23 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_RENAME, func(_ wm.Command) {
 		t0 := timecount.New()
-		if err := me.renameSelectedFiles(false); err != nil {
+		if count, err := me.renameSelectedFiles(false); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
 		} else {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
-					me.lstMp3s.Items().SelectedCount(), t0.ElapsedMs()))
+					count, t0.ElapsedMs()))
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_RENAME_PREFIX, func(_ wm.Command) {
 		t0 := timecount.New()
-		if err := me.renameSelectedFiles(true); err != nil {
+		if count, err := me.renameSelectedFiles(true); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
 		} else {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
-					me.lstMp3s.Items().SelectedCount(), t0.ElapsedMs()))
+					count, t0.ElapsedMs()))
 		}
 	})
 
