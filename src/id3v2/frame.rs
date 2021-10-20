@@ -1,10 +1,11 @@
 use std::convert::TryInto;
-use winsafe::BoxResult;
+use winsafe::ErrResult;
 
 use super::FrameComment;
-use super::tag_util;
+use super::util;
 
 /// The data contained in a frame, which can be of various types.
+#[derive(PartialEq, Eq)]
 pub enum FrameData {
 	Text(String),
 	MultiText(Vec<String>),
@@ -13,6 +14,7 @@ pub enum FrameData {
 }
 
 /// A unit of data in an MP3 tag.
+#[derive(PartialEq, Eq)]
 pub struct Frame {
 	name4:         String,
 	original_size: usize,
@@ -20,7 +22,7 @@ pub struct Frame {
 }
 
 impl Frame {
-	pub fn parse(mut src: &[u8]) -> BoxResult<Self> {
+	pub fn parse(mut src: &[u8]) -> ErrResult<Self> {
 		let name4 = std::str::from_utf8(&src[0..4])?.to_string();
 		let original_size = u32::from_be_bytes(src[4..8].try_into()?) as usize + 10; // also count 10-byte tag header
 
@@ -29,7 +31,7 @@ impl Frame {
 		let data = if name4 == "COMM" {
 			FrameData::Comment(FrameComment::parse(src)?)
 		} else if name4.chars().nth(0).unwrap() == 'T' { // text frame
-			let texts = tag_util::parse_any_strings(src)?;
+			let texts = util::parse_any_strings(src)?;
 			match texts.len() {
 				0 => return Err(format!("Frame {} contains no texts.", name4).into()),
 				1 => FrameData::Text(texts[0].clone()),
@@ -65,8 +67,8 @@ impl Frame {
 	/// Serializes the frame into bytes.
 	pub fn serialize(&self) -> Vec<u8> {
 		let frame_data = match &self.data {
-			FrameData::Text(text) => tag_util::SerializedStrs::new(&[&text]).collect(),
-			FrameData::MultiText(texts) => tag_util::SerializedStrs::new(&texts).collect(),
+			FrameData::Text(text) => util::SerializedStrs::new(&[&text]).collect(),
+			FrameData::MultiText(texts) => util::SerializedStrs::new(&texts).collect(),
 			FrameData::Comment(comm) => comm.serialize_data(),
 			FrameData::Binary(bin) => bin.clone(),
 		};

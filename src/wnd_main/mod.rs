@@ -9,6 +9,7 @@ use crate::wnd_fields::WndFields;
 mod wnd_main_events;
 mod wnd_main_funcs;
 mod wnd_main_menu;
+mod wnd_main_privs;
 
 #[derive(Clone)]
 pub struct WndMain {
@@ -16,7 +17,6 @@ pub struct WndMain {
 	lst_files:  gui::ListView,
 	wnd_fields: WndFields,
 	lst_frames: gui::ListView,
-	resizer:    gui::Resizer,
 	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
 	app_name:   String,
 }

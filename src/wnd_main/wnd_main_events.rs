@@ -1,11 +1,11 @@
-use winsafe::{self as w, co, msg};
+use winsafe::{prelude::*, self as w, co, msg};
 
 use crate::ids::main as id;
 use super::PreDelete;
 use super::WndMain;
 
 impl WndMain {
-	pub(super) fn events(&self) {
+	pub(super) fn _events(&self) {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
 			move |_| {
@@ -32,7 +32,7 @@ impl WndMain {
 				self2.lst_frames.columns().set_width_to_fill(1)?;
 				self2.lst_frames.hwnd().EnableWindow(false);
 
-				self2.titlebar_count(PreDelete::No)?;
+				self2._titlebar_count(PreDelete::No)?;
 				Ok(true)
 			}
 		});
@@ -56,8 +56,10 @@ impl WndMain {
 				if p.hmenu == self2.lst_files.context_menu().unwrap() {
 					let has_sel = self2.lst_files.items().selected_count() > 0;
 
-					[id::MNU_FILE_EXCSEL, id::MNU_FILE_MODIFY, id::MNU_FILE_CLR_DIACR]
-						.iter()
+					[id::MNU_FILE_DELSEL, id::MNU_FILE_REMPAD,
+						id::MNU_FILE_REMRG, id::MNU_FILE_REMRGART,
+						id::MNU_FILE_RENAME, id::MNU_FILE_RENAMETRCK,
+					].iter()
 						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel))
 						.collect::<Result<Vec<_>, _>>()?;
 				}
@@ -76,17 +78,18 @@ impl WndMain {
 		self.wnd.on().wm_drop_files({
 			let self2 = self.clone();
 			move |p| {
-				let dropped_files = p.hdrop.DragQueryFiles()?;
-				let mut all_files = Vec::with_capacity(dropped_files.len());
+				let mut all_files = Vec::default();
 
-				for mut file in dropped_files.into_iter() {
+				for file in p.hdrop.iter() {
+					let mut file = file?;
 					if w::GetFileAttributes(&file)?.has(co::FILE_ATTRIBUTE::DIRECTORY) {
 						if !file.ends_with('\\') {
 							file.push('\\');
 						}
 						file.push_str("*.mp3");
 
-						for mp3 in w::HFINDFILE::ListAll(&file)? { // just search 1 level below
+						for mp3 in w::HFINDFILE::iter(&file) { // search just 1 level below
+							let mp3 = mp3?;
 							if mp3.to_lowercase().ends_with(".mp3") {
 								all_files.push(mp3);
 							}
@@ -96,7 +99,7 @@ impl WndMain {
 					}
 				}
 
-				self2.add_files(&all_files)?;
+				self2._add_files(&all_files)?;
 				Ok(())
 			}
 		});
@@ -105,8 +108,8 @@ impl WndMain {
 			let self2 = self.clone();
 			move |p| {
 				if p.wVKey == co::VK::DELETE { // delete item on DEL
-					self2.wnd.hwnd().SendMessage(msg::wm::Command {
-						event: w::AccelMenuCtrl::Menu(id::MNU_FILE_EXCSEL as _),
+					self2.wnd.hwnd().SendMessage(msg::wm::Command { // simulate menu click
+						event: w::AccelMenuCtrl::Menu(id::MNU_FILE_DELSEL as _),
 					});
 				}
 				Ok(())
@@ -116,8 +119,14 @@ impl WndMain {
 		self.lst_files.on().lvn_item_changed({
 			let self2 = self.clone();
 			move |_| {
-				self2.show_selected_tag_frames()?;
-				self2.titlebar_count(PreDelete::No)?;
+				self2._display_sel_tags_frames()?;
+				self2.wnd_fields.show_text_fields(
+					self2.lst_files.items()
+						.iter_selected()
+						.map(|item| item.text(0))
+						.collect::<Vec<_>>(),
+				)?;
+				self2._titlebar_count(PreDelete::No)?;
 				Ok(())
 			}
 		});
@@ -125,10 +134,21 @@ impl WndMain {
 		self.lst_files.on().lvn_delete_item({
 			let self2 = self.clone();
 			move |p| {
-				self2.tags_cache.borrow_mut() // remove entry from cache
-					.remove(&self2.lst_files.items().text(p.iItem as _, 0));
-				self2.titlebar_count(PreDelete::Yes)?;
+				let file_path = self2.lst_files.items().get(p.iItem as _).text(0);
+				self2.tags_cache.try_borrow_mut()?.remove(&file_path); // remove entry from cache
+				self2._titlebar_count(PreDelete::Yes)?;
 				Ok(())
+			}
+		});
+
+		self.wnd_fields.on_save({
+			let self2 = self.clone();
+			move || {
+				self2._add_files( // reload all tags from their files
+					&self2.lst_files.items().iter_selected()
+						.map(|item| item.text(0))
+						.collect::<Vec<_>>(),
+				)
 			}
 		});
 	}

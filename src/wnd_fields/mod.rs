@@ -1,7 +1,13 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 use winsafe::{self as w, gui};
+
+use crate::id3v2::Tag;
 
 mod wnd_fields_events;
 mod wnd_fields_funcs;
+mod wnd_fields_privs;
 
 #[derive(Clone)]
 pub struct WndFields {
@@ -15,8 +21,8 @@ pub struct WndFields {
 	txt_album:    gui::Edit,
 	chk_track:    gui::CheckBox,
 	txt_track:    gui::Edit,
-	chk_date:     gui::CheckBox,
-	txt_date:     gui::Edit,
+	chk_year:     gui::CheckBox,
+	txt_year:     gui::Edit,
 	chk_genre:    gui::CheckBox,
 	cmb_genre:    gui::ComboBox,
 	chk_composer: gui::CheckBox,
@@ -24,10 +30,8 @@ pub struct WndFields {
 	chk_comment:  gui::CheckBox,
 	txt_comment:  gui::Edit,
 	btn_save:     gui::Button,
-}
 
-impl gui::Child for WndFields {
-	fn hwnd_ref(&self) -> &w::HWND {
-		self.wnd.hwnd_ref()
-	}
+	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
+	sel_files:  Rc<RefCell<Vec<String>>>,
+	save_cb:    Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,
 }

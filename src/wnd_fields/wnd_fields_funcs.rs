@@ -1,29 +1,39 @@
-use winsafe::{self as w, gui};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+use winsafe::{prelude::*, self as w, gui, msg, ErrResult};
 
+use crate::id3v2::Tag;
 use crate::ids::fields as id;
 use super::WndFields;
 
 impl WndFields {
-	pub fn new(parent: &dyn gui::Parent, pos: w::POINT) -> Self {
-		let wnd = gui::WindowControl::new_dlg(parent, id::DLG_FIELDS, pos, None);
+	pub fn new(
+		parent: &impl Parent, pos: w::POINT,
+		horz: gui::Horz, vert: gui::Vert,
+		tags_cache: Rc<RefCell<HashMap<String, Tag>>>) -> Self
+	{
+		use gui::{Button, CheckBox, ComboBox, Edit, Horz, Vert, WindowControl};
 
-		let chk_artist = gui::CheckBox::new_dlg(&wnd, id::CHK_ARTIST);
-		let txt_artist = gui::Edit::new_dlg(&wnd, id::TXT_ARTIST);
-		let chk_title = gui::CheckBox::new_dlg(&wnd, id::CHK_TITLE);
-		let txt_title = gui::Edit::new_dlg(&wnd, id::TXT_TITLE);
-		let chk_album = gui::CheckBox::new_dlg(&wnd, id::CHK_ALBUM);
-		let txt_album = gui::Edit::new_dlg(&wnd, id::TXT_ALBUM);
-		let chk_track = gui::CheckBox::new_dlg(&wnd, id::CHK_TRACK);
-		let txt_track = gui::Edit::new_dlg(&wnd, id::TXT_TRACK);
-		let chk_date = gui::CheckBox::new_dlg(&wnd, id::CHK_DATE);
-		let txt_date = gui::Edit::new_dlg(&wnd, id::TXT_DATE);
-		let chk_genre = gui::CheckBox::new_dlg(&wnd, id::CHK_GENRE);
-		let cmb_genre = gui::ComboBox::new_dlg(&wnd, id::CMB_GENRE);
-		let chk_composer = gui::CheckBox::new_dlg(&wnd, id::CHK_COMPOSER);
-		let txt_composer = gui::Edit::new_dlg(&wnd, id::TXT_COMPOSER);
-		let chk_comment = gui::CheckBox::new_dlg(&wnd, id::CHK_COMMENT);
-		let txt_comment = gui::Edit::new_dlg(&wnd, id::TXT_COMMENT);
-		let btn_save = gui::Button::new_dlg(&wnd, id::BTN_SAVE);
+		let wnd = WindowControl::new_dlg(parent, id::DLG_FIELDS, pos, horz, vert, None);
+
+		let chk_artist   = CheckBox::new_dlg(&wnd, id::CHK_ARTIST,   Horz::None, Vert::None);
+		let txt_artist   = Edit::new_dlg(    &wnd, id::TXT_ARTIST,   Horz::None, Vert::None);
+		let chk_title    = CheckBox::new_dlg(&wnd, id::CHK_TITLE,    Horz::None, Vert::None);
+		let txt_title    = Edit::new_dlg(    &wnd, id::TXT_TITLE,    Horz::None, Vert::None);
+		let chk_album    = CheckBox::new_dlg(&wnd, id::CHK_ALBUM,    Horz::None, Vert::None);
+		let txt_album    = Edit::new_dlg(    &wnd, id::TXT_ALBUM,    Horz::None, Vert::None);
+		let chk_track    = CheckBox::new_dlg(&wnd, id::CHK_TRACK,    Horz::None, Vert::None);
+		let txt_track    = Edit::new_dlg(    &wnd, id::TXT_TRACK,    Horz::None, Vert::None);
+		let chk_year     = CheckBox::new_dlg(&wnd, id::CHK_YEAR,     Horz::None, Vert::None);
+		let txt_year     = Edit::new_dlg(    &wnd, id::TXT_YEAR,     Horz::None, Vert::None);
+		let chk_genre    = CheckBox::new_dlg(&wnd, id::CHK_GENRE,    Horz::None, Vert::None);
+		let cmb_genre    = ComboBox::new_dlg(&wnd, id::CMB_GENRE,    Horz::None, Vert::None);
+		let chk_composer = CheckBox::new_dlg(&wnd, id::CHK_COMPOSER, Horz::None, Vert::None);
+		let txt_composer = Edit::new_dlg(    &wnd, id::TXT_COMPOSER, Horz::None, Vert::None);
+		let chk_comment  = CheckBox::new_dlg(&wnd, id::CHK_COMMENT,  Horz::None, Vert::None);
+		let txt_comment  = Edit::new_dlg(    &wnd, id::TXT_COMMENT,  Horz::None, Vert::None);
+		let btn_save     = Button::new_dlg(  &wnd, id::BTN_SAVE,     Horz::None, Vert::None);
 
 		let new_self = Self {
 			wnd,
@@ -31,12 +41,54 @@ impl WndFields {
 			chk_title, txt_title,
 			chk_album, txt_album,
 			chk_track, txt_track,
-			chk_date, txt_date,
+			chk_year, txt_year,
 			chk_genre, cmb_genre,
 			chk_composer, txt_composer,
 			chk_comment, txt_comment, btn_save,
+			tags_cache,
+			sel_files: Rc::new(RefCell::new(Vec::default())),
+			save_cb: Rc::new(RefCell::new(None)),
 		};
-		new_self.events();
+		new_self._events();
 		new_self
+	}
+
+	pub fn on_save<F>(&self, callback: F)
+		where F: Fn() -> ErrResult<()> + 'static,
+	{
+		*self.save_cb.borrow_mut() = Some(Box::new(callback));
+	}
+
+	pub fn show_text_fields(&self, sel_files: Vec<String>) -> ErrResult<()> {
+		self.sel_files.replace(sel_files); // keep the list of selected files
+
+		let tags_cache = self.tags_cache.try_borrow()?;
+		let sel_tags = {
+			let sel_files = self.sel_files.try_borrow()?;
+			tags_cache.iter()
+				.filter(|(file_name, _)| {
+					sel_files.iter()
+						.find(|sel_file| *sel_file == *file_name) // find the tag file among the sel files
+						.is_some()
+				})
+				.collect::<Vec<_>>()
+		};
+
+		for (chk, txt, field) in self._fields().iter() {
+			let s;
+
+			if let Some(field) = Tag::is_uniform_text_field(&sel_tags, *field)? {
+				chk.set_check_state_and_trigger(gui::CheckState::Checked)?;
+				s = w::WString::from_str(field);
+			} else {
+				chk.set_check_state_and_trigger(gui::CheckState::Unchecked)?;
+				s = w::WString::from_str("");
+			}
+
+			// Works for both Edit and ComboBox.
+			txt.hwnd().SendMessage(msg::wm::SetText { text: unsafe { s.as_ptr() } });
+		}
+
+		self._update_after_check()
 	}
 }

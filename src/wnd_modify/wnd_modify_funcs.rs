@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use winsafe::{self as w, co, gui, BoxResult};
+use winsafe::{self as w, co, gui, ErrResult};
 
 use crate::id3v2::{FrameData, Tag};
 use crate::ids::modify as id;
@@ -9,19 +9,21 @@ use crate::util;
 use super::WndModify;
 
 impl WndModify {
-	pub fn new(parent: &dyn gui::Parent,
+	pub fn new(parent: &impl gui::Parent,
 		tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
 		files: Rc<Vec<String>>) -> Self
 	{
-		let wnd = gui::WindowModal::new_dlg(parent, id::DLG_MODIFY);
+		use gui::{Button, CheckBox, Horz, Vert, WindowModal};
 
-		let chk_rem_padding = gui::CheckBox::new_dlg(&wnd, id::CHK_REM_PADDING);
-		let chk_rem_album   = gui::CheckBox::new_dlg(&wnd, id::CHK_REM_ALBUM);
-		let chk_rem_rg      = gui::CheckBox::new_dlg(&wnd, id::CHK_REM_RG);
-		let chk_prefix_year = gui::CheckBox::new_dlg(&wnd, id::CHK_PREFIX_YEAR);
+		let wnd = WindowModal::new_dlg(parent, id::DLG_MODIFY);
 
-		let btn_ok     = gui::Button::new_dlg(&wnd, id::BTN_OK);
-		let btn_cancel = gui::Button::new_dlg(&wnd, id::BTN_CANCEL);
+		let chk_rem_padding = CheckBox::new_dlg(&wnd, id::CHK_REM_PADDING, Horz::None, Vert::None);
+		let chk_rem_album   = CheckBox::new_dlg(&wnd, id::CHK_REM_ALBUM,   Horz::None, Vert::None);
+		let chk_rem_rg      = CheckBox::new_dlg(&wnd, id::CHK_REM_RG,      Horz::None, Vert::None);
+		let chk_prefix_year = CheckBox::new_dlg(&wnd, id::CHK_PREFIX_YEAR, Horz::None, Vert::None);
+
+		let btn_ok     = Button::new_dlg(&wnd, id::BTN_OK, Horz::None, Vert::None);
+		let btn_cancel = Button::new_dlg(&wnd, id::BTN_CANCEL, Horz::None, Vert::None);
 
 		let new_self = Self {
 			wnd,
@@ -29,7 +31,7 @@ impl WndModify {
 			btn_ok, btn_cancel,
 			tags_cache, files,
 		};
-		new_self.events();
+		new_self._events();
 		new_self
 	}
 
@@ -37,14 +39,14 @@ impl WndModify {
 		self.wnd.show_modal()
 	}
 
-	pub(super) fn enable_disable_rem_padding(&self) -> BoxResult<()> {
+	pub(super) fn _enable_disable_rem_padding(&self) -> ErrResult<()> {
 		// "Remove padding" checkbox will be disabled?
 		let will_disable = self.chk_rem_album.is_checked()
 			|| self.chk_rem_rg.is_checked()
 			|| self.chk_prefix_year.is_checked();
 
-		if will_disable {
-			self.chk_rem_padding.set_check(true); // padding removal is then always performed
+		if will_disable { // padding removal is then always performed
+			self.chk_rem_padding.set_check_state(gui::CheckState::Checked);
 		}
 		self.chk_rem_padding.hwnd().EnableWindow(!will_disable);
 
@@ -53,7 +55,7 @@ impl WndModify {
 		Ok(())
 	}
 
-	pub(super) fn remove_replay_gain(&self, tag: &mut Tag) {
+	pub(super) fn _remove_replay_gain(&self, tag: &mut Tag) {
 		tag.frames_mut().retain(|f| {
 			if f.name4() == "TXXX" {
 				if let FrameData::MultiText(texts) = f.data() {
@@ -66,7 +68,7 @@ impl WndModify {
 		});
 	}
 
-	pub(super) fn prefix_year(&self, tag: &mut Tag, file: &str) -> BoxResult<()> {
+	pub(super) fn _prefix_year(&self, tag: &mut Tag, file: &str) -> ErrResult<()> {
 		let frames = tag.frames_mut();
 
 		let year = match frames.iter()

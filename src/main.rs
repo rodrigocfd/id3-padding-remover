@@ -5,7 +5,6 @@ mod ids;
 mod util;
 mod wnd_fields;
 mod wnd_main;
-mod wnd_modify;
 
 use winsafe as w;
 
@@ -16,6 +15,6 @@ fn main() {
 	}
 }
 
-fn run_app() -> w::BoxResult<i32> {
+fn run_app() -> w::ErrResult<i32> {
 	wnd_main::WndMain::new()?.run()
 }
