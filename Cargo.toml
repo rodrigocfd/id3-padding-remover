@@ -2,7 +2,7 @@
 name = "id3-fit"
 version = "2.1.0"
 authors = ["Rodrigo Cesar de Freitas Dias <rcesar@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [profile.release]
 lto = true
