@@ -1,7 +1,9 @@
 package dlgfields
 
 import (
+	"fmt"
 	"id3fit/id3v2"
+	"id3fit/prompt"
 	"id3fit/timecount"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -14,11 +16,16 @@ func (me *DlgFields) eventsWm() {
 	CHKS, INPS := me.checksAndInputs()
 
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
-		genresPath := win.Path.ExePath() + "\\genres.txt"
-		fin, _ := win.OpenFileMapped(genresPath, co.OPEN_FILE_READ_EXISTING)
-		genres := fin.ReadLines()
-		fin.Close()
-		me.cmbGenre.Items().Add(genres...)
+		genresPath := win.Path.ExePath() + "\\id3fit-genres.txt"
+		if !win.Path.Exists(genresPath) {
+			prompt.Error(me.wnd, "No genres file", nil,
+				fmt.Sprintf("Genres file not found:\n\n%s", genresPath))
+		} else {
+			fin, _ := win.OpenFileMapped(genresPath, co.OPEN_FILE_READ_EXISTING)
+			genres := fin.ReadLines()
+			fin.Close()
+			me.cmbGenre.Items().Add(genres...)
+		}
 
 		return true
 	})
