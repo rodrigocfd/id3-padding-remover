@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3fit/prompt"
 	"id3fit/timecount"
+	"strings"
 
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -60,7 +61,7 @@ func (me *DlgFields) eventsWm() {
 				continue
 			}
 
-			newText := field.Txt.Hwnd().GetWindowText()
+			newText := strings.TrimSpace(field.Txt.Hwnd().GetWindowText())
 			for _, tag := range me.tagsLoaded {
 				// Empty text will delete the frame.
 				// Tags are not flushed to disk here, it's DlgMain's job.
