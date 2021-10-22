@@ -60,11 +60,11 @@ func (me *DlgMain) eventsWm() {
 			prompt.Error(me.wnd, "No files added", nil,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			t0 := timecount.New()
+			// t0 := timecount.New()
 			me.addFilesToList(droppedMp3s, func() {
-				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-					fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
-						len(droppedMp3s), t0.ElapsedMs()))
+				// prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				// 	fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
+				// 		len(droppedMp3s), t0.ElapsedMs()))
 			})
 		}
 	})

@@ -53,11 +53,11 @@ func (me *DlgMain) eventsMenu() {
 			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
 			win.Path.Sort(mp3s)
 
-			t0 := timecount.New()
+			// t0 := timecount.New()
 			me.addFilesToList(mp3s, func() {
-				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-					fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
-						len(mp3s), t0.ElapsedMs()))
+				// prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				// 	fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
+				// 		len(mp3s), t0.ElapsedMs()))
 			})
 		}
 	})
