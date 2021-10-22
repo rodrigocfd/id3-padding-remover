@@ -25,6 +25,8 @@ type DlgFields struct {
 	cmbGenre    ui.ComboBox
 	chkComposer ui.CheckBox
 	txtComposer ui.Edit
+	chkOriginal ui.CheckBox
+	txtOriginal ui.Edit
 	chkComment  ui.CheckBox
 	txtComment  ui.Edit
 	btnSave     ui.Button
@@ -55,6 +57,8 @@ func NewDlgFields(
 		cmbGenre:    ui.NewComboBoxDlg(wnd, CMB_GENRE, ui.HORZ_NONE, ui.VERT_NONE),
 		chkComposer: ui.NewCheckBoxDlg(wnd, CHK_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
 		txtComposer: ui.NewEditDlg(wnd, TXT_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
+		chkOriginal: ui.NewCheckBoxDlg(wnd, CHK_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
+		txtOriginal: ui.NewEditDlg(wnd, TXT_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
 		chkComment:  ui.NewCheckBoxDlg(wnd, CHK_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
 		txtComment:  ui.NewEditDlg(wnd, TXT_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
 		btnSave:     ui.NewButtonDlg(wnd, BTN_SAVE, ui.HORZ_NONE, ui.VERT_NONE),
@@ -119,8 +123,10 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 func (me *DlgFields) checksAndInputs() (chks []ui.CheckBox, inps []ui.AnyNativeControl) {
 	// Note: This must be in sync with id3v2.TextFieldConsts().
 	chks = []ui.CheckBox{me.chkArtist, me.chkTitle, me.chkAlbum,
-		me.chkTrack, me.chkYear, me.chkGenre, me.chkComposer, me.chkComment}
+		me.chkTrack, me.chkYear, me.chkGenre,
+		me.chkComposer, me.chkOriginal, me.chkComment}
 	inps = []ui.AnyNativeControl{me.txtArtist, me.txtTitle, me.txtAlbum,
-		me.txtTrack, me.txtYear, me.cmbGenre, me.txtComposer, me.txtComment}
+		me.txtTrack, me.txtYear, me.cmbGenre,
+		me.txtComposer, me.txtOriginal, me.txtComment}
 	return
 }

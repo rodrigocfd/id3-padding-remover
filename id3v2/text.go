@@ -11,6 +11,7 @@ const (
 	TEXT_YEAR     TEXT = "TYER"
 	TEXT_GENRE    TEXT = "TCON"
 	TEXT_COMPOSER TEXT = "TCOM"
+	TEXT_ORIGINAL TEXT = "TOPE"
 	TEXT_COMMENT  TEXT = "COMM"
 )
 
@@ -18,5 +19,5 @@ const (
 func TextFieldConsts() []TEXT {
 	// Note: This must be in sync with dlgfields.checksAndInputs().
 	return []TEXT{TEXT_ARTIST, TEXT_TITLE, TEXT_ALBUM, TEXT_TRACK,
-		TEXT_YEAR, TEXT_GENRE, TEXT_COMPOSER, TEXT_COMMENT}
+		TEXT_YEAR, TEXT_GENRE, TEXT_COMPOSER, TEXT_ORIGINAL, TEXT_COMMENT}
 }

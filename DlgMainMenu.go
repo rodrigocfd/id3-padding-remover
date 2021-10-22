@@ -17,11 +17,13 @@ import (
 func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		if p.Hmenu() == me.lstMp3s.ContextMenu() {
-			p.Hmenu().EnableByCmdId(
-				me.lstMp3s.Items().SelectedCount() > 0, // 1 or more files currently selected
-				MNU_DELETE,
+			cmdIds := []int{MNU_DELETE,
 				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC,
-				MNU_COPY, MNU_RENAME, MNU_RENAME_PREFIX)
+				MNU_COPY, MNU_RENAME, MNU_RENAME_PREFIX}
+			for _, cmdId := range cmdIds {
+				p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
+					me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
+			}
 		}
 	})
 
