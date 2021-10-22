@@ -75,6 +75,7 @@ func (me *DlgMain) eventsWm() {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
+			me.lstMp3s.Hwnd().SetFocus()
 		})
 	})
 }
