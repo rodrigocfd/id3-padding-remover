@@ -26,6 +26,8 @@ type DlgFields struct {
 	txtComposer    ui.Edit
 	chkOriginal    ui.CheckBox
 	txtOriginal    ui.Edit
+	chkPerformer   ui.CheckBox
+	txtPerformer   ui.Edit
 	chkComment     ui.CheckBox
 	txtComment     ui.Edit
 	btnClearChecks ui.Button
@@ -66,6 +68,8 @@ func NewDlgFields(
 		txtComposer:    ui.NewEditDlg(wnd, TXT_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
 		chkOriginal:    ui.NewCheckBoxDlg(wnd, CHK_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
 		txtOriginal:    ui.NewEditDlg(wnd, TXT_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
+		chkPerformer:   ui.NewCheckBoxDlg(wnd, CHK_PERFORMER, ui.HORZ_NONE, ui.VERT_NONE),
+		txtPerformer:   ui.NewEditDlg(wnd, TXT_PERFORMER, ui.HORZ_NONE, ui.VERT_NONE),
 		chkComment:     ui.NewCheckBoxDlg(wnd, CHK_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
 		txtComment:     ui.NewEditDlg(wnd, TXT_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
 		btnClearChecks: ui.NewButtonDlg(wnd, BTN_CLEARCHECKS, ui.HORZ_NONE, ui.VERT_NONE),
@@ -81,6 +85,7 @@ func NewDlgFields(
 		{Id: id3v2.TEXT_GENRE, Chk: me.chkGenre, Txt: me.cmbGenre},
 		{Id: id3v2.TEXT_COMPOSER, Chk: me.chkComposer, Txt: me.txtComposer},
 		{Id: id3v2.TEXT_ORIGINAL, Chk: me.chkOriginal, Txt: me.txtOriginal},
+		{Id: id3v2.TEXT_PERFORMER, Chk: me.chkPerformer, Txt: me.txtPerformer},
 		{Id: id3v2.TEXT_COMMENT, Chk: me.chkComment, Txt: me.txtComment},
 	}
 
