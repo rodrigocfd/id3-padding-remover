@@ -39,11 +39,18 @@ func (me *DlgFields) eventsWm() {
 						break
 					}
 				}
+				me.btnClearChecks.Hwnd().EnableWindow(atLeastOneEnabled)
 				me.btnSave.Hwnd().EnableWindow(atLeastOneEnabled)
 			})
 
 		}(field)
 	}
+
+	me.btnClearChecks.On().BnClicked(func() {
+		for _, field := range me.fields {
+			field.Chk.SetCheckStateAndTrigger(co.BST_UNCHECKED)
+		}
+	})
 
 	me.btnSave.On().BnClicked(func() {
 		t0 := timecount.New()
