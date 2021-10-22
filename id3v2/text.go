@@ -14,10 +14,3 @@ const (
 	TEXT_ORIGINAL TEXT = "TOPE"
 	TEXT_COMMENT  TEXT = "COMM"
 )
-
-// Returns a list of all accepted text field constants.
-func TextFieldConsts() []TEXT {
-	// Note: This must be in sync with dlgfields.checksAndInputs().
-	return []TEXT{TEXT_ARTIST, TEXT_TITLE, TEXT_ALBUM, TEXT_TRACK,
-		TEXT_YEAR, TEXT_GENRE, TEXT_COMPOSER, TEXT_ORIGINAL, TEXT_COMMENT}
-}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
 )
 
 type DlgFields struct {
@@ -33,6 +32,13 @@ type DlgFields struct {
 
 	onSaveCb   func(t0 timecount.TimeCount)
 	tagsLoaded []*id3v2.Tag
+	fields     []Field
+}
+
+type Field struct {
+	Id  id3v2.TEXT
+	Chk ui.CheckBox
+	Txt ui.AnyNativeControl
 }
 
 func NewDlgFields(
@@ -64,69 +70,18 @@ func NewDlgFields(
 		btnSave:     ui.NewButtonDlg(wnd, BTN_SAVE, ui.HORZ_NONE, ui.VERT_NONE),
 	}
 
+	me.fields = []Field{
+		{Id: id3v2.TEXT_ARTIST, Chk: me.chkArtist, Txt: me.txtArtist},
+		{Id: id3v2.TEXT_TITLE, Chk: me.chkTitle, Txt: me.txtTitle},
+		{Id: id3v2.TEXT_ALBUM, Chk: me.chkAlbum, Txt: me.txtAlbum},
+		{Id: id3v2.TEXT_TRACK, Chk: me.chkTrack, Txt: me.txtTrack},
+		{Id: id3v2.TEXT_YEAR, Chk: me.chkYear, Txt: me.txtYear},
+		{Id: id3v2.TEXT_GENRE, Chk: me.chkGenre, Txt: me.cmbGenre},
+		{Id: id3v2.TEXT_COMPOSER, Chk: me.chkComposer, Txt: me.txtComposer},
+		{Id: id3v2.TEXT_ORIGINAL, Chk: me.chkOriginal, Txt: me.txtOriginal},
+		{Id: id3v2.TEXT_COMMENT, Chk: me.chkComment, Txt: me.txtComment},
+	}
+
 	me.eventsWm()
 	return me
-}
-
-func (me *DlgFields) OnSave(cb func(t0 timecount.TimeCount)) {
-	me.onSaveCb = cb
-}
-
-func (me *DlgFields) Feed(tags []*id3v2.Tag) {
-	chks, inps := me.checksAndInputs()
-	for _, chk := range chks {
-		chk.Hwnd().EnableWindow(len(tags) > 0) // if zero MP3s selected, disable checkboxes
-	}
-
-	if len(tags) == 0 { // zero MP3s selected
-		for c := 0; c < len(chks); c++ {
-			inps[c].Hwnd().SetWindowText("")
-			chks[c].SetCheckStateAndTrigger(co.BST_UNCHECKED)
-		}
-	} else {
-		names4 := id3v2.TextFieldConsts()
-
-		for n := 0; n < len(names4); n++ {
-			if firstText, ok := tags[0].TextByName4(names4[n]); ok {
-				sameStr := true
-
-				for t := 1; t < len(tags); t++ { // subsequent tags
-					if otherText, ok := tags[t].TextByName4(names4[n]); ok {
-						if otherText != firstText {
-							sameStr = false
-							break
-						}
-					} else { // frame absent in subsequent tag
-						sameStr = false
-						break
-					}
-				}
-
-				if sameStr {
-					inps[n].Hwnd().SetWindowText(firstText)
-					chks[n].SetCheckStateAndTrigger(co.BST_CHECKED)
-				} else {
-					inps[n].Hwnd().SetWindowText("")
-					chks[n].SetCheckStateAndTrigger(co.BST_UNCHECKED)
-				}
-
-			} else { // frame absent in first tag
-				inps[n].Hwnd().SetWindowText("")
-				chks[n].SetCheckStateAndTrigger(co.BST_UNCHECKED)
-			}
-		}
-	}
-
-	me.tagsLoaded = tags
-}
-
-func (me *DlgFields) checksAndInputs() (chks []ui.CheckBox, inps []ui.AnyNativeControl) {
-	// Note: This must be in sync with id3v2.TextFieldConsts().
-	chks = []ui.CheckBox{me.chkArtist, me.chkTitle, me.chkAlbum,
-		me.chkTrack, me.chkYear, me.chkGenre,
-		me.chkComposer, me.chkOriginal, me.chkComment}
-	inps = []ui.AnyNativeControl{me.txtArtist, me.txtTitle, me.txtAlbum,
-		me.txtTrack, me.txtYear, me.cmbGenre,
-		me.txtComposer, me.txtOriginal, me.txtComment}
-	return
 }
