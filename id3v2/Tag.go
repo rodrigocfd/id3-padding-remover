@@ -71,7 +71,7 @@ func (me *Tag) readFromBinary(src []byte) error {
 	return nil
 }
 
-func (me *Tag) parseTagHeader(src []byte) (int, error) {
+func (me *Tag) parseTagHeader(src []byte) (tagSize int, e error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return 0, &ErrorNoTagFound{}
@@ -91,12 +91,16 @@ func (me *Tag) parseTagHeader(src []byte) (int, error) {
 		return 0, fmt.Errorf("tag extended header not supported")
 	}
 
-	// Read tag size.
-	originalSize := int(util.SynchSafeDecode(
+	// Read and validate tag size.
+	mp3Off, hasMp3Off := util.FindMp3Signature(src)
+	writtenTagSize := int(util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
 	) + 10)
 
-	return originalSize, nil
+	if hasMp3Off && mp3Off != writtenTagSize {
+		return 0, fmt.Errorf("bad written tag size: %d (actual %d)", writtenTagSize, mp3Off)
+	}
+	return writtenTagSize, nil
 }
 
 func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
@@ -254,7 +258,7 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 		}
 
 	} else { // frame does not exist yet
-		var newFrame Frame
+		var newFrame Frame // polymorphic frame
 		frBase := _MakeFrameBase(string(name4))
 
 		if name4 == TEXT_COMMENT {

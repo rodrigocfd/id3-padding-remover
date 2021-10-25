@@ -57,6 +57,16 @@ func Split16(src []uint16, sep uint16) [][]uint16 {
 	return chunks
 }
 
+func FindMp3Signature(src []byte) (int, bool) {
+	for i, b := range src {
+		// https://en.wikipedia.org/wiki/List_of_file_signatures
+		if b == 0xff && (src[i+1] == 0xfb || src[i+1] == 0xf3 || src[i+1] == 0xf2) {
+			return i, true
+		}
+	}
+	return 0, false
+}
+
 func SynchSafeDecode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7f00_0000)
 	for mask != 0 {
