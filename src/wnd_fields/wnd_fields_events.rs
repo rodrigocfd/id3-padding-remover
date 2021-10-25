@@ -18,7 +18,7 @@ impl WndFields {
 			}
 		});
 
-		for (chk, _, _) in self._fields().iter() {
+		for (_, chk, _) in self.fields.iter() {
 			chk.on().bn_clicked({ // add event on each checkbox
 				let self2 = self.clone();
 				move || self2._update_after_check()

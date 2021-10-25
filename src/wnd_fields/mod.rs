@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::sync::Arc;
 use winsafe::{self as w, gui};
 
-use crate::id3v2::Tag;
+use crate::id3v2::{Tag, TextField};
 
 mod wnd_fields_events;
 mod wnd_fields_funcs;
@@ -31,6 +32,7 @@ pub struct WndFields {
 	txt_comment:  gui::Edit,
 	btn_save:     gui::Button,
 
+	fields:     Vec<(TextField, gui::CheckBox, Arc<dyn gui::NativeControl>)>,
 	tags_cache: Rc<RefCell<HashMap<String, Tag>>>,
 	sel_files:  Rc<RefCell<Vec<String>>>,
 	save_cb:    Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,

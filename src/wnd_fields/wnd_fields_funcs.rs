@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use winsafe::{prelude::*, self as w, gui, msg, ErrResult};
 
-use crate::id3v2::Tag;
+use crate::id3v2::{Tag, TextField};
 use crate::ids::fields as id;
 use super::WndFields;
 
@@ -35,6 +35,17 @@ impl WndFields {
 		let txt_comment  = Edit::new_dlg(    &wnd, id::TXT_COMMENT,  Horz::None, Vert::None);
 		let btn_save     = Button::new_dlg(  &wnd, id::BTN_SAVE,     Horz::None, Vert::None);
 
+		let fields = vec![
+			(TextField::Artist,   chk_artist.clone(),   txt_artist.as_native_control()),
+			(TextField::Title,    chk_title.clone(),    txt_title.as_native_control()),
+			(TextField::Album,    chk_album.clone(),    txt_album.as_native_control()),
+			(TextField::Track,    chk_track.clone(),    txt_track.as_native_control()),
+			(TextField::Year,     chk_year.clone(),     txt_year.as_native_control()),
+			(TextField::Genre,    chk_genre.clone(),    chk_genre.as_native_control()),
+			(TextField::Composer, chk_composer.clone(), chk_composer.as_native_control()),
+			(TextField::Comment,  chk_comment.clone(),  chk_comment.as_native_control()),
+		];
+
 		let new_self = Self {
 			wnd,
 			chk_artist, txt_artist,
@@ -45,6 +56,7 @@ impl WndFields {
 			chk_genre, cmb_genre,
 			chk_composer, txt_composer,
 			chk_comment, txt_comment, btn_save,
+			fields,
 			tags_cache,
 			sel_files: Rc::new(RefCell::new(Vec::default())),
 			save_cb: Rc::new(RefCell::new(None)),
@@ -74,7 +86,7 @@ impl WndFields {
 				.collect::<Vec<_>>()
 		};
 
-		for (chk, txt, field) in self._fields().iter() {
+		for (field, chk, txt) in self.fields.iter() {
 			let s;
 
 			if let Some(field) = Tag::is_uniform_text_field(&sel_tags, *field)? {
