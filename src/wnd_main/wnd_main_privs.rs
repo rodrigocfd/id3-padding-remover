@@ -1,4 +1,4 @@
-use winsafe::{prelude::*, self as w, ErrResult};
+use winsafe::{prelude::*, self as w, ErrResult, path};
 
 use crate::id3v2::{FrameData, Tag, TextField};
 use crate::util;
@@ -161,7 +161,7 @@ impl WndMain {
 				let track = util::clear_diacritics(
 					the_tag.text_field(TextField::Track).ok_or_else(|| "No track frame.")??);
 
-				w::Path::replace_file(&file_name,
+				path::replace_file_name(&file_name,
 					&if with_track {
 						format!("{:02} {} - {}.mp3", track.parse::<u16>()?, artist, title)
 					} else {
