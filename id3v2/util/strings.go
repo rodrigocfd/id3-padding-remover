@@ -70,16 +70,17 @@ func ParseUnicodeStrings(src []byte) []string {
 			block16 = block16[1:] // skip BOM
 		}
 
+		if len(block16) == 0 {
+			continue // skip empty block
+		}
+
 		runes := make([]rune, 0, len(block16))
 		block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2)
 
 		for i := 0; i < len(block8); i += 2 {
 			runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
 		}
-		parsedText := string(runes) // then convert []rune to string
-		if parsedText != "" {
-			texts = append(texts, parsedText) // only non-empty strings
-		}
+		texts = append(texts, string(runes)) // then convert []rune to string
 	}
 
 	return texts
