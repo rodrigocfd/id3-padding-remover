@@ -6,22 +6,24 @@ import (
 )
 
 type FrameComment struct {
-	_FrameBase
-	lang string
-	text string
+	_FrameHeader
+	lang  string
+	descr string
+	text  string
 }
 
 // Constructor.
-func _NewFrameComment(base _FrameBase, lang, text string) *FrameComment {
+func _NewFrameComment(header _FrameHeader, lang, descr, text string) *FrameComment {
 	return &FrameComment{
-		_FrameBase: base,
-		lang:       lang,
-		text:       text,
+		_FrameHeader: header,
+		lang:         lang,
+		descr:        descr,
+		text:         text,
 	}
 }
 
 // Constructor.
-func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
+func _ParseFrameComment(header _FrameHeader, src []byte) (*FrameComment, error) {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
 		return nil, fmt.Errorf("unrecognized comment text encoding: %02x", src[0])
@@ -33,10 +35,6 @@ func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
 	lang := string(src[:3])
 	src = src[3:]
 
-	if src[0] == 0x00 {
-		src = src[1:] // a null separator may appear, skip it
-	}
-
 	// Retrieve comment text.
 	var texts []string
 	if isUnicode {
@@ -45,11 +43,13 @@ func _ParseFrameComment(base _FrameBase, src []byte) (*FrameComment, error) {
 		texts = util.ParseIso88591Strings(src)
 	}
 
-	if len(texts) > 1 {
+	if len(texts) == 2 {
+		return _NewFrameComment(header, lang, texts[0], texts[1]), nil
+	} else if len(texts) == 1 {
+		return _NewFrameComment(header, lang, "", texts[0]), nil
+	} else {
 		return nil, fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
-
-	return _NewFrameComment(base, lang, texts[0]), nil
 }
 
 func (me *FrameComment) Lang() *string { return &me.lang }
@@ -60,20 +60,19 @@ func (me *FrameComment) Serialize() ([]byte, error) {
 		return nil, fmt.Errorf("bad lang: %s", me.lang)
 	}
 
-	encodingByte, data := util.SerializeStrings([]string{me.text})
-	totalFrameSize := 10 + 1 + 3 + 1 + len(data) // header + encodingByte + lang + sep
+	encodingByte, textsBlob := util.SerializeStrings([]string{me.descr, me.text})
+	totalFrameSize := 10 + 1 + 3 + len(textsBlob) // header + encodingByte + lang + texts
 
-	header, err := me._FrameBase.serializeHeader(totalFrameSize)
+	headerBlob, err := me._FrameHeader.serialize(totalFrameSize)
 	if err != nil {
 		return nil, fmt.Errorf("serializing FrameComment header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)
-	final = append(final, header...)    // 10-byte header
-	final = append(final, encodingByte) // encoding byte goes before lang
+	final = append(final, headerBlob...) // 10-byte header
+	final = append(final, encodingByte)  // encoding byte goes before lang
 	final = append(final, []byte(me.lang)...)
-	final = append(final, 0x00) // sep for content description, which is not written here
-	final = append(final, data...)
+	final = append(final, textsBlob...)
 
 	return final, nil
 }

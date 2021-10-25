@@ -119,12 +119,12 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 		if err != nil {
 			return nil, 0, fmt.Errorf("parsing frames: %w", err) // error when parsing the frame
 		}
-		if newFrame.OriginalSize() > len(src) { // means the tag was serialized with error
+		if newFrame.OriginalTagSize() > len(src) { // means the tag was serialized with error
 			return nil, 0, fmt.Errorf("frame size is greater than real size")
 		}
 		frames = append(frames, newFrame) // add the frame to our collection
 
-		src = src[newFrame.OriginalSize():] // now starts at 1st byte of next frame
+		src = src[newFrame.OriginalTagSize():] // now starts at 1st byte of next frame
 	}
 
 	return frames, padding, nil
@@ -259,10 +259,10 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 
 	} else { // frame does not exist yet
 		var newFrame Frame // polymorphic frame
-		frBase := _MakeFrameBase(string(name4))
+		frBase := _MakeFrameHeader(string(name4))
 
 		if name4 == TEXT_COMMENT {
-			newFrame = _NewFrameComment(frBase, "eng", text)
+			newFrame = _NewFrameComment(frBase, "eng", "", text)
 		} else {
 			newFrame = _NewFrameText(frBase, text)
 		}

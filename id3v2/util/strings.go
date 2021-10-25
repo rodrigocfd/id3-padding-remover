@@ -22,26 +22,27 @@ func ParseAnyStrings(src []byte) ([]string, error) {
 		// Encoding is Unicode, may have 2-byte BOM.
 		return ParseUnicodeStrings(src[1:]), nil
 	default:
-		return nil, fmt.Errorf("Unrecognized text encoding: %02x.", src[0])
+		return nil, fmt.Errorf("unrecognized text encoding: %02x.", src[0])
 	}
 }
 
 func ParseIso88591Strings(src []byte) []string {
+	if src[len(src)-1] == 0x00 {
+		src = src[:len(src)-1] // trim last zero, if any
+	}
+
 	strBlocks := bytes.Split(src, []byte{0x00})
 	texts := make([]string, 0, len(strBlocks))
 
 	for _, block := range strBlocks {
 		if len(block) == 0 {
-			continue // bytes.Split() may result in empty blocks; skip these
-		}
-
-		runes := make([]rune, 0, len(block))
-		for _, ch := range block {
-			runes = append(runes, rune(ch)) // convert byte to rune
-		}
-		parsedText := string(runes) // then convert []rune to string
-		if parsedText != "" {
-			texts = append(texts, parsedText) // only non-empty strings
+			texts = append(texts, "")
+		} else {
+			runes := make([]rune, 0, len(block))
+			for _, ch := range block {
+				runes = append(runes, rune(ch)) // convert byte to rune
+			}
+			texts = append(texts, string(runes)) // then convert []rune to string
 		}
 	}
 
@@ -56,6 +57,10 @@ func ParseUnicodeStrings(src []byte) []string {
 	}
 
 	src16 := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
+	if src16[len(src16)-1] == 0x00 {
+		src16 = src16[:len(src16)-1] // trim last zero, if any
+	}
+
 	strBlocks16 := Split16(src16, 0x0000)
 	texts := make([]string, 0, len(strBlocks16))
 
@@ -71,16 +76,16 @@ func ParseUnicodeStrings(src []byte) []string {
 		}
 
 		if len(block16) == 0 {
-			continue // skip empty block
-		}
+			texts = append(texts, "")
+		} else {
+			runes := make([]rune, 0, len(block16))
+			block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2)
 
-		runes := make([]rune, 0, len(block16))
-		block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2)
-
-		for i := 0; i < len(block8); i += 2 {
-			runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
+			for i := 0; i < len(block8); i += 2 {
+				runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
+			}
+			texts = append(texts, string(runes)) // then convert []rune to string
 		}
-		texts = append(texts, string(runes)) // then convert []rune to string
 	}
 
 	return texts
@@ -122,9 +127,7 @@ out:
 	}
 
 	for _, oneString := range theStrings {
-		runeArr := []rune(oneString) // convert to rune slice
-
-		for _, ch := range runeArr { // append each character to final blob
+		for _, ch := range oneString { // append each character to final blob
 			if isUnicode {
 				blob = Append16(blob, binary.LittleEndian, uint16(ch))
 			} else {

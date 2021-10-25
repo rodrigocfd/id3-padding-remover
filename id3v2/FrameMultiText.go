@@ -7,18 +7,18 @@ import (
 )
 
 type FrameMultiText struct {
-	_FrameBase
+	_FrameHeader
 	texts []string
 }
 
 // Constructor.
-func _NewFrameMultiText(base _FrameBase, texts []string) (*FrameMultiText, error) {
+func _NewFrameMultiText(header _FrameHeader, texts []string) (*FrameMultiText, error) {
 	if len(texts) < 2 {
 		return nil, fmt.Errorf("bad multi-text frame with only 1 text")
 	}
 	return &FrameMultiText{
-		_FrameBase: base,
-		texts:      texts,
+		_FrameHeader: header,
+		texts:        texts,
 	}, nil
 }
 
@@ -28,13 +28,13 @@ func (me *FrameMultiText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings(me.texts)
 	totalFrameSize := 10 + 1 + len(data) // header + encodingByte
 
-	header, err := me._FrameBase.serializeHeader(totalFrameSize)
+	headerBlob, err := me._FrameHeader.serialize(totalFrameSize)
 	if err != nil {
 		return nil, fmt.Errorf("serializing FrameMultiText header: %w", err)
 	}
 
 	final := make([]byte, 0, totalFrameSize)
-	final = append(final, header...) // 10-byte header
+	final = append(final, headerBlob...) // 10-byte header
 	final = append(final, encodingByte)
 	final = append(final, data...)
 
@@ -42,7 +42,7 @@ func (me *FrameMultiText) Serialize() ([]byte, error) {
 }
 
 func (me *FrameMultiText) IsReplayGain() bool {
-	return me._FrameBase.Name4() == "TXXX" &&
+	return me._FrameHeader.Name4() == "TXXX" &&
 		len(me.texts) == 2 &&
 		(strings.HasPrefix(me.texts[0], "replaygain_") ||
 			strings.HasPrefix(me.texts[1], "replaygain_"))
