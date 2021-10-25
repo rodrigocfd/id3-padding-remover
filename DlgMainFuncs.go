@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"id3fit/dlgrun"
 	"id3fit/id3v2"
 	"id3fit/prompt"
 	"strconv"
@@ -10,53 +11,51 @@ import (
 )
 
 func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
-	go func() { // launch a separated thread
-		halted := false
-
+	var errMp3 string
+	var errErr error
+	dlgRun := dlgrun.NewDlgRun()
+	dlgRun.Show(me.wnd, func() { // this function will run in another thread
 		for _, mp3 := range mp3s {
 			tag, err := id3v2.ReadTagFromFile(mp3) // read all files sequentially
 			if _, ok := err.(*id3v2.ErrorNoTagFound); ok {
 				tag = id3v2.NewEmptyTag()
-			} else if err != nil {
-				me.wnd.RunUiThread(func() {
-					prompt.Error(me.wnd, "Error parsing tag", nil,
-						fmt.Sprintf("File:\n%s\n\n%s", mp3, err))
-				})
-				halted = true // nothing else will be done
-				break
+			} else if err != nil { // any other error
+				errMp3, errErr = mp3, err
+				break // nothing else will be done
 			}
 			me.cachedTags[mp3] = tag // cache (or re-cache) tag
 		}
+	})
+	if errErr != nil {
+		me.wnd.RunUiThread(func() {
+			prompt.Error(me.wnd, "Error parsing tag", nil,
+				fmt.Sprintf("File:\n%s\n\n%s", errMp3, errErr.Error()))
+		})
+		return
+	}
 
-		if halted {
-			return
+	me.lstMp3s.SetRedraw(false)
+	for _, mp3 := range mp3s {
+		tag := me.cachedTags[mp3]
+
+		padding := "N/A"
+		if !tag.IsEmpty() {
+			padding = strconv.Itoa(tag.OriginalPadding())
 		}
 
-		me.wnd.RunUiThread(func() {
-			me.lstMp3s.SetRedraw(false)
-			for _, mp3 := range mp3s {
-				tag := me.cachedTags[mp3]
+		if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
+			me.lstMp3s.Items().AddWithIcon(0, mp3, padding)
+		} else {
+			item.SetText(1, padding) // update padding
+		}
+	}
+	me.lstMp3s.SetRedraw(true)
+	me.lstMp3s.Columns().SetWidthToFill(0)
+	me.displayFramesOfSelectedFiles()
 
-				padding := "N/A"
-				if !tag.IsEmpty() {
-					padding = strconv.Itoa(tag.OriginalPadding())
-				}
-
-				if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
-					me.lstMp3s.Items().AddWithIcon(0, mp3, padding)
-				} else {
-					item.SetText(1, padding) // update padding
-				}
-			}
-			me.lstMp3s.SetRedraw(true)
-			me.lstMp3s.Columns().SetWidthToFill(0)
-			me.displayFramesOfSelectedFiles()
-
-			if onFinish != nil {
-				onFinish()
-			}
-		})
-	}()
+	if onFinish != nil {
+		onFinish()
+	}
 }
 
 func (me *DlgMain) displayFramesOfSelectedFiles() {
@@ -116,28 +115,25 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
 	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
-
-	go func() { // launch a separated thread
-		halted := false
-
+	var errMp3 string
+	var errErr error
+	dlgRun := dlgrun.NewDlgRun()
+	dlgRun.Show(me.wnd, func() { // this function will run in another thread
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
 			if err := tag.SerializeToFile(selMp3); err != nil {
-				prompt.Error(me.wnd, "Writing error", nil,
-					fmt.Sprintf("Failed to write tag to:\n%sn\n\n%s", selMp3, err.Error()))
-				halted = true // nothing else will be done
-				break
+				errMp3, errErr = selMp3, err
+				break // nothing else will be done
 			}
 		}
+	})
+	if errErr != nil {
+		prompt.Error(me.wnd, "Writing error", nil,
+			fmt.Sprintf("Failed to write tag to:\n%sn\n\n%s", errMp3, errErr.Error()))
+		return
+	}
 
-		if halted {
-			return
-		}
-
-		me.wnd.RunUiThread(func() {
-			me.addFilesToList(selMp3s, onFinish)
-		})
-	}()
+	me.addFilesToList(selMp3s, onFinish)
 }
 
 func (me *DlgMain) updateTitlebarCount(total int) {
