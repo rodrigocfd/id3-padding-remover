@@ -26,6 +26,8 @@ type DlgFields struct {
 	cmbGenre       ui.ComboBox
 	chkComposer    ui.CheckBox
 	txtComposer    ui.Edit
+	chkLyricist    ui.CheckBox
+	txtLyricist    ui.Edit
 	chkOriginal    ui.CheckBox
 	txtOriginal    ui.Edit
 	chkPerformer   ui.CheckBox
@@ -70,6 +72,8 @@ func NewDlgFields(
 		cmbGenre:       ui.NewComboBoxDlg(wnd, CMB_GENRE, ui.HORZ_NONE, ui.VERT_NONE),
 		chkComposer:    ui.NewCheckBoxDlg(wnd, CHK_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
 		txtComposer:    ui.NewEditDlg(wnd, TXT_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
+		chkLyricist:    ui.NewCheckBoxDlg(wnd, CHK_LYRICIST, ui.HORZ_NONE, ui.VERT_NONE),
+		txtLyricist:    ui.NewEditDlg(wnd, TXT_LYRICIST, ui.HORZ_NONE, ui.VERT_NONE),
 		chkOriginal:    ui.NewCheckBoxDlg(wnd, CHK_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
 		txtOriginal:    ui.NewEditDlg(wnd, TXT_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
 		chkPerformer:   ui.NewCheckBoxDlg(wnd, CHK_PERFORMER, ui.HORZ_NONE, ui.VERT_NONE),
@@ -89,6 +93,7 @@ func NewDlgFields(
 		{Id: id3v2.TEXT_YEAR, Chk: me.chkYear, Txt: me.txtYear},
 		{Id: id3v2.TEXT_GENRE, Chk: me.chkGenre, Txt: me.cmbGenre},
 		{Id: id3v2.TEXT_COMPOSER, Chk: me.chkComposer, Txt: me.txtComposer},
+		{Id: id3v2.TEXT_LYRICIST, Chk: me.chkLyricist, Txt: me.txtLyricist},
 		{Id: id3v2.TEXT_ORIGINAL, Chk: me.chkOriginal, Txt: me.txtOriginal},
 		{Id: id3v2.TEXT_PERFORMER, Chk: me.chkPerformer, Txt: me.txtPerformer},
 		{Id: id3v2.TEXT_COMMENT, Chk: me.chkComment, Txt: me.txtComment},
