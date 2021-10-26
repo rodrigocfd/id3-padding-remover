@@ -6,6 +6,7 @@ type TEXT string
 const (
 	TEXT_ARTIST    TEXT = "TPE1"
 	TEXT_TITLE     TEXT = "TIT2"
+	TEXT_SUBTITLE  TEXT = "TIT3"
 	TEXT_ALBUM     TEXT = "TALB"
 	TEXT_TRACK     TEXT = "TRCK"
 	TEXT_YEAR      TEXT = "TYER"

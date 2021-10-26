@@ -14,6 +14,8 @@ type DlgFields struct {
 	txtArtist      ui.Edit
 	chkTitle       ui.CheckBox
 	txtTitle       ui.Edit
+	chkSubtitle    ui.CheckBox
+	txtSubtitle    ui.Edit
 	chkAlbum       ui.CheckBox
 	txtAlbum       ui.Edit
 	chkTrack       ui.CheckBox
@@ -56,6 +58,8 @@ func NewDlgFields(
 		txtArtist:      ui.NewEditDlg(wnd, TXT_ARTIST, ui.HORZ_NONE, ui.VERT_NONE),
 		chkTitle:       ui.NewCheckBoxDlg(wnd, CHK_TITLE, ui.HORZ_NONE, ui.VERT_NONE),
 		txtTitle:       ui.NewEditDlg(wnd, TXT_TITLE, ui.HORZ_NONE, ui.VERT_NONE),
+		chkSubtitle:    ui.NewCheckBoxDlg(wnd, CHK_SUBTITLE, ui.HORZ_NONE, ui.VERT_NONE),
+		txtSubtitle:    ui.NewEditDlg(wnd, TXT_SUBTITLE, ui.HORZ_NONE, ui.VERT_NONE),
 		chkAlbum:       ui.NewCheckBoxDlg(wnd, CHK_ALBUM, ui.HORZ_NONE, ui.VERT_NONE),
 		txtAlbum:       ui.NewEditDlg(wnd, TXT_ALBUM, ui.HORZ_NONE, ui.VERT_NONE),
 		chkTrack:       ui.NewCheckBoxDlg(wnd, CHK_TRACK, ui.HORZ_NONE, ui.VERT_NONE),
@@ -79,6 +83,7 @@ func NewDlgFields(
 	me.fields = []Field{
 		{Id: id3v2.TEXT_ARTIST, Chk: me.chkArtist, Txt: me.txtArtist},
 		{Id: id3v2.TEXT_TITLE, Chk: me.chkTitle, Txt: me.txtTitle},
+		{Id: id3v2.TEXT_SUBTITLE, Chk: me.chkSubtitle, Txt: me.txtSubtitle},
 		{Id: id3v2.TEXT_ALBUM, Chk: me.chkAlbum, Txt: me.txtAlbum},
 		{Id: id3v2.TEXT_TRACK, Chk: me.chkTrack, Txt: me.txtTrack},
 		{Id: id3v2.TEXT_YEAR, Chk: me.chkYear, Txt: me.txtYear},
