@@ -8,95 +8,59 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
+type Field struct {
+	FrameId id3v2.TEXT
+	ChkId   int
+	TxtId   int
+	Chk     ui.CheckBox
+	Txt     ui.AnyNativeControl
+}
+
 type DlgFields struct {
 	wnd            ui.WindowControl
-	chkArtist      ui.CheckBox
-	txtArtist      ui.Edit
-	chkTitle       ui.CheckBox
-	txtTitle       ui.Edit
-	chkSubtitle    ui.CheckBox
-	txtSubtitle    ui.Edit
-	chkAlbum       ui.CheckBox
-	txtAlbum       ui.Edit
-	chkTrack       ui.CheckBox
-	txtTrack       ui.Edit
-	chkYear        ui.CheckBox
-	txtYear        ui.Edit
-	chkGenre       ui.CheckBox
-	cmbGenre       ui.ComboBox
-	chkComposer    ui.CheckBox
-	txtComposer    ui.Edit
-	chkLyricist    ui.CheckBox
-	txtLyricist    ui.Edit
-	chkOriginal    ui.CheckBox
-	txtOriginal    ui.Edit
-	chkPerformer   ui.CheckBox
-	txtPerformer   ui.Edit
-	chkComment     ui.CheckBox
-	txtComment     ui.Edit
+	fields         []Field
 	btnClearChecks ui.Button
 	btnSave        ui.Button
 
 	onSaveCb   func(t0 timecount.TimeCount)
 	tagsLoaded []*id3v2.Tag
-	fields     []Field
-}
-
-type Field struct {
-	Id  id3v2.TEXT
-	Chk ui.CheckBox
-	Txt ui.AnyNativeControl
 }
 
 func NewDlgFields(
-	parent ui.AnyParent, position win.POINT,
+	parent ui.AnyParent,
+	position win.POINT,
 	horz ui.HORZ, vert ui.VERT) *DlgFields {
 
 	wnd := ui.NewWindowControlDlg(parent, DLG_MODAL, position, horz, vert)
 
 	me := &DlgFields{
-		wnd:            wnd,
-		chkArtist:      ui.NewCheckBoxDlg(wnd, CHK_ARTIST, ui.HORZ_NONE, ui.VERT_NONE),
-		txtArtist:      ui.NewEditDlg(wnd, TXT_ARTIST, ui.HORZ_NONE, ui.VERT_NONE),
-		chkTitle:       ui.NewCheckBoxDlg(wnd, CHK_TITLE, ui.HORZ_NONE, ui.VERT_NONE),
-		txtTitle:       ui.NewEditDlg(wnd, TXT_TITLE, ui.HORZ_NONE, ui.VERT_NONE),
-		chkSubtitle:    ui.NewCheckBoxDlg(wnd, CHK_SUBTITLE, ui.HORZ_NONE, ui.VERT_NONE),
-		txtSubtitle:    ui.NewEditDlg(wnd, TXT_SUBTITLE, ui.HORZ_NONE, ui.VERT_NONE),
-		chkAlbum:       ui.NewCheckBoxDlg(wnd, CHK_ALBUM, ui.HORZ_NONE, ui.VERT_NONE),
-		txtAlbum:       ui.NewEditDlg(wnd, TXT_ALBUM, ui.HORZ_NONE, ui.VERT_NONE),
-		chkTrack:       ui.NewCheckBoxDlg(wnd, CHK_TRACK, ui.HORZ_NONE, ui.VERT_NONE),
-		txtTrack:       ui.NewEditDlg(wnd, TXT_TRACK, ui.HORZ_NONE, ui.VERT_NONE),
-		chkYear:        ui.NewCheckBoxDlg(wnd, CHK_YEAR, ui.HORZ_NONE, ui.VERT_NONE),
-		txtYear:        ui.NewEditDlg(wnd, TXT_YEAR, ui.HORZ_NONE, ui.VERT_NONE),
-		chkGenre:       ui.NewCheckBoxDlg(wnd, CHK_GENRE, ui.HORZ_NONE, ui.VERT_NONE),
-		cmbGenre:       ui.NewComboBoxDlg(wnd, CMB_GENRE, ui.HORZ_NONE, ui.VERT_NONE),
-		chkComposer:    ui.NewCheckBoxDlg(wnd, CHK_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
-		txtComposer:    ui.NewEditDlg(wnd, TXT_COMPOSER, ui.HORZ_NONE, ui.VERT_NONE),
-		chkLyricist:    ui.NewCheckBoxDlg(wnd, CHK_LYRICIST, ui.HORZ_NONE, ui.VERT_NONE),
-		txtLyricist:    ui.NewEditDlg(wnd, TXT_LYRICIST, ui.HORZ_NONE, ui.VERT_NONE),
-		chkOriginal:    ui.NewCheckBoxDlg(wnd, CHK_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
-		txtOriginal:    ui.NewEditDlg(wnd, TXT_ORIGINAL, ui.HORZ_NONE, ui.VERT_NONE),
-		chkPerformer:   ui.NewCheckBoxDlg(wnd, CHK_PERFORMER, ui.HORZ_NONE, ui.VERT_NONE),
-		txtPerformer:   ui.NewEditDlg(wnd, TXT_PERFORMER, ui.HORZ_NONE, ui.VERT_NONE),
-		chkComment:     ui.NewCheckBoxDlg(wnd, CHK_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
-		txtComment:     ui.NewEditDlg(wnd, TXT_COMMENT, ui.HORZ_NONE, ui.VERT_NONE),
+		wnd: wnd,
+		fields: []Field{
+			{FrameId: id3v2.TEXT_ARTIST, ChkId: CHK_ARTIST, TxtId: TXT_ARTIST},
+			{FrameId: id3v2.TEXT_TITLE, ChkId: CHK_TITLE, TxtId: TXT_TITLE},
+			{FrameId: id3v2.TEXT_SUBTITLE, ChkId: CHK_SUBTITLE, TxtId: TXT_SUBTITLE},
+			{FrameId: id3v2.TEXT_ALBUM, ChkId: CHK_ALBUM, TxtId: TXT_ALBUM},
+			{FrameId: id3v2.TEXT_TRACK, ChkId: CHK_TRACK, TxtId: TXT_TRACK},
+			{FrameId: id3v2.TEXT_YEAR, ChkId: CHK_YEAR, TxtId: TXT_YEAR},
+			{FrameId: id3v2.TEXT_GENRE, ChkId: CHK_GENRE, TxtId: CMB_GENRE},
+			{FrameId: id3v2.TEXT_COMPOSER, ChkId: CHK_COMPOSER, TxtId: TXT_COMPOSER},
+			{FrameId: id3v2.TEXT_LYRICIST, ChkId: CHK_LYRICIST, TxtId: TXT_LYRICIST},
+			{FrameId: id3v2.TEXT_ORIGINAL, ChkId: CHK_ORIGINAL, TxtId: TXT_ORIGINAL},
+			{FrameId: id3v2.TEXT_PERFORMER, ChkId: CHK_PERFORMER, TxtId: TXT_PERFORMER},
+			{FrameId: id3v2.TEXT_COMMENT, ChkId: CHK_COMMENT, TxtId: TXT_COMMENT},
+		},
 		btnClearChecks: ui.NewButtonDlg(wnd, BTN_CLEARCHECKS, ui.HORZ_NONE, ui.VERT_NONE),
 		btnSave:        ui.NewButtonDlg(wnd, BTN_SAVE, ui.HORZ_NONE, ui.VERT_NONE),
 	}
 
-	me.fields = []Field{
-		{Id: id3v2.TEXT_ARTIST, Chk: me.chkArtist, Txt: me.txtArtist},
-		{Id: id3v2.TEXT_TITLE, Chk: me.chkTitle, Txt: me.txtTitle},
-		{Id: id3v2.TEXT_SUBTITLE, Chk: me.chkSubtitle, Txt: me.txtSubtitle},
-		{Id: id3v2.TEXT_ALBUM, Chk: me.chkAlbum, Txt: me.txtAlbum},
-		{Id: id3v2.TEXT_TRACK, Chk: me.chkTrack, Txt: me.txtTrack},
-		{Id: id3v2.TEXT_YEAR, Chk: me.chkYear, Txt: me.txtYear},
-		{Id: id3v2.TEXT_GENRE, Chk: me.chkGenre, Txt: me.cmbGenre},
-		{Id: id3v2.TEXT_COMPOSER, Chk: me.chkComposer, Txt: me.txtComposer},
-		{Id: id3v2.TEXT_LYRICIST, Chk: me.chkLyricist, Txt: me.txtLyricist},
-		{Id: id3v2.TEXT_ORIGINAL, Chk: me.chkOriginal, Txt: me.txtOriginal},
-		{Id: id3v2.TEXT_PERFORMER, Chk: me.chkPerformer, Txt: me.txtPerformer},
-		{Id: id3v2.TEXT_COMMENT, Chk: me.chkComment, Txt: me.txtComment},
+	for i := range me.fields {
+		field := &me.fields[i]
+		field.Chk = ui.NewCheckBoxDlg(wnd, field.ChkId, ui.HORZ_NONE, ui.VERT_NONE)
+		if field.FrameId == id3v2.TEXT_GENRE {
+			field.Txt = ui.NewComboBoxDlg(wnd, field.TxtId, ui.HORZ_NONE, ui.VERT_NONE)
+		} else {
+			field.Txt = ui.NewEditDlg(wnd, field.TxtId, ui.HORZ_NONE, ui.VERT_NONE)
+		}
 	}
 
 	me.eventsWm()

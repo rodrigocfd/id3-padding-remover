@@ -2,10 +2,12 @@ package dlgfields
 
 import (
 	"fmt"
+	"id3fit/id3v2"
 	"id3fit/prompt"
 	"id3fit/timecount"
 	"strings"
 
+	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
@@ -21,14 +23,22 @@ func (me *DlgFields) eventsWm() {
 			fin, _ := win.OpenFileMapped(genresPath, co.OPEN_FILE_READ_EXISTING)
 			genres := fin.ReadLines()
 			fin.Close()
-			me.cmbGenre.Items().Add(genres...)
+
+			for i := range me.fields {
+				field := &me.fields[i]
+				if field.FrameId == id3v2.TEXT_GENRE {
+					cmbGenre := field.Txt.(ui.ComboBox)
+					cmbGenre.Items().Add(genres...)
+					break
+				}
+			}
 		}
 
 		return true
 	})
 
-	for _, field := range me.fields {
-		func(field Field) {
+	for i := range me.fields {
+		func(field *Field) {
 
 			field.Chk.On().BnClicked(func() {
 				field.Txt.Hwnd().EnableWindow(field.Chk.IsChecked()) // enable/disable input with checkbox
@@ -44,7 +54,7 @@ func (me *DlgFields) eventsWm() {
 				me.btnSave.Hwnd().EnableWindow(atLeastOneEnabled)
 			})
 
-		}(field)
+		}(&me.fields[i])
 	}
 
 	me.btnClearChecks.On().BnClicked(func() {
@@ -65,7 +75,7 @@ func (me *DlgFields) eventsWm() {
 			for _, tag := range me.tagsLoaded {
 				// Empty text will delete the frame.
 				// Tags are not flushed to disk here, it's DlgMain's job.
-				tag.SetTextByName4(field.Id, newText)
+				tag.SetTextByName4(field.FrameId, newText)
 			}
 		}
 
