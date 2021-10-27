@@ -25,7 +25,9 @@ func _Base(parent ui.AnyParent,
 
 	tdc := win.TASKDIALOGCONFIG{}
 	tdc.SetCbSize()
-	tdc.SetHwndParent(parent.Hwnd())
+	if parent != nil {
+		tdc.SetHwndParent(parent.Hwnd())
+	}
 	tdc.SetDwFlags(co.TDF_ALLOW_DIALOG_CANCELLATION)
 	tdc.SetDwCommonButtons(btns)
 	tdc.SetHMainIcon(win.TdcIconTdi(ico))

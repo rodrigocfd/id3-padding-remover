@@ -1,15 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"id3fit/dlgfields"
 	"id3fit/id3v2"
+	"id3fit/prompt"
 	"runtime"
+	"runtime/debug"
+	"time"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 )
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			prompt.Error(nil, "Panic", nil,
+				fmt.Sprintf("PANIC @ %v\n\n%v\n\n%s",
+					time.Now(), r, string(debug.Stack())))
+		}
+	}()
 	runtime.LockOSThread()
 	NewDlgMain().Run()
 }
