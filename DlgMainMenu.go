@@ -206,9 +206,9 @@ func (me *DlgMain) eventsMenu() {
 			fmt.Sprintf("Rodrigo César de Freitas Dias (C) 2021\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
-				"Alloc mem: %s\n"+
-				"Alloc sys: %s\n"+
-				"Alloc idle: %s\n"+
+				"Objects mem: %s\n"+
+				"Reserved sys: %s\n"+
+				"Idle spans: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s",
 				win.Str.FmtBytes(memStats.HeapAlloc),
