@@ -191,7 +191,7 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
-		resNfo, _ := win.LoadResourceInfo(win.HINSTANCE(0).GetModuleFileName())
+		resNfo, _ := win.ResourceInfoLoad(win.HINSTANCE(0).GetModuleFileName())
 		vsf, _ := resNfo.FixedFileInfo()
 		vMaj, vMin, vPat, _ := vsf.ProductVersion()
 

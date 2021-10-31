@@ -20,7 +20,7 @@ func (me *DlgFields) eventsWm() {
 				fmt.Sprintf("Genres file not found:\n\n%s", genresTxt))
 		} else {
 			genres := func() []string {
-				fin, _ := win.OpenFileMapped(genresTxt, co.OPEN_FILE_READ_EXISTING)
+				fin, _ := win.FileMappedOpen(genresTxt, co.FILE_OPEN_READ_EXISTING)
 				defer fin.Close()
 				return fin.ReadLines()
 			}()

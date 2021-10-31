@@ -44,7 +44,7 @@ func (me *Tag) Frames() []Frame      { return me.frames }
 func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
 
 func (me *Tag) readFromFile(mp3Path string) error {
-	fMap, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_READ_EXISTING)
+	fMap, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
 	if err != nil {
 		return fmt.Errorf("opening file to read: %w", err)
 	}
@@ -162,7 +162,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 		}
 	}
 
-	fout, err := win.OpenFileMapped(mp3Path, co.OPEN_FILE_RW_EXISTING)
+	fout, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_RW_EXISTING)
 	if err != nil {
 		return fmt.Errorf("opening file to serialize: %w", err)
 	}
