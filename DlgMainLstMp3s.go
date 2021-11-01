@@ -20,6 +20,7 @@ func (me *DlgMain) eventsLstFiles() {
 					me.updateTitlebarCount(me.lstMp3s.Items().Count())
 					me.displayFramesOfSelectedFiles()
 					me.lstMp3sSelLocked = false
+					me.updateMemoryStatus()
 				})
 		}
 	})

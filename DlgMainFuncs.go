@@ -5,10 +5,23 @@ import (
 	"id3fit/dlgrun"
 	"id3fit/id3v2"
 	"id3fit/prompt"
+	"runtime"
 	"strconv"
 
 	"github.com/rodrigocfd/windigo/win"
 )
+
+func (me *DlgMain) updateMemoryStatus() {
+	memStats := runtime.MemStats{}
+	runtime.ReadMemStats(&memStats)
+
+	parts := me.statusBar.Parts()
+	parts.SetText(0, fmt.Sprintf("Objects mem: %s", win.Str.FmtBytes(memStats.HeapAlloc)))
+	parts.SetText(1, fmt.Sprintf("Reserved sys: %s", win.Str.FmtBytes(memStats.HeapSys)))
+	parts.SetText(2, fmt.Sprintf("Idle spans: %s", win.Str.FmtBytes(memStats.HeapIdle)))
+	parts.SetText(3, fmt.Sprintf("GC cycles: %d", memStats.NumGC))
+	parts.SetText(4, fmt.Sprintf("Next GC: %s", win.Str.FmtBytes(memStats.NextGC)))
+}
 
 func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	var errMp3 string
@@ -111,6 +124,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 		selTags = append(selTags, me.cachedTags[selMp3])
 	}
 	me.dlgFields.Feed(selTags)
+	me.updateMemoryStatus()
 }
 
 func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
@@ -195,5 +209,6 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 			}
 		}
 	}
+	me.updateMemoryStatus()
 	return
 }

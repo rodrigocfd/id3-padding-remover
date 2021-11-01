@@ -28,6 +28,10 @@ func (me *DlgMain) eventsWm() {
 		me.lstFrames.Columns().SetWidthToFill(1)
 		me.lstFrames.Hwnd().EnableWindow(false)
 
+		// Status bar parts.
+		me.statusBar.Parts().AddResizable(1, 1, 1, 1, 1)
+		me.updateMemoryStatus()
+
 		return true
 	})
 

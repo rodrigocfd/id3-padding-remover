@@ -22,6 +22,7 @@ func main() {
 		}
 	}()
 	runtime.LockOSThread()
+	debug.SetGCPercent(5)
 	NewDlgMain().Run()
 }
 
@@ -31,6 +32,7 @@ type DlgMain struct {
 	lstMp3sSelLocked bool // LVN_ITEMCHANGED is scheduled to fire?
 	dlgFields        *dlgfields.DlgFields
 	lstFrames        ui.ListView
+	statusBar        ui.StatusBar
 	cachedTags       map[string]*id3v2.Tag // for each file currently in the list
 }
 
@@ -42,6 +44,7 @@ func NewDlgMain() *DlgMain {
 		lstMp3s:    ui.NewListViewDlg(wnd, LST_MP3S, ui.HORZ_RESIZE, ui.VERT_RESIZE, MNU_MAIN),
 		dlgFields:  dlgfields.NewDlgFields(wnd, win.POINT{X: 292, Y: 4}, ui.HORZ_REPOS, ui.VERT_NONE),
 		lstFrames:  ui.NewListViewDlg(wnd, LST_FRAMES, ui.HORZ_REPOS, ui.VERT_RESIZE, 0),
+		statusBar:  ui.NewStatusBar(wnd),
 		cachedTags: make(map[string]*id3v2.Tag),
 	}
 

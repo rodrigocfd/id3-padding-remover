@@ -131,24 +131,23 @@ func (me *DlgMain) eventsMenu() {
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 		proceed := prompt.OkCancel(me.wnd, "Delete tag", nil,
 			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s)))
-		if !proceed {
-			return
-		}
 
-		t0 := timecount.New()
+		if proceed {
+			t0 := timecount.New()
 
-		for _, selMp3 := range selMp3s {
-			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(_ id3v2.Frame) (willDelete bool) {
-				return true
+			for _, selMp3 := range selMp3s {
+				tag := me.cachedTags[selMp3]
+				tag.DeleteFrames(func(_ id3v2.Frame) (willDelete bool) {
+					return true
+				})
+			}
+
+			me.reSaveTagsOfSelectedFiles(func() {
+				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+					fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
+						len(selMp3s), t0.ElapsedMs()))
 			})
 		}
-
-		me.reSaveTagsOfSelectedFiles(func() {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
-					len(selMp3s), t0.ElapsedMs()))
-		})
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_COPY, func(_ wm.Command) {
