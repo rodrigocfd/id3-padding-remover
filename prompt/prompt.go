@@ -14,9 +14,9 @@ func Info(parent ui.AnyParent, title string, header win.StrOrNil, body string) {
 	_Base(parent, title, header, body, co.TDCBF_OK, co.TD_ICON_INFORMATION)
 }
 
-func OkCancel(parent ui.AnyParent, title string, header win.StrOrNil, body string) co.ID {
+func OkCancel(parent ui.AnyParent, title string, header win.StrOrNil, body string) bool {
 	return _Base(parent, title, header, body,
-		co.TDCBF_OK|co.TDCBF_CANCEL, co.TD_ICON_WARNING)
+		co.TDCBF_OK|co.TDCBF_CANCEL, co.TD_ICON_WARNING) == co.ID_OK
 }
 
 func _Base(parent ui.AnyParent,

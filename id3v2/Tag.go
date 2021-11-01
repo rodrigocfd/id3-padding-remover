@@ -197,7 +197,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	return nil
 }
 
-func (me *Tag) DeleteFrames(fun func(f Frame) bool) {
+func (me *Tag) DeleteFrames(fun func(f Frame) (willDelete bool)) {
 	newSlice := make([]Frame, 0, len(me.frames))
 
 	for _, f := range me.frames {

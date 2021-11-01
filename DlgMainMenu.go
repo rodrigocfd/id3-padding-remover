@@ -18,7 +18,7 @@ func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		if p.Hmenu() == me.lstMp3s.ContextMenu() {
 			cmdIds := []int{MNU_DELETE,
-				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC,
+				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC, MNU_DEL_TAG,
 				MNU_COPY, MNU_RENAME, MNU_RENAME_PREFIX}
 			for _, cmdId := range cmdIds {
 				p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
@@ -85,7 +85,7 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(fr id3v2.Frame) bool {
+			tag.DeleteFrames(func(fr id3v2.Frame) (willDelete bool) {
 				if frMulti, ok := fr.(*id3v2.FrameMultiText); ok {
 					return frMulti.IsReplayGain()
 				}
@@ -106,7 +106,7 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(frDyn id3v2.Frame) bool {
+			tag.DeleteFrames(func(frDyn id3v2.Frame) (willDelete bool) {
 				if frMulti, ok := frDyn.(*id3v2.FrameMultiText); ok {
 					if frMulti.IsReplayGain() {
 						return true
@@ -123,6 +123,30 @@ func (me *DlgMain) eventsMenu() {
 		me.reSaveTagsOfSelectedFiles(func() {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
+		})
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_DEL_TAG, func(_ wm.Command) {
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		proceed := prompt.OkCancel(me.wnd, "Delete tag", nil,
+			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s)))
+		if !proceed {
+			return
+		}
+
+		t0 := timecount.New()
+
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
+			tag.DeleteFrames(func(_ id3v2.Frame) (willDelete bool) {
+				return true
+			})
+		}
+
+		me.reSaveTagsOfSelectedFiles(func() {
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		})
 	})
