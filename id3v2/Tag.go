@@ -17,12 +17,12 @@ type Tag struct {
 	frames          []Frame
 }
 
-// Constructor.
-func NewEmptyTag() *Tag { return &Tag{} }
+// Constructor; creates a new tag with no frames.
+func TagNewEmpty() *Tag { return &Tag{} }
 
 // Constructor; reads the tag from an MP3 file.
-func ReadTagFromFile(mp3Path string) (*Tag, error) {
-	me := NewEmptyTag()
+func TagReadFromFile(mp3Path string) (*Tag, error) {
+	me := TagNewEmpty()
 	if err := me.readFromFile(mp3Path); err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func ReadTagFromFile(mp3Path string) (*Tag, error) {
 }
 
 // Constructor; reads the tag from a binary blob.
-func ReadTagFromBinary(src []byte) (*Tag, error) {
+func TagReadFromBinary(src []byte) (*Tag, error) {
 	me := &Tag{}
 	if err := me.readFromBinary(src); err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	defer fout.Close()
 	foutMem := fout.HotSlice()
 
-	currentTag, err := ReadTagFromBinary(foutMem)
+	currentTag, err := TagReadFromBinary(foutMem)
 	if err != nil {
 		return fmt.Errorf("reading current tag: %w", err)
 	}

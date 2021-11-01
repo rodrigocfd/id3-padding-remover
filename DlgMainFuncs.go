@@ -16,9 +16,9 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	dlgRun := dlgrun.NewDlgRun()
 	dlgRun.Show(me.wnd, func() { // this function will run in another thread
 		for _, mp3 := range mp3s {
-			tag, err := id3v2.ReadTagFromFile(mp3) // read all files sequentially
+			tag, err := id3v2.TagReadFromFile(mp3) // read all files sequentially
 			if _, ok := err.(*id3v2.ErrorNoTagFound); ok {
-				tag = id3v2.NewEmptyTag()
+				tag = id3v2.TagNewEmpty()
 			} else if err != nil { // any other error
 				errMp3, errErr = mp3, err
 				break // nothing else will be done
@@ -154,11 +154,11 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 
 		var track string
 		if withTrackPrefix {
-			trackStr, has := theTag.TextByName4(id3v2.TEXT_TRACK)
-			if !has {
+			if trackStr, has := theTag.TextByName4(id3v2.TEXT_TRACK); !has {
 				return 0, fmt.Errorf("track frame absent")
+			} else {
+				track = trackStr
 			}
-			track = trackStr
 		}
 
 		artist, has := theTag.TextByName4(id3v2.TEXT_ARTIST)
@@ -184,7 +184,7 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 				win.Path.GetPath(selMp3), artist, title)
 		}
 
-		if newPath != selMp3 {
+		if newPath != selMp3 { // file name actually changed?
 			delete(me.cachedTags, selMp3)
 			me.cachedTags[newPath] = theTag // re-insert tag under new name
 			selItem.SetText(0, newPath)     // rename list view item
