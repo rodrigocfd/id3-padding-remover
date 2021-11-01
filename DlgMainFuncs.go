@@ -40,7 +40,7 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 
 		padding := "N/A"
 		if !tag.IsEmpty() {
-			padding = strconv.Itoa(tag.OriginalPadding())
+			padding = strconv.Itoa(tag.Padding())
 		}
 
 		if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
@@ -95,7 +95,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 					fmt.Sprintf("%s (%.2f%%)",
 						win.Str.FmtBytes(binLen), // frame size
 						float64(binLen)*100/ // percent of whole tag size
-							float64(cachedTag.OriginalSize())),
+							float64(cachedTag.Mp3Offset())),
 				)
 			}
 		}

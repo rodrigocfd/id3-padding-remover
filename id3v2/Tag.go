@@ -11,101 +11,102 @@ import (
 )
 
 // Metadata of a single MP3 file, composed of many frames.
+// If the tag has no frames, it means the tag itself is absent in file.
 type Tag struct {
-	originalSize    int
-	originalPadding int
-	frames          []Frame
+	declaredSize int
+	mp3Offset    int
+	padding      int
+	frames       []Frame
 }
 
+func (me *Tag) DeclaredSize() int { return me.declaredSize }
+func (me *Tag) Mp3Offset() int    { return me.mp3Offset }
+func (me *Tag) Padding() int      { return me.padding }
+func (me *Tag) Frames() []Frame   { return me.frames }
+func (me *Tag) IsEmpty() bool     { return len(me.frames) == 0 }
+
 // Constructor; creates a new tag with no frames.
+// If saved, will actually remove the tag from file.
 func TagNewEmpty() *Tag { return &Tag{} }
 
 // Constructor; reads the tag from an MP3 file.
 func TagReadFromFile(mp3Path string) (*Tag, error) {
-	me := TagNewEmpty()
-	if err := me.readFromFile(mp3Path); err != nil {
-		return nil, err
+	fin, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open MP3 file: %w", err)
 	}
-	return me, nil
+	defer fin.Close()
+
+	return TagReadFromBinary(fin.HotSlice())
 }
 
 // Constructor; reads the tag from a binary blob.
 func TagReadFromBinary(src []byte) (*Tag, error) {
-	me := &Tag{}
-	if err := me.readFromBinary(src); err != nil {
-		return nil, err
+	declaredSize, mp3Offset, err := _TagParseHeader(src)
+	if err != nil {
+		return nil, fmt.Errorf("binary read: %w", err)
 	}
-	return me, nil
+
+	if declaredSize == 0 && mp3Offset == 0 {
+		return TagNewEmpty(), nil // file has no tag
+	} else if declaredSize == 0 && mp3Offset > 0 {
+		return nil, fmt.Errorf("file has no tag, but MP3 has offset")
+	}
+
+	frames, padding, err := _TagParseFrames(src[10:declaredSize])
+	if err != nil {
+		return nil, fmt.Errorf("binary read: %w", err)
+	}
+
+	return &Tag{
+		declaredSize: declaredSize,
+		mp3Offset:    mp3Offset,
+		padding:      padding,
+		frames:       frames,
+	}, nil
 }
 
-func (me *Tag) OriginalSize() int    { return me.originalSize }
-func (me *Tag) OriginalPadding() int { return me.originalPadding }
-func (me *Tag) Frames() []Frame      { return me.frames }
-func (me *Tag) IsEmpty() bool        { return len(me.frames) == 0 }
-
-func (me *Tag) readFromFile(mp3Path string) error {
-	fMap, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
-	if err != nil {
-		return fmt.Errorf("opening file to read: %w", err)
-	}
-	defer fMap.Close()
-
-	return me.readFromBinary(fMap.HotSlice())
-}
-
-func (me *Tag) readFromBinary(src []byte) error {
-	originalSize, err := me.parseTagHeader(src)
-	if err != nil {
-		return fmt.Errorf("parsing tag header: %w", err)
-	}
-	src = src[10:originalSize] // skip 10-byte tag header; truncate to tag bounds
-
-	frames, originalPadding, err := me.parseAllFrames(src)
-	if err != nil {
-		return fmt.Errorf("parsing all frames: %w", err)
+func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
+	// Read MP3 offset.
+	mp3Off, has := util.FindMp3Signature(src)
+	if !has {
+		return 0, 0, fmt.Errorf("no MP3 signature found")
 	}
 
-	me.originalSize = originalSize
-	me.originalPadding = originalPadding
-	me.frames = frames
-	return nil
-}
-
-func (me *Tag) parseTagHeader(src []byte) (tagSize int, e error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, &ErrorNoTagFound{}
+		return 0, mp3Off, nil // MP3 file has no tag
 	}
 
 	// Validate tag version 2.3.0.
 	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
-		return 0, fmt.Errorf(
+		return 0, 0, fmt.Errorf(
 			"tag version 2.%d.%d is not supported, only 2.3.0",
 			src[3], src[4])
 	}
 
 	// Validate unsupported flags.
 	if (src[5] & 0b1000_0000) != 0 {
-		return 0, fmt.Errorf("unsynchronised tag not supported")
+		return 0, 0, fmt.Errorf("unsynchronised tag not supported")
 	} else if (src[5] & 0b0100_0000) != 0 {
-		return 0, fmt.Errorf("tag extended header not supported")
+		return 0, 0, fmt.Errorf("tag extended header not supported")
 	}
 
-	// Read and validate tag size.
-	mp3Off, hasMp3Off := util.FindMp3Signature(src)
-	writtenTagSize := int(util.SynchSafeDecode(
+	// Read declared tag size and MP3 offset.
+	declaredTagSize := int(util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
 	) + 10)
 
-	if hasMp3Off && mp3Off != writtenTagSize {
-		return 0, fmt.Errorf("bad written tag size: %d (actual %d)", writtenTagSize, mp3Off)
+	if declaredSize > mp3Off {
+		return 0, 0, fmt.Errorf(
+			"declared size is greater than MP3 offset: %d vs %d", declaredSize, mp3Off)
 	}
-	return writtenTagSize, nil
+
+	return declaredTagSize, mp3Off, nil
 }
 
-func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
-	frames := make([]Frame, 0, 6) // arbitrary capacity
-	padding := 0
+func _TagParseFrames(src []byte) (frames []Frame, padding int, e error) {
+	frames = make([]Frame, 0, 10) // arbitrary capacity
 
 	for {
 		if len(src) == 0 { // end of tag, no padding found
@@ -130,6 +131,7 @@ func (me *Tag) parseAllFrames(src []byte) ([]Frame, int, error) {
 	return frames, padding, nil
 }
 
+// Serializes the tag into a raw []byte.
 func (me *Tag) Serialize() ([]byte, error) {
 	framesBlob := make([]byte, 0, 100) // arbitrary; all serialized frames
 	for _, frame := range me.frames {
@@ -152,13 +154,14 @@ func (me *Tag) Serialize() ([]byte, error) {
 	return final, nil
 }
 
+// Saves or removes the tag in an MP3 file.
 func (me *Tag) SerializeToFile(mp3Path string) error {
-	newTag := []byte{} // if tag is empty, this will actually remove any existing tag
+	newTagBlob := []byte{} // if tag is empty, this will actually remove any existing tag
 	if !me.IsEmpty() {
 		if theNewTag, err := me.Serialize(); err != nil {
 			return fmt.Errorf("serializing tag: %w", err)
 		} else {
-			newTag = theNewTag
+			newTagBlob = theNewTag
 		}
 	}
 
@@ -174,7 +177,7 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 		return fmt.Errorf("reading current tag: %w", err)
 	}
 
-	diff := len(newTag) - currentTag.OriginalSize() // size difference between new/old tags
+	diff := len(newTagBlob) - currentTag.Mp3Offset() // size difference between new/old tags
 
 	if diff > 0 { // new tag is larger, we need to make room
 		if err := fout.Resize(fout.Size() + diff); err != nil {
@@ -183,10 +186,12 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	}
 
 	// Move the MP3 data block inside the file, back or forth.
-	copy(foutMem[int(currentTag.OriginalSize())+diff:], foutMem[currentTag.OriginalSize():])
+	destPos := int(currentTag.Mp3Offset()) + diff
+	srcPos := currentTag.Mp3Offset()
+	copy(foutMem[destPos:], foutMem[srcPos:])
 
 	// Copy the new tag into the file, no padding.
-	copy(foutMem, newTag)
+	copy(foutMem, newTagBlob)
 
 	if diff < 0 { // new tag is shorter, shrink
 		if err := fout.Resize(fout.Size() + diff); err != nil {
