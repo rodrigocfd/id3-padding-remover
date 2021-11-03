@@ -26,11 +26,11 @@ func _Base(parent ui.AnyParent,
 	tdc := win.TASKDIALOGCONFIG{
 		DwFlags:         co.TDF_ALLOW_DIALOG_CANCELLATION,
 		DwCommonButtons: btns,
+		HMainIcon:       win.TdcIconTdi(ico),
 	}
 	if parent != nil {
 		tdc.HwndParent = parent.Hwnd()
 	}
-	tdc.SetHMainIcon(win.TdcIconTdi(ico))
 	tdc.SetPszWindowTitle(title)
 	if header, ok := header.(win.StrVal); ok { // not nil?
 		tdc.SetPszMainInstruction(string(header))
