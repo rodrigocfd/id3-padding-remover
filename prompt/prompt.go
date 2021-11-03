@@ -23,13 +23,13 @@ func _Base(parent ui.AnyParent,
 	title string, header win.StrOrNil, body string,
 	btns co.TDCBF, ico co.TD_ICON) co.ID {
 
-	tdc := win.TASKDIALOGCONFIG{}
-	tdc.SetCbSize()
-	if parent != nil {
-		tdc.SetHwndParent(parent.Hwnd())
+	tdc := win.TASKDIALOGCONFIG{
+		DwFlags:         co.TDF_ALLOW_DIALOG_CANCELLATION,
+		DwCommonButtons: btns,
 	}
-	tdc.SetDwFlags(co.TDF_ALLOW_DIALOG_CANCELLATION)
-	tdc.SetDwCommonButtons(btns)
+	if parent != nil {
+		tdc.HwndParent = parent.Hwnd()
+	}
 	tdc.SetHMainIcon(win.TdcIconTdi(ico))
 	tdc.SetPszWindowTitle(title)
 	if header, ok := header.(win.StrVal); ok { // not nil?

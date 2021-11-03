@@ -14,9 +14,9 @@ func (me *DlgMain) eventsLstFiles() {
 		if !me.lstMp3sSelLocked {
 			me.lstMp3sSelLocked = true
 
-			me.wnd.Hwnd().SetTimer(TIMER_LSTFILES, 50, // wait between LVM_ITEMCHANGED updates
-				func(_ uint32) {
-					me.wnd.Hwnd().KillTimer(TIMER_LSTFILES)
+			me.wnd.Hwnd().SetTimerCallback(50, // wait between LVM_ITEMCHANGED updates
+				func(id uintptr) {
+					me.wnd.Hwnd().KillTimer(id)
 					me.updateTitlebarCount(me.lstMp3s.Items().Count())
 					me.displayFramesOfSelectedFiles()
 					me.lstMp3sSelLocked = false

@@ -25,7 +25,3 @@ const (
 	MNU_RENAME_PREFIX
 	MNU_ABOUT
 )
-
-const (
-	TIMER_LSTFILES uintptr = iota + 100
-)

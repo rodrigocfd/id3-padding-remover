@@ -22,7 +22,7 @@ func main() {
 		}
 	}()
 	runtime.LockOSThread()
-	debug.SetGCPercent(5)
+	debug.SetGCPercent(50)
 	NewDlgMain().Run()
 }
 
