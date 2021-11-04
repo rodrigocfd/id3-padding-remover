@@ -27,7 +27,7 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 				sameStr := true // the field value is the same across all tags?
 
 				for t := 1; t < len(tags); t++ { // subsequent tags
-					if otherText, ok := tags[t].TextByName4(field.FrameId); ok {
+					if otherText, hasFrame := tags[t].TextByName4(field.FrameId); hasFrame {
 						if otherText != firstText {
 							sameStr = false
 							break
