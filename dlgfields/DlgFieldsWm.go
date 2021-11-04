@@ -72,7 +72,7 @@ func (me *DlgFields) eventsWm() {
 				continue
 			}
 
-			newText := strings.TrimSpace(field.Txt.Hwnd().GetWindowText())
+			newText := strings.TrimSpace(field.Txt.Text())
 			for _, tag := range me.tagsLoaded {
 				// Empty text will delete the frame.
 				// Tags are not flushed to disk here, it's DlgMain's job.

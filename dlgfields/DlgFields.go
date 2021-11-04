@@ -13,7 +13,7 @@ type Field struct {
 	ChkId   int
 	TxtId   int
 	Chk     ui.CheckBox
-	Txt     ui.AnyNativeControl
+	Txt     ui.AnyTextControl
 }
 
 type DlgFields struct {
