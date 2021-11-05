@@ -1,4 +1,4 @@
-use winsafe::{self as w, ErrResult};
+use winsafe::{self as w};
 
 const BOM_LE: u16 = 0xfe_ff;
 const BOM_BE: u16 = 0xff_fe;
@@ -31,7 +31,7 @@ pub fn synch_safe_decode(n: u32) -> u32 { // big-endian
 	out
 }
 
-pub fn parse_any_strings(src: &[u8]) -> ErrResult<Vec<String>> {
+pub fn parse_any_strings(src: &[u8]) -> w::ErrResult<Vec<String>> {
 	match src[0] {
 		0x00 => parse_iso88591_strings(&src[1..]), // skip encoding byte
 		0x01 => parse_unicode_strings(&src[1..]),
@@ -39,16 +39,15 @@ pub fn parse_any_strings(src: &[u8]) -> ErrResult<Vec<String>> {
 	}
 }
 
-pub fn parse_iso88591_strings(src: &[u8]) -> ErrResult<Vec<String>> {
+pub fn parse_iso88591_strings(src: &[u8]) -> w::ErrResult<Vec<String>> {
 	let mut texts: Vec<String> = Vec::with_capacity(1); // arbitrary
 	let mut buf16: Vec<u16> = Vec::default();
 
 	for str_block in src.split(|b| *b == 0x00).into_iter() { // trailing zeros will be discarded
 		buf16.clear();
 		buf16.reserve(str_block.len());
-		for ch in str_block.iter() {
-			buf16.push(*ch as _); // simple expansion from u8 to u16, for each char
-		}
+		str_block.iter()
+			.for_each(|ch| buf16.push(*ch as _)); // simple expansion from u8 to u16, for each char
 
 		let parsed_str = w::WString::from_wchars_slice(&buf16);
 		if !parsed_str.is_empty() {
@@ -59,18 +58,19 @@ pub fn parse_iso88591_strings(src: &[u8]) -> ErrResult<Vec<String>> {
 	Ok(texts)
 }
 
-pub fn parse_unicode_strings(mut src: &[u8]) -> ErrResult<Vec<String>> {
+pub fn parse_unicode_strings(mut src: &[u8]) -> w::ErrResult<Vec<String>> {
 	if (src.len() & 1) != 0 {
 		// Length is not even, something is not quite right.
 		// We'll simply discard the last byte and hope for the best.
 		src = &src[..src.len() - 1];
 	}
 
+	// Cast &[u8] to &[u16].
 	// https://users.rust-lang.org/t/how-best-to-convert-u8-to-u16/57551/4
 	let mut src16 = unsafe {
 		std::slice::from_raw_parts(
 			src.as_ptr().cast::<u16>(),
-			src.len() / 2
+			src.len() / 2,
 		)
 	};
 
@@ -88,9 +88,10 @@ pub fn parse_unicode_strings(mut src: &[u8]) -> ErrResult<Vec<String>> {
 	for str_block in src16.split(|b| *b == 0x0000).into_iter() { // trailing zeros will be discarded
 		buf16.clear();
 		buf16.reserve(str_block.len());
-		for ch in str_block.iter() {
-			buf16.push(if is_little_endian { *ch } else { ch.swap_bytes() });
-		}
+		str_block.iter()
+			.for_each(|ch|
+				buf16.push(if is_little_endian { *ch } else { ch.swap_bytes() }),
+			);
 
 		let parsed_str = w::WString::from_wchars_slice(&buf16);
 		if !parsed_str.is_empty() {
@@ -115,9 +116,11 @@ impl SerializedStrs {
 			let one_string = one_string_ref.as_ref();
 			estimated_len_bytes += one_string.len(); // doesn't always bring the real char number, though
 
-			is_unicode = one_string.chars().enumerate()
+			let is_this_string_unicode = one_string.chars()
+				.enumerate()
 				.find(|(_, ch)| *ch as u32 > 255)
 				.is_some();
+			if is_this_string_unicode { is_unicode = true; } // at least one string is Unicode
 		}
 
 		if is_unicode {

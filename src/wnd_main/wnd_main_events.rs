@@ -40,12 +40,10 @@ impl WndMain {
 		self.wnd.on().wm_size({
 			let self2 = self.clone();
 			move |p| {
-				if p.request == co::SIZE_R::MINIMIZED {
-					return Ok(());
+				if p.request != co::SIZE_R::MINIMIZED {
+					self2.lst_files.columns().set_width_to_fill(0)?;
+					self2.lst_frames.columns().set_width_to_fill(1)?;
 				}
-
-				self2.lst_files.columns().set_width_to_fill(0)?;
-				self2.lst_frames.columns().set_width_to_fill(1)?;
 				Ok(())
 			}
 		});
@@ -61,7 +59,7 @@ impl WndMain {
 						id::MNU_FILE_RENAME, id::MNU_FILE_RENAMETRCK,
 					].iter()
 						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel))
-						.collect::<Result<Vec<_>, _>>()?;
+						.collect::<w::WinResult<Vec<_>>>()?;
 				}
 				Ok(())
 			}
@@ -78,23 +76,21 @@ impl WndMain {
 		self.wnd.on().wm_drop_files({
 			let self2 = self.clone();
 			move |p| {
-				let mut all_files = Vec::default();
+				let mut all_files = Vec::with_capacity(5); // arbitrary
 
 				for file in p.hdrop.iter() {
 					let mut file = file?;
 					if w::GetFileAttributes(&file)?.has(co::FILE_ATTRIBUTE::DIRECTORY) {
-						if !file.ends_with('\\') {
-							file.push('\\');
-						}
+						if !file.ends_with('\\') { file.push('\\'); }
 						file.push_str("*.mp3");
 
 						for mp3 in w::HFINDFILE::iter(&file) { // search just 1 level below
 							let mp3 = mp3?;
-							if mp3.to_lowercase().ends_with(".mp3") {
+							if w::path::has_extension(&mp3, &[".mp3"]) {
 								all_files.push(mp3);
 							}
 						}
-					} else if file.to_lowercase().ends_with(".mp3") {
+					} else if w::path::has_extension(&file, &[".mp3"]) {
 						all_files.push(file);
 					}
 				}
@@ -120,12 +116,20 @@ impl WndMain {
 			let self2 = self.clone();
 			move |_| {
 				self2._display_sel_tags_frames()?;
-				self2.wnd_fields.show_text_fields(
-					self2.lst_files.items()
-						.iter_selected()
-						.map(|item| item.text(0))
+
+				self2.wnd_fields.feed(
+					self2.tags_cache.try_borrow()?
+						.iter()
+						.filter(|(file_name, _)|
+							self2.lst_files.items()
+								.iter_selected()
+								.find(|sel_item| sel_item.text(0) == **file_name)
+								.is_some(),
+						)
+						.map(|(_, tag)| tag.clone())
 						.collect::<Vec<_>>(),
 				)?;
+
 				self2._titlebar_count(PreDelete::No)?;
 				Ok(())
 			}
@@ -145,8 +149,9 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				self2._add_files( // reload all tags from their files
-					&self2.lst_files.items().iter_selected()
-						.map(|item| item.text(0))
+					&self2.lst_files.items()
+						.iter_selected()
+						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),
 				)
 			}

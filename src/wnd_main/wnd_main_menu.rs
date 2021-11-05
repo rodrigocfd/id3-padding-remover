@@ -34,8 +34,13 @@ impl WndMain {
 
 				if fileo.Show(self2.wnd.hwnd())? {
 					self2._add_files(
-						&fileo.GetResults()?
-							.GetDisplayNames(shell::co::SIGDN::FILESYSPATH)?,
+						&fileo.GetResults()?.iter()
+							.map(|shi|
+								shi.and_then(|shi|
+									shi.GetDisplayName(shell::co::SIGDN::FILESYSPATH)
+								),
+							)
+							.collect::<w::WinResult<Vec<_>>>()?,
 					)?;
 				}
 				Ok(())

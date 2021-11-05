@@ -1,6 +1,8 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use winsafe::{prelude::*, self as w, ErrResult, path};
 
-use crate::id3v2::{FrameData, Tag, TextField};
+use crate::id3v2::{FrameData, Tag, FieldName};
 use crate::util;
 use super::{PreDelete, WndMain};
 
@@ -30,7 +32,7 @@ impl WndMain {
 						"Tag reading failed", Some("Error"),
 						&format!("File: {}\n\n{}", file, e))?;
 					return Ok(()); // quit processing, nothing else is done
-				}
+				},
 			};
 
 			if let Some(existing_item) = self.lst_files.items().find(file) { // file already in list?
@@ -42,7 +44,8 @@ impl WndMain {
 				], Some(0))?;
 			}
 
-			self.tags_cache.try_borrow_mut()?.insert(file.to_owned(), tag); // cache or re-cache the tag
+			self.tags_cache.try_borrow_mut()?
+				.insert(file.to_owned(), Rc::new(RefCell::new(tag))); // cache or re-cache the tag
 		}
 
 		self.lst_files.set_redraw(true);
@@ -70,7 +73,7 @@ impl WndMain {
 		} else { // 1 single item selected, show its frames
 			let sel_item = self.lst_files.items().iter_selected().next().unwrap();
 			let tags_cache = self.tags_cache.try_borrow()?;
-			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap();
+			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap().try_borrow()?;
 
 			for frame in the_tag.frames().iter() {
 				let new_item = self.lst_frames.items().add(&[frame.name4()], None)?;
@@ -111,7 +114,7 @@ impl WndMain {
 
 			for sel_item in self.lst_files.items().iter_selected() {
 				let file_name = sel_item.text(0);
-				let the_tag = tags_cache.get_mut(&file_name).unwrap();
+				let mut the_tag = tags_cache.get_mut(&file_name).unwrap().try_borrow_mut()?;
 
 				the_tag.frames_mut().retain(|frame| {
 					if replay_gain && frame.name4() == "TXXX" {
@@ -143,50 +146,50 @@ impl WndMain {
 	}
 
 	pub(super) fn _rename_files(&self, with_track: bool) -> ErrResult<()> {
-		self.lst_files.set_redraw(false);
-		let clock = util::Timer::start()?;
-		let mut changed_count = 0;
+		// self.lst_files.set_redraw(false);
+		// let clock = util::Timer::start()?;
+		// let mut changed_count = 0;
 
-		for sel_item in self.lst_files.items().iter_selected() {
-			let file_name = sel_item.text(0);
+		// for sel_item in self.lst_files.items().iter_selected() {
+		// 	let file_name = sel_item.text(0);
 
-			let new_name = {
-				let tags_cache = self.tags_cache.try_borrow()?;
-				let the_tag = tags_cache.get(&file_name).unwrap();
+		// 	let new_name = {
+		// 		let tags_cache = self.tags_cache.try_borrow()?;
+		// 		let the_tag = tags_cache.get(&file_name).unwrap();
 
-				let artist = util::clear_diacritics(
-					the_tag.text_field(TextField::Artist).ok_or_else(|| "No artist frame.")??);
-				let title = util::clear_diacritics(
-					the_tag.text_field(TextField::Title).ok_or_else(|| "No title frame.")??);
-				let track = util::clear_diacritics(
-					the_tag.text_field(TextField::Track).ok_or_else(|| "No track frame.")??);
+		// 		let artist = util::clear_diacritics(
+		// 			the_tag.text_field(FieldName::Artist).ok_or_else(|| "No artist frame.")??);
+		// 		let title = util::clear_diacritics(
+		// 			the_tag.text_field(FieldName::Title).ok_or_else(|| "No title frame.")??);
+		// 		let track = util::clear_diacritics(
+		// 			the_tag.text_field(FieldName::Track).ok_or_else(|| "No track frame.")??);
 
-				path::replace_file_name(&file_name,
-					&if with_track {
-						format!("{:02} {} - {}.mp3", track.parse::<u16>()?, artist, title)
-					} else {
-						format!("{} - {}.mp3", artist, title)
-					})
-			};
-			if new_name == file_name { continue; } // same name, nothing to do
+		// 		path::replace_file_name(&file_name,
+		// 			&if with_track {
+		// 				format!("{:02} {} - {}.mp3", track.parse::<u16>()?, artist, title)
+		// 			} else {
+		// 				format!("{} - {}.mp3", artist, title)
+		// 			})
+		// 	};
+		// 	if new_name == file_name { continue; } // same name, nothing to do
 
-			{
-				let mut tags_cache = self.tags_cache.try_borrow_mut()?;
-				let renamed_tag = tags_cache.remove(&file_name).unwrap();
-				tags_cache.insert(new_name.clone(), renamed_tag); // reinsert tag under new name
-			}
+		// 	{
+		// 		let mut tags_cache = self.tags_cache.try_borrow_mut()?;
+		// 		let renamed_tag = tags_cache.remove(&file_name).unwrap();
+		// 		tags_cache.insert(new_name.clone(), renamed_tag); // reinsert tag under new name
+		// 	}
 
-			sel_item.set_text(0, &new_name)?; // change item
-			w::MoveFile(&file_name, &new_name)?; // rename file on disk
-			changed_count += 1;
-		}
+		// 	sel_item.set_text(0, &new_name)?; // change item
+		// 	w::MoveFile(&file_name, &new_name)?; // rename file on disk
+		// 	changed_count += 1;
+		// }
 
-		self.lst_files.set_redraw(true);
+		// self.lst_files.set_redraw(true);
 
-		util::prompt::info(self.wnd.hwnd(),
-			"Operation successful", Some("Success"),
-			&format!("{} file(s) renamed in {:.2} ms.",
-				changed_count, clock.now_ms()?))?;
+		// util::prompt::info(self.wnd.hwnd(),
+		// 	"Operation successful", Some("Success"),
+		// 	&format!("{} file(s) renamed in {:.2} ms.",
+		// 		changed_count, clock.now_ms()?))?;
 
 		Ok(())
 	}

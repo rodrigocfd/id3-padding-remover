@@ -1,6 +1,6 @@
 /// Known simple text fields.
-#[derive(Clone, Copy)]
-pub enum TextField {
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum FieldName {
 	Album,
 	Artist,
 	Genre,
@@ -11,7 +11,7 @@ pub enum TextField {
 	Comment, // behold: not a simple text frame
 }
 
-impl TextField {
+impl FieldName {
 	pub fn names(self) -> (&'static str, &'static str) {
 		match self {
 			Self::Album    => ("TALB", "Album"),

@@ -6,7 +6,7 @@ mod util;
 mod wnd_fields;
 mod wnd_main;
 
-use winsafe as w;
+use winsafe::{prelude::*, self as w};
 
 fn main() {
 	if let Err(e) = run_app() {

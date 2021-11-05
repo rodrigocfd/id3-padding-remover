@@ -1,4 +1,4 @@
-use winsafe::{self as w, WinResult};
+use winsafe::{prelude::*, self as w, WinResult};
 
 pub struct Timer(i64);
 
