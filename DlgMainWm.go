@@ -45,7 +45,7 @@ func (me *DlgMain) eventsWm() {
 	})
 
 	me.wnd.On().WmDropFiles(func(p wm.DropFiles) {
-		droppedFiles := p.Hdrop().GetFilesAndFinish()
+		droppedFiles := p.Hdrop().ListFilesAndFinish()
 		droppedMp3s := make([]string, 0, len(droppedFiles)) // MP3 files effectively found
 
 		for _, path := range droppedFiles {

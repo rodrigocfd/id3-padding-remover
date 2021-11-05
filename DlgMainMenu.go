@@ -52,7 +52,7 @@ func (me *DlgMain) eventsMenu() {
 		// fod.SetFolder(&shiDir)
 
 		if fod.Show(me.wnd.Hwnd()) {
-			mp3s := fod.GetResultsDisplayNames(shellco.SIGDN_FILESYSPATH)
+			mp3s := fod.ListResultDisplayNames(shellco.SIGDN_FILESYSPATH)
 			win.Path.Sort(mp3s)
 
 			// t0 := timecount.New()
