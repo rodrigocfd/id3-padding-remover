@@ -221,7 +221,7 @@ func (me *DlgMain) eventsMenu() {
 		block0 := resNfo.Blocks()[0]
 		productName, _ := resNfo.ProductName(block0.LangId, block0.CodePage)
 
-		memStats := runtime.MemStats{}
+		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",

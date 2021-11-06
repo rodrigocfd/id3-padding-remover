@@ -9,16 +9,25 @@ import (
 )
 
 type (
+	// Aglutinates enable + focus + text interfaces into one.
+	AnyEnabledFocusTextControl interface {
+		ui.AnyEnabledControl
+		ui.AnyFocusControl
+		ui.AnyTextControl
+	}
+
+	// Used to build the field blocks.
 	FieldDescr struct {
 		FrameId id3v2.TEXT
 		ChkId   int
 		TxtId   int
 	}
 
+	// Each field block to be stored in DlgFields.
 	Field struct {
 		FrameId id3v2.TEXT
 		Chk     ui.CheckBox
-		Txt     ui.AnyTextControl
+		Txt     AnyEnabledFocusTextControl
 	}
 )
 

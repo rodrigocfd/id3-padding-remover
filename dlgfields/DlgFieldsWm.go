@@ -54,10 +54,9 @@ func (me *DlgFields) eventsWm() {
 				me.btnClearChecks.Hwnd().EnableWindow(atLeastOneEnabled)
 				me.btnSave.Hwnd().EnableWindow(atLeastOneEnabled)
 
-				// if field.Chk.IsChecked() {
-				// 	me.wnd.Hwnd().SendMessage(
-				// 		co.WM_NEXTDLGCTL, win.WPARAM(0), win.LPARAM(0)) // focus txt
-				// }
+				if field.Chk.IsChecked() {
+					field.Txt.Focus()
+				}
 			})
 
 		}(&me.fields[i])

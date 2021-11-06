@@ -18,8 +18,9 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 
 	if len(tags) == 0 { // zero MP3s selected
 		for _, field := range me.fields {
+			field.Chk.SetCheckState(co.BST_UNCHECKED)
 			field.Txt.SetText("")
-			field.Chk.SetCheckStateAndTrigger(co.BST_UNCHECKED)
+			field.Txt.Enable(false)
 		}
 	} else {
 		for _, field := range me.fields {
@@ -39,16 +40,19 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 				}
 
 				if sameStr {
+					field.Chk.SetCheckState(co.BST_CHECKED)
 					field.Txt.SetText(firstText)
-					field.Chk.SetCheckStateAndTrigger(co.BST_CHECKED)
+					field.Txt.Enable(true)
 				} else {
+					field.Chk.SetCheckState(co.BST_UNCHECKED)
 					field.Txt.SetText("")
-					field.Chk.SetCheckStateAndTrigger(co.BST_UNCHECKED)
+					field.Txt.Enable(false)
 				}
 
 			} else { // frame absent in first tag
+				field.Chk.SetCheckState(co.BST_UNCHECKED)
 				field.Txt.SetText("")
-				field.Chk.SetCheckStateAndTrigger(co.BST_UNCHECKED)
+				field.Txt.Enable(false)
 			}
 		}
 	}
