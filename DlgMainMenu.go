@@ -240,5 +240,7 @@ func (me *DlgMain) eventsMenu() {
 				memStats.NumGC,
 				win.Str.FmtBytes(memStats.NextGC),
 			))
+
+		me.updateMemoryStatus()
 	})
 }

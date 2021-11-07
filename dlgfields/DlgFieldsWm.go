@@ -85,7 +85,7 @@ func (me *DlgFields) eventsWm() {
 		}
 
 		if me.onSaveCb != nil {
-			me.onSaveCb(t0)
+			me.onSaveCb(t0) // invoke parent's callback
 		}
 	})
 }
