@@ -92,7 +92,7 @@ out:
 		estimatedLenBytes += len(runeArr)
 
 		for _, ch := range runeArr {
-			if ch > 255 {
+			if ch > 127 { // MP3Tag appears to do this
 				isUnicode = true
 				break out
 			}
@@ -111,13 +111,13 @@ out:
 
 	blob = make([]byte, 0, estimatedLenBytes)
 
-	if isUnicode {
-		// Append the BOM bytes.
-		// All strings will be encoded as little-endian.
-		blob = Append16(blob, binary.LittleEndian, _BOM_LE)
-	}
-
 	for _, oneString := range theStrings {
+		if isUnicode {
+			// Append the BOM bytes.
+			// All strings will be encoded as little-endian.
+			blob = Append16(blob, binary.LittleEndian, _BOM_LE)
+		}
+
 		for _, ch := range oneString { // append each character to final blob
 			if isUnicode {
 				blob = Append16(blob, binary.LittleEndian, uint16(ch))
