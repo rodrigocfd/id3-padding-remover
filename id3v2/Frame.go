@@ -16,12 +16,12 @@ type Frame interface {
 }
 
 // Constructor.
-func _ParseFrame(src []byte) (Frame, error) {
-	header := _ParseFrameHeader(src)
+func _FrameParse(src []byte) (Frame, error) {
+	header := _FrameHeaderParse(src)
 	src = src[10:header.OriginalTagSize()] // skip frame header, truncate to frame size
 
 	if header.Name4() == "COMM" {
-		return _ParseFrameComment(header, src)
+		return _FrameCommentParse(header, src)
 
 	} else if header.Name4()[0] == 'T' {
 		texts, err := util.ParseAnyStrings(src)
@@ -32,14 +32,14 @@ func _ParseFrame(src []byte) (Frame, error) {
 		if len(texts) == 0 {
 			return nil, fmt.Errorf("Frame %s contains no texts", header.Name4())
 		} else if len(texts) == 1 {
-			return _NewFrameText(header, texts[0]), nil
+			return _FrameTextNew(header, texts[0]), nil
 		} else {
-			return _NewFrameMultiText(header, texts)
+			return _FrameMultiTextNew(header, texts)
 		}
 
 	} else {
 		// Anything else is treated as raw binary.
-		return _ParseFrameBinary(header, src), nil
+		return _FrameBinaryParse(header, src), nil
 	}
 }
 
@@ -52,7 +52,7 @@ type _FrameHeader struct {
 }
 
 // Constructor.
-func _MakeFrameHeader(name4 string) _FrameHeader {
+func _FrameHeaderMake(name4 string) _FrameHeader {
 	return _FrameHeader{
 		name4:        name4,
 		originalSize: 0,
@@ -61,7 +61,7 @@ func _MakeFrameHeader(name4 string) _FrameHeader {
 }
 
 // Constructor.
-func _ParseFrameHeader(src []byte) _FrameHeader {
+func _FrameHeaderParse(src []byte) _FrameHeader {
 	return _FrameHeader{
 		name4:        string(src[0:4]),
 		originalSize: int(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header

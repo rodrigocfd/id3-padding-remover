@@ -11,7 +11,7 @@ type FrameText struct {
 }
 
 // Constructor.
-func _NewFrameText(header _FrameHeader, text string) *FrameText {
+func _FrameTextNew(header _FrameHeader, text string) *FrameText {
 	return &FrameText{
 		_FrameHeader: header,
 		text:         text,

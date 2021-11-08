@@ -13,7 +13,7 @@ type FrameComment struct {
 }
 
 // Constructor.
-func _NewFrameComment(header _FrameHeader, lang, descr, text string) *FrameComment {
+func _FrameCommentNew(header _FrameHeader, lang, descr, text string) *FrameComment {
 	return &FrameComment{
 		_FrameHeader: header,
 		lang:         lang,
@@ -23,7 +23,7 @@ func _NewFrameComment(header _FrameHeader, lang, descr, text string) *FrameComme
 }
 
 // Constructor.
-func _ParseFrameComment(header _FrameHeader, src []byte) (*FrameComment, error) {
+func _FrameCommentParse(header _FrameHeader, src []byte) (*FrameComment, error) {
 	// Retrieve text encoding.
 	if src[0] != 0x00 && src[0] != 0x01 {
 		return nil, fmt.Errorf("unrecognized comment text encoding: %02x", src[0])
@@ -44,9 +44,9 @@ func _ParseFrameComment(header _FrameHeader, src []byte) (*FrameComment, error) 
 	}
 
 	if len(texts) == 2 {
-		return _NewFrameComment(header, lang, texts[0], texts[1]), nil
+		return _FrameCommentNew(header, lang, texts[0], texts[1]), nil
 	} else if len(texts) == 1 {
-		return _NewFrameComment(header, lang, "", texts[0]), nil
+		return _FrameCommentNew(header, lang, "", texts[0]), nil
 	} else {
 		return nil, fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}

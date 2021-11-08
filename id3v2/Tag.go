@@ -116,7 +116,7 @@ func _TagParseFrames(src []byte) (frames []Frame, padding int, e error) {
 			break
 		}
 
-		newFrame, err := _ParseFrame(src)
+		newFrame, err := _FrameParse(src)
 		if err != nil {
 			return nil, 0, fmt.Errorf("parsing frames: %w", err) // error when parsing the frame
 		}
@@ -264,12 +264,12 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 
 	} else { // frame does not exist yet
 		var newFrame Frame // polymorphic frame
-		frBase := _MakeFrameHeader(string(name4))
+		header := _FrameHeaderMake(string(name4))
 
 		if name4 == TEXT_COMMENT {
-			newFrame = _NewFrameComment(frBase, "eng", "", text)
+			newFrame = _FrameCommentNew(header, "eng", "", text)
 		} else {
-			newFrame = _NewFrameText(frBase, text)
+			newFrame = _FrameTextNew(header, text)
 		}
 
 		me.frames = append(me.frames, newFrame)

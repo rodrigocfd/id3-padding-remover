@@ -12,7 +12,7 @@ type FrameMultiText struct {
 }
 
 // Constructor.
-func _NewFrameMultiText(header _FrameHeader, texts []string) (*FrameMultiText, error) {
+func _FrameMultiTextNew(header _FrameHeader, texts []string) (*FrameMultiText, error) {
 	if len(texts) < 2 {
 		return nil, fmt.Errorf("bad multi-text frame with only 1 text")
 	}
