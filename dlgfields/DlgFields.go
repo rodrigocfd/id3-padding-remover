@@ -11,7 +11,7 @@ import (
 type (
 	// Aglutinates enable + focus + text interfaces into one.
 	AnyEnabledFocusTextControl interface {
-		ui.AnyEnabledControl
+		ui.AnyEnableControl
 		ui.AnyFocusControl
 		ui.AnyTextControl
 	}

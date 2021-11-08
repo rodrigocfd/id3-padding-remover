@@ -46,7 +46,7 @@ func _FrameCommentParse(header _FrameHeader, src []byte) (*FrameComment, error) 
 	if len(texts) == 2 {
 		return _FrameCommentNew(header, lang, texts[0], texts[1]), nil
 	} else if len(texts) == 1 {
-		return _FrameCommentNew(header, lang, "", texts[0]), nil
+		return _FrameCommentNew(header, lang, "", texts[0]), nil // assume empty description
 	} else {
 		return nil, fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
