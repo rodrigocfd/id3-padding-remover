@@ -258,7 +258,7 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 			} else {
 				*fr.Text() = text
 			}
-		default:
+		default: // not simple text or comment: something went wrong
 			panic(fmt.Sprintf("Cannot set text on frame %s.", name4))
 		}
 
@@ -273,5 +273,26 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 		}
 
 		me.frames = append(me.frames, newFrame)
+	}
+}
+
+// Tells whether the field value is the same across all tags.
+//
+// If so, returns the value itself.
+func TagSameValueAcrossAll(tags []*Tag, textName TEXT) (string, bool) {
+	if firstText, ok := tags[0].TextByName4(textName); ok {
+		for i := 1; i < len(tags); i++ {
+			if otherText, hasFrame := tags[i].TextByName4(textName); hasFrame {
+				if otherText != firstText {
+					return "", false
+				}
+			} else { // frame absent in subsequent tag
+				return "", false
+			}
+		}
+		return firstText, true
+
+	} else { // frame absent in first tag
+		return "", false
 	}
 }

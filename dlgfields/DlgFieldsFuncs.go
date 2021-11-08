@@ -24,32 +24,11 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 		}
 	} else {
 		for _, field := range me.fields {
-			if firstText, ok := tags[0].TextByName4(field.FrameId); ok {
-				sameStr := true // the field value is the same across all tags?
-
-				for t := 1; t < len(tags); t++ { // subsequent tags
-					if otherText, hasFrame := tags[t].TextByName4(field.FrameId); hasFrame {
-						if otherText != firstText {
-							sameStr = false
-							break
-						}
-					} else { // frame absent in subsequent tag
-						sameStr = false
-						break
-					}
-				}
-
-				if sameStr {
-					field.Chk.SetCheckState(co.BST_CHECKED)
-					field.Txt.SetText(firstText)
-					field.Txt.Enable(true)
-				} else {
-					field.Chk.SetCheckState(co.BST_UNCHECKED)
-					field.Txt.SetText("")
-					field.Txt.Enable(false)
-				}
-
-			} else { // frame absent in first tag
+			if text, same := id3v2.TagSameValueAcrossAll(tags, field.FrameId); same {
+				field.Chk.SetCheckState(co.BST_CHECKED)
+				field.Txt.SetText(text)
+				field.Txt.Enable(true)
+			} else {
 				field.Chk.SetCheckState(co.BST_UNCHECKED)
 				field.Txt.SetText("")
 				field.Txt.Enable(false)
