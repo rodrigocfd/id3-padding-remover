@@ -1,8 +1,6 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use winsafe::{prelude::*, self as w, ErrResult, path};
 
-use crate::id3v2::{FrameData, Tag, FieldName};
+use crate::id3v2;
 use crate::util;
 use super::{PreDelete, WndMain};
 
@@ -25,7 +23,7 @@ impl WndMain {
 		for file_ref in files.iter() {
 			let file = file_ref.as_ref();
 
-			let tag = match Tag::read(file) { // parse the tag from file
+			let tag = match id3v2::Tag::read(file) { // parse the tag from file
 				Ok(tag) => tag,
 				Err(e) => {
 					util::prompt::err(self.wnd.hwnd(),
@@ -44,8 +42,7 @@ impl WndMain {
 				], Some(0))?;
 			}
 
-			self.tags_cache.try_borrow_mut()?
-				.insert(file.to_owned(), Rc::new(RefCell::new(tag))); // cache or re-cache the tag
+			self.tags_cache.try_borrow_mut()?.insert(file.to_owned(), tag); // cache or re-cache the tag
 		}
 
 		self.lst_files.set_redraw(true);
@@ -73,9 +70,10 @@ impl WndMain {
 		} else { // 1 single item selected, show its frames
 			let sel_item = self.lst_files.items().iter_selected().next().unwrap();
 			let tags_cache = self.tags_cache.try_borrow()?;
-			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap().try_borrow()?;
+			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap();
 
 			for frame in the_tag.frames().iter() {
+				use id3v2::FrameData;
 				let new_item = self.lst_frames.items().add(&[frame.name4()], None)?;
 
 				match frame.data() {
@@ -114,11 +112,11 @@ impl WndMain {
 
 			for sel_item in self.lst_files.items().iter_selected() {
 				let file_name = sel_item.text(0);
-				let mut the_tag = tags_cache.get_mut(&file_name).unwrap().try_borrow_mut()?;
+				let the_tag = tags_cache.get_mut(&file_name).unwrap();
 
 				the_tag.frames_mut().retain(|frame| {
 					if replay_gain && frame.name4() == "TXXX" {
-						if let FrameData::MultiText(texts) = frame.data() {
+						if let id3v2::FrameData::MultiText(texts) = frame.data() {
 							if texts[0].starts_with("replaygain_") {
 								return false;
 							}

@@ -118,15 +118,9 @@ impl WndMain {
 				self2._display_sel_tags_frames()?;
 
 				self2.wnd_fields.feed(
-					self2.tags_cache.try_borrow()?
-						.iter()
-						.filter(|(file_name, _)|
-							self2.lst_files.items()
-								.iter_selected()
-								.find(|sel_item| sel_item.text(0) == **file_name)
-								.is_some(),
-						)
-						.map(|(_, tag)| tag.clone())
+					&self2.lst_files.items()
+						.iter_selected()
+						.map(|item| item.text(0))
 						.collect::<Vec<_>>(),
 				)?;
 

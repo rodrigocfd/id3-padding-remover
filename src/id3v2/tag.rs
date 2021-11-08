@@ -1,6 +1,4 @@
-use std::cell::RefCell;
 use std::convert::TryInto;
-use std::rc::Rc;
 use winsafe::{self as w};
 
 use super::{Frame, FrameData, FieldName};
@@ -189,14 +187,14 @@ impl Tag {
 
 	/// Tells whether the field value is the same among all given tags.
 	pub fn same_field_value(
-		tags: &Vec<Rc<RefCell<Self>>>,
+		tags: &Vec<&Self>,
 		field_name: FieldName) -> w::ErrResult<Option<String>>
 	{
 		if tags.is_empty() { // no tags to look at
 			return Ok(None);
 		} else if tags.len() == 1 { // 1 single tag
 			return Ok(
-				tags[0].try_borrow()?
+				tags[0]
 					.text_field(field_name)?
 					.map(|s| s.to_owned()),
 			);
@@ -205,7 +203,7 @@ impl Tag {
 		let mut tags_iter = tags.iter();
 		let first_tag = tags_iter.next().unwrap(); // take first tag from iterator
 
-		let first_val = match first_tag.try_borrow()?
+		let first_val = match first_tag
 			.text_field(field_name)?
 			.map(|s| s.to_owned())
 		{
@@ -215,7 +213,7 @@ impl Tag {
 
 		let mut is_uniform = true;
 		for other_tag in tags_iter {
-			let other_val = match other_tag.try_borrow()?
+			let other_val = match other_tag
 				.text_field(field_name)?
 				.map(|s| s.to_owned())
 			{

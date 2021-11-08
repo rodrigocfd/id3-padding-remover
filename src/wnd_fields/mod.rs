@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use winsafe::{self as w, gui};
@@ -11,11 +12,11 @@ mod wnd_fields_privs;
 
 #[derive(Clone)]
 pub struct WndFields {
-	wnd:      gui::WindowControl,
-	fields:   Vec<Field>,
-	btn_save: gui::Button,
-	sel_tags: Rc<RefCell<Vec<Rc<RefCell<id3v2::Tag>>>>>,
-	save_cb:  Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,
+	wnd:        gui::WindowControl,
+	fields:     Vec<Field>,
+	btn_save:   gui::Button,
+	tags_cache: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+	save_cb:    Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,
 }
 
 #[derive(Clone)]

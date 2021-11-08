@@ -1,22 +1,24 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use winsafe::{prelude::*, self as w, gui, msg};
 
-use crate::id3v2::{FieldName, Tag};
+use crate::id3v2;
 use crate::ids::fields as id;
 use super::{Field, WndFields};
 
 impl WndFields {
 	pub fn new(
 		parent: &impl Parent,
+		tags_cache: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
 		pos: w::POINT,
 		horz: gui::Horz, vert: gui::Vert) -> Self
 	{
 		let wnd = gui::WindowControl::new_dlg(parent, id::DLG_FIELDS, pos, horz, vert, None);
 
 		use gui::{Horz::None as HNone, Vert::None as VNone};
-		use FieldName::*;
+		use id3v2::FieldName::*;
 		let fields = [
 			(Artist,   id::CHK_ARTIST,   id::TXT_ARTIST),
 			(Title,    id::CHK_TITLE,    id::TXT_TITLE),
@@ -40,8 +42,8 @@ impl WndFields {
 
 		let new_self = Self {
 			wnd, fields, btn_save,
-			sel_tags: Rc::new(RefCell::new(Vec::default())),
-			save_cb:  Rc::new(RefCell::new(None)),
+			tags_cache,
+			save_cb: Rc::new(RefCell::new(None)),
 		};
 		new_self._events();
 		new_self
@@ -53,19 +55,26 @@ impl WndFields {
 		*self.save_cb.borrow_mut() = Some(Box::new(callback));
 	}
 
-	pub fn feed(&self, tags: Vec<Rc<RefCell<Tag>>>) -> w::ErrResult<()> {
-		*self.sel_tags.try_borrow_mut()? = tags; // keep the tags currently being displayed
+	pub fn feed<S: AsRef<str>>(&self, sel_files: &[S]) -> w::ErrResult<()> {
+		let tags_cache = self.tags_cache.try_borrow()?;
+		let sel_tags = tags_cache.iter()
+			.filter(|(file_name, _)|
+				sel_files.iter()
+					.find(|sel_file| sel_file.as_ref() == *file_name)
+					.is_some(),
+			)
+			.map(|(_, tag)| tag)
+			.collect::<Vec<_>>();
 
 		for field in self.fields.iter() {
-			let (check_state, s) = match Tag::same_field_value(
-				self.sel_tags.try_borrow()?.as_ref(), field.name)?
-			{
+			let (check_state, s) = match id3v2::Tag::same_field_value(&sel_tags, field.name)? {
 				Some(s) => (gui::CheckState::Checked, w::WString::from_str(&s)),
 				None => (gui::CheckState::Unchecked, w::WString::from_str("")),
 			};
 
-			field.chk.set_check_state_and_trigger(check_state)?;
+			field.chk.set_check_state(check_state);
 			field.txt.set_text(&s.to_string())?;
+			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
 		}
 
 		self._update_after_check()
