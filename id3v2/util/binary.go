@@ -29,6 +29,39 @@ func IsSliceZeroed(blob []byte) bool {
 }
 
 // Splits the slice into chunks over the same underlying memory block.
+//
+// Unlike bytes.Split(), no empty chunks will be made.
+func Split8(src []uint8, sep uint8) [][]uint8 {
+	chunks := make([][]uint8, 0, 4) // arbitrary
+	beginIdx, curIdx := 0, 0
+
+	for {
+		if curIdx == len(src) || src[curIdx] == sep {
+			size := curIdx - beginIdx
+			if size > 0 {
+				chunks = append(chunks, unsafe.Slice(&src[beginIdx], size))
+			}
+
+			for curIdx != len(src) && src[curIdx] == sep {
+				curIdx++ // find the next non-separator
+			}
+			if curIdx == len(src) {
+				break // we reached end of slice
+			}
+
+			beginIdx = curIdx
+
+		} else {
+			curIdx++
+		}
+	}
+
+	return chunks
+}
+
+// Splits the slice into chunks over the same underlying memory block.
+//
+// Unlike bytes.Split(), no empty chunks will be made.
 func Split16(src []uint16, sep uint16) [][]uint16 {
 	chunks := make([][]uint16, 0, 4) // arbitrary
 	beginIdx, curIdx := 0, 0

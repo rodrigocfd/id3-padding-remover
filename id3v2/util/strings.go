@@ -1,7 +1,6 @@
 package util
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"unsafe"
@@ -22,7 +21,7 @@ func ParseAnyStrings(src []byte) ([]string, error) {
 		// Encoding is Unicode, may have 2-byte BOM.
 		return ParseUnicodeStrings(src[1:]), nil
 	default:
-		return nil, fmt.Errorf("unrecognized text encoding: %02x.", src[0])
+		return nil, fmt.Errorf("unrecognized text encoding: %02x", src[0])
 	}
 }
 
@@ -31,19 +30,15 @@ func ParseIso88591Strings(src []byte) []string {
 		src = src[:len(src)-1] // trim last zero, if any
 	}
 
-	strBlocks := bytes.Split(src, []byte{0x00})
+	strBlocks := Split8(src, 0x00)
 	texts := make([]string, 0, len(strBlocks))
 
 	for _, block := range strBlocks {
-		if len(block) == 0 {
-			texts = append(texts, "")
-		} else {
-			runes := make([]rune, 0, len(block))
-			for _, ch := range block {
-				runes = append(runes, rune(ch)) // convert byte to rune
-			}
-			texts = append(texts, string(runes)) // then convert []rune to string
+		runes := make([]rune, 0, len(block))
+		for _, ch := range block {
+			runes = append(runes, rune(ch)) // convert byte to rune
 		}
+		texts = append(texts, string(runes)) // then convert []rune to string
 	}
 
 	return texts
@@ -56,11 +51,7 @@ func ParseUnicodeStrings(src []byte) []string {
 		src = src[:len(src)-1]
 	}
 
-	src16 := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
-	if src16[len(src16)-1] == 0x00 {
-		src16 = src16[:len(src16)-1] // trim last zero, if any
-	}
-
+	src16 := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2) // []byte to []uint16
 	strBlocks16 := Split16(src16, 0x0000)
 	texts := make([]string, 0, len(strBlocks16))
 
@@ -75,17 +66,13 @@ func ParseUnicodeStrings(src []byte) []string {
 			block16 = block16[1:] // skip BOM
 		}
 
-		if len(block16) == 0 {
-			texts = append(texts, "")
-		} else {
-			runes := make([]rune, 0, len(block16))
-			block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2)
+		runes := make([]rune, 0, len(block16))
+		block8 := unsafe.Slice((*uint8)(unsafe.Pointer(&block16[0])), len(block16)*2) // []uint16 to []uint8
 
-			for i := 0; i < len(block8); i += 2 {
-				runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
-			}
-			texts = append(texts, string(runes)) // then convert []rune to string
+		for i := 0; i < len(block8); i += 2 {
+			runes = append(runes, rune(endianDecoder.Uint16(block8[i:]))) // raw conversion
 		}
+		texts = append(texts, string(runes)) // then convert []rune to string
 	}
 
 	return texts
