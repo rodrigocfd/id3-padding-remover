@@ -11,6 +11,8 @@ type FrameMultiText struct {
 	texts []string
 }
 
+func (me *FrameMultiText) Texts() *[]string { return &me.texts }
+
 // Constructor.
 func _FrameMultiTextNew(header _FrameHeader, texts []string) (*FrameMultiText, error) {
 	if len(texts) < 2 {
@@ -21,8 +23,6 @@ func _FrameMultiTextNew(header _FrameHeader, texts []string) (*FrameMultiText, e
 		texts:        texts,
 	}, nil
 }
-
-func (me *FrameMultiText) Texts() *[]string { return &me.texts }
 
 func (me *FrameMultiText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings(me.texts)

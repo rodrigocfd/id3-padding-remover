@@ -12,6 +12,9 @@ type FrameComment struct {
 	text  string
 }
 
+func (me *FrameComment) Lang() *string { return &me.lang }
+func (me *FrameComment) Text() *string { return &me.text }
+
 // Constructor.
 func _FrameCommentNew(header _FrameHeader, lang, descr, text string) *FrameComment {
 	return &FrameComment{
@@ -51,9 +54,6 @@ func _FrameCommentParse(header _FrameHeader, src []byte) (*FrameComment, error) 
 		return nil, fmt.Errorf("comment frame with multiple texts: %d", len(texts))
 	}
 }
-
-func (me *FrameComment) Lang() *string { return &me.lang }
-func (me *FrameComment) Text() *string { return &me.text }
 
 func (me *FrameComment) Serialize() ([]byte, error) {
 	if len(me.lang) != 3 {

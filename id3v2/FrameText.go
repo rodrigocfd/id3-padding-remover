@@ -10,6 +10,8 @@ type FrameText struct {
 	text string
 }
 
+func (me *FrameText) Text() *string { return &me.text }
+
 // Constructor.
 func _FrameTextNew(header _FrameHeader, text string) *FrameText {
 	return &FrameText{
@@ -17,8 +19,6 @@ func _FrameTextNew(header _FrameHeader, text string) *FrameText {
 		text:         text,
 	}
 }
-
-func (me *FrameText) Text() *string { return &me.text }
 
 func (me *FrameText) Serialize() ([]byte, error) {
 	encodingByte, data := util.SerializeStrings([]string{me.text})

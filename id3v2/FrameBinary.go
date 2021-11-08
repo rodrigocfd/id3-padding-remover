@@ -9,6 +9,8 @@ type FrameBinary struct {
 	binData []byte
 }
 
+func (me *FrameBinary) BinData() *[]byte { return &me.binData }
+
 // Constructor.
 func _FrameBinaryNew(header _FrameHeader, binData []byte) *FrameBinary {
 	return &FrameBinary{
@@ -24,8 +26,6 @@ func _FrameBinaryParse(base _FrameHeader, src []byte) *FrameBinary {
 
 	return _FrameBinaryNew(base, theData)
 }
-
-func (me *FrameBinary) BinData() *[]byte { return &me.binData }
 
 func (me *FrameBinary) Serialize() ([]byte, error) {
 	totalFrameSize := 10 + len(me.binData) // headerBlob + data

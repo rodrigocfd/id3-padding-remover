@@ -51,6 +51,10 @@ type _FrameHeader struct {
 	flags        [2]byte
 }
 
+func (me *_FrameHeader) Name4() string        { return me.name4 }
+func (me *_FrameHeader) OriginalTagSize() int { return me.originalSize }
+func (me *_FrameHeader) Flags() [2]byte       { return me.flags }
+
 // Constructor.
 func _FrameHeaderMake(name4 string) _FrameHeader {
 	return _FrameHeader{
@@ -68,10 +72,6 @@ func _FrameHeaderParse(src []byte) _FrameHeader {
 		flags:        [2]byte{src[8], src[9]},
 	}
 }
-
-func (me *_FrameHeader) Name4() string        { return me.name4 }
-func (me *_FrameHeader) OriginalTagSize() int { return me.originalSize }
-func (me *_FrameHeader) Flags() [2]byte       { return me.flags }
 
 func (me *_FrameHeader) serialize(totalFrameSize int) ([]byte, error) {
 	if len(me.name4) != 4 {
