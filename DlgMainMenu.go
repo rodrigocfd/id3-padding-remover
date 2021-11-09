@@ -215,11 +215,11 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
 		resNfo, _ := win.ResourceInfoLoad(win.HINSTANCE(0).GetModuleFileName())
-		vsf, _ := resNfo.FixedFileInfo()
-		vMaj, vMin, vPat, _ := vsf.ProductVersion()
+		verNfo, _ := resNfo.FixedFileInfo()
+		vMaj, vMin, vPat, _ := verNfo.ProductVersion()
 
-		block0 := resNfo.Blocks()[0]
-		productName, _ := resNfo.ProductName(block0.LangId, block0.CodePage)
+		blocks := resNfo.Blocks()
+		productName, _ := blocks[0].ProductName()
 
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
