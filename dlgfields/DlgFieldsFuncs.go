@@ -20,18 +20,18 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 		for _, field := range me.fields {
 			field.Chk.SetCheckState(co.BST_UNCHECKED)
 			field.Txt.SetText("")
-			field.Txt.Enable(false)
+			field.Txt.Hwnd().EnableWindow(false)
 		}
 	} else {
 		for _, field := range me.fields {
 			if text, same := id3v2.TagSameValueAcrossAll(tags, field.FrameId); same {
 				field.Chk.SetCheckState(co.BST_CHECKED)
 				field.Txt.SetText(text)
-				field.Txt.Enable(true)
+				field.Txt.Hwnd().EnableWindow(true)
 			} else {
 				field.Chk.SetCheckState(co.BST_UNCHECKED)
 				field.Txt.SetText("")
-				field.Txt.Enable(false)
+				field.Txt.Hwnd().EnableWindow(false)
 			}
 		}
 	}

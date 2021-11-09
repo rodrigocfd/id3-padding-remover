@@ -27,7 +27,7 @@ func (me *DlgFields) eventsWm() {
 
 			for i := range me.fields {
 				field := &me.fields[i]
-				if field.FrameId == id3v2.TEXT_GENRE {
+				if field.FrameId == id3v2.TEXT_GENRE { // find the genre combobox
 					cmbGenre := field.Txt.(ui.ComboBox)
 					cmbGenre.Items().Add(genres...)
 					break

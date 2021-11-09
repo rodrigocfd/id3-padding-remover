@@ -9,9 +9,8 @@ import (
 )
 
 type (
-	// Aglutinates enable + focus + text interfaces into one.
-	AnyEnabledFocusTextControl interface {
-		ui.AnyEnableControl
+	// Aglutinates focus + text interfaces into one.
+	AnyFocusTextControl interface {
 		ui.AnyFocusControl
 		ui.AnyTextControl
 	}
@@ -27,7 +26,7 @@ type (
 	Field struct {
 		FrameId id3v2.TEXT
 		Chk     ui.CheckBox
-		Txt     AnyEnabledFocusTextControl
+		Txt     AnyFocusTextControl
 	}
 )
 
