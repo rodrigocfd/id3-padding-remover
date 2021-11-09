@@ -43,20 +43,10 @@ func (me *DlgFields) eventsWm() {
 
 			field.Chk.On().BnClicked(func() {
 				field.Txt.Hwnd().EnableWindow(field.Chk.IsChecked()) // enable/disable input with checkbox
-
-				atLeastOneEnabled := false
-				for _, otherField := range me.fields {
-					if otherField.Txt.Hwnd().IsWindowEnabled() {
-						atLeastOneEnabled = true
-						break
-					}
-				}
-				me.btnClearChecks.Hwnd().EnableWindow(atLeastOneEnabled)
-				me.btnSave.Hwnd().EnableWindow(atLeastOneEnabled)
-
 				if field.Chk.IsChecked() {
-					field.Txt.Focus()
+					field.Txt.Focus() // if checkbox was checked, focus the edit
 				}
+				me.enableButtonsIfAtLeastOneChecked()
 			})
 
 		}(&me.fields[i])
@@ -64,8 +54,10 @@ func (me *DlgFields) eventsWm() {
 
 	me.btnClearChecks.On().BnClicked(func() {
 		for _, field := range me.fields {
-			field.Chk.SetCheckStateAndTrigger(co.BST_UNCHECKED)
+			field.Chk.SetCheckState(co.BST_UNCHECKED)
+			field.Txt.Hwnd().EnableWindow(false)
 		}
+		me.enableButtonsIfAtLeastOneChecked()
 	})
 
 	me.btnSave.On().BnClicked(func() {
