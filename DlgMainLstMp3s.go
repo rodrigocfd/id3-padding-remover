@@ -35,7 +35,7 @@ func (me *DlgMain) eventsLstFiles() {
 	me.lstMp3s.On().LvnKeyDown(func(p *win.NMLVKEYDOWN) {
 		if p.WVKey == co.VK_DELETE {
 			me.wnd.Hwnd().SendMessage(co.WM_COMMAND,
-				win.MAKEWPARAM(uint16(MNU_DELETE), 1), 0) // simulate menu command
+				win.MAKEWPARAM(uint16(MNU_MP3_DELETE), 1), 0) // simulate menu command
 		}
 	})
 }

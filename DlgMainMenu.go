@@ -17,9 +17,9 @@ import (
 func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		if p.Hmenu() == me.lstMp3s.ContextMenu() {
-			cmdIds := []int{MNU_DELETE,
-				MNU_REM_PAD, MNU_REM_RG, MNU_REM_RG_PIC, MNU_DEL_TAG,
-				MNU_COPY, MNU_RENAME, MNU_RENAME_PREFIX}
+			cmdIds := []int{MNU_MP3_DELETE,
+				MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
+				MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
 			for _, cmdId := range cmdIds {
 				p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
 					me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
@@ -27,7 +27,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_OPEN, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_OPEN, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(
 			win.CoCreateInstance(
 				shellco.CLSID_FileOpenDialog, nil,
@@ -64,13 +64,13 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_DELETE, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DELETE, func(_ wm.Command) {
 		me.lstMp3s.SetRedraw(false)
 		me.lstMp3s.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
 		me.lstMp3s.SetRedraw(true)
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_PAD, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_PAD, func(_ wm.Command) {
 		t0 := timecount.New()
 		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
@@ -79,7 +79,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
@@ -100,7 +100,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_REM_RG_PIC, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG_PIC, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
@@ -127,7 +127,7 @@ func (me *DlgMain) eventsMenu() {
 		})
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_DEL_TAG, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DEL_TAG, func(_ wm.Command) {
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 		proceed := prompt.OkCancel(me.wnd, "Delete tag", nil,
 			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s)))
@@ -150,7 +150,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_COPY, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_COPY_TO_FOLDER, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(
 			win.CoCreateInstance(
 				shellco.CLSID_FileOpenDialog, nil,
@@ -191,7 +191,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_RENAME, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME, func(_ wm.Command) {
 		t0 := timecount.New()
 		if count, err := me.renameSelectedFiles(false); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
@@ -202,7 +202,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_RENAME_PREFIX, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME_PREFIX, func(_ wm.Command) {
 		t0 := timecount.New()
 		if count, err := me.renameSelectedFiles(true); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
@@ -213,7 +213,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(MNU_ABOUT, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_MP3_ABOUT, func(_ wm.Command) {
 		resNfo, _ := win.ResourceInfoLoad(win.HINSTANCE(0).GetModuleFileName())
 		verNfo, _ := resNfo.FixedFileInfo()
 		vMaj, vMin, vPat, _ := verNfo.ProductVersion()
