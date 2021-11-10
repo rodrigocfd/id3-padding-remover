@@ -20,7 +20,7 @@ impl WndMain {
 
 		let wnd        = WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
 		let lst_files  = ListView::new_dlg(&wnd, id::LST_FILES, H::Resize, V::Resize, Some(context_menu));
-		let wnd_fields = WndFields::new(&wnd, tags_cache.clone(), w::POINT::new(496, 8), H::Repos, V::None);
+		let wnd_fields = WndFields::new(&wnd, tags_cache.clone(), w::POINT::new(330, 6), H::Repos, V::None);
 		let lst_frames = ListView::new_dlg(&wnd, id::LST_FRAMES, H::Repos, V::Resize, None);
 
 		let new_self = Self {
@@ -28,7 +28,7 @@ impl WndMain {
 			tags_cache,
 			app_name: util::app_name_from_res()?,
 		};
-		new_self._events();
+		new_self._events()?;
 		new_self._menu_events();
 		Ok(new_self)
 	}

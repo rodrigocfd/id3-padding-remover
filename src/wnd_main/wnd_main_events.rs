@@ -5,7 +5,7 @@ use super::PreDelete;
 use super::WndMain;
 
 impl WndMain {
-	pub(super) fn _events(&self) {
+	pub(super) fn _events(&self) -> w::ErrResult<()> {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
 			move |_| {
@@ -118,7 +118,7 @@ impl WndMain {
 				self2._display_sel_tags_frames()?;
 
 				self2.wnd_fields.feed(
-					&self2.lst_files.items()
+					self2.lst_files.items()
 						.iter_selected()
 						.map(|item| item.text(0))
 						.collect::<Vec<_>>(),
@@ -149,6 +149,8 @@ impl WndMain {
 						.collect::<Vec<_>>(),
 				)
 			}
-		});
+		})?;
+
+		Ok(())
 	}
 }

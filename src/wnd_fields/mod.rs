@@ -16,6 +16,7 @@ pub struct WndFields {
 	fields:     Vec<Field>,
 	btn_save:   gui::Button,
 	tags_cache: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+	sel_files:  Rc<RefCell<Vec<String>>>,
 	save_cb:    Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,
 }
 

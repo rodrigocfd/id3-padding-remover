@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
-use winsafe::{prelude::*, self as w, gui, msg};
+use winsafe::{prelude::*, self as w, gui};
 
 use crate::id3v2;
 use crate::ids::fields as id;
@@ -43,24 +43,26 @@ impl WndFields {
 		let new_self = Self {
 			wnd, fields, btn_save,
 			tags_cache,
-			save_cb: Rc::new(RefCell::new(None)),
+			sel_files: Rc::new(RefCell::new(Vec::default())),
+			save_cb:   Rc::new(RefCell::new(None)),
 		};
 		new_self._events();
 		new_self
 	}
 
-	pub fn on_save<F>(&self, callback: F)
+	pub fn on_save<F>(&self, callback: F) -> w::ErrResult<()>
 		where F: Fn() -> w::ErrResult<()> + 'static,
 	{
-		*self.save_cb.borrow_mut() = Some(Box::new(callback));
+		*self.save_cb.try_borrow_mut()? = Some(Box::new(callback));
+		Ok(())
 	}
 
-	pub fn feed<S: AsRef<str>>(&self, sel_files: &[S]) -> w::ErrResult<()> {
+	pub fn feed(&self, sel_files: Vec<String>) -> w::ErrResult<()> {
 		let tags_cache = self.tags_cache.try_borrow()?;
 		let sel_tags = tags_cache.iter()
 			.filter(|(file_name, _)|
 				sel_files.iter()
-					.find(|sel_file| sel_file.as_ref() == *file_name)
+					.find(|sel_file| *sel_file == *file_name)
 					.is_some(),
 			)
 			.map(|(_, tag)| tag)
@@ -77,6 +79,7 @@ impl WndFields {
 			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
 		}
 
+		*self.sel_files.try_borrow_mut()? = sel_files; // keep selected files
 		self._update_after_check()
 	}
 }
