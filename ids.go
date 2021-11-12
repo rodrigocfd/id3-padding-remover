@@ -25,3 +25,8 @@ const (
 	MNU_MP3_RENAME_PREFIX
 	MNU_MP3_ABOUT
 )
+
+const (
+	MNU_FRAMES = iota + 300
+	MNU_FRAMES_REM
+)

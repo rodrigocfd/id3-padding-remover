@@ -16,7 +16,8 @@ import (
 
 func (me *DlgMain) eventsMenu() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
-		if p.Hmenu() == me.lstMp3s.ContextMenu() {
+		switch p.Hmenu() {
+		case me.lstMp3s.ContextMenu():
 			cmdIds := []int{MNU_MP3_DELETE,
 				MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
 				MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
@@ -24,6 +25,16 @@ func (me *DlgMain) eventsMenu() {
 				p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
 					me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
 			}
+
+		case me.lstFrames.ContextMenu():
+			selFrameNames4 := make([]string, 0, me.lstFrames.Items().SelectedCount())
+			for _, name4 := range me.lstFrames.Columns().SelectedTexts(0) {
+				if name4 != "" {
+					selFrameNames4 = append(selFrameNames4, name4) // only non-empty names
+				}
+			}
+			p.Hmenu().EnableMenuItem(
+				win.MenuItemCmd(MNU_FRAMES_REM), len(selFrameNames4) > 0)
 		}
 	})
 
@@ -242,5 +253,17 @@ func (me *DlgMain) eventsMenu() {
 			))
 
 		me.updateMemoryStatus()
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
+		// t0 := timecount.New()
+
+		// selFrameNames4 := make([]string, 0, me.lstFrames.Items().SelectedCount())
+		// for _, name4 := range me.lstFrames.Columns().SelectedTexts(0) {
+		// 	if name4 != "" {
+		// 		selFrameNames4 = append(selFrameNames4, name4) // only non-empty names
+		// 	}
+		// }
+
 	})
 }

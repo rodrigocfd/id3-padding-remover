@@ -12,7 +12,7 @@ import (
 )
 
 func (me *DlgMain) updateMemoryStatus() {
-	memStats := runtime.MemStats{}
+	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
 	parts := me.statusBar.Parts()
