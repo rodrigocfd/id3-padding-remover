@@ -202,16 +202,14 @@ func (me *Tag) SerializeToFile(mp3Path string) error {
 	return nil
 }
 
-func (me *Tag) DeleteFrames(fun func(f Frame) (willDelete bool)) {
+func (me *Tag) DeleteFrames(fun func(i int, f Frame) (willDelete bool)) {
 	newSlice := make([]Frame, 0, len(me.frames))
-
-	for _, f := range me.frames {
-		willDelete := fun(f)
+	for i, f := range me.frames {
+		willDelete := fun(i, f)
 		if !willDelete { // the new slice will contain the non-deleted tags
 			newSlice = append(newSlice, f)
 		}
 	}
-
 	me.frames = newSlice // throw the old one away
 }
 
@@ -244,7 +242,7 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 		switch fr := frDyn.(type) {
 		case *FrameText:
 			if text == "" { // empty text will delete the frame
-				me.DeleteFrames(func(f Frame) bool {
+				me.DeleteFrames(func(_ int, f Frame) bool {
 					return f.Name4() == string(name4)
 				})
 			} else {
@@ -252,7 +250,7 @@ func (me *Tag) SetTextByName4(name4 TEXT, text string) {
 			}
 		case *FrameComment:
 			if text == "" { // empty text will delete the frame
-				me.DeleteFrames(func(f Frame) bool {
+				me.DeleteFrames(func(_ int, f Frame) bool {
 					return f.Name4() == string(name4)
 				})
 			} else {

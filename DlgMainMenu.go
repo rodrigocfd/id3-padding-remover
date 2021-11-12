@@ -96,7 +96,7 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(fr id3v2.Frame) (willDelete bool) {
+			tag.DeleteFrames(func(_ int, fr id3v2.Frame) (willDelete bool) {
 				if frMulti, ok := fr.(*id3v2.FrameMultiText); ok {
 					return frMulti.IsReplayGain()
 				}
@@ -117,7 +117,7 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(frDyn id3v2.Frame) (willDelete bool) {
+			tag.DeleteFrames(func(_ int, frDyn id3v2.Frame) (willDelete bool) {
 				if frMulti, ok := frDyn.(*id3v2.FrameMultiText); ok {
 					if frMulti.IsReplayGain() {
 						return true
@@ -148,7 +148,7 @@ func (me *DlgMain) eventsMenu() {
 
 			for _, selMp3 := range selMp3s {
 				tag := me.cachedTags[selMp3]
-				tag.DeleteFrames(func(_ id3v2.Frame) (willDelete bool) {
+				tag.DeleteFrames(func(_ int, _ id3v2.Frame) (willDelete bool) {
 					return true
 				})
 			}
@@ -256,14 +256,43 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
-		// t0 := timecount.New()
+		t0 := timecount.New()
+		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0]
+		tag := me.cachedTags[selMp3]
+		idxsToDelete := make([]int, 0, me.lstFrames.Items().SelectedCount())
 
-		// selFrameNames4 := make([]string, 0, me.lstFrames.Items().SelectedCount())
-		// for _, name4 := range me.lstFrames.Columns().SelectedTexts(0) {
-		// 	if name4 != "" {
-		// 		selFrameNames4 = append(selFrameNames4, name4) // only non-empty names
-		// 	}
-		// }
+		selFrameItems := me.lstFrames.Items().Selected()
+		for _, selFrameItem := range selFrameItems {
+			name4 := selFrameItem.Text(0)
+			if name4 == "" { // just an extension of a previous frame line?
+				continue
+			}
 
+			idxFrame := int(selFrameItem.LParam()) // index frame within frames slice
+			selFrame := tag.Frames()[idxFrame]
+			if selFrame.Name4() != name4 {
+				prompt.Error(me.wnd, "This is bad", win.StrVal("Mismatched frames"),
+					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
+						selFrame.Name4(), name4, idxFrame))
+				return // halt any further processing
+			}
+
+			idxsToDelete = append(idxsToDelete, idxFrame)
+		}
+
+		tag.DeleteFrames(func(idx int, _ id3v2.Frame) (willDelete bool) {
+			for _, idxFrame := range idxsToDelete {
+				if idx == idxFrame {
+					return true
+				}
+			}
+			return false
+		})
+
+		me.reSaveTagsOfSelectedFiles(func() {
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
+					len(idxsToDelete), t0.ElapsedMs()))
+		})
 	})
 }
