@@ -40,10 +40,8 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 		}
 	})
 	if errErr != nil {
-		me.wnd.RunUiThread(func() {
-			prompt.Error(me.wnd, "Error parsing tag", nil,
-				fmt.Sprintf("File:\n%s\n\n%s", errMp3, errErr.Error()))
-		})
+		prompt.Error(me.wnd, "Error parsing tag", nil,
+			fmt.Sprintf("File:\n%s\n\n%s", errMp3, errErr.Error()))
 		return
 	}
 
