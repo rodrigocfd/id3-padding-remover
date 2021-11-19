@@ -60,7 +60,7 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	}
 	me.lstMp3s.SetRedraw(true)
 	me.lstMp3s.Columns().SetWidthToFill(0)
-	me.displayFramesOfSelectedFiles()
+	// me.displayFramesOfSelectedFiles()
 
 	if onFinish != nil {
 		onFinish()
