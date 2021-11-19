@@ -58,8 +58,8 @@ pub fn format_bytes(num_bytes: usize) -> String {
 pub fn app_name_from_res() -> WinResult<String> {
 	let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 	let res_info = w::ResourceInfo::read_from(&exe_name)?;
-	let (lang, cp) = res_info.langs_and_code_pages().unwrap()[0];
-	Ok(res_info.product_name(lang, cp).unwrap())
+	let block = res_info.blocks().next().unwrap(); // first block
+	Ok(block.product_name().unwrap())
 }
 
 pub mod prompt {

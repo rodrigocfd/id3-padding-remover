@@ -1,24 +1,14 @@
-use winsafe::{prelude::*, ErrResult};
+use winsafe::prelude::*;
 
 use super::WndFields;
 
 impl WndFields {
-	pub(super) fn _update_after_check(&self) -> ErrResult<()> {
-		for field in self.fields.iter() {
-			field.txt.hwnd().EnableWindow(field.chk.is_checked()); // enable field if its checkbox is on
-		}
+	pub(super) fn _enable_buttons_if_at_least_one_checked(&self) {
+		let at_least_one_checked = self.fields.iter()
+			.find(|field| field.chk.is_checked())
+			.is_some();
 
-		// let sel_files_count = self.sel_files.try_borrow()?.len();
-		// let at_least_1_check = self.fields
-		// 	.iter().find(|field| field.chk.is_checked()).is_some();
-
-		// self.btn_save.hwnd().EnableWindow(sel_files_count > 0 && at_least_1_check);
-		// if at_least_1_check {
-		// 	self.btn_save.hwnd().SetWindowText(&format!("&Save ({})", sel_files_count))
-		// } else {
-		// 	self.btn_save.hwnd().SetWindowText("&Save")
-		// }?;
-
-		Ok(())
+		self.btn_clear_checks.hwnd().EnableWindow(at_least_one_checked);
+		self.btn_save.hwnd().EnableWindow(at_least_one_checked);
 	}
 }

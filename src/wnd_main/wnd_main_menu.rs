@@ -1,12 +1,11 @@
 use winsafe::{prelude::*, self as w, co, shell};
 
-use crate::ids::main as id;
 use crate::util;
-use super::WndMain;
+use super::{ids, WndMain};
 
 impl WndMain {
 	pub(super) fn _menu_events(&self) {
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_OPEN, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_OPEN, {
 			let self2 = self.clone();
 			move || {
 				let fileo = w::CoCreateInstance::<shell::IFileOpenDialog>(
@@ -47,15 +46,15 @@ impl WndMain {
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_DELSEL, {
-			let lst_files = self.lst_files.clone();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_DELETE, {
+			let lst_files = self.lst_mp3s.clone();
 			move || {
 				lst_files.items().delete_selected()?;
 				Ok(())
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_REMPAD, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_REM_PAD, {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
@@ -64,13 +63,13 @@ impl WndMain {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("Padding removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(), clock.now_ms()?))?;
+						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
 
 				Ok(())
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_REMRG, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_REM_RG, {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
@@ -79,13 +78,13 @@ impl WndMain {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(), clock.now_ms()?))?;
+						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
 
 				Ok(())
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_REMRGART, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_REM_RG_PIC, {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
@@ -94,13 +93,13 @@ impl WndMain {
 				util::prompt::info(self2.wnd.hwnd(),
 					"Operation successful", Some("Success"),
 					&format!("ReplayGain and album art removed from {} file(s) in {:.2} ms.",
-						self2.lst_files.items().selected_count(), clock.now_ms()?))?;
+						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
 
 				Ok(())
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_RENAME, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_RENAME, {
 			let self2 = self.clone();
 			move || {
 				if let Err(err) = self2._rename_files(false) {
@@ -110,7 +109,7 @@ impl WndMain {
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_RENAMETRCK, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_RENAME_PREFIX, {
 			let self2 = self.clone();
 			move || {
 				if let Err(err) = self2._rename_files(true) {
@@ -120,21 +119,23 @@ impl WndMain {
 			}
 		});
 
-		self.wnd.on().wm_command_accel_menu(id::MNU_FILE_ABOUT, {
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_ABOUT, {
 			let self2 = self.clone();
 			move || {
-				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
-				let ri = w::ResourceInfo::read_from(&exe_name)?;
-				let ver = ri.fixed_file_info().unwrap().dwFileVersion();
-				let (lang, cp) = ri.langs_and_code_pages().unwrap()[0];
+				// let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
+				// let res_info = w::ResourceInfo::read_from(&exe_name)?;
+				// let ver = res_info.version_info().unwrap().dwFileVersion();
+				// let block = res_info.blocks().next().unwrap(); // first block
 
-				util::prompt::info(self2.wnd.hwnd(),
-					"About",
-					Some(&format!("{} v{}.{}.{}",
-						ri.product_name(lang, cp).unwrap(), ver[0], ver[1], ver[2])),
-					&format!("Writen in Rust with WinSafe library.\n{}",
-						ri.legal_copyright(lang, cp).unwrap()),
-				)?;
+				// util::prompt::info(self2.wnd.hwnd(),
+				// 	"About",
+				// 	Some(&format!("{} v{}.{}.{}",
+				// 		block.product_name().unwrap(),
+				// 		ver[0], ver[1], ver[2])),
+				// 	&format!("Writen in Rust with WinSafe library.\n{}",
+				// 		block.legal_copyright().unwrap()),
+				// )?;
+
 				Ok(())
 			}
 		});

@@ -1,62 +1,90 @@
-use winsafe::{prelude::*, self as w, ErrResult, path};
+use std::sync::{Arc, Mutex};
+use winsafe::{prelude::*, self as w, path};
 
 use crate::id3v2;
 use crate::util;
+use crate::wnd_progress::WndProgress;
 use super::{PreDelete, WndMain};
 
 impl WndMain {
-	pub(super) fn _titlebar_count(&self, moment: PreDelete) -> ErrResult<()> {
-		let lv_items = self.lst_files.items();
-		let count = lv_items.count() - match moment {
-			PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
-			PreDelete::No => 0,
-		};
+	pub(super) fn _titlebar_count(&self, moment: PreDelete) -> w::ErrResult<()> {
 		self.wnd.hwnd().SetWindowText(
-			&format!("{} ({}/{})", self.app_name, lv_items.selected_count(), count),
-		)?;
-		Ok(())
+			&format!("{} ({}/{})",
+				self.app_name,
+				self.lst_mp3s.items().selected_count(),
+				self.lst_mp3s.items().count() - match moment {
+					PreDelete::Yes => 1, // because LVN_DELETEITEM is fired before deletion
+					PreDelete::No => 0,
+				}),
+		).map_err(|e| e.into())
 	}
 
-	pub(super) fn _add_files<S: AsRef<str>>(&self, files: &[S]) -> ErrResult<()> {
-		self.lst_files.set_redraw(false);
+	pub(super) fn _add_files(&self, files: &[impl AsRef<str>]) -> w::ErrResult<()> {
+		let process_err: Arc<Mutex<Option<w::ErrResult<()>>>>
+			= Arc::new(Mutex::new(None)); // will receive any error from the processing closure
 
-		for file_ref in files.iter() {
-			let file = file_ref.as_ref();
+		WndProgress::new(&self.wnd, { // display the progress modal window
+			let process_err = process_err.clone();
+			let tags_cache = self.tags_cache.clone();
+			let files = Arc::new(
+				files.iter()
+					.map(|s| s.as_ref().to_owned())
+					.collect::<Vec<_>>(),
+			);
 
-			let tag = match id3v2::Tag::read(file) { // parse the tag from file
-				Ok(tag) => tag,
-				Err(e) => {
-					util::prompt::err(self.wnd.hwnd(),
-						"Tag reading failed", Some("Error"),
-						&format!("File: {}\n\n{}", file, e))?;
-					return Ok(()); // quit processing, nothing else is done
-				},
-			};
-
-			if let Some(existing_item) = self.lst_files.items().find(file) { // file already in list?
-				existing_item.set_text(1, &format!("{}", tag.original_padding()))?; // update padding
-			} else {
-				self.lst_files.items().add(&[ // insert new item
-					file,
-					&format!("{}", tag.original_padding()),
-				], Some(0))?;
+			move || { // this closure will run in a spawned thread
+				for file in files.iter() {
+					let tag = match id3v2::Tag::read(file) { // read all files sequentially
+						Ok(tag) => tag,
+						Err(e) => {
+							*process_err.lock().unwrap() = Some(Err(e)); // store error
+							break; // no further files will be parsed
+						},
+					};
+					tags_cache.lock().unwrap().insert(file.clone(), tag);
+				}
+				Ok(())
 			}
+		}).show()?;
 
-			self.tags_cache.try_borrow_mut()?.insert(file.to_owned(), tag); // cache or re-cache the tag
+		if let Some(e) = process_err.lock().unwrap().as_ref() {
+			if let Err(e) = e {
+				util::prompt::err(self.wnd.hwnd(),
+					"Error", Some("Error parsing tag"), &e.to_string())?;
+				return Ok(());
+			}
 		}
 
-		self.lst_files.set_redraw(true);
-		self.lst_files.columns().set_width_to_fill(0)?;
+		self.lst_mp3s.set_redraw(false);
+
+		for file in files.iter().map(|f| f.as_ref()) {
+			let padding_txt = {
+				let tags_cache = self.tags_cache.lock().unwrap();
+				let tag = tags_cache.get(file).unwrap();
+				if tag.is_empty() {
+					"N/A".to_owned()
+				} else {
+					tag.padding().to_string()
+				}
+			};
+
+			match self.lst_mp3s.items().find(file) {
+				Some(item) => { item.set_text(1, &padding_txt)?; },
+				None => { self.lst_mp3s.items().add(&[file], Some(0))?; }
+			}
+		}
+
+		self.lst_mp3s.set_redraw(true);
+		self.lst_mp3s.columns().set_width_to_fill(0)?;
 		self._titlebar_count(PreDelete::No)?;
-		self._display_sel_tags_frames()?;
 		Ok(())
 	}
 
-	pub(super) fn _display_sel_tags_frames(&self) -> ErrResult<()> {
+	pub(super) fn _display_sel_tags_frames(&self) -> w::ErrResult<()> {
 		self.lst_frames.set_redraw(false);
 		self.lst_frames.items().delete_all()?;
 
-		let sel_count = self.lst_files.items().selected_count();
+		let sel_count = self.lst_mp3s.items().selected_count();
 
 		if sel_count == 0 {
 			// Nothing to do.
@@ -68,8 +96,8 @@ impl WndMain {
 			], None)?;
 
 		} else { // 1 single item selected, show its frames
-			let sel_item = self.lst_files.items().iter_selected().next().unwrap();
-			let tags_cache = self.tags_cache.try_borrow()?;
+			let sel_item = self.lst_mp3s.items().iter_selected().next().unwrap();
+			let tags_cache = self.tags_cache.lock().unwrap();
 			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap();
 
 			for frame in the_tag.frames().iter() {
@@ -91,7 +119,7 @@ impl WndMain {
 						new_item.set_text(1,
 							&format!("{} ({:.2}%)",
 								&util::format_bytes(bin.len()),
-								(bin.len() as f32) * 100.0 / the_tag.original_size() as f32),
+								(bin.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
 						)?
 					},
 				}
@@ -105,12 +133,12 @@ impl WndMain {
 	}
 
 	pub(super) fn _remove_frames_from_sel_files_and_save(&self,
-		replay_gain: bool, album_art: bool) -> ErrResult<()>
+		replay_gain: bool, album_art: bool) -> w::ErrResult<()>
 	{
 		{
-			let mut tags_cache = self.tags_cache.try_borrow_mut()?;
+			let mut tags_cache = self.tags_cache.lock().unwrap();
 
-			for sel_item in self.lst_files.items().iter_selected() {
+			for sel_item in self.lst_mp3s.items().iter_selected() {
 				let file_name = sel_item.text(0);
 				let the_tag = tags_cache.get_mut(&file_name).unwrap();
 
@@ -135,7 +163,7 @@ impl WndMain {
 		}
 
 		self._add_files( // reload all tags from their files
-			&self.lst_files.items().iter_selected()
+			&self.lst_mp3s.items().iter_selected()
 				.map(|item| item.text(0))
 				.collect::<Vec<_>>(),
 		)?;
@@ -143,7 +171,7 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn _rename_files(&self, with_track: bool) -> ErrResult<()> {
+	pub(super) fn _rename_files(&self, with_track: bool) -> w::ErrResult<()> {
 		// self.lst_files.set_redraw(false);
 		// let clock = util::Timer::start()?;
 		// let mut changed_count = 0;

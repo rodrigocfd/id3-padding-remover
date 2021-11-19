@@ -1,30 +1,28 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use winsafe::{prelude::*, self as w, gui};
 
-use crate::ids::main as id;
 use crate::util;
 use crate::wnd_fields::WndFields;
-use super::WndMain;
+use super::{ids, WndMain};
 
 impl WndMain {
 	pub fn new() -> w::ErrResult<Self> {
 		use gui::{Horz as H, ListView, Vert as V, WindowMain};
 
-		let context_menu = w::HINSTANCE::NULL
-			.LoadMenu(w::IdStr::Id(id::MNU_FILE))?
+		let mnu_mp3s = w::HINSTANCE::NULL
+			.LoadMenu(w::IdStr::Id(ids::MNU_MP3S))?
 			.GetSubMenu(0).unwrap();
 
-		let tags_cache = Rc::new(RefCell::new(HashMap::default()));
+		let tags_cache = Arc::new(Mutex::new(HashMap::default()));
 
-		let wnd        = WindowMain::new_dlg(id::DLG_MAIN, Some(id::ICO_FROG), Some(id::ACT_MAIN));
-		let lst_files  = ListView::new_dlg(&wnd, id::LST_FILES, H::Resize, V::Resize, Some(context_menu));
-		let wnd_fields = WndFields::new(&wnd, tags_cache.clone(), w::POINT::new(330, 6), H::Repos, V::None);
-		let lst_frames = ListView::new_dlg(&wnd, id::LST_FRAMES, H::Repos, V::Resize, None);
+		let wnd        = WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), Some(ids::ACC_MAIN));
+		let lst_mp3s   = ListView::new_dlg(&wnd, ids::LST_MP3S, (H::Resize, V::Resize), Some(mnu_mp3s));
+		let wnd_fields = WndFields::new(&wnd, tags_cache.clone(), w::POINT::new(292, 4), (H::Repos, V::None));
+		let lst_frames = ListView::new_dlg(&wnd, ids::LST_FRAMES, (H::Repos, V::Resize), None);
 
 		let new_self = Self {
-			wnd, lst_files, wnd_fields, lst_frames,
+			wnd, lst_mp3s, wnd_fields, lst_frames,
 			tags_cache,
 			app_name: util::app_name_from_res()?,
 		};

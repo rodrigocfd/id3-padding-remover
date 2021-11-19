@@ -25,33 +25,58 @@ impl WndFields {
 		});
 
 		for field in self.fields.iter() {
-
 			field.chk.on().bn_clicked({ // add event on each checkbox
-				let self2 = self.clone();
-				let field = field.clone();
+				let (self2, field) = (self.clone(), field.clone());
 				move || {
-					self2._update_after_check()?;
-
+					field.chk.focus()?;
+					field.txt.hwnd().EnableWindow(field.chk.is_checked());
 					if field.chk.is_checked() {
 						field.txt.focus()?;
 					}
-
+					self2._enable_buttons_if_at_least_one_checked();
 					Ok(())
 				}
 			});
-
 		}
+
+		self.btn_clear_checks.on().bn_clicked({
+			let self2 = self.clone();
+			move || {
+				for field in self2.fields.iter() {
+					field.chk.set_check_state(gui::CheckState::Unchecked);
+					field.txt.hwnd().EnableWindow(false);
+				}
+				self2._enable_buttons_if_at_least_one_checked();
+				Ok(())
+			}
+		});
 
 		self.btn_save.on().bn_clicked({
 			let self2 = self.clone();
 			move || {
+				for field in self2.fields.iter() {
+					if !field.chk.is_checked() { continue; }
 
+					let new_text = field.txt.text()?.trim().to_owned(); // text typed by the user
+					let sel_files = self2.sel_files.try_borrow_mut()?;
 
+					for (_, sel_tag) in self2.tags_cache.lock().unwrap()
+						.iter_mut()
+						.filter(|(file_name, _)|
+							sel_files.iter()
+								.find(|sel_file| *sel_file == *file_name)
+								.is_some(),
+						)
+					{
+						sel_tag.set_text_by_field(field.name, &new_text)?;
+					}
+				}
 
+				self2.save_cb.try_borrow()?
+					.as_ref()
+					.map_or(Ok(()), |cb| cb())?;
 
-				self2.save_cb.borrow_mut()
-					.as_mut()
-					.map_or(Ok(()), |cb| cb())
+				Ok(())
 			}
 		});
 	}

@@ -1,30 +1,25 @@
 use winsafe::{prelude::*, self as w, co, msg};
 
-use crate::ids::main as id;
-use super::PreDelete;
-use super::WndMain;
+use super::{ids, PreDelete, WndMain};
 
 impl WndMain {
 	pub(super) fn _events(&self) -> w::ErrResult<()> {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
 			move |_| {
-				// Files list view.
-				self2.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
-
 				// Since it doesn't have LVS_SHAREIMAGELISTS style, the image list
 				// will be automatically deleted by the list view.
 				let himgl = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
 				himgl.AddIconFromShell(&["mp3"])?;
-				self2.lst_files.set_image_list(co::LVSIL::SMALL, himgl);
+				self2.lst_mp3s.set_image_list(co::LVSIL::SMALL, himgl);
 
-				self2.lst_files.columns().add(&[
+				self2.lst_mp3s.columns().add(&[
 					("File", 0),
 					("Padding", 60),
 				])?;
-				self2.lst_files.columns().set_width_to_fill(0)?;
+				self2.lst_mp3s.columns().set_width_to_fill(0)?;
 
-				// Frames list view.
+				self2.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
 				self2.lst_frames.columns().add(&[
 					("Frame", 65),
 					("Value", 0),
@@ -41,7 +36,7 @@ impl WndMain {
 			let self2 = self.clone();
 			move |p| {
 				if p.request != co::SIZE_R::MINIMIZED {
-					self2.lst_files.columns().set_width_to_fill(0)?;
+					self2.lst_mp3s.columns().set_width_to_fill(0)?;
 					self2.lst_frames.columns().set_width_to_fill(1)?;
 				}
 				Ok(())
@@ -51,12 +46,13 @@ impl WndMain {
 		self.wnd.on().wm_init_menu_popup({
 			let self2 = self.clone();
 			move |p| {
-				if p.hmenu == self2.lst_files.context_menu().unwrap() {
-					let has_sel = self2.lst_files.items().selected_count() > 0;
+				if p.hmenu == self2.lst_mp3s.context_menu().unwrap() {
+					let has_sel = self2.lst_mp3s.items().selected_count() > 0;
 
-					[id::MNU_FILE_DELSEL, id::MNU_FILE_REMPAD,
-						id::MNU_FILE_REMRG, id::MNU_FILE_REMRGART,
-						id::MNU_FILE_RENAME, id::MNU_FILE_RENAMETRCK,
+					[ids::MNU_MP3S_DELETE,
+						ids::MNU_MP3S_REM_PAD, ids::MNU_MP3S_REM_RG, ids::MNU_MP3S_REM_RG_PIC,
+						ids::MNU_MP3S_DEL_TAG,
+						ids::MNU_MP3S_COPY_TO_FOLDER, ids::MNU_MP3S_RENAME, ids::MNU_MP3S_RENAME_PREFIX,
 					].iter()
 						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel))
 						.collect::<w::WinResult<Vec<_>>>()?;
@@ -100,25 +96,25 @@ impl WndMain {
 			}
 		});
 
-		self.lst_files.on().lvn_key_down({
+		self.lst_mp3s.on().lvn_key_down({
 			let self2 = self.clone();
 			move |p| {
 				if p.wVKey == co::VK::DELETE { // delete item on DEL
 					self2.wnd.hwnd().SendMessage(msg::wm::Command { // simulate menu click
-						event: w::AccelMenuCtrl::Menu(id::MNU_FILE_DELSEL as _),
+						event: w::AccelMenuCtrl::Menu(ids::MNU_MP3S_DELETE as _),
 					});
 				}
 				Ok(())
 			}
 		});
 
-		self.lst_files.on().lvn_item_changed({
+		self.lst_mp3s.on().lvn_item_changed({
 			let self2 = self.clone();
 			move |_| {
 				self2._display_sel_tags_frames()?;
 
 				self2.wnd_fields.feed(
-					self2.lst_files.items()
+					self2.lst_mp3s.items()
 						.iter_selected()
 						.map(|item| item.text(0))
 						.collect::<Vec<_>>(),
@@ -129,11 +125,11 @@ impl WndMain {
 			}
 		});
 
-		self.lst_files.on().lvn_delete_item({
+		self.lst_mp3s.on().lvn_delete_item({
 			let self2 = self.clone();
 			move |p| {
-				let file_path = self2.lst_files.items().get(p.iItem as _).text(0);
-				self2.tags_cache.try_borrow_mut()?.remove(&file_path); // remove entry from cache
+				let file_path = self2.lst_mp3s.items().get(p.iItem as _).text(0);
+				self2.tags_cache.lock().unwrap().remove(&file_path); // remove entry from cache
 				self2._titlebar_count(PreDelete::Yes)?;
 				Ok(())
 			}
@@ -143,7 +139,7 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				self2._add_files( // reload all tags from their files
-					&self2.lst_files.items()
+					&self2.lst_mp3s.items()
 						.iter_selected()
 						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),

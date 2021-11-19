@@ -1,47 +1,53 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use winsafe::{prelude::*, self as w, gui};
 
 use crate::id3v2;
-use crate::ids::fields as id;
-use super::{Field, WndFields};
+use super::{ids, Field, WndFields};
 
 impl WndFields {
 	pub fn new(
 		parent: &impl Parent,
-		tags_cache: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+		tags_cache: Arc<Mutex<HashMap<String, id3v2::Tag>>>,
 		pos: w::POINT,
-		horz: gui::Horz, vert: gui::Vert) -> Self
+		resize_behavior: (gui::Horz, gui::Vert)) -> Self
 	{
-		let wnd = gui::WindowControl::new_dlg(parent, id::DLG_FIELDS, pos, horz, vert, None);
+		let wnd = gui::WindowControl::new_dlg(parent, ids::DLG_FIELDS, pos, resize_behavior, None);
 
 		use gui::{Horz::None as HNone, Vert::None as VNone};
 		use id3v2::FieldName::*;
 		let fields = [
-			(Artist,   id::CHK_ARTIST,   id::TXT_ARTIST),
-			(Title,    id::CHK_TITLE,    id::TXT_TITLE),
-			(Album,    id::CHK_ALBUM,    id::TXT_ALBUM),
-			(Track,    id::CHK_TRACK,    id::TXT_TRACK),
-			(Year,     id::CHK_YEAR,     id::TXT_YEAR),
-			(Genre,    id::CHK_GENRE,    id::CMB_GENRE),
-			(Composer, id::CHK_COMPOSER, id::TXT_COMPOSER),
-			(Comment,  id::CHK_COMMENT,  id::TXT_COMMENT),
-		].map(|(name, idchk, idtxt)| Field {
+			(Artist,     ids::CHK_ARTIST,      ids::TXT_ARTIST),
+			(Title,      ids::CHK_TITLE,       ids::TXT_TITLE),
+			(Subtitle,   ids::CHK_SUBTITLE,    ids::TXT_SUBTITLE),
+			(Album,      ids::CHK_ALBUM,       ids::TXT_ALBUM),
+			(Track,      ids::CHK_TRACK,       ids::TXT_TRACK),
+			(Year,       ids::CHK_YEAR,        ids::TXT_YEAR),
+			(Genre,      ids::CHK_GENRE,       ids::CMB_GENRE),
+			(Composer,   ids::CHK_COMPOSER,    ids::TXT_COMPOSER),
+			(Lyricist,   ids::CHK_LYRICIST,    ids::TXT_LYRICIST),
+			(OrigArtist, ids::CHK_ORIG_ARTIST, ids::TXT_ORIG_ARTIST),
+			(OrigAlbum,  ids::CHK_ORIG_ALBUM,  ids::TXT_ORIG_ALBUM),
+			(OrigYear,   ids::CHK_ORIG_YEAR,   ids::TXT_ORIG_YEAR),
+			(Performer,  ids::CHK_PERFORMER,   ids::TXT_PERFORMER),
+			(Comment,    ids::CHK_COMMENT,     ids::TXT_COMMENT),
+		].map(|(name, idchk, idtxt)| Field { // dynamically build all the frame fields
 			name,
-			chk: gui::CheckBox::new_dlg(&wnd, idchk, HNone, VNone),
-			txt: if idtxt == id::CMB_GENRE {
-				Arc::new(gui::ComboBox::new_dlg(&wnd, idtxt, HNone, VNone))
+			chk: gui::CheckBox::new_dlg(&wnd, idchk, (HNone, VNone)),
+			txt: if idtxt == ids::CMB_GENRE {
+				Arc::new(gui::ComboBox::new_dlg(&wnd, idtxt, (HNone, VNone)))
 			} else {
-				Arc::new(gui::Edit::new_dlg(&wnd, idtxt, HNone, VNone))
+				Arc::new(gui::Edit::new_dlg(&wnd, idtxt, (HNone, VNone)))
 			},
 		}).to_vec();
 
-		let btn_save = gui::Button::new_dlg(&wnd, id::BTN_SAVE, HNone, VNone);
+		let btn_clear_checks = gui::Button::new_dlg(&wnd, ids::BTN_CLEARCHECKS, (HNone, VNone));
+		let btn_save         = gui::Button::new_dlg(&wnd, ids::BTN_SAVE, (HNone, VNone));
 
 		let new_self = Self {
-			wnd, fields, btn_save,
+			wnd, fields, btn_clear_checks, btn_save,
 			tags_cache,
 			sel_files: Rc::new(RefCell::new(Vec::default())),
 			save_cb:   Rc::new(RefCell::new(None)),
@@ -53,12 +59,12 @@ impl WndFields {
 	pub fn on_save<F>(&self, callback: F) -> w::ErrResult<()>
 		where F: Fn() -> w::ErrResult<()> + 'static,
 	{
-		*self.save_cb.try_borrow_mut()? = Some(Box::new(callback));
+		*self.save_cb.try_borrow_mut()? = Some(Box::new(callback)); // store callback
 		Ok(())
 	}
 
 	pub fn feed(&self, sel_files: Vec<String>) -> w::ErrResult<()> {
-		let tags_cache = self.tags_cache.try_borrow()?;
+		let tags_cache = self.tags_cache.lock().unwrap();
 		let sel_tags = tags_cache.iter()
 			.filter(|(file_name, _)|
 				sel_files.iter()
@@ -74,12 +80,14 @@ impl WndFields {
 				None => (gui::CheckState::Unchecked, w::WString::from_str("")),
 			};
 
+			field.chk.hwnd().EnableWindow(!sel_files.is_empty()); // if zero MP3s selected, disable checkboxes
 			field.chk.set_check_state(check_state);
 			field.txt.set_text(&s.to_string())?;
 			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
 		}
 
 		*self.sel_files.try_borrow_mut()? = sel_files; // keep selected files
-		self._update_after_check()
+		self._enable_buttons_if_at_least_one_checked();
+		Ok(())
 	}
 }
