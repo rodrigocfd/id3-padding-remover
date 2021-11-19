@@ -92,8 +92,8 @@ func Split16(src []uint16, sep uint16) [][]uint16 {
 
 func FindMp3Signature(src []byte) (int, bool) {
 	for i, b := range src {
-		// https://en.wikipedia.org/wiki/List_of_file_signatures
-		if b == 0xff && (src[i+1] == 0xfb || src[i+1] == 0xf3 || src[i+1] == 0xf2) {
+		// https://stackoverflow.com/a/7302482/6923555
+		if b == 0xff && src[i+1] == 0xfb {
 			return i, true
 		}
 	}

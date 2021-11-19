@@ -27,7 +27,9 @@ func (me *Tag) IsEmpty() bool     { return len(me.frames) == 0 }
 
 // Constructor; creates a new tag with no frames.
 // If saved, will actually remove the tag from file.
-func TagNewEmpty() *Tag { return &Tag{} }
+func TagNewEmpty() *Tag {
+	return &Tag{}
+}
 
 // Constructor; reads the tag from an MP3 file.
 func TagReadFromFile(mp3Path string) (*Tag, error) {
@@ -49,12 +51,9 @@ func TagReadFromBinary(src []byte) (*Tag, error) {
 
 	if declaredSize == 0 && mp3Offset == 0 {
 		return TagNewEmpty(), nil // file has no tag
-	} else if declaredSize == 0 && mp3Offset > 0 {
-		return nil, fmt.Errorf(
-			fmt.Sprintf("file has no tag, but MP3 has offset: %d", mp3Offset))
 	}
 
-	frames, padding, err := _TagParseFrames(src[10:mp3Offset])
+	frames, padding, err := _TagParseFrames(src[10:declaredSize])
 	if err != nil {
 		return nil, fmt.Errorf("binary read: %w", err)
 	}
