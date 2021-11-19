@@ -29,14 +29,12 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 	dlgRun := dlgrun.NewDlgRun()
 	dlgRun.Show(me.wnd, func() { // this function will run in another thread
 		for _, mp3 := range mp3s {
-			tag, err := id3v2.TagReadFromFile(mp3) // read all files sequentially
-			if _, ok := err.(*id3v2.ErrorNoTagFound); ok {
-				tag = id3v2.TagNewEmpty()
-			} else if err != nil { // any other error
+			if tag, err := id3v2.TagReadFromFile(mp3); err != nil { // read all files sequentially
 				errMp3, errErr = mp3, err
 				break // nothing else will be done
+			} else {
+				me.cachedTags[mp3] = tag // cache (or re-cache) tag
 			}
-			me.cachedTags[mp3] = tag // cache (or re-cache) tag
 		}
 	})
 	if errErr != nil {
