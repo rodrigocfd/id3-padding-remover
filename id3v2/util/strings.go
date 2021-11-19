@@ -92,7 +92,7 @@ out:
 		estimatedLenBytes += len(runeArr)
 
 		for _, ch := range runeArr {
-			if ch > 127 { // MP3Tag appears to do this
+			if ch > 127 { // Mp3Tag appears to do this
 				isUnicode = true
 				break out
 			}

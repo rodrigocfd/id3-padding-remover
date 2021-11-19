@@ -50,10 +50,11 @@ func TagReadFromBinary(src []byte) (*Tag, error) {
 	if declaredSize == 0 && mp3Offset == 0 {
 		return TagNewEmpty(), nil // file has no tag
 	} else if declaredSize == 0 && mp3Offset > 0 {
-		return nil, fmt.Errorf("file has no tag, but MP3 has offset")
+		return nil, fmt.Errorf(
+			fmt.Sprintf("file has no tag, but MP3 has offset: %d", mp3Offset))
 	}
 
-	frames, padding, err := _TagParseFrames(src[10:declaredSize])
+	frames, padding, err := _TagParseFrames(src[10:mp3Offset])
 	if err != nil {
 		return nil, fmt.Errorf("binary read: %w", err)
 	}
@@ -67,7 +68,7 @@ func TagReadFromBinary(src []byte) (*Tag, error) {
 }
 
 func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
-	// Read MP3 offset.
+	// Find MP3 offset.
 	mp3Off, has := util.FindMp3Signature(src)
 	if !has {
 		return 0, 0, fmt.Errorf("no MP3 signature found")
@@ -92,7 +93,7 @@ func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 		return 0, 0, fmt.Errorf("tag extended header not supported")
 	}
 
-	// Read declared tag size and MP3 offset.
+	// Read declared tag size.
 	declaredTagSize := int(util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
 	) + 10)

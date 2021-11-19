@@ -8,7 +8,7 @@ import (
 type FrameComment struct {
 	_FrameHeader
 	lang  string
-	descr string
+	descr string // usually an empty string
 	text  string
 }
 
@@ -34,7 +34,7 @@ func _FrameCommentParse(header _FrameHeader, src []byte) (*FrameComment, error) 
 	isUnicode := src[0] == 0x01
 	src = src[1:] // skip encoding byte
 
-	// Retrieve 3-char language string, always ASCII.
+	// Retrieve 3-char language string, always ISO-8859-1.
 	lang := string(src[:3])
 	src = src[3:]
 
