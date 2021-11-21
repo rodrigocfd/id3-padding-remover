@@ -64,22 +64,35 @@ func (me *DlgMain) eventsWm() {
 			prompt.Error(me.wnd, "No files added", nil,
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			// t0 := timecount.New()
-			me.addFilesToList(droppedMp3s, func() {
-				// prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-				// 	fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
-				// 		len(droppedMp3s), t0.ElapsedMs()))
-			})
+			if tagOpErr := me.tagOpsModal(droppedMp3s, TAG_OP_LOAD); tagOpErr != nil {
+				prompt.Error(me.wnd, "Tag operation error", nil,
+					fmt.Sprintf("Failed to open tag:\n%sn\n\n%s",
+						tagOpErr.mp3, tagOpErr.err.Error()))
+			} else {
+				me.addMp3sToList(droppedMp3s)
+			}
 		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.dlgFields.OnSave(func(t0 timecount.TimeCount) {
+		// Tags have been modified, but not saved to disk yet.
+		// Here we save them and reload the cache.
+
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
-		me.reSaveTagsOfSelectedFiles(func() { // tags are modified but not saved to disk yet
+
+		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
-		})
+		}
+
+		me.updateMemoryStatus()
 	})
 }

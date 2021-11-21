@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"id3fit/dlgrun"
 	"id3fit/id3v2"
-	"id3fit/prompt"
 	"runtime"
 	"strconv"
 
@@ -23,27 +21,20 @@ func (me *DlgMain) updateMemoryStatus() {
 	parts.SetText(4, fmt.Sprintf("Next GC: %s", win.Str.FmtBytes(memStats.NextGC)))
 }
 
-func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
-	var errMp3 string
-	var errErr error
-	dlgRun := dlgrun.NewDlgRun()
-	dlgRun.Show(me.wnd, func() { // this function will run in another thread
-		for _, mp3 := range mp3s {
-			if tag, err := id3v2.TagReadFromFile(mp3); err != nil { // read all files sequentially
-				errMp3, errErr = mp3, err
-				break // nothing else will be done
-			} else {
-				me.cachedTags[mp3] = tag // cache (or re-cache) tag
-			}
-		}
-	})
-	if errErr != nil {
-		prompt.Error(me.wnd, "Error parsing tag", nil,
-			fmt.Sprintf("File:\n%s\n\n%s", errMp3, errErr.Error()))
-		return
+func (me *DlgMain) updateTitlebarCount(total int) {
+	// Total is not computed here because LVN_DELETEITEM notification is sent
+	// before the item is actually deleted, so the count would be wrong.
+	if total == 0 {
+		me.wnd.Hwnd().SetWindowText(APP_TITLE)
+	} else {
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
+			APP_TITLE, me.lstMp3s.Items().SelectedCount(), total))
 	}
+}
 
+func (me *DlgMain) addMp3sToList(mp3s []string) {
 	me.lstMp3s.SetRedraw(false)
+
 	for _, mp3 := range mp3s {
 		tag := me.cachedTags[mp3]
 
@@ -58,13 +49,9 @@ func (me *DlgMain) addFilesToList(mp3s []string, onFinish func()) {
 			item.SetText(1, padding) // update padding
 		}
 	}
+
 	me.lstMp3s.SetRedraw(true)
 	me.lstMp3s.Columns().SetWidthToFill(0)
-	// me.displayFramesOfSelectedFiles()
-
-	if onFinish != nil {
-		onFinish()
-	}
 }
 
 func (me *DlgMain) displayFramesOfSelectedFiles() {
@@ -122,41 +109,6 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 		selTags = append(selTags, me.cachedTags[selMp3])
 	}
 	me.dlgFields.Feed(selTags)
-	me.updateMemoryStatus()
-}
-
-func (me *DlgMain) reSaveTagsOfSelectedFiles(onFinish func()) {
-	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
-	var errMp3 string
-	var errErr error
-	dlgRun := dlgrun.NewDlgRun()
-	dlgRun.Show(me.wnd, func() { // this function will run in another thread
-		for _, selMp3 := range selMp3s {
-			tag := me.cachedTags[selMp3]
-			if err := tag.SerializeToFile(selMp3); err != nil {
-				errMp3, errErr = selMp3, err
-				break // nothing else will be done
-			}
-		}
-	})
-	if errErr != nil {
-		prompt.Error(me.wnd, "Writing error", nil,
-			fmt.Sprintf("Failed to write tag to:\n%sn\n\n%s", errMp3, errErr.Error()))
-		return
-	}
-
-	me.addFilesToList(selMp3s, onFinish)
-}
-
-func (me *DlgMain) updateTitlebarCount(total int) {
-	// Total is not computed here because LVN_DELETEITEM notification is sent
-	// before the item is actually deleted, so the count would be wrong.
-	if total == 0 {
-		me.wnd.Hwnd().SetWindowText(APP_TITLE)
-	} else {
-		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
-			APP_TITLE, me.lstMp3s.Items().SelectedCount(), total))
-	}
 }
 
 func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
@@ -164,12 +116,12 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 		selMp3 := selItem.Text(0)
 		theTag := me.cachedTags[selMp3]
 
-		var track string
+		var trackNoStr string
 		if withTrackPrefix {
-			if trackStr, has := theTag.TextByName4(id3v2.TEXT_TRACK); !has {
+			if trackNoConverted, has := theTag.TextByName4(id3v2.TEXT_TRACK); !has {
 				return 0, fmt.Errorf("track frame absent")
 			} else {
-				track = trackStr
+				trackNoStr = trackNoConverted
 			}
 		}
 
@@ -185,8 +137,8 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 
 		var newPath string
 		if withTrackPrefix {
-			if trackNo, err := strconv.Atoi(track); err != nil {
-				return 0, fmt.Errorf("invalid track format: %s", track)
+			if trackNo, err := strconv.Atoi(trackNoStr); err != nil {
+				return 0, fmt.Errorf("invalid track format: %s", trackNoStr)
 			} else {
 				newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
 					win.Path.GetPath(selMp3), trackNo, artist, title)
@@ -197,7 +149,7 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 		}
 
 		if newPath != selMp3 { // file name actually changed?
-			delete(me.cachedTags, selMp3)
+			delete(me.cachedTags, selMp3)   // remove cached tag
 			me.cachedTags[newPath] = theTag // re-insert tag under new name
 			selItem.SetText(0, newPath)     // rename list view item
 			renamedCount++
@@ -207,6 +159,5 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 			}
 		}
 	}
-	me.updateMemoryStatus()
 	return
 }

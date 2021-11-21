@@ -16,34 +16,33 @@ type DlgRun struct {
 	job     func()
 }
 
-func NewDlgRun() *DlgRun {
+func NewDlgRun(job func()) *DlgRun {
 	wnd := ui.NewWindowModalDlg(DLG_RUN)
 
 	me := &DlgRun{
 		wnd:    wnd,
 		proRun: ui.NewProgressBarDlg(wnd, PRO_RUN, ui.HORZ_NONE, ui.VERT_NONE),
+		taskbar: shell.NewITaskbarList4(
+			win.CoCreateInstance(
+				shellco.CLSID_TaskbarList, nil,
+				co.CLSCTX_INPROC_SERVER,
+				shellco.IID_ITaskbarList4),
+		),
+		job: job,
 	}
 
 	me.events()
 	return me
 }
 
-func (me *DlgRun) Show(parent ui.AnyParent, job func()) {
+func (me *DlgRun) Show(parent ui.AnyParent) {
 	defer me.taskbar.Release()
-	me.job = job
 	me.wnd.ShowModal(parent)
 }
 
 func (me *DlgRun) events() {
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
 		me.proRun.SetMarquee(true)
-
-		me.taskbar = shell.NewITaskbarList4(
-			win.CoCreateInstance(
-				shellco.CLSID_TaskbarList, nil,
-				co.CLSCTX_INPROC_SERVER,
-				shellco.IID_ITaskbarList4),
-		)
 		me.taskbar.SetProgressState(
 			me.wnd.Hwnd().GetWindow(co.GW_OWNER), shellco.TBPF_INDETERMINATE)
 

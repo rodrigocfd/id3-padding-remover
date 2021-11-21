@@ -58,36 +58,44 @@ func (me *DlgMain) eventsMenu() {
 		})
 		fod.SetFileTypeIndex(1)
 
-		// shiDir, _ := shell.NewShellItem(win.GetCurrentDirectory())
-		// defer shiDir.Release()
-		// fod.SetFolder(&shiDir)
-
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.ListResultDisplayNames(shellco.SIGDN_FILESYSPATH)
-			win.Path.Sort(mp3s)
 
-			// t0 := timecount.New()
-			me.addFilesToList(mp3s, func() {
-				// prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-				// 	fmt.Sprintf("%d file tag(s) parsed in %.2f ms.",
-				// 		len(mp3s), t0.ElapsedMs()))
-			})
+			if tagOpErr := me.tagOpsModal(mp3s, TAG_OP_LOAD); tagOpErr != nil {
+				prompt.Error(me.wnd, "Tag operation error", nil,
+					fmt.Sprintf("Failed to open tag:\n%sn\n\n%s",
+						tagOpErr.mp3, tagOpErr.err.Error()))
+			} else {
+				me.addMp3sToList(mp3s)
+			}
 		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DELETE, func(_ wm.Command) {
 		me.lstMp3s.SetRedraw(false)
 		me.lstMp3s.Items().DeleteSelected() // will fire multiple LVM_DELETEITEM
 		me.lstMp3s.SetRedraw(true)
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_PAD, func(_ wm.Command) {
 		t0 := timecount.New()
-		me.reSaveTagsOfSelectedFiles(func() { // simply saving will remove the padding
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+
+		// Simply saving will remove the padding.
+		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
-					me.lstMp3s.Items().SelectedCount(), t0.ElapsedMs()))
-		})
+					len(selMp3s), t0.ElapsedMs()))
+		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG, func(_ wm.Command) {
@@ -104,11 +112,18 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		me.reSaveTagsOfSelectedFiles(func() {
+		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to remove ReplayGain:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
+			me.addMp3sToList(selMp3s)
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
-		})
+		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG_PIC, func(_ wm.Command) {
@@ -131,75 +146,100 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		me.reSaveTagsOfSelectedFiles(func() {
+		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to remove ReplayGain and album art:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
+			me.addMp3sToList(selMp3s)
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
-		})
+		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DEL_TAG, func(_ wm.Command) {
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
-		proceed := prompt.OkCancel(me.wnd, "Delete tag", nil,
-			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s)))
+		if !prompt.OkCancel(me.wnd, "Delete tag", nil,
+			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s))) {
+			return
+		}
 
-		if proceed {
-			t0 := timecount.New()
+		t0 := timecount.New()
 
-			for _, selMp3 := range selMp3s {
-				tag := me.cachedTags[selMp3]
-				tag.DeleteFrames(func(_ int, _ id3v2.Frame) (willDelete bool) {
-					return true
-				})
-			}
-
-			me.reSaveTagsOfSelectedFiles(func() {
-				prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-					fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
-						len(selMp3s), t0.ElapsedMs()))
+		for _, selMp3 := range selMp3s {
+			tag := me.cachedTags[selMp3]
+			tag.DeleteFrames(func(_ int, _ id3v2.Frame) (willDelete bool) {
+				return true
 			})
 		}
+
+		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to delete tag:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
+			me.addMp3sToList(selMp3s)
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
+					len(selMp3s), t0.ElapsedMs()))
+		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_COPY_TO_FOLDER, func(_ wm.Command) {
-		fod := shell.NewIFileOpenDialog(
-			win.CoCreateInstance(
-				shellco.CLSID_FileOpenDialog, nil,
-				co.CLSCTX_INPROC_SERVER,
-				shellco.IID_IFileOpenDialog),
-		)
-		defer fod.Release()
+		// fod := shell.NewIFileOpenDialog(
+		// 	win.CoCreateInstance(
+		// 		shellco.CLSID_FileOpenDialog, nil,
+		// 		co.CLSCTX_INPROC_SERVER,
+		// 		shellco.IID_IFileOpenDialog),
+		// )
+		// defer fod.Release()
 
-		fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
+		// fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
+		// if !fod.Show(me.wnd.Hwnd()) {
+		// 	return
+		// }
 
-		if fod.Show(me.wnd.Hwnd()) {
-			newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
-			var newCopiedFiles []string
-			t0 := timecount.New()
+		// newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
+		// selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		// var newCopiedFiles []string
+		// t0 := timecount.New()
 
-			for _, selMp3 := range me.lstMp3s.Columns().SelectedTexts(0) {
-				newPath := fmt.Sprintf("%s\\%s",
-					newFolder, win.Path.GetFileName(selMp3))
-				if win.Path.Exists(newPath) {
-					prompt.Error(me.wnd, "File already exists", nil,
-						fmt.Sprintf("File already exists:\n%s", newPath))
-					continue
-				}
-				if err := win.CopyFile(selMp3, newPath, false); err != nil {
-					prompt.Error(me.wnd, "File copy error", nil, err.Error())
-					continue
-				}
-				newCopiedFiles = append(newCopiedFiles, newPath)
-			}
+		// for _, selMp3 := range selMp3s {
+		// 	newPath := fmt.Sprintf("%s\\%s",
+		// 		newFolder, win.Path.GetFileName(selMp3))
+		// 	if win.Path.Exists(newPath) {
+		// 		prompt.Error(me.wnd, "File already exists", nil,
+		// 			fmt.Sprintf("File already exists:\n%s", newPath))
+		// 		continue
+		// 	}
+		// 	if err := win.CopyFile(selMp3, newPath, false); err != nil {
+		// 		prompt.Error(me.wnd, "File copy error", nil, err.Error())
+		// 		continue
+		// 	}
+		// 	newCopiedFiles = append(newCopiedFiles, newPath)
+		// }
 
-			me.addFilesToList(newCopiedFiles, func() {
-				if len(newCopiedFiles) > 0 {
-					prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-						fmt.Sprintf("%d file(s) copied and parsed back in %.2f ms.",
-							len(newCopiedFiles), t0.ElapsedMs()))
-				}
-			})
-		}
+		// var tagOpErr *TagOpError
+		// dlgrun.NewDlgRun(func() {
+		// 	tagOpErr = me.tagSaveAndReload(selMp3s)
+		// }).Show(me.wnd)
+
+		// if tagOpErr != nil {
+		// 	prompt.Error(me.wnd, "Tag operation error", nil,
+		// 		fmt.Sprintf("Failed to delete tag:\n%sn\n\n%s",
+		// 			tagOpErr.mp3, tagOpErr.err.Error()))
+		// } else {
+		// 	if len(newCopiedFiles) > 0 {
+		// 		prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+		// 			fmt.Sprintf("%d file(s) copied and parsed back in %.2f ms.",
+		// 				len(newCopiedFiles), t0.ElapsedMs()))
+		// 	}
+		// }
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME, func(_ wm.Command) {
@@ -211,6 +251,8 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME_PREFIX, func(_ wm.Command) {
@@ -222,6 +264,8 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_ABOUT, func(_ wm.Command) {
@@ -262,7 +306,7 @@ func (me *DlgMain) eventsMenu() {
 		idxsToDelete := make([]int, 0, me.lstFrames.Items().SelectedCount())
 
 		selFrameItems := me.lstFrames.Items().Selected()
-		for _, selFrameItem := range selFrameItems {
+		for _, selFrameItem := range selFrameItems { // scan all lines of frames listview
 			name4 := selFrameItem.Text(0)
 			if name4 == "" { // just an extension of a previous frame line?
 				continue
@@ -289,10 +333,16 @@ func (me *DlgMain) eventsMenu() {
 			return false
 		})
 
-		me.reSaveTagsOfSelectedFiles(func() {
+		if tagOpErr := me.tagOpsModal([]string{selMp3}, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to delete %d frame(s) of tag:\n%sn\n\n%s",
+					len(idxsToDelete), tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
 			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
 				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
 					len(idxsToDelete), t0.ElapsedMs()))
-		})
+		}
+
+		me.updateMemoryStatus()
 	})
 }
