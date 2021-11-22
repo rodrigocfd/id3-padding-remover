@@ -91,7 +91,7 @@ impl WndMain {
 					.map(|item| item.text(0))
 					.collect::<Vec<_>>();
 
-				self2._remove_frames(WhatFrame::Repl, &sel_files);
+				self2._remove_frames(WhatFrame::Replg, &sel_files);
 
 				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
 					util::prompt::err(self2.wnd.hwnd(),
@@ -116,7 +116,7 @@ impl WndMain {
 					.map(|item| item.text(0))
 					.collect::<Vec<_>>();
 
-				self2._remove_frames(WhatFrame::ReplArt, &sel_files);
+				self2._remove_frames(WhatFrame::ReplgArt, &sel_files);
 
 				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
 					util::prompt::err(self2.wnd.hwnd(),
@@ -168,6 +168,14 @@ impl WndMain {
 					&format!("Writen in Rust with WinSafe library.\n{}",
 						block.legal_copyright().unwrap()),
 				)?;
+
+				Ok(())
+			}
+		});
+
+		self.wnd.on().wm_command_accel_menu(ids::MNU_FRAMES_REM, {
+			let self2 = self.clone();
+			move || {
 
 				Ok(())
 			}

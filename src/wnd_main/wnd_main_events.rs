@@ -48,16 +48,27 @@ impl WndMain {
 			let self2 = self.clone();
 			move |p| {
 				if p.hmenu == self2.lst_mp3s.context_menu().unwrap() {
-					let has_sel = self2.lst_mp3s.items().selected_count() > 0;
+					let sel_count = self2.lst_mp3s.items().selected_count() > 0;
 
 					[ids::MNU_MP3S_DELETE,
 						ids::MNU_MP3S_REM_PAD, ids::MNU_MP3S_REM_RG, ids::MNU_MP3S_REM_RG_PIC,
 						ids::MNU_MP3S_DEL_TAG,
 						ids::MNU_MP3S_COPY_TO_FOLDER, ids::MNU_MP3S_RENAME, ids::MNU_MP3S_RENAME_PREFIX,
 					].iter()
-						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel))
+						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), sel_count))
+						.collect::<w::WinResult<Vec<_>>>()?;
+
+				} else if p.hmenu == self2.lst_frames.context_menu().unwrap() {
+					let has_sel_text = self2.lst_frames.items()
+						.iter_selected()
+						.find(|item| !item.text(0).is_empty())
+						.is_some();
+
+					[ids::MNU_FRAMES_REM].iter()
+						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel_text))
 						.collect::<w::WinResult<Vec<_>>>()?;
 				}
+
 				Ok(())
 			}
 		});
@@ -145,7 +156,7 @@ impl WndMain {
 			move || {
 				let clock = util::Timer::start()?;
 
-				if let Err(e) = self2._modal_tag_op( // WndFields doesn't save the tags
+				if let Err(e) = self2._modal_tag_op( // WndFields won't save the tags
 					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()

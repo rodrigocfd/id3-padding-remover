@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex};
-use winsafe::{prelude::*, self as w, path};
+use winsafe::{prelude::*, self as w};
 
 use crate::id3v2;
 use crate::util;
@@ -65,7 +65,7 @@ impl WndMain {
 
 		self.lst_mp3s.set_redraw(false);
 
-		for file in files.iter().map(|f| f.as_ref()) {
+		for file in files.iter().map(|f| f.as_ref()) { // add files + paddings on the listview
 			let padding_txt = {
 				let tags_cache = self.tags_cache.lock().unwrap();
 				let tag = tags_cache.get(file).unwrap();
@@ -159,7 +159,7 @@ impl WndMain {
 							}
 						}
 
-						if what == WhatFrame::ReplArt && frame.name4() == "APIC" {
+						if what == WhatFrame::ReplgArt && frame.name4() == "APIC" {
 							return false;
 						}
 

@@ -31,4 +31,4 @@ pub enum TagOp { Load, SaveAndLoad }
 
 /// Specifies which frames should be removed from MP3 tags.
 #[derive(PartialEq, Eq)]
-pub enum WhatFrame { Repl, ReplArt }
+pub enum WhatFrame { Replg, ReplgArt }

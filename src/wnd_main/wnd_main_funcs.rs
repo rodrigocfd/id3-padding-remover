@@ -13,13 +13,16 @@ impl WndMain {
 		let mnu_mp3s = w::HINSTANCE::NULL
 			.LoadMenu(w::IdStr::Id(ids::MNU_MP3S))?
 			.GetSubMenu(0).unwrap();
+		let mnu_frames = w::HINSTANCE::NULL
+			.LoadMenu(w::IdStr::Id(ids::MNU_FRAMES))?
+			.GetSubMenu(0).unwrap();
 
 		let tags_cache = Arc::new(Mutex::new(HashMap::default()));
 
 		let wnd        = WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_FROG), Some(ids::ACC_MAIN));
 		let lst_mp3s   = ListView::new_dlg(&wnd, ids::LST_MP3S, (H::Resize, V::Resize), Some(mnu_mp3s));
 		let wnd_fields = WndFields::new(&wnd, tags_cache.clone(), w::POINT::new(292, 4), (H::Repos, V::None));
-		let lst_frames = ListView::new_dlg(&wnd, ids::LST_FRAMES, (H::Repos, V::Resize), None);
+		let lst_frames = ListView::new_dlg(&wnd, ids::LST_FRAMES, (H::Repos, V::Resize), Some(mnu_frames));
 
 		let new_self = Self {
 			wnd, lst_mp3s, wnd_fields, lst_frames,
