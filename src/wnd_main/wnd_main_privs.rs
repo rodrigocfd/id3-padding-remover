@@ -78,7 +78,7 @@ impl WndMain {
 
 			match self.lst_mp3s.items().find(file) {
 				Some(item) => { item.set_text(1, &padding_txt)?; },
-				None => { self.lst_mp3s.items().add(&[file], Some(0))?; }
+				None => { self.lst_mp3s.items().add(&[file, &padding_txt], Some(0))?; }
 			}
 		}
 

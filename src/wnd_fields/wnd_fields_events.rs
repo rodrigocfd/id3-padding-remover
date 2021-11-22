@@ -13,13 +13,13 @@ impl WndFields {
 				.clone();
 
 			move |_| {
-				let genres = { // read genres from TXT
+				let genres_text = { // read genres from TXT
 					let path = format!("{}\\genres.txt", path::exe_path()?);
 					let fin = w::FileMapped::open(&path, w::FileAccess::ExistingReadOnly)?;
 					w::WString::parse_str(fin.as_slice())?.to_string()
 				};
 
-				cmb_genre.items().add(&genres.lines().collect::<Vec<_>>())?;
+				cmb_genre.items().add(&genres_text.lines().collect::<Vec<_>>())?;
 				Ok(true)
 			}
 		});
@@ -55,26 +55,26 @@ impl WndFields {
 			let self2 = self.clone();
 			move || {
 				for field in self2.fields.iter() {
-					if !field.chk.is_checked() { continue; }
+					if !field.chk.is_checked() { continue; } // skip unchecked textboxes
 
-					let new_text = field.txt.text()?.trim().to_owned(); // text typed by the user
 					let sel_files = self2.sel_files.try_borrow_mut()?;
+					let new_text = field.txt.text()?.trim().to_owned(); // text typed by the user
 
 					for (_, sel_tag) in self2.tags_cache.lock().unwrap()
 						.iter_mut()
 						.filter(|(file_name, _)|
 							sel_files.iter()
-								.find(|sel_file| *sel_file == *file_name)
+								.find(|sel_file| *sel_file == *file_name) // filter tags whose name are selected
 								.is_some(),
 						)
 					{
-						sel_tag.set_text_by_field(field.name, &new_text)?;
+						sel_tag.set_text_by_field(field.name, &new_text)?; // set new frame value
 					}
 				}
 
 				self2.save_cb.try_borrow()?
 					.as_ref()
-					.map_or(Ok(()), |cb| cb())?;
+					.map_or(Ok(()), |cb| cb())?; // execute user callback
 
 				Ok(())
 			}

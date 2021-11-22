@@ -1,5 +1,6 @@
 use winsafe::{prelude::*, self as w, co, msg};
 
+use crate::util;
 use super::{ids, PreDelete, TagOp, WndMain};
 
 impl WndMain {
@@ -91,7 +92,11 @@ impl WndMain {
 					}
 				}
 
-				self2._modal_tag_op(TagOp::Load, &all_files)?;
+				if let Err(e) = self2._modal_tag_op(TagOp::Load, &all_files) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("Tag load failed"), &e.to_string())?;
+				}
+
 				Ok(())
 			}
 		});
@@ -138,13 +143,25 @@ impl WndMain {
 		self.wnd_fields.on_save({
 			let self2 = self.clone();
 			move || {
-				self2._modal_tag_op( // reload all tags from their files
-					TagOp::Load,
+				let clock = util::Timer::start()?;
+
+				if let Err(e) = self2._modal_tag_op( // WndFields doesn't save the tags
+					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()
-						.map(|sel_item| sel_item.text(0))
+						.map(|item| item.text(0))
 						.collect::<Vec<_>>(),
-				)
+				) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("Tag updating failed"), &e.to_string())?;
+				} else {
+					util::prompt::info(self2.wnd.hwnd(),
+						"Operation successful", Some("Success"),
+						&format!("Tag updated in {} file(s) in {:.2} ms.",
+							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				}
+
+				Ok(())
 			}
 		})?;
 

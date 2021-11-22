@@ -70,10 +70,6 @@ pub mod parse_strs {
 
 	pub fn unicode(src: &[u8]) -> w::ErrResult<Vec<String>> {
 		let mut src = src;
-		if let Some(idx) = src.iter().rposition(|b| *b != 0x0000) {
-			src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
-		}
-
 		if (src.len() & 1) != 0 {
 			// Length is not even, something is not quite right.
 			// We'll simply discard the last byte and hope for the best.
@@ -88,6 +84,10 @@ pub mod parse_strs {
 				src.len() / 2,
 			)
 		};
+
+		if let Some(idx) = src16.iter().rposition(|b| *b != 0x0000) {
+			src16 = &src16[..=idx]; // right-trim zeros to avoid an extra empty string
+		}
 
 		let mut is_little_endian = true;
 		if src16[0] == BOM_LE || src16[0] == BOM_BE { // BOM found
