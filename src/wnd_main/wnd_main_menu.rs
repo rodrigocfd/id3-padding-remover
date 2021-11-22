@@ -1,7 +1,8 @@
 use winsafe::{prelude::*, self as w, co, shell};
 
+use crate::id3v2;
 use crate::util;
-use super::{ids, WndMain};
+use super::{ids, TagOp, WhatFrame, WndMain};
 
 impl WndMain {
 	pub(super) fn _menu_events(&self) {
@@ -32,7 +33,8 @@ impl WndMain {
 				// fileo.SetFolder(&sh_dir)?;
 
 				if fileo.Show(self2.wnd.hwnd())? {
-					self2._add_files(
+					if let Err(e) = self2._modal_tag_op(
+						TagOp::Load,
 						&fileo.GetResults()?.iter()
 							.map(|shi|
 								shi.and_then(|shi|
@@ -40,7 +42,10 @@ impl WndMain {
 								),
 							)
 							.collect::<w::WinResult<Vec<_>>>()?,
-					)?;
+					) {
+						util::prompt::err(self2.wnd.hwnd(),
+							"Error", Some("File open failed"), &e.to_string())?;
+					}
 				}
 				Ok(())
 			}
@@ -48,22 +53,30 @@ impl WndMain {
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_DELETE, {
 			let lst_files = self.lst_mp3s.clone();
-			move || {
-				lst_files.items().delete_selected()?;
-				Ok(())
-			}
+			move || lst_files.items().delete_selected()
+				.map_err(|e| e.into())
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_REM_PAD, {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
-				self2._remove_frames_from_sel_files_and_save(false, false)?;
 
-				util::prompt::info(self2.wnd.hwnd(),
-					"Operation successful", Some("Success"),
-					&format!("Padding removed from {} file(s) in {:.2} ms.",
-						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				if let Err(e) = self2._modal_tag_op(
+					TagOp::SaveAndLoad,
+					&self2.lst_mp3s.items()
+						.iter_selected()
+						.map(|item| item.text(0))
+						.collect::<Vec<_>>(),
+				) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("Padding removal failed"), &e.to_string())?;
+				} else {
+					util::prompt::info(self2.wnd.hwnd(),
+						"Operation successful", Some("Success"),
+						&format!("Padding removed from {} file(s) in {:.2} ms.",
+							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				}
 
 				Ok(())
 			}
@@ -73,12 +86,22 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
-				self2._remove_frames_from_sel_files_and_save(true, false)?;
+				let sel_files = self2.lst_mp3s.items()
+					.iter_selected()
+					.map(|item| item.text(0))
+					.collect::<Vec<_>>();
 
-				util::prompt::info(self2.wnd.hwnd(),
-					"Operation successful", Some("Success"),
-					&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
-						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				self2._remove_frames(WhatFrame::Repl, &sel_files);
+
+				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("ReplayGain removal failed"), &e.to_string())?;
+				} else {
+					util::prompt::info(self2.wnd.hwnd(),
+						"Operation successful", Some("Success"),
+						&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
+							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				}
 
 				Ok(())
 			}
@@ -88,12 +111,22 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
-				self2._remove_frames_from_sel_files_and_save(true, true)?;
+				let sel_files = self2.lst_mp3s.items()
+					.iter_selected()
+					.map(|item| item.text(0))
+					.collect::<Vec<_>>();
 
-				util::prompt::info(self2.wnd.hwnd(),
-					"Operation successful", Some("Success"),
-					&format!("ReplayGain and album art removed from {} file(s) in {:.2} ms.",
-						self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				self2._remove_frames(WhatFrame::ReplArt, &sel_files);
+
+				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("ReplayGain and album art removal failed"), &e.to_string())?;
+				} else {
+					util::prompt::info(self2.wnd.hwnd(),
+						"Operation successful", Some("Success"),
+						&format!("ReplayGain and album art removed from {} file(s) in {:.2} ms.",
+							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+				}
 
 				Ok(())
 			}
@@ -122,19 +155,19 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_ABOUT, {
 			let self2 = self.clone();
 			move || {
-				// let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
-				// let res_info = w::ResourceInfo::read_from(&exe_name)?;
-				// let ver = res_info.version_info().unwrap().dwFileVersion();
-				// let block = res_info.blocks().next().unwrap(); // first block
+				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
+				let res_info = w::ResourceInfo::read_from(&exe_name)?;
+				let ver = res_info.version_info().unwrap().dwFileVersion();
+				let block = res_info.blocks().next().unwrap(); // first block
 
-				// util::prompt::info(self2.wnd.hwnd(),
-				// 	"About",
-				// 	Some(&format!("{} v{}.{}.{}",
-				// 		block.product_name().unwrap(),
-				// 		ver[0], ver[1], ver[2])),
-				// 	&format!("Writen in Rust with WinSafe library.\n{}",
-				// 		block.legal_copyright().unwrap()),
-				// )?;
+				util::prompt::info(self2.wnd.hwnd(),
+					"About",
+					Some(&format!("{} v{}.{}.{}",
+						block.product_name().unwrap(),
+						ver[0], ver[1], ver[2])),
+					&format!("Writen in Rust with WinSafe library.\n{}",
+						block.legal_copyright().unwrap()),
+				)?;
 
 				Ok(())
 			}

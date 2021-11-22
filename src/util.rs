@@ -1,5 +1,6 @@
 use winsafe::{prelude::*, self as w, WinResult};
 
+/// Uses QueryPerformanceCounter() to count the number of elapsed milliseconds.
 pub struct Timer(i64);
 
 impl Timer {

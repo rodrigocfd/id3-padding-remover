@@ -1,6 +1,6 @@
 use winsafe::{prelude::*, self as w, co, msg};
 
-use super::{ids, PreDelete, WndMain};
+use super::{ids, PreDelete, TagOp, WndMain};
 
 impl WndMain {
 	pub(super) fn _events(&self) -> w::ErrResult<()> {
@@ -91,7 +91,7 @@ impl WndMain {
 					}
 				}
 
-				self2._add_files(&all_files)?;
+				self2._modal_tag_op(TagOp::Load, &all_files)?;
 				Ok(())
 			}
 		});
@@ -138,7 +138,8 @@ impl WndMain {
 		self.wnd_fields.on_save({
 			let self2 = self.clone();
 			move || {
-				self2._add_files( // reload all tags from their files
+				self2._modal_tag_op( // reload all tags from their files
+					TagOp::Load,
 					&self2.lst_mp3s.items()
 						.iter_selected()
 						.map(|sel_item| sel_item.text(0))

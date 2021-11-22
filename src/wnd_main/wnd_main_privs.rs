@@ -4,7 +4,7 @@ use winsafe::{prelude::*, self as w, path};
 use crate::id3v2;
 use crate::util;
 use crate::wnd_progress::WndProgress;
-use super::{PreDelete, WndMain};
+use super::{PreDelete, TagOp, WhatFrame, WndMain};
 
 impl WndMain {
 	pub(super) fn _titlebar_count(&self, moment: PreDelete) -> w::ErrResult<()> {
@@ -19,11 +19,14 @@ impl WndMain {
 		).map_err(|e| e.into())
 	}
 
-	pub(super) fn _add_files(&self, files: &[impl AsRef<str>]) -> w::ErrResult<()> {
+	pub(super) fn _modal_tag_op(&self,
+		tag_op: TagOp,
+		files: &[impl AsRef<str>]) -> w::ErrResult<()>
+	{
 		let process_err: Arc<Mutex<Option<w::ErrResult<()>>>>
 			= Arc::new(Mutex::new(None)); // will receive any error from the processing closure
 
-		WndProgress::new(&self.wnd, { // display the progress modal window
+		WndProgress::new(&self.wnd, { // show the progress modal window
 			let process_err = process_err.clone();
 			let tags_cache = self.tags_cache.clone();
 			let files = Arc::new(
@@ -34,25 +37,30 @@ impl WndMain {
 
 			move || { // this closure will run in a spawned thread
 				for file in files.iter() {
-					let tag = match id3v2::Tag::read(file) { // read all files sequentially
+					if tag_op == TagOp::SaveAndLoad {
+						let tags_cache = tags_cache.lock().unwrap();
+						let cached_tag = tags_cache.get(file).unwrap();
+						if let Err(e) = cached_tag.write(file) {
+							*process_err.lock().unwrap() = Some(Err(e)); // store error
+							break; // nothing else will be done
+						}
+					}
+
+					let loaded_tag = match id3v2::Tag::read(file) {
 						Ok(tag) => tag,
 						Err(e) => {
 							*process_err.lock().unwrap() = Some(Err(e)); // store error
-							break; // no further files will be parsed
+							break; // nothing else will be done
 						},
 					};
-					tags_cache.lock().unwrap().insert(file.clone(), tag);
+					tags_cache.lock().unwrap().insert(file.clone(), loaded_tag); // store new loaded tag
 				}
 				Ok(())
 			}
 		}).show()?;
 
-		if let Some(e) = process_err.lock().unwrap().as_ref() {
-			if let Err(e) = e {
-				util::prompt::err(self.wnd.hwnd(),
-					"Error", Some("Error parsing tag"), &e.to_string())?;
-				return Ok(());
-			}
+		if let Some(e) = process_err.lock().unwrap().take() {
+			return e;
 		}
 
 		self.lst_mp3s.set_redraw(false);
@@ -62,7 +70,7 @@ impl WndMain {
 				let tags_cache = self.tags_cache.lock().unwrap();
 				let tag = tags_cache.get(file).unwrap();
 				if tag.is_empty() {
-					"N/A".to_owned()
+					"N/A".to_owned() // if the file has no tag, there's no padding
 				} else {
 					tag.padding().to_string()
 				}
@@ -132,43 +140,32 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn _remove_frames_from_sel_files_and_save(&self,
-		replay_gain: bool, album_art: bool) -> w::ErrResult<()>
+	pub(super) fn _remove_frames(&self,
+		what: WhatFrame,
+		files: &[impl AsRef<str>])
 	{
-		{
-			let mut tags_cache = self.tags_cache.lock().unwrap();
-
-			for sel_item in self.lst_mp3s.items().iter_selected() {
-				let file_name = sel_item.text(0);
-				let the_tag = tags_cache.get_mut(&file_name).unwrap();
-
-				the_tag.frames_mut().retain(|frame| {
-					if replay_gain && frame.name4() == "TXXX" {
-						if let id3v2::FrameData::MultiText(texts) = frame.data() {
-							if texts[0].starts_with("replaygain_") {
-								return false;
+		let mut tags_cache = self.tags_cache.lock().unwrap();
+		files.iter()
+			.map(|file| file.as_ref())
+			.for_each(|file| {
+				tags_cache.get_mut(file).unwrap()
+					.frames_mut()
+					.retain(|frame| {
+						if frame.name4() == "TXXX" {
+							if let id3v2::FrameData::MultiText(texts) = frame.data() {
+								if texts[0].starts_with("replaygain_") {
+									return false;
+								}
 							}
 						}
-					}
 
-					if album_art && frame.name4() == "APIC" {
-						return false;
-					}
+						if what == WhatFrame::ReplArt && frame.name4() == "APIC" {
+							return false;
+						}
 
-					true
-				});
-
-				the_tag.write(&file_name)?; // save tag to file
-			}
-		}
-
-		self._add_files( // reload all tags from their files
-			&self.lst_mp3s.items().iter_selected()
-				.map(|item| item.text(0))
-				.collect::<Vec<_>>(),
-		)?;
-
-		Ok(())
+						true
+					});
+			});
 	}
 
 	pub(super) fn _rename_files(&self, with_track: bool) -> w::ErrResult<()> {

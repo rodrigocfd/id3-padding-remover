@@ -201,7 +201,10 @@ impl Tag {
 				match f.data_mut() {
 					FrameData::Comment(comm) => comm.set_text(new_val),
 					FrameData::Text(text) => *text = new_val.to_owned(),
-					_ => return Err(format!("Cannot set text on frame {}.", fancy_name).into()),
+					_ => return Err(
+						format!("Cannot set text on frame {} ({}).",
+							name4, fancy_name).into(),
+					),
 				}
 
 			} else { // no such frame yet, create new

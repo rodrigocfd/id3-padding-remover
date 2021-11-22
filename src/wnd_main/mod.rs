@@ -21,4 +21,14 @@ pub struct WndMain {
 	app_name:   String,
 }
 
+/// Did the event happened before the file item was deleted?
+#[derive(PartialEq, Eq)]
 pub enum PreDelete { Yes, No }
+
+/// Operation to be performed asynchronously on a batch of MP3 tags.
+#[derive(PartialEq, Eq)]
+pub enum TagOp { Load, SaveAndLoad }
+
+/// Specifies which frames should be removed from MP3 tags.
+#[derive(PartialEq, Eq)]
+pub enum WhatFrame { Repl, ReplArt }

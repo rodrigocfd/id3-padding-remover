@@ -42,7 +42,7 @@ impl WndProgress {
 							}
 						});
 
-						cb_ret // user closure erros will go down through library pipes
+						cb_ret // user closure errors will go down through library pipes
 					}
 				});
 
