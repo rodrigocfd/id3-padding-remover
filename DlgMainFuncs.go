@@ -104,7 +104,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	me.lstFrames.Columns().SetWidthToFill(1)
 	me.lstFrames.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
 
-	selTags := make([]*id3v2.Tag, 0, len(selMp3s))
+	selTags := make([]*id3v2.Tag, 0, len(selMp3s)) // filter the tags of currently selected files
 	for _, selMp3 := range selMp3s {
 		selTags = append(selTags, me.cachedTags[selMp3])
 	}

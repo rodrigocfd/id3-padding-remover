@@ -61,12 +61,12 @@ func (me *DlgMain) eventsWm() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			prompt.Error(me.wnd, "No files added", nil,
+			prompt.Error(me.wnd, "No files added", win.StrVal("No files"),
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			if tagOpErr := me.tagOpsModal(droppedMp3s, TAG_OP_LOAD); tagOpErr != nil {
+			if tagOpErr := me.tagOpModal(droppedMp3s, TAG_OP_LOAD); tagOpErr != nil {
 				prompt.Error(me.wnd, "Tag operation error", nil,
-					fmt.Sprintf("Failed to open tag:\n%sn\n\n%s",
+					fmt.Sprintf("Failed to load tag:\n%sn\n\n%s",
 						tagOpErr.mp3, tagOpErr.err.Error()))
 			} else {
 				me.addMp3sToList(droppedMp3s)
@@ -82,7 +82,7 @@ func (me *DlgMain) eventsWm() {
 
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
-		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))

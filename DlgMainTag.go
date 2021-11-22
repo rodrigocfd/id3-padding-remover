@@ -20,7 +20,8 @@ const (
 	TAG_OP_SAVE_AND_LOAD
 )
 
-func (me *DlgMain) tagOpsModal(mp3s []string, ops TAG_OP) *TagOpError {
+// Performs the chosen tasks in a DlgRun modal window.
+func (me *DlgMain) tagOpModal(mp3s []string, ops TAG_OP) *TagOpError {
 	load := func(mp3s []string, cachedTags map[string]*id3v2.Tag) *TagOpError {
 		loadedTags := make([]*id3v2.Tag, 0, len(mp3s))
 

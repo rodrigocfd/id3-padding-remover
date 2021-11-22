@@ -61,7 +61,7 @@ func (me *DlgMain) eventsMenu() {
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.ListResultDisplayNames(shellco.SIGDN_FILESYSPATH)
 
-			if tagOpErr := me.tagOpsModal(mp3s, TAG_OP_LOAD); tagOpErr != nil {
+			if tagOpErr := me.tagOpModal(mp3s, TAG_OP_LOAD); tagOpErr != nil {
 				prompt.Error(me.wnd, "Tag operation error", nil,
 					fmt.Sprintf("Failed to open tag:\n%sn\n\n%s",
 						tagOpErr.mp3, tagOpErr.err.Error()))
@@ -85,7 +85,7 @@ func (me *DlgMain) eventsMenu() {
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 		// Simply saving will remove the padding.
-		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -112,7 +112,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove ReplayGain:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -146,7 +146,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove ReplayGain and album art:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -176,7 +176,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpsModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to delete tag:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -191,55 +191,63 @@ func (me *DlgMain) eventsMenu() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_COPY_TO_FOLDER, func(_ wm.Command) {
-		// fod := shell.NewIFileOpenDialog(
-		// 	win.CoCreateInstance(
-		// 		shellco.CLSID_FileOpenDialog, nil,
-		// 		co.CLSCTX_INPROC_SERVER,
-		// 		shellco.IID_IFileOpenDialog),
-		// )
-		// defer fod.Release()
+		fod := shell.NewIFileOpenDialog(
+			win.CoCreateInstance(
+				shellco.CLSID_FileOpenDialog, nil,
+				co.CLSCTX_INPROC_SERVER,
+				shellco.IID_IFileOpenDialog),
+		)
+		defer fod.Release()
 
-		// fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
-		// if !fod.Show(me.wnd.Hwnd()) {
-		// 	return
-		// }
+		fod.SetOptions(fod.GetOptions() | shellco.FOS_PICKFOLDERS)
+		if !fod.Show(me.wnd.Hwnd()) {
+			return
+		}
 
-		// newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
-		// selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
-		// var newCopiedFiles []string
-		// t0 := timecount.New()
+		newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
+		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		newCopiedFiles := make([]string, 0, len(selMp3s))
+		t0 := timecount.New()
 
-		// for _, selMp3 := range selMp3s {
-		// 	newPath := fmt.Sprintf("%s\\%s",
-		// 		newFolder, win.Path.GetFileName(selMp3))
-		// 	if win.Path.Exists(newPath) {
-		// 		prompt.Error(me.wnd, "File already exists", nil,
-		// 			fmt.Sprintf("File already exists:\n%s", newPath))
-		// 		continue
-		// 	}
-		// 	if err := win.CopyFile(selMp3, newPath, false); err != nil {
-		// 		prompt.Error(me.wnd, "File copy error", nil, err.Error())
-		// 		continue
-		// 	}
-		// 	newCopiedFiles = append(newCopiedFiles, newPath)
-		// }
+		for _, selMp3 := range selMp3s {
+			newPath := fmt.Sprintf("%s\\%s",
+				newFolder, win.Path.GetFileName(selMp3))
+			if win.Path.Exists(newPath) {
+				prompt.Error(me.wnd, "Existing file", nil,
+					fmt.Sprintf("File already exists:\n%s", newPath))
+				return
+			}
+			if err := win.CopyFile(selMp3, newPath, false); err != nil {
+				prompt.Error(me.wnd, "Copy error", nil, err.Error())
+				return
+			}
+			newCopiedFiles = append(newCopiedFiles, newPath)
+		}
 
-		// var tagOpErr *TagOpError
-		// dlgrun.NewDlgRun(func() {
-		// 	tagOpErr = me.tagSaveAndReload(selMp3s)
-		// }).Show(me.wnd)
+		if len(newCopiedFiles) == 0 {
+			prompt.Info(me.wnd, "No copies", nil, "No files have been copied.")
+			return
+		}
 
-		// if tagOpErr != nil {
-		// 	prompt.Error(me.wnd, "Tag operation error", nil,
-		// 		fmt.Sprintf("Failed to delete tag:\n%sn\n\n%s",
-		// 			tagOpErr.mp3, tagOpErr.err.Error()))
-		// } else {
-		// 	if len(newCopiedFiles) > 0 {
-		// 		prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
-		// 			fmt.Sprintf("%d file(s) copied and parsed back in %.2f ms.",
-		// 				len(newCopiedFiles), t0.ElapsedMs()))
-		// 	}
-		// }
+		me.lstMp3s.SetRedraw(false)
+		for _, selMp3 := range selMp3s { // delete all items of the copied files
+			item, _ := me.lstMp3s.Items().Find(selMp3)
+			item.Delete() // will fire LVM_DELETEITEM
+		}
+		me.lstMp3s.SetRedraw(true)
+
+		if tagOpErr := me.tagOpModal(newCopiedFiles, TAG_OP_LOAD); tagOpErr != nil {
+			prompt.Error(me.wnd, "Tag operation error", nil,
+				fmt.Sprintf("Failed to reload tag:\n%sn\n\n%s",
+					tagOpErr.mp3, tagOpErr.err.Error()))
+		} else {
+			me.addMp3sToList(newCopiedFiles) // load the files that have been copied to the new folder
+			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+				fmt.Sprintf("%d file(s) reloaded in %.2f ms.",
+					len(newCopiedFiles), t0.ElapsedMs()))
+		}
+
+		me.updateMemoryStatus()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME, func(_ wm.Command) {
@@ -301,7 +309,7 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0]
+		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0] // single selected MP3 file
 		tag := me.cachedTags[selMp3]
 		idxsToDelete := make([]int, 0, me.lstFrames.Items().SelectedCount())
 
@@ -312,7 +320,7 @@ func (me *DlgMain) eventsMenu() {
 				continue
 			}
 
-			idxFrame := int(selFrameItem.LParam()) // index frame within frames slice
+			idxFrame := int(selFrameItem.LParam()) // index of frame within frames slice
 			selFrame := tag.Frames()[idxFrame]
 			if selFrame.Name4() != name4 {
 				prompt.Error(me.wnd, "This is bad", win.StrVal("Mismatched frames"),
@@ -333,7 +341,7 @@ func (me *DlgMain) eventsMenu() {
 			return false
 		})
 
-		if tagOpErr := me.tagOpsModal([]string{selMp3}, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.tagOpModal([]string{selMp3}, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to delete %d frame(s) of tag:\n%sn\n\n%s",
 					len(idxsToDelete), tagOpErr.mp3, tagOpErr.err.Error()))
