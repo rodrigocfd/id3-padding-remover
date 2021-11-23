@@ -78,11 +78,11 @@ pub mod prompt {
 		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::INFORMATION)
 	}
 
-	pub fn ok_cancel(
-		hwnd: HWND, title: &str, instruc: Option<&str>, body: &str) -> WinResult<co::DLGID>
-	{
-		base(hwnd, title, instruc, body, co::TDCBF::OK | co::TDCBF::CANCEL, co::TD_ICON::WARNING)
-	}
+	// pub fn ok_cancel(
+	// 	hwnd: HWND, title: &str, instruc: Option<&str>, body: &str) -> WinResult<co::DLGID>
+	// {
+	// 	base(hwnd, title, instruc, body, co::TDCBF::OK | co::TDCBF::CANCEL, co::TD_ICON::WARNING)
+	// }
 
 	fn base(hwnd: HWND, title: &str, instruc: Option<&str>,
 		body: &str, btns: co::TDCBF, ico: co::TD_ICON) -> WinResult<co::DLGID>

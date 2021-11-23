@@ -11,6 +11,7 @@ mod wnd_fields_events;
 mod wnd_fields_funcs;
 mod wnd_fields_privs;
 
+/// Control with lots of checkboxes and textboxes.
 #[derive(Clone)]
 pub struct WndFields {
 	wnd:              gui::WindowControl,

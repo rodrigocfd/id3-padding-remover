@@ -8,9 +8,11 @@ use crate::wnd_fields::WndFields;
 mod ids;
 mod wnd_main_events;
 mod wnd_main_funcs;
-mod wnd_main_menu;
+mod wnd_main_menu_frames;
+mod wnd_main_menu_mp3;
 mod wnd_main_privs;
 
+/// Main application window.
 #[derive(Clone)]
 pub struct WndMain {
 	wnd:        gui::WindowMain,

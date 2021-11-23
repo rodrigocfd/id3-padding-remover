@@ -85,8 +85,6 @@ impl WndMain {
 		self.lst_mp3s.set_redraw(true);
 		self.lst_mp3s.columns().set_width_to_fill(0)?;
 		self._titlebar_count(PreDelete::No)?;
-		self._display_sel_tags_frames()?;
-		self.wnd_fields.feed(mp3_names.iter().map(|m| m.as_ref().to_owned()).collect::<Vec<_>>())?;
 		Ok(())
 	}
 

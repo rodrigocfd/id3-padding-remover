@@ -30,7 +30,8 @@ impl WndMain {
 			app_name: util::app_name_from_res()?,
 		};
 		new_self._events()?;
-		new_self._menu_events();
+		new_self._menu_mp3s_events();
+		new_self._menu_frames_events();
 		Ok(new_self)
 	}
 

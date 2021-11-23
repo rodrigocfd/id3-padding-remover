@@ -59,14 +59,25 @@ impl WndMain {
 						.collect::<w::WinResult<Vec<_>>>()?;
 
 				} else if p.hmenu == self2.lst_frames.context_menu().unwrap() {
-					let has_sel_text = self2.lst_frames.items()
-						.iter_selected()
-						.find(|item| !item.text(0).is_empty())
-						.is_some();
+					p.hmenu.EnableMenuItem(
+						w::IdPos::Id(ids::MNU_FRAMES_REM),
+						self2.lst_frames.items()
+							.iter_selected()
+							.find(|sel_item| !sel_item.text(0).is_empty())
+							.is_some(),
+					)?;
 
-					[ids::MNU_FRAMES_REM].iter()
-						.map(|id| p.hmenu.EnableMenuItem(w::IdPos::Id(*id), has_sel_text))
-						.collect::<w::WinResult<Vec<_>>>()?;
+					p.hmenu.EnableMenuItem(
+						w::IdPos::Id(ids::MNU_FRAMES_MOVE_UP),
+						self2.lst_frames.items().selected_count() == 1
+							&& self2.lst_frames.items()
+								.iter()
+								.enumerate()
+								.find(|(idx, item)| *idx != 0
+									&& item.is_selected()
+									&& !item.text(0).is_empty())
+								.is_some(),
+					)?;
 				}
 
 				Ok(())
@@ -166,6 +177,7 @@ impl WndMain {
 					util::prompt::err(self2.wnd.hwnd(),
 						"Error", Some("Tag updating failed"), &e.to_string())?;
 				} else {
+					self2._display_sel_tags_frames()?;
 					util::prompt::info(self2.wnd.hwnd(),
 						"Operation successful", Some("Success"),
 						&format!("Tag updated in {} file(s) in {:.2} ms.",

@@ -4,7 +4,7 @@ use crate::util;
 use super::{ids, PrefixWithTrack, TagOp, WhatFrame, WndMain};
 
 impl WndMain {
-	pub(super) fn _menu_events(&self) {
+	pub(super) fn _menu_mp3s_events(&self) {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_OPEN, {
 			let self2 = self.clone();
 			move || {
@@ -96,6 +96,7 @@ impl WndMain {
 					util::prompt::err(self2.wnd.hwnd(),
 						"Error", Some("ReplayGain removal failed"), &e.to_string())?;
 				} else {
+					self2._display_sel_tags_frames()?;
 					util::prompt::info(self2.wnd.hwnd(),
 						"Operation successful", Some("Success"),
 						&format!("ReplayGain removed from {} file(s) in {:.2} ms.",
@@ -121,6 +122,7 @@ impl WndMain {
 					util::prompt::err(self2.wnd.hwnd(),
 						"Error", Some("ReplayGain and album art removal failed"), &e.to_string())?;
 				} else {
+					self2._display_sel_tags_frames()?;
 					util::prompt::info(self2.wnd.hwnd(),
 						"Operation successful", Some("Success"),
 						&format!("ReplayGain and album art removed from {} file(s) in {:.2} ms.",
@@ -171,48 +173,5 @@ impl WndMain {
 				Ok(())
 			}
 		});
-
-		self.wnd.on().wm_command_accel_menu(ids::MNU_FRAMES_REM, {
-			let self2 = self.clone();
-			move || {
-				let clock = util::Timer::start()?;
-				let sel_mp3 = self2.lst_mp3s.items().iter_selected()
-					.next().unwrap().text(0); // assume there's only 1 selected MP3
-
-				let frames_count = {
-					let mut count = 0;
-					let mut tags_cache = self2.tags_cache.lock().unwrap();
-					let tag = tags_cache.get_mut(&sel_mp3).unwrap();
-
-					for sel_item in self2.lst_frames.items()
-						.iter_selected()
-						.collect::<Vec<_>>()
-						.iter()
-						.rev()
-					{
-						if sel_item.text(0).is_empty() { continue; }
-
-						let frame_index = sel_item.lparam()?;
-						tag.frames_mut().remove(frame_index as _);
-						count += 1;
-					}
-
-					count
-				};
-
-				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &[&sel_mp3]) {
-					util::prompt::err(self2.wnd.hwnd(),
-						"Error", Some("Frame removal failed"), &e.to_string())?;
-				} else {
-					util::prompt::info(self2.wnd.hwnd(),
-						"Operation successful", Some("Success"),
-						&format!("{} frame(s) removed from file in {:.2} ms.",
-							frames_count, clock.now_ms()?))?;
-				}
-
-				Ok(())
-			}
-		});
 	}
 }
-

@@ -28,4 +28,5 @@ seq_ids! {
 seq_ids! {
 	MNU_FRAMES = 300;
 	MNU_FRAMES_REM
+	MNU_FRAMES_MOVE_UP
 }
