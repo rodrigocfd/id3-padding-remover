@@ -14,7 +14,7 @@ impl WndFields {
 
 			move |_| {
 				let genres_text = { // read genres from TXT
-					let path = format!("{}\\genres.txt", path::exe_path()?);
+					let path = format!("{}\\id3-fit-genres.txt", path::exe_path()?);
 					let fin = w::FileMapped::open(&path, w::FileAccess::ExistingReadOnly)?;
 					w::WString::parse_str(fin.as_slice())?.to_string()
 				};
