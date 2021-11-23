@@ -22,13 +22,17 @@ pub struct WndMain {
 }
 
 /// Did the event happened before the file item was deleted?
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum PreDelete { Yes, No }
 
 /// Operation to be performed asynchronously on a batch of MP3 tags.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum TagOp { Load, SaveAndLoad }
 
+/// When renaming a file, should it be prefixed with the track number?
+#[derive(PartialEq, Eq, Clone, Copy)]
+pub enum PrefixWithTrack { Yes, No }
+
 /// Specifies which frames should be removed from MP3 tags.
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum WhatFrame { Replg, ReplgArt }

@@ -1,8 +1,7 @@
 use winsafe::{prelude::*, self as w, co, shell};
 
-use crate::id3v2;
 use crate::util;
-use super::{ids, TagOp, WhatFrame, WndMain};
+use super::{ids, PrefixWithTrack, TagOp, WhatFrame, WndMain};
 
 impl WndMain {
 	pub(super) fn _menu_events(&self) {
@@ -86,14 +85,14 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
-				let sel_files = self2.lst_mp3s.items()
+				let sel_mp3s = self2.lst_mp3s.items()
 					.iter_selected()
 					.map(|item| item.text(0))
 					.collect::<Vec<_>>();
 
-				self2._remove_frames(WhatFrame::Replg, &sel_files);
+				self2._remove_frames(WhatFrame::Replg, &sel_mp3s);
 
-				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
+				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_mp3s) {
 					util::prompt::err(self2.wnd.hwnd(),
 						"Error", Some("ReplayGain removal failed"), &e.to_string())?;
 				} else {
@@ -111,14 +110,14 @@ impl WndMain {
 			let self2 = self.clone();
 			move || {
 				let clock = util::Timer::start()?;
-				let sel_files = self2.lst_mp3s.items()
+				let sel_mp3s = self2.lst_mp3s.items()
 					.iter_selected()
 					.map(|item| item.text(0))
 					.collect::<Vec<_>>();
 
-				self2._remove_frames(WhatFrame::ReplgArt, &sel_files);
+				self2._remove_frames(WhatFrame::ReplgArt, &sel_mp3s);
 
-				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_files) {
+				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &sel_mp3s) {
 					util::prompt::err(self2.wnd.hwnd(),
 						"Error", Some("ReplayGain and album art removal failed"), &e.to_string())?;
 				} else {
@@ -135,7 +134,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_RENAME, {
 			let self2 = self.clone();
 			move || {
-				if let Err(err) = self2._rename_files(false) {
+				if let Err(err) = self2._rename_files(PrefixWithTrack::No) {
 					util::prompt::err(self2.wnd.hwnd(), "Error", None, &err.to_string())?;
 				}
 				Ok(())
@@ -145,7 +144,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_RENAME_PREFIX, {
 			let self2 = self.clone();
 			move || {
-				if let Err(err) = self2._rename_files(true) {
+				if let Err(err) = self2._rename_files(PrefixWithTrack::Yes) {
 					util::prompt::err(self2.wnd.hwnd(), "Error", None, &err.to_string())?;
 				}
 				Ok(())
@@ -176,6 +175,8 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FRAMES_REM, {
 			let self2 = self.clone();
 			move || {
+
+				util::prompt::info(self2.wnd.hwnd(), "Oops...", None, "Not implemented yet.")?;
 
 				Ok(())
 			}
