@@ -65,7 +65,7 @@ impl WndMain {
 					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()
-						.map(|item| item.text(0))
+						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),
 				) {
 					util::prompt::err(self2.wnd.hwnd(),
@@ -87,7 +87,7 @@ impl WndMain {
 				let clock = util::Timer::start()?;
 				let sel_mp3s = self2.lst_mp3s.items()
 					.iter_selected()
-					.map(|item| item.text(0))
+					.map(|sel_item| sel_item.text(0))
 					.collect::<Vec<_>>();
 
 				self2._remove_frames(WhatFrame::Replg, &sel_mp3s);
@@ -112,7 +112,7 @@ impl WndMain {
 				let clock = util::Timer::start()?;
 				let sel_mp3s = self2.lst_mp3s.items()
 					.iter_selected()
-					.map(|item| item.text(0))
+					.map(|sel_item| sel_item.text(0))
 					.collect::<Vec<_>>();
 
 				self2._remove_frames(WhatFrame::ReplgArt, &sel_mp3s);
@@ -175,8 +175,40 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_FRAMES_REM, {
 			let self2 = self.clone();
 			move || {
+				let clock = util::Timer::start()?;
+				let sel_mp3 = self2.lst_mp3s.items().iter_selected()
+					.next().unwrap().text(0); // assume there's only 1 selected MP3
 
-				util::prompt::info(self2.wnd.hwnd(), "Oops...", None, "Not implemented yet.")?;
+				let frames_count = {
+					let mut count = 0;
+					let mut tags_cache = self2.tags_cache.lock().unwrap();
+					let tag = tags_cache.get_mut(&sel_mp3).unwrap();
+
+					for sel_item in self2.lst_frames.items()
+						.iter_selected()
+						.collect::<Vec<_>>()
+						.iter()
+						.rev()
+					{
+						if sel_item.text(0).is_empty() { continue; }
+
+						let frame_index = sel_item.lparam()?;
+						tag.frames_mut().remove(frame_index as _);
+						count += 1;
+					}
+
+					count
+				};
+
+				if let Err(e) = self2._modal_tag_op(TagOp::SaveAndLoad, &[&sel_mp3]) {
+					util::prompt::err(self2.wnd.hwnd(),
+						"Error", Some("Frame removal failed"), &e.to_string())?;
+				} else {
+					util::prompt::info(self2.wnd.hwnd(),
+						"Operation successful", Some("Success"),
+						&format!("{} frame(s) removed from file in {:.2} ms.",
+							frames_count, clock.now_ms()?))?;
+				}
 
 				Ok(())
 			}

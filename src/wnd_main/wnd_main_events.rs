@@ -132,7 +132,7 @@ impl WndMain {
 				self2.wnd_fields.feed(
 					self2.lst_mp3s.items()
 						.iter_selected()
-						.map(|item| item.text(0))
+						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),
 				)?;
 
@@ -160,7 +160,7 @@ impl WndMain {
 					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()
-						.map(|item| item.text(0))
+						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),
 				) {
 					util::prompt::err(self2.wnd.hwnd(),

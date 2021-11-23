@@ -85,6 +85,8 @@ impl WndMain {
 		self.lst_mp3s.set_redraw(true);
 		self.lst_mp3s.columns().set_width_to_fill(0)?;
 		self._titlebar_count(PreDelete::No)?;
+		self._display_sel_tags_frames()?;
+		self.wnd_fields.feed(mp3_names.iter().map(|m| m.as_ref().to_owned()).collect::<Vec<_>>())?;
 		Ok(())
 	}
 
@@ -108,9 +110,10 @@ impl WndMain {
 			let tags_cache = self.tags_cache.lock().unwrap();
 			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap();
 
-			for frame in the_tag.frames().iter() {
+			for (idx, frame) in the_tag.frames().iter().enumerate() {
 				use id3v2::FrameData;
 				let new_item = self.lst_frames.items().add(&[frame.name4()], None)?;
+				new_item.set_lparam(idx as _)?; // save frame index in item room
 
 				match frame.data() {
 					FrameData::Text(text) => new_item.set_text(1, text)?,

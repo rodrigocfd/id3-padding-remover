@@ -49,7 +49,7 @@ impl WndFields {
 		let new_self = Self {
 			wnd, fields, btn_clear_checks, btn_save,
 			tags_cache,
-			sel_files: Rc::new(RefCell::new(Vec::default())),
+			sel_mp3s: Rc::new(RefCell::new(Vec::default())),
 			save_cb:   Rc::new(RefCell::new(None)),
 		};
 		new_self._events();
@@ -63,11 +63,11 @@ impl WndFields {
 		Ok(())
 	}
 
-	pub fn feed(&self, sel_files: Vec<String>) -> w::ErrResult<()> {
+	pub fn feed(&self, sel_mp3s: Vec<String>) -> w::ErrResult<()> {
 		let tags_cache = self.tags_cache.lock().unwrap();
 		let sel_tags = tags_cache.iter()
 			.filter(|(file_name, _)|
-				sel_files.iter()
+				sel_mp3s.iter()
 					.find(|sel_file| *sel_file == *file_name)
 					.is_some(),
 			)
@@ -80,13 +80,13 @@ impl WndFields {
 				None => (gui::CheckState::Unchecked, w::WString::from_str("")),
 			};
 
-			field.chk.hwnd().EnableWindow(!sel_files.is_empty()); // if zero MP3s selected, disable checkboxes
+			field.chk.hwnd().EnableWindow(!sel_mp3s.is_empty()); // if zero MP3s selected, disable checkboxes
 			field.chk.set_check_state(check_state);
 			field.txt.set_text(&s.to_string())?;
 			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
 		}
 
-		*self.sel_files.try_borrow_mut()? = sel_files; // keep selected files
+		*self.sel_mp3s.try_borrow_mut()? = sel_mp3s; // keep selected files
 		self._enable_buttons_if_at_least_one_checked();
 		Ok(())
 	}

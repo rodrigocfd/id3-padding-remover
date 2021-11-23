@@ -57,14 +57,14 @@ impl WndFields {
 				for field in self2.fields.iter() {
 					if !field.chk.is_checked() { continue; } // skip unchecked textboxes
 
-					let sel_files = self2.sel_files.try_borrow_mut()?;
+					let sel_mp3s = self2.sel_mp3s.try_borrow_mut()?;
 					let new_text = field.txt.text()?.trim().to_owned(); // text typed by the user
 
 					for (_, sel_tag) in self2.tags_cache.lock().unwrap()
 						.iter_mut()
-						.filter(|(file_name, _)|
-							sel_files.iter()
-								.find(|sel_file| *sel_file == *file_name) // filter tags whose name are selected
+						.filter(|(mp3_name, _)|
+							sel_mp3s.iter()
+								.find(|sel_mp3| *sel_mp3 == *mp3_name) // filter tags whose name are selected
 								.is_some(),
 						)
 					{
