@@ -1,6 +1,8 @@
 package dlgrun
 
 import (
+	"runtime"
+
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -47,6 +49,7 @@ func (me *DlgRun) events() {
 			me.wnd.Hwnd().GetWindow(co.GW_OWNER), shellco.TBPF_INDETERMINATE)
 
 		go func() { // launch another thread for the job
+			runtime.LockOSThread()
 			me.job()
 			me.wnd.RunUiThread(func() { // return to UI thread after job is finished
 				me.taskbar.SetProgressState(
