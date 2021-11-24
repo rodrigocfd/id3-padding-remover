@@ -6,6 +6,7 @@ use crate::id3v2::Tag;
 use crate::wnd_fields::WndFields;
 
 mod ids;
+mod mp3_error;
 mod wnd_main_events;
 mod wnd_main_funcs;
 mod wnd_main_menu_frames;

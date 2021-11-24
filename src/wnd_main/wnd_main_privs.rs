@@ -4,7 +4,7 @@ use winsafe::{prelude::*, self as w};
 use crate::id3v2;
 use crate::util;
 use crate::wnd_progress::WndProgress;
-use super::{PreDelete, PrefixWithTrack, TagOp, WhatFrame, WndMain};
+use super::{mp3_error::Mp3Error, PreDelete, PrefixWithTrack, TagOp, WhatFrame, WndMain};
 
 impl WndMain {
 	pub(super) fn _titlebar_count(&self, moment: PreDelete) -> w::ErrResult<()> {
@@ -21,9 +21,9 @@ impl WndMain {
 
 	pub(super) fn _modal_tag_op(&self,
 		tag_op: TagOp,
-		mp3_names: &[impl AsRef<str>]) -> w::ErrResult<()>
+		mp3_names: &[impl AsRef<str>]) -> Result<(), Mp3Error>
 	{
-		let process_err: Arc<Mutex<Option<w::ErrResult<()>>>>
+		let process_err: Arc<Mutex<Option<Mp3Error>>>
 			= Arc::new(Mutex::new(None)); // will receive any error from the processing closure
 
 		WndProgress::new(&self.wnd, { // show the progress modal window
@@ -41,7 +41,7 @@ impl WndMain {
 						let tags_cache = tags_cache.lock().unwrap();
 						let cached_tag = tags_cache.get(mp3_name).unwrap();
 						if let Err(e) = cached_tag.write(mp3_name) {
-							*process_err.lock().unwrap() = Some(Err(e)); // store error
+							*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
 							break; // nothing else will be done
 						}
 					}
@@ -49,7 +49,7 @@ impl WndMain {
 					let loaded_tag = match id3v2::Tag::read(mp3_name) {
 						Ok(tag) => tag,
 						Err(e) => {
-							*process_err.lock().unwrap() = Some(Err(e)); // store error
+							*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
 							break; // nothing else will be done
 						},
 					};
@@ -57,10 +57,11 @@ impl WndMain {
 				}
 				Ok(())
 			}
-		}).show()?;
+		}).show()
+			.map(|_| ())?;
 
-		if let Some(e) = process_err.lock().unwrap().take() {
-			return e;
+		if let Some(e) = process_err.lock().unwrap().take() { // an error happened during processing?
+			return Err(e);
 		}
 
 		self.lst_mp3s.set_redraw(false);
@@ -77,9 +78,9 @@ impl WndMain {
 			};
 
 			match self.lst_mp3s.items().find(mp3_name) {
-				Some(item) => { item.set_text(1, &padding_txt)?; },
-				None => { self.lst_mp3s.items().add(&[mp3_name, &padding_txt], Some(0))?; }
-			}
+				Some(item) => { item.set_text(1, &padding_txt) },
+				None => { self.lst_mp3s.items().add(&[mp3_name, &padding_txt], Some(0)).map(|_| ()) }
+			}?;
 		}
 
 		self.lst_mp3s.set_redraw(true);
