@@ -184,6 +184,7 @@ impl WndMain {
 							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
 				}
 
+				self2.lst_mp3s.focus()?;
 				Ok(())
 			}
 		})?;
