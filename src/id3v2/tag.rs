@@ -58,7 +58,7 @@ impl Tag {
 		// Check ID3 magic bytes.
 		let magic_str = "ID3".as_bytes();
 		if &src[..3] != magic_str {
-			return Err("No ID3 tag found.".into());
+			return Ok((0, 0)); // no tag found
 		}
 
 		// Validate tag version 2.3.0.
