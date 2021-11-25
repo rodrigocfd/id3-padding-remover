@@ -68,14 +68,14 @@ func TagReadFromBinary(src []byte) (*Tag, error) {
 
 func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 	// Find MP3 offset.
-	mp3Off, has := util.FindMp3Signature(src)
+	mp3Offset, has := util.FindMp3Signature(src)
 	if !has {
 		return 0, 0, fmt.Errorf("no MP3 signature found")
 	}
 
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, mp3Off, nil // MP3 file has no tag
+		return 0, mp3Offset, nil // MP3 file has no tag
 	}
 
 	// Validate tag version 2.3.0.
@@ -93,16 +93,17 @@ func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 	}
 
 	// Read declared tag size.
-	declaredTagSize := int(util.SynchSafeDecode(
+	declaredSize = int(util.SynchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]), // also count 10-byte tag header
 	) + 10)
 
-	if declaredSize > mp3Off {
+	if declaredSize > mp3Offset {
 		return 0, 0, fmt.Errorf(
-			"declared size is greater than MP3 offset: %d vs %d", declaredSize, mp3Off)
+			"declared size is greater than MP3 offset: %d vs %d",
+			declaredSize, mp3Offset)
 	}
 
-	return declaredTagSize, mp3Off, nil
+	return declaredSize, mp3Offset, nil
 }
 
 func _TagParseFrames(src []byte) (frames []Frame, padding int, e error) {
