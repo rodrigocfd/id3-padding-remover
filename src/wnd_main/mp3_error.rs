@@ -13,7 +13,7 @@ impl Error for Mp3Error {}
 
 impl fmt::Display for Mp3Error {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{} : {}", self.mp3_file, self.err)
+		write!(f, "{}\n\n{}", self.mp3_file, self.err)
 	}
 }
 

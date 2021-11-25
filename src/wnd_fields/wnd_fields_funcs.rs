@@ -16,7 +16,7 @@ impl WndFields {
 	{
 		let wnd = gui::WindowControl::new_dlg(parent, ids::DLG_FIELDS, pos, resize_behavior, None);
 
-		let none2 = (gui::Horz::None, gui::Vert::None);
+		let hv_none = (gui::Horz::None, gui::Vert::None);
 		use id3v2::FieldName::*;
 		let fields = [
 			(Artist,     ids::CHK_ARTIST,      ids::TXT_ARTIST),
@@ -35,16 +35,16 @@ impl WndFields {
 			(Comment,    ids::CHK_COMMENT,     ids::TXT_COMMENT),
 		].map(|(name, idchk, idtxt)| Field { // dynamically build all the frame fields
 			name,
-			chk: gui::CheckBox::new_dlg(&wnd, idchk, none2),
+			chk: gui::CheckBox::new_dlg(&wnd, idchk, hv_none),
 			txt: if idtxt == ids::CMB_GENRE {
-				Arc::new(gui::ComboBox::new_dlg(&wnd, idtxt, none2))
+				Arc::new(gui::ComboBox::new_dlg(&wnd, idtxt, hv_none))
 			} else {
-				Arc::new(gui::Edit::new_dlg(&wnd, idtxt, none2))
+				Arc::new(gui::Edit::new_dlg(&wnd, idtxt, hv_none))
 			},
 		}).to_vec();
 
-		let btn_clear_checks = gui::Button::new_dlg(&wnd, ids::BTN_CLEARCHECKS, none2);
-		let btn_save         = gui::Button::new_dlg(&wnd, ids::BTN_SAVE, none2);
+		let btn_clear_checks = gui::Button::new_dlg(&wnd, ids::BTN_CLEARCHECKS, hv_none);
+		let btn_save         = gui::Button::new_dlg(&wnd, ids::BTN_SAVE, hv_none);
 
 		let new_self = Self {
 			wnd, fields, btn_clear_checks, btn_save,

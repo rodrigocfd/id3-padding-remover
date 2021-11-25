@@ -48,9 +48,8 @@ impl Tag {
 	}
 
 	fn _parse_header(src: &[u8]) -> w::ErrResult<(usize, usize)> {
-		// Find MP3 offset.
 		let mp3_offset = match src.windows(2)
-			.position(|by| by == [0xff, 0xfb] || by == [0xff, 0xf3] || by == [0xff, 0xf2])
+			.position(|by| by == [0xff, 0xfb]) // https://stackoverflow.com/a/7302482/6923555
 		{
 			None => return Err("No MP3 signature found.".into()),
 			Some(mp3_off) => mp3_off,

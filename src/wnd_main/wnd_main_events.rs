@@ -167,7 +167,7 @@ impl WndMain {
 			move || {
 				let clock = util::Timer::start()?;
 
-				if let Err(e) = self2._modal_tag_op( // WndFields won't save the tags
+				if let Err(e) = self2._modal_tag_op( // WndFields itself won't save the tags
 					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()
