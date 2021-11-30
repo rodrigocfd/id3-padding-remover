@@ -110,22 +110,21 @@ impl WndMain {
 			let the_tag = tags_cache.get(&sel_item.text(0)).unwrap();
 
 			for (idx, frame) in the_tag.frames().iter().enumerate() {
-				use id3v2::FrameData;
 				let new_item = self.lst_frames.items().add(&[frame.name4()], None)?;
 				new_item.set_lparam(idx as _)?; // save frame index in item room
 
 				match frame.data() {
-					FrameData::Text(text) => new_item.set_text(1, text)?,
-					FrameData::MultiText(texts) => {
+					id3v2::FrameData::Text(text) => new_item.set_text(1, text)?,
+					id3v2::FrameData::MultiText(texts) => {
 						new_item.set_text(1, &texts[0])?;
 						for text in texts.iter().skip(1) {
 							self.lst_frames.items().add(&["", text], None)?; // add subsequent items
 						}
 					},
-					FrameData::Comment(com) => {
+					id3v2::FrameData::Comment(com) => {
 						new_item.set_text(1, &format!("[{}] {}", com.lang, com.text))?;
 					},
-					FrameData::Binary(bin) => {
+					id3v2::FrameData::Binary(bin) => {
 						new_item.set_text(1,
 							&format!("{} ({:.2}%)",
 								&util::format_bytes(bin.len()),

@@ -34,10 +34,10 @@ impl WndMain {
 				if fileo.Show(self2.wnd.hwnd())? {
 					if let Err(e) = self2._modal_tag_op(
 						TagOp::Load,
-						&fileo.GetResults()?.iter()
+						&fileo.GetResults()?.iter()?
 							.map(|shi|
 								shi.and_then(|shi|
-									shi.GetDisplayName(shell::co::SIGDN::FILESYSPATH)
+									shi.GetDisplayName(shell::co::SIGDN::FILESYSPATH),
 								),
 							)
 							.collect::<w::WinResult<Vec<_>>>()?,

@@ -15,7 +15,7 @@ impl WndMain {
 				let frames_count = {
 					let mut count = 0;
 					let mut tags_cache = self2.tags_cache.lock().unwrap();
-					let tag = tags_cache.get_mut(&sel_mp3).unwrap();
+					let tag = tags_cache.get_mut(&sel_mp3).unwrap(); // the tag of the selected MP3
 
 					for sel_item in self2.lst_frames.items()
 						.iter_selected()
@@ -25,7 +25,7 @@ impl WndMain {
 					{
 						if sel_item.text(0).is_empty() { continue; } // discard auxiliar lines
 
-						let frame_index = sel_item.lparam()?;
+						let frame_index = sel_item.lparam()?; // sequential frame index within tag
 						tag.frames_mut().remove(frame_index as _);
 						count += 1;
 					}

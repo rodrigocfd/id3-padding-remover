@@ -97,7 +97,7 @@ impl WndMain {
 			move |p| {
 				let mut all_files = Vec::with_capacity(5); // arbitrary
 
-				for file in p.hdrop.iter() {
+				for file in p.hdrop.iter()? {
 					let mut file = file?;
 					if w::GetFileAttributes(&file)?.has(co::FILE_ATTRIBUTE::DIRECTORY) {
 						if !file.ends_with('\\') { file.push('\\'); }

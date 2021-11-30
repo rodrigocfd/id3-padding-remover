@@ -176,12 +176,14 @@ impl Tag {
 		let (name4, fancy_name) = text_field.names();
 		self.frames.iter()
 			.find(|f| f.name4() == name4)
-			.map_or(Ok(None), // no such frame
+			.map_or(
+				Ok(None), // no such frame
 				|f| match f.data() {
 					FrameData::Comment(comm) => Ok(Some(&comm.text)), // ignore comment lang
 					FrameData::Text(text) => Ok(Some(text)),
 					_ => Err(format!("{} has wrong frame type.", fancy_name).into()),
-				})
+				},
+			)
 	}
 
 	pub fn set_text_by_field(&mut self,
