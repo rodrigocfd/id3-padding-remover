@@ -40,7 +40,7 @@ impl WndMain {
 									shi.GetDisplayName(shell::co::SIGDN::FILESYSPATH),
 								),
 							)
-							.collect::<w::WinResult<Vec<_>>>()?,
+							.collect::<w::HrResult<Vec<_>>>()?,
 					) {
 						util::prompt::err(self2.wnd.hwnd(),
 							"Error", Some("File open failed"), &e.to_string())?;

@@ -1,14 +1,14 @@
-use winsafe::{prelude::*, self as w, WinResult};
+use winsafe::{prelude::*, self as w};
 
 /// Uses QueryPerformanceCounter() to count the number of elapsed milliseconds.
 pub struct Timer(i64);
 
 impl Timer {
-	pub fn start() -> WinResult<Self> {
+	pub fn start() -> w::WinResult<Self> {
 		Ok( Self(w::QueryPerformanceCounter()?) )
 	}
 
-	pub fn now_ms(&self) -> WinResult<f64> {
+	pub fn now_ms(&self) -> w::WinResult<f64> {
 		let freq = w::QueryPerformanceFrequency()?;
 		let t1 = w::QueryPerformanceCounter()?;
 		Ok( ((t1 - self.0) as f64 / freq as f64) * 1000.0 )
@@ -56,7 +56,7 @@ pub fn format_bytes(num_bytes: usize) -> String {
 	}
 }
 
-pub fn app_name_from_res() -> WinResult<String> {
+pub fn app_name_from_res() -> w::WinResult<String> {
 	let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 	let res_info = w::ResourceInfo::read_from(&exe_name)?;
 	let block = res_info.blocks().next().unwrap(); // first block
@@ -64,16 +64,16 @@ pub fn app_name_from_res() -> WinResult<String> {
 }
 
 pub mod prompt {
-	use winsafe::{self as w, co, HWND, WinResult};
+	use winsafe::{self as w, co};
 
 	pub fn err(
-		hwnd: HWND, title: &str, instruc: Option<&str>, body: &str) -> WinResult<co::DLGID>
+		hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> w::HrResult<co::DLGID>
 	{
 		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::ERROR)
 	}
 
 	pub fn info(
-		hwnd: HWND, title: &str, instruc: Option<&str>, body: &str) -> WinResult<co::DLGID>
+		hwnd: w::HWND, title: &str, instruc: Option<&str>, body: &str) -> w::HrResult<co::DLGID>
 	{
 		base(hwnd, title, instruc, body, co::TDCBF::OK, co::TD_ICON::INFORMATION)
 	}
@@ -84,8 +84,8 @@ pub mod prompt {
 	// 	base(hwnd, title, instruc, body, co::TDCBF::OK | co::TDCBF::CANCEL, co::TD_ICON::WARNING)
 	// }
 
-	fn base(hwnd: HWND, title: &str, instruc: Option<&str>,
-		body: &str, btns: co::TDCBF, ico: co::TD_ICON) -> WinResult<co::DLGID>
+	fn base(hwnd: w::HWND, title: &str, instruc: Option<&str>,
+		body: &str, btns: co::TDCBF, ico: co::TD_ICON) -> w::HrResult<co::DLGID>
 	{
 		let mut tdc = w::TASKDIALOGCONFIG::default();
 		tdc.hwndParent = hwnd;

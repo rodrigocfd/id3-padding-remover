@@ -30,6 +30,6 @@ struct Field {
 	txt:  Arc<dyn TxtCtrl>,
 }
 
-trait TxtCtrl: gui::TextControl + gui::FocusControl {}
+trait TxtCtrl: w::prelude::TextControl + w::prelude::FocusControl {}
 impl TxtCtrl for gui::Edit {}
 impl TxtCtrl for gui::ComboBox {}
