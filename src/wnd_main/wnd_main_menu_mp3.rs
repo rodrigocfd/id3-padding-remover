@@ -1,4 +1,4 @@
-use winsafe::{prelude::*, self as w, co, shell};
+use winsafe::{prelude::*, self as w, co};
 
 use crate::util;
 use super::{ids, PrefixWithTrack, TagOp, WhatFrame, WndMain};
@@ -8,17 +8,17 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_OPEN, {
 			let self2 = self.clone();
 			move || {
-				let fileo = w::CoCreateInstance::<shell::IFileOpenDialog>(
-					&shell::clsid::FileOpenDialog,
+				let fileo = w::CoCreateInstance::<w::shell::IFileOpenDialog>(
+					&w::shell::clsid::FileOpenDialog,
 					None,
 					co::CLSCTX::INPROC_SERVER,
 				)?;
 
 				fileo.SetOptions(
 					fileo.GetOptions()?
-						| shell::co::FOS::FORCEFILESYSTEM
-						| shell::co::FOS::FILEMUSTEXIST
-						| shell::co::FOS::ALLOWMULTISELECT,
+						| w::shell::co::FOS::FORCEFILESYSTEM
+						| w::shell::co::FOS::FILEMUSTEXIST
+						| w::shell::co::FOS::ALLOWMULTISELECT,
 				)?;
 
 				fileo.SetFileTypes(&[
@@ -37,7 +37,7 @@ impl WndMain {
 						&fileo.GetResults()?.iter()?
 							.map(|shi|
 								shi.and_then(|shi|
-									shi.GetDisplayName(shell::co::SIGDN::FILESYSPATH),
+									shi.GetDisplayName(w::shell::co::SIGDN::FILESYSPATH),
 								),
 							)
 							.collect::<w::HrResult<Vec<_>>>()?,

@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use winsafe::{self as w, gui};
 
-use crate::id3v2;
+use crate::{id3v2, wnd_picture::WndPicture};
 
 mod ids;
 mod wnd_fields_events;
@@ -16,6 +16,7 @@ mod wnd_fields_privs;
 pub struct WndFields {
 	wnd:              gui::WindowControl,
 	fields:           Vec<Field>,
+	wnd_picture:      WndPicture,
 	btn_clear_checks: gui::Button,
 	btn_save:         gui::Button,
 	tags_cache:       Arc<Mutex<HashMap<String, id3v2::Tag>>>,

@@ -4,7 +4,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use winsafe::{prelude::*, self as w, gui};
 
-use crate::id3v2;
+use crate::{id3v2, wnd_picture::WndPicture};
 use super::{ids, Field, WndFields};
 
 impl WndFields {
@@ -43,11 +43,13 @@ impl WndFields {
 			},
 		}).to_vec();
 
+		let wnd_picture = WndPicture::new(&wnd, w::POINT::new(160, 66), w::SIZE::new(30, 30), hv_none);
+
 		let btn_clear_checks = gui::Button::new_dlg(&wnd, ids::BTN_CLEARCHECKS, hv_none);
 		let btn_save         = gui::Button::new_dlg(&wnd, ids::BTN_SAVE, hv_none);
 
 		let new_self = Self {
-			wnd, fields, btn_clear_checks, btn_save,
+			wnd, fields, wnd_picture, btn_clear_checks, btn_save,
 			tags_cache,
 			sel_mp3s: Rc::new(RefCell::new(Vec::default())),
 			save_cb:   Rc::new(RefCell::new(None)),
@@ -85,6 +87,16 @@ impl WndFields {
 			field.txt.set_text(&s.to_string())?;
 			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
 		}
+
+		self.wnd_picture.feed(match sel_tags.len() {
+			1 => sel_tags[0].frames().iter()
+				.find(|f| f.name4() == "APIC")
+				.map_or(None, |f| match f.data() {
+					id3v2::FrameData::Picture(pic) => Some(&pic.data),
+					_ => None, // invalid APIC should really never happen
+				}),
+			_ => None,
+		})?;
 
 		*self.sel_mp3s.try_borrow_mut()? = sel_mp3s; // keep selected files
 		self._enable_buttons_if_at_least_one_checked();

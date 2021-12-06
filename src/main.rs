@@ -4,6 +4,7 @@ mod id3v2;
 mod util;
 mod wnd_fields;
 mod wnd_main;
+mod wnd_picture;
 mod wnd_progress;
 
 use winsafe::{prelude::*, self as w};

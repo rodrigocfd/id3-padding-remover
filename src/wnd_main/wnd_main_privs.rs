@@ -124,6 +124,14 @@ impl WndMain {
 					id3v2::FrameData::Comment(com) => {
 						new_item.set_text(1, &format!("[{}] {}", com.lang, com.text))?;
 					},
+					id3v2::FrameData::Picture(pic) => {
+						new_item.set_text(1,
+							&format!("{}: {} ({:.2}%)",
+								pic.kind.descr(),
+								&util::format_bytes(pic.data.len()),
+								(pic.data.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
+						)?
+					},
 					id3v2::FrameData::Binary(bin) => {
 						new_item.set_text(1,
 							&format!("{} ({:.2}%)",

@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use winsafe as w;
 
-use super::FrameComment;
+use super::{FrameComment, FramePicture};
 use super::util;
 
 /// The data contained in a frame, which can be of various types.
@@ -10,6 +10,7 @@ pub enum FrameData {
 	Text(String),
 	MultiText(Vec<String>),
 	Comment(FrameComment),
+	Picture(FramePicture),
 	Binary(Vec<u8>),
 }
 
@@ -47,6 +48,8 @@ impl Frame {
 
 		let data = if name4 == "COMM" {
 			FrameData::Comment(FrameComment::parse(src)?)
+		} else if name4 == "APIC" {
+			FrameData::Picture(FramePicture::parse(src)?)
 		} else if name4.chars().nth(0).unwrap() == 'T' { // text frame
 			let texts = util::parse_strs::any(src)?;
 			match texts.len() {
@@ -70,6 +73,7 @@ impl Frame {
 			FrameData::Text(text) => util::SerializedStrs::new(&[&text]).collect(),
 			FrameData::MultiText(texts) => util::SerializedStrs::new(&texts).collect(),
 			FrameData::Comment(comm) => comm.serialize_data(),
+			FrameData::Picture(pic) => pic.serialize_data(),
 			FrameData::Binary(bin) => bin.clone(),
 		};
 

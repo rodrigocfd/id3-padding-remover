@@ -1,4 +1,4 @@
-use winsafe::ErrResult;
+use winsafe as w;
 
 use super::util;
 
@@ -19,7 +19,7 @@ impl FrameComment {
 		}
 	}
 
-	pub fn parse(src: &[u8]) -> ErrResult<Self> {
+	pub fn parse(src: &[u8]) -> w::ErrResult<Self> {
 		let mut src = src;
 		if src[0] != 0x00 && src[1] != 0x01 {
 			return Err(
