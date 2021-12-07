@@ -5,19 +5,19 @@ use super::{PicKind, util};
 /// The APIC frame type.
 #[derive(PartialEq, Eq)]
 pub struct FramePicture {
-	pub mime:  String,
-	pub kind:  PicKind,
-	pub descr: String, // usually an empty string
-	pub data:  Vec<u8>,
+	pub mime:       String,
+	pub kind:       PicKind,
+	pub descr:      String, // usually an empty string
+	pub pic_bytes:  Vec<u8>,
 }
 
 impl FramePicture {
-	pub fn new(mime: &str, kind: PicKind, descr: Option<&str>, data: &[u8]) -> Self {
+	pub fn new(mime: &str, kind: PicKind, descr: Option<&str>, pic_bytes: &[u8]) -> Self {
 		Self {
 			mime: mime.to_owned(),
 			kind,
 			descr: descr.unwrap_or_default().to_owned(),
-			data: data.to_vec(),
+			pic_bytes: pic_bytes.to_vec(),
 		}
 	}
 
@@ -44,12 +44,24 @@ impl FramePicture {
 		src = &src[idx_second_zero + 1..];
 
 		// Picture data itself.
-		let data = src.to_vec();
+		let pic_bytes = src.to_vec();
 
-		Ok(Self { mime, kind, descr, data })
+		Ok(Self { mime, kind, descr, pic_bytes })
 	}
 
 	pub fn serialize_data(&self) -> Vec<u8> {
-		panic!("NOT SERIALIZING APIC");
+		let serialized_mime = util::SerializedStrs::new(&[&self.mime]);
+		let serialized_descr = util::SerializedStrs::new(&[&self.descr]);
+
+		let mut buf = Vec::<u8>::with_capacity(
+			1 + serialized_mime.str_z.len() + 1 + // encoding + picture kind
+			serialized_descr.str_z.len() +
+			self.pic_bytes.len(),
+		);
+		buf.extend_from_slice(&serialized_mime.collect());
+		buf.push(self.kind as u8);
+		buf.extend_from_slice(&serialized_descr.str_z); // no encoding byte
+		buf.extend_from_slice(&self.pic_bytes);
+		buf
 	}
 }

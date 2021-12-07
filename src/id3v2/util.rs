@@ -118,12 +118,14 @@ pub mod parse_strs {
 	}
 }
 
+/// Serializes strings into u8 vecs, null-terminated, along with their encoding.
 pub struct SerializedStrs {
 	pub encoding_byte: u8,
-	pub data: Vec<u8>,
+	pub str_z: Vec<u8>,
 }
 
 impl SerializedStrs {
+	/// Creates a new object by serializing the given strings, null-terminated.
 	pub fn new(the_strings: &[impl AsRef<str>]) -> Self {
 		let mut is_unicode = false;
 		let mut estimated_len_bytes = 0;
@@ -177,14 +179,16 @@ impl SerializedStrs {
 
 		Self {
 			encoding_byte: if is_unicode { 0x01 } else { 0x00 },
-			data: buf,
+			str_z: buf,
 		}
 	}
 
+	/// Returns the encoding byte and the serialized null-terminated strings in
+	/// a single vec.
 	pub fn collect(&self) -> Vec<u8> {
-		let mut buf = Vec::<u8>::with_capacity(1 + self.data.len());
+		let mut buf = Vec::<u8>::with_capacity(1 + self.str_z.len());
 		buf.push(self.encoding_byte);
-		buf.extend_from_slice(&self.data);
+		buf.extend_from_slice(&self.str_z);
 		buf
 	}
 }

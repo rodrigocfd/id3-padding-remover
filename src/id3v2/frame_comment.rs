@@ -45,25 +45,21 @@ impl FrameComment {
 		} else if texts.len() == 1 {
 			Ok(Self { lang, descr: "".to_owned(), text: texts[0].clone() })
 		} else {
-			Err(
-				format!("Comment frame with multiple texts: {}.", texts.len())
-					.into(),
-			)
+			Err(format!("Comment frame with multiple texts: {}.", texts.len()).into())
 		}
 	}
 
 	pub fn serialize_data(&self) -> Vec<u8> {
 		let buf_text = util::SerializedStrs::new(&[&self.text]);
 
-		let mut buf = Vec::<u8>::with_capacity(1 + 3 + buf_text.data.len());
+		let mut buf = Vec::<u8>::with_capacity(1 + 3 + buf_text.str_z.len());
 		buf.push(buf_text.encoding_byte);
 		buf.extend(
-			self.lang.chars()
-				.enumerate()
-				.map(|(_, ch)| ch as u8),
+			self.lang.chars() // lang is always ISO-8859-1
+				.map(|ch| ch as u8),
 		);
 		buf.push(0x00);
-		buf.extend_from_slice(&buf_text.data);
+		buf.extend_from_slice(&buf_text.str_z); // no encoding byte
 
 		buf
 	}

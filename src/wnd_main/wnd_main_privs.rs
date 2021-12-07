@@ -128,8 +128,8 @@ impl WndMain {
 						new_item.set_text(1,
 							&format!("{}: {} ({:.2}%)",
 								pic.kind.descr(),
-								&util::format_bytes(pic.data.len()),
-								(pic.data.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
+								&util::format_bytes(pic.pic_bytes.len()),
+								(pic.pic_bytes.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
 						)?
 					},
 					id3v2::FrameData::Binary(bin) => {

@@ -91,7 +91,7 @@ impl WndFields {
 		if same_pic {
 			let pic_frame = sel_tags[0].frame_by_name4("APIC").unwrap();
 			if let id3v2::FrameData::Picture(pic) = pic_frame.data() {
-				self.wnd_picture.feed(Some(&pic.data))?;
+				self.wnd_picture.feed(Some(&pic.pic_bytes))?;
 			}
 		} else {
 			self.wnd_picture.feed(None)?;
