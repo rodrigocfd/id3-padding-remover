@@ -1,6 +1,6 @@
 [package]
 name = "id3-fit"
-version = "2.1.0"
+version = "2.2.0"
 authors = ["Rodrigo Cesar de Freitas Dias <rcesar@gmail.com>"]
 edition = "2021"
 
