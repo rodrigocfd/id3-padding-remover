@@ -126,18 +126,18 @@ impl WndMain {
 					},
 					id3v2::FrameData::Picture(pic) => {
 						new_item.set_text(1,
-							&format!("{}: {} ({:.2}%)",
-								pic.kind.descr(),
-								&util::format_bytes(pic.pic_bytes.len()),
-								(pic.pic_bytes.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
-						)?
+							&format!("{} - {}", pic.kind.descr(), pic.mime))?;
+						let pcts = &format!("{} ({:.2}%)",
+							&util::format_bytes(pic.pic_bytes.len()),
+							(pic.pic_bytes.len() as f32) * 100.0 / the_tag.mp3_offset() as f32);
+						self.lst_frames.items().add(&["", pcts], None)?;
 					},
 					id3v2::FrameData::Binary(bin) => {
 						new_item.set_text(1,
 							&format!("{} ({:.2}%)",
 								&util::format_bytes(bin.len()),
 								(bin.len() as f32) * 100.0 / the_tag.mp3_offset() as f32),
-						)?
+						)?;
 					},
 				}
 			}
