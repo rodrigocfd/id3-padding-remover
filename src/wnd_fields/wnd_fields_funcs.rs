@@ -17,34 +17,32 @@ impl WndFields {
 		let wnd = gui::WindowControl::new_dlg(parent, ids::DLG_FIELDS, pos, resize_behavior, None);
 
 		let hv_none = (gui::Horz::None, gui::Vert::None);
-		use id3v2::FieldName::*;
 		let fields = [
-			(Artist,     ids::CHK_ARTIST,      ids::TXT_ARTIST),
-			(Title,      ids::CHK_TITLE,       ids::TXT_TITLE),
-			(Subtitle,   ids::CHK_SUBTITLE,    ids::TXT_SUBTITLE),
-			(Album,      ids::CHK_ALBUM,       ids::TXT_ALBUM),
-			(Track,      ids::CHK_TRACK,       ids::TXT_TRACK),
-			(Year,       ids::CHK_YEAR,        ids::TXT_YEAR),
-			(Genre,      ids::CHK_GENRE,       ids::CMB_GENRE),
-			(Composer,   ids::CHK_COMPOSER,    ids::TXT_COMPOSER),
-			(Lyricist,   ids::CHK_LYRICIST,    ids::TXT_LYRICIST),
-			(OrigArtist, ids::CHK_ORIG_ARTIST, ids::TXT_ORIG_ARTIST),
-			(OrigAlbum,  ids::CHK_ORIG_ALBUM,  ids::TXT_ORIG_ALBUM),
-			(OrigYear,   ids::CHK_ORIG_YEAR,   ids::TXT_ORIG_YEAR),
-			(Performer,  ids::CHK_PERFORMER,   ids::TXT_PERFORMER),
-			(Comment,    ids::CHK_COMMENT,     ids::TXT_COMMENT),
-		].map(|(name, idchk, idtxt)| Field { // dynamically build all the frame fields
-			name,
-			chk: gui::CheckBox::new_dlg(&wnd, idchk, hv_none),
-			txt: if idtxt == ids::CMB_GENRE {
-				Arc::new(gui::ComboBox::new_dlg(&wnd, idtxt, hv_none))
+			("TPE1", ids::CHK_ARTIST,      ids::TXT_ARTIST),
+			("TIT2", ids::CHK_TITLE,       ids::TXT_TITLE),
+			("TIT3", ids::CHK_SUBTITLE,    ids::TXT_SUBTITLE),
+			("TALB", ids::CHK_ALBUM,       ids::TXT_ALBUM),
+			("TRCK", ids::CHK_TRACK,       ids::TXT_TRACK),
+			("TYER", ids::CHK_YEAR,        ids::TXT_YEAR),
+			("TCON", ids::CHK_GENRE,       ids::CMB_GENRE),
+			("TCOM", ids::CHK_COMPOSER,    ids::TXT_COMPOSER),
+			("TEXT", ids::CHK_LYRICIST,    ids::TXT_LYRICIST),
+			("TOPE", ids::CHK_ORIG_ARTIST, ids::TXT_ORIG_ARTIST),
+			("TOAL", ids::CHK_ORIG_ALBUM,  ids::TXT_ORIG_ALBUM),
+			("TORY", ids::CHK_ORIG_YEAR,   ids::TXT_ORIG_YEAR),
+			("TPE3", ids::CHK_PERFORMER,   ids::TXT_PERFORMER),
+			("COMM", ids::CHK_COMMENT,     ids::TXT_COMMENT),
+		].map(|(name4, id_chk, id_txt)| Field { // dynamically build all the field structs
+			name4,
+			chk: gui::CheckBox::new_dlg(&wnd, id_chk, hv_none),
+			txt: if id_txt == ids::CMB_GENRE {
+				Arc::new(gui::ComboBox::new_dlg(&wnd, id_txt, hv_none))
 			} else {
-				Arc::new(gui::Edit::new_dlg(&wnd, idtxt, hv_none))
+				Arc::new(gui::Edit::new_dlg(&wnd, id_txt, hv_none))
 			},
 		}).to_vec();
 
-		let wnd_picture = WndPicture::new(&wnd, w::POINT::new(160, 66), w::SIZE::new(30, 30), hv_none);
-
+		let wnd_picture      = WndPicture::new(&wnd, w::POINT::new(160, 66), w::SIZE::new(30, 30), hv_none);
 		let btn_clear_checks = gui::Button::new_dlg(&wnd, ids::BTN_CLEARCHECKS, hv_none);
 		let btn_save         = gui::Button::new_dlg(&wnd, ids::BTN_SAVE, hv_none);
 
@@ -76,27 +74,30 @@ impl WndFields {
 			.map(|(_, tag)| tag)
 			.collect::<Vec<_>>();
 
-		for field in self.fields.iter() {
-			let (check_state, s) = match id3v2::Tag::same_field_value(&sel_tags, field.name)? {
-				Some(s) => (gui::CheckState::Checked, w::WString::from_str(&s)),
-				None => (gui::CheckState::Unchecked, w::WString::from_str("")),
+		for field in self.fields.iter() { // text fields
+			let (chk_state, text) = if id3v2::Tag::same_frame_value(&sel_tags, field.name4)? {
+				(gui::CheckState::Checked, sel_tags[0].text_of_frame(field.name4)?.unwrap())
+			} else {
+				(gui::CheckState::Unchecked, "")
 			};
 
 			field.chk.hwnd().EnableWindow(!sel_mp3s.is_empty()); // if zero MP3s selected, disable checkboxes
-			field.chk.set_check_state(check_state);
-			field.txt.set_text(&s.to_string())?;
-			field.txt.hwnd().EnableWindow(check_state == gui::CheckState::Checked);
+			field.chk.set_check_state(chk_state);
+			field.txt.set_text(text)?;
+			field.txt.hwnd().EnableWindow(chk_state == gui::CheckState::Checked);
 		}
 
-		self.wnd_picture.feed(match sel_tags.len() {
-			1 => sel_tags[0].frames().iter()
-				.find(|f| f.name4() == "APIC")
-				.map_or(None, |f| match f.data() {
-					id3v2::FrameData::Picture(pic) => Some(&pic.data),
-					_ => None, // invalid APIC should really never happen
-				}),
-			_ => None,
-		})?;
+		let same_pic = id3v2::Tag::same_frame_value(&sel_tags, "APIC")?;
+		if same_pic {
+			let pic_frame = sel_tags[0].frame_by_name4("APIC").unwrap();
+			if let id3v2::FrameData::Picture(pic) = pic_frame.data() {
+				self.wnd_picture.feed(Some(&pic.data))?;
+			}
+		} else {
+			self.wnd_picture.feed(None)?;
+		}
+		self.wnd_picture.enable(same_pic);
+
 
 		*self.sel_mp3s.try_borrow_mut()? = sel_mp3s; // keep selected files
 		self._enable_buttons_if_at_least_one_checked();

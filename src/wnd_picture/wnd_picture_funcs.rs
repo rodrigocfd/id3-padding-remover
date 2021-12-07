@@ -14,7 +14,7 @@ impl WndPicture {
 		let wnd = gui::WindowControl::new(parent, gui::WindowControlOpts {
 			size,
 			position,
-			style: WS::CHILD | WS::VISIBLE | WS::CLIPCHILDREN | WS::CLIPSIBLINGS,
+			style: WS::CHILD | WS::VISIBLE | WS::CLIPCHILDREN | WS::CLIPSIBLINGS | WS::DISABLED,
 			ex_style: WS_EX::LEFT | WS_EX::CLIENTEDGE,
 			horz_resize: resize_behavior.0,
 			vert_resize: resize_behavior.1,
@@ -26,6 +26,10 @@ impl WndPicture {
 		let new_self = Self { wnd, image };
 		new_self._events();
 		new_self
+	}
+
+	pub fn enable(&self, enable: bool) {
+		self.wnd.hwnd().EnableWindow(enable);
 	}
 
 	pub fn feed(&self, image: Option<&[u8]>) -> w::ErrResult<()> {

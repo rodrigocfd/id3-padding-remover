@@ -190,11 +190,11 @@ impl WndMain {
 				let the_tag = tags_cache.get(&sel_mp3).unwrap();
 
 				let artist = util::clear_diacritics(
-					the_tag.text_by_field(id3v2::FieldName::Artist)?.ok_or_else(|| "No artist frame.")?);
+					the_tag.text_of_frame("TPE1")?.ok_or_else(|| "No artist frame.")?);
 				let title = util::clear_diacritics(
-					the_tag.text_by_field(id3v2::FieldName::Title)?.ok_or_else(|| "No title frame.")?);
+					the_tag.text_of_frame("TIT2")?.ok_or_else(|| "No title frame.")?);
 				let track = util::clear_diacritics(
-					the_tag.text_by_field(id3v2::FieldName::Track)?.ok_or_else(|| "No track frame.")?);
+					the_tag.text_of_frame("TRCK")?.ok_or_else(|| "No track frame.")?);
 
 				w::path::replace_file_name(&sel_mp3,
 					&if prefix == PrefixWithTrack::Yes {

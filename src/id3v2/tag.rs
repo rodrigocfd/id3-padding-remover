@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use winsafe as w;
 
-use super::{Frame, FrameComment, FrameData, FieldName};
+use super::{Frame, FrameComment, FrameData};
 use super::util;
 
 /// The MP3 file metadata.
@@ -170,48 +170,43 @@ impl Tag {
 		Ok(buf)
 	}
 
-	pub fn text_by_field(&self,
-		text_field: FieldName) -> w::ErrResult<Option<&str>>
-	{
-		let (name4, fancy_name) = text_field.names();
+	pub fn frame_by_name4(&self, name4: &str) -> Option<&Frame> {
 		self.frames.iter()
 			.find(|f| f.name4() == name4)
-			.map_or(
-				Ok(None), // no such frame
-				|f| match f.data() {
-					FrameData::Comment(comm) => Ok(Some(&comm.text)), // ignore comment lang
-					FrameData::Text(text) => Ok(Some(text)),
-					_ => Err(format!("{} has wrong frame type.", fancy_name).into()),
-				},
-			)
 	}
 
-	pub fn set_text_by_field(&mut self,
-		text_field: FieldName,
-		new_val: &str) -> w::ErrResult<()>
-	{
-		let (name4, fancy_name) = text_field.names();
+	pub fn frame_by_name4_mut(&mut self, name4: &str) -> Option<&mut Frame> {
+		self.frames.iter_mut()
+			.find(|f| f.name4() == name4)
+	}
 
+	pub fn text_of_frame(&self, name4: &str) -> w::ErrResult<Option<&str>> {
+		self.frame_by_name4(name4).map_or(
+			Ok(None), // no such frame
+			|f| match f.data() {
+				FrameData::Comment(comm) => Ok(Some(&comm.text)), // ignore comment lang
+				FrameData::Text(text) => Ok(Some(text)),
+				_ => Err(format!("{} has wrong frame type.", name4).into()),
+			},
+		)
+	}
+
+	pub fn set_text_of_frame(&mut self, name4: &str, new_val: &str) -> w::ErrResult<()> {
 		if new_val.is_empty() { // an empty string will delete the frame
 			self.frames.retain(|f| f.name4() != name4);
 
 		} else {
-			if let Some(f) = self.frames.iter_mut()
-				.find(|f| f.name4() == name4) // frame exists, update text
-			{
+			if let Some(f) = self.frame_by_name4_mut(name4) { // frame exists, update text
 				match f.data_mut() {
 					FrameData::Comment(comm) => comm.set_text(new_val),
 					FrameData::Text(text) => *text = new_val.to_owned(),
-					_ => return Err(
-						format!("Cannot set text on frame {} ({}).",
-							name4, fancy_name).into(),
-					),
+					_ => return Err(format!("Cannot set text on frame {}.", name4).into()),
 				}
 
 			} else { // no such frame yet, create new
 				self.frames.push(
-					Frame::new(name4, match text_field {
-						FieldName::Comment => FrameData::Comment(FrameComment::new(None, None, new_val)),
+					Frame::new(name4, match name4 {
+						"COMM" => FrameData::Comment(FrameComment::new(None, None, new_val)),
 						_ => FrameData::Text(new_val.to_owned()),
 					}),
 				);
@@ -221,51 +216,33 @@ impl Tag {
 		Ok(())
 	}
 
-	/// Tells whether the field value is the same among all given tags.
-	pub fn same_field_value(
-		tags: &Vec<&Self>,
-		field_name: FieldName) -> w::ErrResult<Option<String>>
-	{
+	/// Tells whether the frame value is the same among all given tags.
+	pub fn same_frame_value(tags: &Vec<&Self>, name4: &str) -> w::ErrResult<bool> {
 		if tags.is_empty() { // no tags to look at
-			return Ok(None);
-		} else if tags.len() == 1 { // 1 single tag
-			return Ok(
-				tags[0]
-					.text_by_field(field_name)?
-					.map(|s| s.to_owned()),
-			);
+			return Ok(false);
+		} else if tags.len() == 1 { // 1 single tag, simply check if frame exists
+			return Ok(tags[0].frame_by_name4(name4).is_some());
 		}
 
 		let mut tags_iter = tags.iter();
-		let first_tag = tags_iter.next().unwrap(); // take first tag from iterator
+		let first_tag = *tags_iter.next().unwrap(); // take first tag from iterator
 
-		let first_val = match first_tag
-			.text_by_field(field_name)?
-			.map(|s| s.to_owned())
-		{
-			Some(val) => val,
-			None => return Ok(None), // 1st tag doesn't have such field
+		let first_frame = match first_tag.frame_by_name4(name4) {
+			Some(f) => f,
+			None => return Ok(false), // first tag doesn't have such frame
 		};
 
-		let mut is_uniform = true;
 		for other_tag in tags_iter {
-			let other_val = match other_tag
-				.text_by_field(field_name)?
-				.map(|s| s.to_owned())
-			{
-				Some(val) => val,
-				None => { // other tag doesn't have such field
-					is_uniform = false;
-					break;
-				},
+			let other_frame = match other_tag.frame_by_name4(name4) {
+				Some(f) => f,
+				None => return Ok(false), // subsequent tag doesn't have such frame
 			};
 
-			if first_val != other_val {
-				is_uniform = false;
-				break;
+			if first_frame != other_frame {
+				return Ok(false); // frame in subsequent tag is different from first
 			}
 		}
 
-		Ok(if is_uniform { Some(first_val) } else { None })
+		Ok(true)
 	}
 }

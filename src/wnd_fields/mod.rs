@@ -24,11 +24,12 @@ pub struct WndFields {
 	save_cb:          Rc<RefCell<Option<Box<dyn Fn() -> w::ErrResult<()>>>>>,
 }
 
+/// Each text field being displayed.
 #[derive(Clone)]
 struct Field {
-	name: id3v2::FieldName,
-	chk:  gui::CheckBox,
-	txt:  Arc<dyn TxtCtrl>,
+	name4: &'static str,
+	chk:   gui::CheckBox,
+	txt:   Arc<dyn TxtCtrl>,
 }
 
 trait TxtCtrl: w::prelude::TextControl + w::prelude::FocusControl {}

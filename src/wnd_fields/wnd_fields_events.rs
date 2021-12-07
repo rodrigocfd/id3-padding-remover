@@ -1,13 +1,12 @@
 use winsafe::{prelude::*, self as w, gui, path};
 
-use crate::id3v2;
 use super::WndFields;
 
 impl WndFields {
 	pub(super) fn _events(&self) {
 		self.wnd.on().wm_init_dialog({
 			let cmb_genre = self.fields.iter()
-				.find(|f| f.name == id3v2::FieldName::Genre).unwrap()
+				.find(|f| f.name4 == "TCON").unwrap()
 				.txt.as_any()
 				.downcast_ref::<gui::ComboBox>().unwrap()
 				.clone();
@@ -68,7 +67,7 @@ impl WndFields {
 								.is_some(),
 						)
 					{
-						sel_tag.set_text_by_field(field.name, &new_text)?; // set new frame value
+						sel_tag.set_text_of_frame(field.name4, &new_text)?; // set new frame value
 					}
 				}
 
