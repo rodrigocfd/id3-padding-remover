@@ -5,10 +5,10 @@ use super::{PicKind, util};
 /// The APIC frame type.
 #[derive(PartialEq, Eq)]
 pub struct FramePicture {
-	pub mime:       String,
-	pub kind:       PicKind,
-	pub descr:      String, // usually an empty string
-	pub pic_bytes:  Vec<u8>,
+	pub mime:      String,
+	pub kind:      PicKind,
+	pub descr:     String, // usually an empty string
+	pub pic_bytes: Vec<u8>,
 }
 
 impl FramePicture {
@@ -16,7 +16,7 @@ impl FramePicture {
 		Self {
 			mime: mime.to_owned(),
 			kind,
-			descr: descr.unwrap_or_default().to_owned(),
+			descr: descr.unwrap_or("").to_owned(),
 			pic_bytes: pic_bytes.to_vec(),
 		}
 	}

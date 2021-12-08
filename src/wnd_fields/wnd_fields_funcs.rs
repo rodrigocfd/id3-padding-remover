@@ -50,7 +50,7 @@ impl WndFields {
 			wnd, fields, wnd_picture, btn_clear_checks, btn_save,
 			tags_cache,
 			sel_mp3s: Rc::new(RefCell::new(Vec::default())),
-			save_cb:   Rc::new(RefCell::new(None)),
+			save_cb:  Rc::new(RefCell::new(None)),
 		};
 		new_self._events();
 		new_self
@@ -87,8 +87,8 @@ impl WndFields {
 			field.txt.hwnd().EnableWindow(chk_state == gui::CheckState::Checked);
 		}
 
-		let same_pic = id3v2::Tag::same_frame_value(&sel_tags, "APIC")?;
-		if same_pic {
+		let is_same_pic = id3v2::Tag::same_frame_value(&sel_tags, "APIC")?;
+		if is_same_pic {
 			let pic_frame = sel_tags[0].frame_by_name4("APIC").unwrap();
 			if let id3v2::FrameData::Picture(pic) = pic_frame.data() {
 				self.wnd_picture.feed(Some(&pic.pic_bytes))?;
@@ -96,8 +96,7 @@ impl WndFields {
 		} else {
 			self.wnd_picture.feed(None)?;
 		}
-		self.wnd_picture.enable(same_pic);
-
+		self.wnd_picture.enable(is_same_pic);
 
 		*self.sel_mp3s.try_borrow_mut()? = sel_mp3s; // keep selected files
 		self._enable_buttons_if_at_least_one_checked();
