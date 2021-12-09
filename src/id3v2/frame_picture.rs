@@ -43,7 +43,7 @@ impl FramePicture {
 		}?[0].clone();
 		src = &src[idx_second_zero + 1..];
 
-		// Picture data itself.
+		// Picture data itself, up to the end of data.
 		let pic_bytes = src.to_vec();
 
 		Ok(Self { mime, kind, descr, pic_bytes })
