@@ -14,6 +14,9 @@ import (
 )
 
 func main() {
+	debug.SetGCPercent(50)
+	runtime.LockOSThread()
+
 	defer func() {
 		if r := recover(); r != nil {
 			prompt.Error(nil, "Panic", nil,
@@ -21,8 +24,7 @@ func main() {
 					time.Now(), r, string(debug.Stack())))
 		}
 	}()
-	runtime.LockOSThread()
-	debug.SetGCPercent(50)
+
 	NewDlgMain().Run()
 }
 

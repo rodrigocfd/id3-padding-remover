@@ -90,7 +90,7 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		}
@@ -118,7 +118,7 @@ func (me *DlgMain) eventsMenu() {
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
 			me.addMp3sToList(selMp3s)
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		}
@@ -152,7 +152,7 @@ func (me *DlgMain) eventsMenu() {
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
 			me.addMp3sToList(selMp3s)
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		}
@@ -182,7 +182,7 @@ func (me *DlgMain) eventsMenu() {
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
 			me.addMp3sToList(selMp3s)
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 		}
@@ -242,7 +242,7 @@ func (me *DlgMain) eventsMenu() {
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
 			me.addMp3sToList(newCopiedFiles) // load the files that have been copied to the new folder
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) reloaded in %.2f ms.",
 					len(newCopiedFiles), t0.ElapsedMs()))
 		}
@@ -255,7 +255,7 @@ func (me *DlgMain) eventsMenu() {
 		if count, err := me.renameSelectedFiles(false); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
 		} else {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 		}
@@ -268,7 +268,7 @@ func (me *DlgMain) eventsMenu() {
 		if count, err := me.renameSelectedFiles(true); err != nil {
 			prompt.Error(me.wnd, "Renaming error", nil, "Error: "+err.Error())
 		} else {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 		}
@@ -288,7 +288,7 @@ func (me *DlgMain) eventsMenu() {
 		runtime.ReadMemStats(&memStats)
 
 		prompt.Info(me.wnd, "About",
-			win.StrVal(fmt.Sprintf("%s %d.%d.%d", productName, vMaj, vMin, vPat)),
+			win.StrOptVal(fmt.Sprintf("%s %d.%d.%d", productName, vMaj, vMin, vPat)),
 			fmt.Sprintf("Rodrigo César de Freitas Dias (C) 2021\n"+
 				"rcesar@gmail.com\n\n"+
 				"This application was written in Go with Windigo library.\n\n"+
@@ -323,7 +323,7 @@ func (me *DlgMain) eventsMenu() {
 			idxFrame := int(selFrameItem.LParam()) // index of frame within frames slice
 			selFrame := tag.Frames()[idxFrame]
 			if selFrame.Name4() != name4 {
-				prompt.Error(me.wnd, "This is bad", win.StrVal("Mismatched frames"),
+				prompt.Error(me.wnd, "This is bad", win.StrOptVal("Mismatched frames"),
 					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
 						selFrame.Name4(), name4, idxFrame))
 				return // halt any further processing
@@ -346,7 +346,7 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("Failed to delete %d frame(s) of tag:\n%sn\n\n%s",
 					len(idxsToDelete), tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
 					len(idxsToDelete), t0.ElapsedMs()))
 		}

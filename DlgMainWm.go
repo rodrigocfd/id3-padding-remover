@@ -61,7 +61,7 @@ func (me *DlgMain) eventsWm() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			prompt.Error(me.wnd, "No files added", win.StrVal("No files"),
+			prompt.Error(me.wnd, "No files added", win.StrOptVal("No files"),
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
 			if tagOpErr := me.tagOpModal(droppedMp3s, TAG_OP_LOAD); tagOpErr != nil {
@@ -87,7 +87,7 @@ func (me *DlgMain) eventsWm() {
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
-			prompt.Info(me.wnd, "Process finished", win.StrVal("Success"),
+			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
