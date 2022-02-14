@@ -59,16 +59,17 @@ func (me *DlgMain) modalTagOp(mp3s []string, ops TAG_OP) *TagOpError {
 
 	var tagOpErr *TagOpError
 
-	dlgrun.NewDlgRun(func() {
-		switch ops {
-		case TAG_OP_LOAD:
-			tagOpErr = loadOp(mp3s, me.cachedTags)
-		case TAG_OP_SAVE_AND_RELOAD:
-			if tagOpErr = saveOp(mp3s, me.cachedTags); tagOpErr != nil {
+	dlgrun.NewDlgRun().
+		Show(me.wnd, func() {
+			switch ops {
+			case TAG_OP_LOAD:
 				tagOpErr = loadOp(mp3s, me.cachedTags)
+			case TAG_OP_SAVE_AND_RELOAD:
+				if tagOpErr = saveOp(mp3s, me.cachedTags); tagOpErr != nil {
+					tagOpErr = loadOp(mp3s, me.cachedTags)
+				}
 			}
-		}
-	}).Show(me.wnd)
+		})
 
 	return tagOpErr
 }

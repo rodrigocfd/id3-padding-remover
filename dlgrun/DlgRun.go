@@ -1,8 +1,6 @@
 package dlgrun
 
 import (
-	"runtime"
-
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -18,42 +16,47 @@ type DlgRun struct {
 	job     func()
 }
 
-func NewDlgRun(job func()) *DlgRun {
+func NewDlgRun() *DlgRun {
 	wnd := ui.NewWindowModalDlg(DLG_RUN)
 
 	me := &DlgRun{
 		wnd:    wnd,
 		proRun: ui.NewProgressBarDlg(wnd, PRO_RUN, ui.HORZ_NONE, ui.VERT_NONE),
-		taskbar: shell.NewITaskbarList4(
-			win.CoCreateInstance(
-				shellco.CLSID_TaskbarList, nil,
-				co.CLSCTX_INPROC_SERVER,
-				shellco.IID_ITaskbarList4),
-		),
-		job: job,
 	}
 
 	me.events()
 	return me
 }
 
-func (me *DlgRun) Show(parent ui.AnyParent) {
+func (me *DlgRun) Show(parent ui.AnyParent, job func()) {
+	me.taskbar = shell.NewITaskbarList4(
+		win.CoCreateInstance(
+			shellco.CLSID_TaskbarList, nil,
+			co.CLSCTX_INPROC_SERVER,
+			shellco.IID_ITaskbarList4),
+	)
 	defer me.taskbar.Release()
+
+	me.job = job
+	defer func() { me.job = nil }()
+
 	me.wnd.ShowModal(parent)
 }
 
 func (me *DlgRun) events() {
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
+		if me.taskbar.Ptr() == nil {
+			panic("DlgRun modal cannot be reused, create another one.")
+		}
+
+		hRootOwner := me.wnd.Hwnd().GetWindow(co.GW_OWNER)
 		me.proRun.SetMarquee(true)
-		me.taskbar.SetProgressState(
-			me.wnd.Hwnd().GetWindow(co.GW_OWNER), shellco.TBPF_INDETERMINATE)
+		me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_INDETERMINATE)
 
 		go func() { // launch another thread for the job
-			runtime.LockOSThread()
 			me.job()
 			me.wnd.RunUiThread(func() { // return to UI thread after job is finished
-				me.taskbar.SetProgressState(
-					me.wnd.Hwnd().GetWindow(co.GW_OWNER), shellco.TBPF_NOPROGRESS)
+				me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_NOPROGRESS)
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 			})
 		}()
