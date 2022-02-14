@@ -61,7 +61,7 @@ func (me *DlgMain) eventsMenu() {
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.ListResultDisplayNames(shellco.SIGDN_FILESYSPATH)
 
-			if tagOpErr := me.tagOpModal(mp3s, TAG_OP_LOAD); tagOpErr != nil {
+			if tagOpErr := me.modalTagOp(mp3s, TAG_OP_LOAD); tagOpErr != nil {
 				prompt.Error(me.wnd, "Tag operation error", nil,
 					fmt.Sprintf("Failed to open tag:\n%sn\n\n%s",
 						tagOpErr.mp3, tagOpErr.err.Error()))
@@ -85,7 +85,7 @@ func (me *DlgMain) eventsMenu() {
 		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
 		// Simply saving will remove the padding.
-		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -112,7 +112,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove ReplayGain:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -146,7 +146,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to remove ReplayGain and album art:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -176,7 +176,7 @@ func (me *DlgMain) eventsMenu() {
 			})
 		}
 
-		if tagOpErr := me.tagOpModal(selMp3s, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to delete tag:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -236,7 +236,7 @@ func (me *DlgMain) eventsMenu() {
 		}
 		me.lstMp3s.SetRedraw(true)
 
-		if tagOpErr := me.tagOpModal(newCopiedFiles, TAG_OP_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp(newCopiedFiles, TAG_OP_LOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to reload tag:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
@@ -341,7 +341,7 @@ func (me *DlgMain) eventsMenu() {
 			return false
 		})
 
-		if tagOpErr := me.tagOpModal([]string{selMp3}, TAG_OP_SAVE_AND_LOAD); tagOpErr != nil {
+		if tagOpErr := me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD); tagOpErr != nil {
 			prompt.Error(me.wnd, "Tag operation error", nil,
 				fmt.Sprintf("Failed to delete %d frame(s) of tag:\n%sn\n\n%s",
 					len(idxsToDelete), tagOpErr.mp3, tagOpErr.err.Error()))
