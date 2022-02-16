@@ -51,51 +51,37 @@ const (
 	PICTYPE_PUBLISHER_LOGO       PICTYPE = 0x14
 )
 
+var _PICTYPE_STR map[PICTYPE]string
+
 func (p PICTYPE) String() string {
-	switch p {
-	case PICTYPE_OTHER:
-		return "Other"
-	case PICTYPE_FILE_ICON_PNG_32:
-		return "32x32 pixels 'file icon' (PNG only)"
-	case PICTYPE_FILE_ICON_OTHER:
-		return "Other file icon"
-	case PICTYPE_COVER_FRONT:
-		return "Cover (front)"
-	case PICTYPE_COVER_BACK:
-		return "Cover (back)"
-	case PICTYPE_LEAFLET:
-		return "Leaflet page"
-	case PICTYPE_CD_LABEL_SIDE:
-		return "Media (e.g. lable side of CD)"
-	case PICTYPE_LEAD_ARTIST:
-		return "Lead artist/lead performer/soloist"
-	case PICTYPE_ARTIST:
-		return "Artist/performer"
-	case PICTYPE_CONDUCTOR:
-		return "Conductor"
-	case PICTYPE_BAND:
-		return "Band/Orchestra"
-	case PICTYPE_COMPOSER:
-		return "Composer"
-	case PICTYPE_LYRICIST:
-		return "Lyricist/text writer"
-	case PICTYPE_REC_LOCATION:
-		return "Recording Location"
-	case PICTYPE_DURING_RECORDING:
-		return "During recording"
-	case PICTYPE_DURING_PERFORMANCE:
-		return "During performance"
-	case PICTYPE_MOVIE_CAPTURE:
-		return "Movie/video screen capture"
-	case PICTYPE_BRIGHT_COLOURED_FISH:
-		return "A bright coloured fish"
-	case PICTYPE_ILLUSTRATION:
-		return "Illustration"
-	case PICTYPE_BAND_LOGO:
-		return "Band/artist logotype"
-	case PICTYPE_PUBLISHER_LOGO:
-		return "Publisher/Studio logotype"
-	default:
+	if _PICTYPE_STR == nil {
+		_PICTYPE_STR = make(map[PICTYPE]string, 21)
+	}
+	_PICTYPE_STR[PICTYPE_OTHER] = "Other"
+	_PICTYPE_STR[PICTYPE_FILE_ICON_PNG_32] = "32x32 pixels 'file icon' (PNG only)"
+	_PICTYPE_STR[PICTYPE_FILE_ICON_OTHER] = "Other file icon"
+	_PICTYPE_STR[PICTYPE_COVER_FRONT] = "Cover (front)"
+	_PICTYPE_STR[PICTYPE_COVER_BACK] = "Cover (back)"
+	_PICTYPE_STR[PICTYPE_LEAFLET] = "Leaflet page"
+	_PICTYPE_STR[PICTYPE_CD_LABEL_SIDE] = "Media (e.g. lable side of CD)"
+	_PICTYPE_STR[PICTYPE_LEAD_ARTIST] = "Lead artist/lead performer/soloist"
+	_PICTYPE_STR[PICTYPE_ARTIST] = "Artist/performer"
+	_PICTYPE_STR[PICTYPE_CONDUCTOR] = "Conductor"
+	_PICTYPE_STR[PICTYPE_BAND] = "Band/Orchestra"
+	_PICTYPE_STR[PICTYPE_COMPOSER] = "Composer"
+	_PICTYPE_STR[PICTYPE_LYRICIST] = "Lyricist/text writer"
+	_PICTYPE_STR[PICTYPE_REC_LOCATION] = "Recording Location"
+	_PICTYPE_STR[PICTYPE_DURING_RECORDING] = "During recording"
+	_PICTYPE_STR[PICTYPE_DURING_PERFORMANCE] = "During performance"
+	_PICTYPE_STR[PICTYPE_MOVIE_CAPTURE] = "Movie/video screen capture"
+	_PICTYPE_STR[PICTYPE_BRIGHT_COLOURED_FISH] = "A bright coloured fish"
+	_PICTYPE_STR[PICTYPE_ILLUSTRATION] = "Illustration"
+	_PICTYPE_STR[PICTYPE_BAND_LOGO] = "Band/artist logotype"
+	_PICTYPE_STR[PICTYPE_PUBLISHER_LOGO] = "Publisher/Studio logotype"
+
+	if descr, ok := _PICTYPE_STR[p]; ok {
+		return descr
+	} else {
 		panic(fmt.Sprintf("Invalid PICTYPE: %d.", p))
 	}
 }
