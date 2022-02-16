@@ -27,7 +27,7 @@ func (me *DlgFields) eventsWm() {
 
 			for i := range me.fields {
 				field := &me.fields[i]
-				if field.FrameId == id3v2.TEXT_GENRE { // find the genre combobox
+				if field.FrameId == id3v2.FRAMETXT_GENRE { // find the genre combobox
 					cmbGenre := field.Txt.(ui.ComboBox)
 					cmbGenre.Items().Add(genres...)
 					break
@@ -64,15 +64,19 @@ func (me *DlgFields) eventsWm() {
 		t0 := timecount.New()
 
 		for _, field := range me.fields {
-			if !field.Chk.IsChecked() {
-				continue
-			}
-
-			newText := strings.TrimSpace(field.Txt.Text())
-			for _, tag := range me.tagsLoaded {
-				// Empty text will delete the frame.
-				// Tags are not flushed to disk here, it's DlgMain's job.
-				tag.SetTextByName4(field.FrameId, newText)
+			if field.Chk.IsChecked() {
+				newText := strings.TrimSpace(field.Txt.Text())
+				for _, tag := range me.tagsLoaded {
+					// Empty text will delete the frame.
+					// Tags are changed but not flushed to disk here, it's DlgMain's job.
+					tag.SetTextByFrameId(field.FrameId, newText)
+				}
+			} else {
+				for _, tag := range me.tagsLoaded {
+					tag.DeleteFrames(func(_ int, frame *id3v2.Frame) (willDelete bool) {
+						return frame.Name4() == string(field.FrameId)
+					})
+				}
 			}
 		}
 

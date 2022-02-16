@@ -90,9 +90,11 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
+			me.addMp3sToList(selMp3s)
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -104,11 +106,8 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(_ int, fr id3v2.Frame) (willDelete bool) {
-				if frMulti, ok := fr.(*id3v2.FrameMultiText); ok {
-					return frMulti.IsReplayGain()
-				}
-				return false
+			tag.DeleteFrames(func(_ int, frame *id3v2.Frame) (willDelete bool) {
+				return frame.IsReplayGain()
 			})
 		}
 
@@ -121,6 +120,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -132,17 +132,8 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(_ int, frDyn id3v2.Frame) (willDelete bool) {
-				if frMulti, ok := frDyn.(*id3v2.FrameMultiText); ok {
-					if frMulti.IsReplayGain() {
-						return true
-					}
-				} else if frBin, ok := frDyn.(*id3v2.FrameBinary); ok {
-					if frBin.Name4() == "APIC" {
-						return true
-					}
-				}
-				return false
+			tag.DeleteFrames(func(_ int, frame *id3v2.Frame) (willDelete bool) {
+				return frame.IsReplayGain() || frame.Name4() == "APIC"
 			})
 		}
 
@@ -155,6 +146,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -171,7 +163,7 @@ func (me *DlgMain) eventsMenu() {
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
-			tag.DeleteFrames(func(_ int, _ id3v2.Frame) (willDelete bool) {
+			tag.DeleteFrames(func(_ int, _ *id3v2.Frame) (willDelete bool) {
 				return true
 			})
 		}
@@ -185,6 +177,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -245,6 +238,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) reloaded in %.2f ms.",
 					len(newCopiedFiles), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -258,6 +252,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -271,6 +266,7 @@ func (me *DlgMain) eventsMenu() {
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
@@ -332,7 +328,7 @@ func (me *DlgMain) eventsMenu() {
 			idxsToDelete = append(idxsToDelete, idxFrame)
 		}
 
-		tag.DeleteFrames(func(idx int, _ id3v2.Frame) (willDelete bool) {
+		tag.DeleteFrames(func(idx int, _ *id3v2.Frame) (willDelete bool) {
 			for _, idxFrame := range idxsToDelete {
 				if idx == idxFrame {
 					return true
@@ -346,9 +342,11 @@ func (me *DlgMain) eventsMenu() {
 				fmt.Sprintf("Failed to delete %d frame(s) of tag:\n%sn\n\n%s",
 					len(idxsToDelete), tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
+			me.displayFramesOfSelectedFiles()
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
 					len(idxsToDelete), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()

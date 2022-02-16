@@ -87,6 +87,8 @@ func (me *DlgMain) eventsWm() {
 				fmt.Sprintf("Failed to remove padding:\n%sn\n\n%s",
 					tagOpErr.mp3, tagOpErr.err.Error()))
 		} else {
+			me.addMp3sToList(selMp3s)
+			me.displayFramesOfSelectedFiles()
 			prompt.Info(me.wnd, "Process finished", win.StrOptVal("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))

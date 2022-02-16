@@ -67,30 +67,38 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
 		cachedTag := me.cachedTags[selMp3s[0]]
 
-		for idxFrame, frameDyn := range cachedTag.Frames() { // read each frame of the tag
+		for idxFrame, frame := range cachedTag.Frames() { // read each frame of the tag
 			newItem := me.lstFrames.Items().
-				Add(frameDyn.Name4()) // add new item, first column displays frame name
+				Add(frame.Name4()) // add new item, first column displays frame name
 
 			newItem.SetLParam(win.LPARAM(idxFrame)) // keep frame index, used when deleting a frame
 
-			switch myFrame := frameDyn.(type) {
-			case *id3v2.FrameComment:
+			switch data := frame.Data().(type) {
+			case *id3v2.FrameDataText:
+				newItem.SetText(1, data.Text)
+
+			case *id3v2.FrameDataUserText:
+				newItem.SetText(1, data.Descr)
+				me.lstFrames.Items().Add("", data.Text) // subsequent line
+
+			case *id3v2.FrameDataBinary:
+				binLen := uint64(len(data.Data))
 				newItem.SetText(1,
-					fmt.Sprintf("[%s] %s", *myFrame.Lang(), *myFrame.Text()))
+					fmt.Sprintf("%s: (%.2f%%)",
+						win.Str.FmtBytes(binLen), // frame size
+						float64(binLen)*100/ // percent of whole tag size
+							float64(cachedTag.Mp3Offset())),
+				)
 
-			case *id3v2.FrameText:
-				newItem.SetText(1, *myFrame.Text())
-
-			case *id3v2.FrameMultiText:
-				newItem.SetText(1, (*myFrame.Texts())[0]) // 1st text
-				for i := 1; i < len(*myFrame.Texts()); i++ {
-					me.lstFrames.Items().Add("", (*myFrame.Texts())[i]) // subsequent
-				}
-
-			case *id3v2.FrameBinary:
-				binLen := uint64(len(*myFrame.BinData()))
+			case *id3v2.FrameDataComment:
 				newItem.SetText(1,
-					fmt.Sprintf("%s (%.2f%%)",
+					fmt.Sprintf("[%s] %s", data.Lang3, data.Text))
+
+			case *id3v2.FrameDataPicture:
+				binLen := uint64(len(data.Data))
+				newItem.SetText(1,
+					fmt.Sprintf("%s - %s (%.2f%%)",
+						data.Type.String(),
 						win.Str.FmtBytes(binLen), // frame size
 						float64(binLen)*100/ // percent of whole tag size
 							float64(cachedTag.Mp3Offset())),
@@ -114,23 +122,23 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
 	for _, selItem := range me.lstMp3s.Items().Selected() {
 		selMp3 := selItem.Text(0)
-		theTag := me.cachedTags[selMp3]
+		theTag := me.cachedTags[selMp3] // tag of the MP3 we're going to rename
 
 		var trackNoStr string
 		if withTrackPrefix {
-			if trackNoConverted, has := theTag.TextByName4(id3v2.TEXT_TRACK); !has {
+			if trackNoConverted, has := theTag.TextByFrameId(id3v2.FRAMETXT_TRACK); !has {
 				return 0, fmt.Errorf("track frame absent")
 			} else {
 				trackNoStr = trackNoConverted
 			}
 		}
 
-		artist, has := theTag.TextByName4(id3v2.TEXT_ARTIST)
+		artist, has := theTag.TextByFrameId(id3v2.FRAMETXT_ARTIST)
 		if !has {
 			return 0, fmt.Errorf("artist frame absent")
 		}
 
-		title, has := theTag.TextByName4(id3v2.TEXT_TITLE)
+		title, has := theTag.TextByFrameId(id3v2.FRAMETXT_TITLE)
 		if !has {
 			return 0, fmt.Errorf("title frame absent")
 		}
@@ -159,5 +167,5 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 			}
 		}
 	}
-	return
+	return renamedCount, nil
 }
