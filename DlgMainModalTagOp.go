@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"id3fit/dlgrun"
 	"id3fit/id3v2"
+	"sync"
 )
 
 // Tag operations to be performed.
@@ -14,62 +15,76 @@ const (
 	TAG_OP_SAVE_AND_RELOAD
 )
 
-// Error report for tag operations.
-type TagOpError struct {
-	mp3 string
-	err error
-}
-
 // Opens the DlgRun modal window to perform the chosen operation.
-func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) *TagOpError {
-	loadOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) *TagOpError {
-		loadedTags := make([]*id3v2.Tag, 0, len(mp3s))
+func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
+
+	loadOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
+		var waitGroup sync.WaitGroup
+		var mutex sync.Mutex
+		parsingErrors := make([]error, 0, len(mp3s))
+		loadedTags := make(map[string]*id3v2.Tag, len(mp3s))
 
 		for _, mp3 := range mp3s {
-			if tag, err := id3v2.TagParseFromFile(mp3); err != nil {
-				return &TagOpError{ // no further files will be parsed
-					mp3: mp3,
-					err: fmt.Errorf("load fail: %w", err),
+			waitGroup.Add(1)
+			go func(mp3 string) {
+				defer waitGroup.Done()
+				if tag, err := id3v2.TagParseFromFile(mp3); err != nil {
+					mutex.Lock()
+					parsingErrors = append(parsingErrors,
+						fmt.Errorf("parsing \"%s\" failed: %w", mp3, err))
+					mutex.Unlock()
+				} else {
+					mutex.Lock()
+					loadedTags[mp3] = tag
+					mutex.Unlock()
 				}
-			} else {
-				loadedTags = append(loadedTags, tag)
+			}(mp3)
+		}
+		waitGroup.Wait()
+
+		if len(parsingErrors) == 0 { // no errors occurred?
+			for mp3, tag := range loadedTags {
+				cachedTags[mp3] = tag // atomically cache (or re-cache) the loaded tags
 			}
 		}
-
-		for i := range mp3s { // atomically cache (or re-cache) the loaded tags
-			cachedTags[mp3s[i]] = loadedTags[i]
-		}
-
-		return nil
+		return parsingErrors
 	}
 
-	saveOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) *TagOpError {
+	saveOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
+		var waitGroup sync.WaitGroup
+		var mutex sync.Mutex
+		savingErrors := make([]error, 0, len(mp3s))
+
 		for _, mp3 := range mp3s {
-			tag := cachedTags[mp3]
-			if err := tag.SerializeToFile(mp3); err != nil {
-				return &TagOpError{ // no further files will be saved
-					mp3: mp3,
-					err: fmt.Errorf("save fail: %w", err),
+			waitGroup.Add(1)
+			go func(mp3 string, tag *id3v2.Tag) {
+				defer waitGroup.Done()
+				if err := tag.SerializeToFile(mp3); err != nil {
+					mutex.Lock()
+					savingErrors = append(savingErrors,
+						fmt.Errorf("saving \"%s\" failed: %w", mp3, err))
+					mutex.Unlock()
 				}
-			}
+			}(mp3, cachedTags[mp3])
 		}
+		waitGroup.Wait()
 
-		return nil
+		return savingErrors
 	}
 
-	var tagOpErr *TagOpError
-
-	dlgrun.NewDlgRun().
-		Show(me.wnd, func() {
+	return dlgrun.NewDlgRun().
+		Show(me.wnd, func() []error {
 			switch tagOp {
 			case TAG_OP_LOAD:
-				tagOpErr = loadOp(mp3s, me.cachedTags)
+				return loadOp(mp3s, me.cachedTags)
 			case TAG_OP_SAVE_AND_RELOAD:
-				if tagOpErr = saveOp(mp3s, me.cachedTags); tagOpErr == nil {
-					tagOpErr = loadOp(mp3s, me.cachedTags)
+				if errors := saveOp(mp3s, me.cachedTags); len(errors) > 0 {
+					return errors
+				} else {
+					return loadOp(mp3s, me.cachedTags)
 				}
+			default:
+				panic("Invalid TAG_OP.")
 			}
 		})
-
-	return tagOpErr
 }

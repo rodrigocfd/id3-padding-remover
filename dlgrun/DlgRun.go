@@ -1,8 +1,11 @@
 package dlgrun
 
 import (
+	"id3fit/prompt"
+
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
+	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 	"github.com/rodrigocfd/windigo/win/com/com"
 	"github.com/rodrigocfd/windigo/win/com/com/comco"
@@ -14,7 +17,8 @@ type DlgRun struct {
 	wnd     ui.WindowModal
 	proRun  ui.ProgressBar
 	taskbar shell.ITaskbarList4
-	job     func()
+	job     func() []error
+	errors  []error
 }
 
 func NewDlgRun() *DlgRun {
@@ -29,7 +33,7 @@ func NewDlgRun() *DlgRun {
 	return me
 }
 
-func (me *DlgRun) Show(parent ui.AnyParent, job func()) {
+func (me *DlgRun) Show(parent ui.AnyParent, job func() []error) bool {
 	me.taskbar = shell.NewITaskbarList4(
 		com.CoCreateInstance(
 			shellco.CLSID_TaskbarList, nil,
@@ -42,6 +46,7 @@ func (me *DlgRun) Show(parent ui.AnyParent, job func()) {
 	defer func() { me.job = nil }()
 
 	me.wnd.ShowModal(parent)
+	return len(me.errors) == 0 // no errors? all good
 }
 
 func (me *DlgRun) events() {
@@ -55,8 +60,15 @@ func (me *DlgRun) events() {
 		me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_INDETERMINATE)
 
 		go func() { // launch another thread for the job
-			me.job()
+			me.errors = me.job()
 			me.wnd.RunUiThread(func() { // return to UI thread after job is finished
+				if len(me.errors) > 0 {
+					text := "Errors:\n"
+					for _, err := range me.errors {
+						text += err.Error() + "\n"
+					}
+					prompt.Error(me.wnd, "Error", win.StrOptNone{}, text)
+				}
 				me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_NOPROGRESS)
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 			})
