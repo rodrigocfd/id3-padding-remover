@@ -32,9 +32,9 @@ func FindMp3Signature(src []byte) (int, bool) {
 }
 
 // Returns the index of the given element within the slice, or -1.
-func Index16(src []uint16, what uint16) int {
+func Index16(src []uint16, elemToFind uint16) int {
 	for idx, word := range src {
-		if word == what {
+		if word == elemToFind {
 			return idx
 		}
 	}
@@ -51,7 +51,8 @@ func IsSliceZeroed(blob []byte) bool {
 	return true
 }
 
-// Casts a []byte into a []uint16 over the same memory location.
+// Uses unsafe.Slice() to cast a []byte into a []uint16 over the same memory
+// location.
 func Slice8To16(src []byte) []uint16 {
 	if len(src)%2 != 0 {
 		panic(fmt.Sprintf(
@@ -60,18 +61,19 @@ func Slice8To16(src []byte) []uint16 {
 	return unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
 }
 
-// Casts a []uint16 into a []byte over the same memory location.
+// Uses unsafe.Slice() to cast a []uint16 into a []byte over the same memory
+// location.
 func Slice16To8(src []uint16) []byte {
 	return unsafe.Slice((*byte)(unsafe.Pointer(&src[0])), len(src)*2)
 }
 
 // Splits the given slice into subslices over the same memory location.
-func Split16(src []uint16, sep uint16) [][]uint16 {
+func Split16(src []uint16, separator uint16) [][]uint16 {
 	chunks := make([][]uint16, 0, 4) // arbitrary
 	for {
-		sepIdx := Index16(src, sep)
+		sepIdx := Index16(src, separator)
 		if sepIdx == -1 { // separator not found
-			chunks = append(chunks, src) // all remaining elements
+			chunks = append(chunks, src) // last part with all remaining elements
 			break
 		}
 		chunks = append(chunks, src[:sepIdx])

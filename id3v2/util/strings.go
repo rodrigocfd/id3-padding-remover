@@ -100,7 +100,7 @@ func SerializeStrings(theStrings []string) (encodingByte byte, serialized []byte
 	for _, oneString := range theStrings {
 		estimatedLenBytes += len(oneString) + 1 // strings will be null-terminated
 
-		if !isUnicode {
+		if !isUnicode { // we still don't know if it's Unicode?
 			idxUnicodeChar := strings.IndexFunc(oneString, func(ch rune) bool { return ch > 0xff })
 			if idxUnicodeChar != -1 {
 				isUnicode = true
@@ -108,21 +108,21 @@ func SerializeStrings(theStrings []string) (encodingByte byte, serialized []byte
 		}
 	}
 
-	if isUnicode {
+	if isUnicode { // chars will be serialized as uint16
 		estimatedLenBytes *= 2
-		estimatedLenBytes += 2 * len(theStrings) // BOM bytes
+		estimatedLenBytes += 2 * len(theStrings) // BOM bytes for each string
 	}
 
 	buf := make([]byte, 0, estimatedLenBytes)
 	for _, oneString := range theStrings {
 		if isUnicode {
-			// Insert BOM bytes.
+			// Insert BOM bytes for each string.
 			// Strings will be encoded as little-endian.
 			buf = Append16(buf, binary.LittleEndian, _BOM_LE)
 		}
 
-		slice16 := win.Str.ToNativeSlice(oneString) // this slice is null-terminated
-		for _, ch := range slice16 {
+		convertedSlice16 := win.Str.ToNativeSlice(oneString) // this slice is null-terminated
+		for _, ch := range convertedSlice16 {
 			if isUnicode {
 				buf = Append16(buf, binary.LittleEndian, ch)
 			} else {

@@ -16,6 +16,9 @@ const (
 )
 
 // Opens the DlgRun modal window to perform the chosen operation.
+//
+// Returns false if any error occurred. Error messages are displayed in the
+// DlgRun itself.
 func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 
 	loadOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
@@ -26,7 +29,7 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 
 		for _, mp3 := range mp3s {
 			waitGroup.Add(1)
-			go func(mp3 string) {
+			go func(mp3 string) { // spawn one goroutine per file
 				defer waitGroup.Done()
 				if tag, err := id3v2.TagParseFromFile(mp3); err != nil {
 					mutex.Lock()
@@ -57,7 +60,7 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 
 		for _, mp3 := range mp3s {
 			waitGroup.Add(1)
-			go func(mp3 string, tag *id3v2.Tag) {
+			go func(mp3 string, tag *id3v2.Tag) { // spawn one goroutine per file
 				defer waitGroup.Done()
 				if err := tag.SerializeToFile(mp3); err != nil {
 					mutex.Lock()
