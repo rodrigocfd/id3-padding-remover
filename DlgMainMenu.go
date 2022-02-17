@@ -9,7 +9,8 @@ import (
 
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
+	"github.com/rodrigocfd/windigo/win/com/com"
+	"github.com/rodrigocfd/windigo/win/com/com/comco"
 	"github.com/rodrigocfd/windigo/win/com/shell"
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
@@ -40,9 +41,9 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_OPEN, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(
-			win.CoCreateInstance(
+			com.CoCreateInstance(
 				shellco.CLSID_FileOpenDialog, nil,
-				co.CLSCTX_INPROC_SERVER,
+				comco.CLSCTX_INPROC_SERVER,
 				shellco.IID_IFileOpenDialog),
 		)
 		defer fod.Release()
@@ -185,9 +186,9 @@ func (me *DlgMain) eventsMenu() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_COPY_TO_FOLDER, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(
-			win.CoCreateInstance(
+			com.CoCreateInstance(
 				shellco.CLSID_FileOpenDialog, nil,
-				co.CLSCTX_INPROC_SERVER,
+				comco.CLSCTX_INPROC_SERVER,
 				shellco.IID_IFileOpenDialog),
 		)
 		defer fod.Release()

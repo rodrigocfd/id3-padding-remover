@@ -63,7 +63,6 @@ func _FrameParse(src []byte) (*Frame, error) {
 		case 0:
 			return nil, fmt.Errorf("frame %s contains no texts", f.name4)
 		case 1:
-			println("TEXT", texts[0])
 			f.data = &FrameDataText{Text: texts[0]}
 		case 2:
 			f.data = &FrameDataUserText{Descr: texts[0], Text: texts[1]}

@@ -3,8 +3,9 @@ package dlgrun
 import (
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
-	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
+	"github.com/rodrigocfd/windigo/win/com/com"
+	"github.com/rodrigocfd/windigo/win/com/com/comco"
 	"github.com/rodrigocfd/windigo/win/com/shell"
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
@@ -30,9 +31,9 @@ func NewDlgRun() *DlgRun {
 
 func (me *DlgRun) Show(parent ui.AnyParent, job func()) {
 	me.taskbar = shell.NewITaskbarList4(
-		win.CoCreateInstance(
+		com.CoCreateInstance(
 			shellco.CLSID_TaskbarList, nil,
-			co.CLSCTX_INPROC_SERVER,
+			comco.CLSCTX_INPROC_SERVER,
 			shellco.IID_ITaskbarList4),
 	)
 	defer me.taskbar.Release()
