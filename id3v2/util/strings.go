@@ -30,7 +30,7 @@ func ParseAnyStrings(src []byte) ([]string, error) {
 
 // Parses one or more null-separated ISO-8859-1 strings.
 func ParseIso88591Strings(src []byte) []string {
-	src = TrimRightZeros(src) // avoid an extra empty string
+	src = TrimRightZeros8(src) // avoid an extra empty string
 	if len(src) == 0 {
 		return []string{}
 	}
@@ -54,35 +54,36 @@ func ParseIso88591Strings(src []byte) []string {
 
 // Parses one or more null-separated Unicode strings.
 func ParseUnicodeStrings(src []byte) []string {
-	src = TrimRightZeros(src) // avoid an extra empty string
-	if len(src) == 0 {
-		return []string{}
-	}
-
 	if len(src)%1 != 0 {
 		// Length is not even, something is not quite right.
 		// Discard last byte and hope for the best.
 		src = src[:len(src)-1]
 	}
 
+	src16 := Slice8To16(src)
+	src16 = TrimRightZeros16(src16) // avoid an extra empty string
+	if len(src16) == 0 {
+		return []string{}
+	}
+
 	texts := make([]string, 0, 2) // arbitrary
-	parts := bytes.Split(src, []byte{0x00, 0x00})
+	parts := Split16(src16, 0x0000)
 	for _, part := range parts {
 		var endianDecoder binary.ByteOrder = binary.LittleEndian // little-endian by default
-		firstWord := binary.LittleEndian.Uint16(part[:2])
-		if firstWord == _BOM_LE || firstWord == _BOM_BE { // BOM found
-			if firstWord == _BOM_BE {
+		if part[0] == _BOM_LE || part[0] == _BOM_BE {
+			if part[0] == _BOM_BE {
 				endianDecoder = binary.BigEndian
 			}
-			part = part[2:] // skip BOM
+			part = part[1:] // skip BOM
 		}
 
 		if len(part) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
+			part8 := Slice16To8(part)
 			buf16 := make([]uint16, 0, len(part)+1) // room for terminating null
-			for i := 0; i < len(part); i += 2 {
-				buf16 = append(buf16, endianDecoder.Uint16(part[i:]))
+			for i := 0; i < len(part8); i += 2 {
+				buf16 = append(buf16, endianDecoder.Uint16(part8[i:]))
 			}
 			buf16 = append(buf16, 0x0000) // terminating null
 			texts = append(texts, win.Str.FromNativeSlice(buf16))
