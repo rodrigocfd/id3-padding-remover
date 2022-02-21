@@ -4,17 +4,10 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
+var frequency float64 = 0 // global, retrieved only once
+
 // High-resolution elapsed time counter.
-type TimeCount interface {
-	// Returns the number of milliseconds elapsed since the timer started.
-	ElapsedMs() float64
-}
-
-//------------------------------------------------------------------------------
-
-var frequency float64 = 0
-
-type _TimeCount struct {
+type TimeCount struct {
 	t0 float64
 }
 
@@ -24,12 +17,12 @@ func New() TimeCount {
 		frequency = float64(win.QueryPerformanceFrequency())
 	}
 
-	return &_TimeCount{
+	return TimeCount{
 		t0: float64(win.QueryPerformanceCounter()),
 	}
 }
 
-func (me *_TimeCount) ElapsedMs() float64 {
+func (me *TimeCount) ElapsedMs() float64 {
 	tFin := float64(win.QueryPerformanceCounter())
 	return ((tFin - me.t0) / frequency) * 1000
 }
