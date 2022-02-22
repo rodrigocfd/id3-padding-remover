@@ -13,6 +13,7 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
+// Displays the marquee progress bar while running a job in background.
 type DlgRun struct {
 	wnd     ui.WindowModal
 	proRun  ui.ProgressBar

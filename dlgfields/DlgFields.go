@@ -30,6 +30,7 @@ type (
 	}
 )
 
+// Contains editable fields for the currently selected tag.
 type DlgFields struct {
 	wnd            ui.WindowControl
 	fields         []Field

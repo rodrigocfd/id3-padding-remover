@@ -28,6 +28,7 @@ func main() {
 	NewDlgMain().Run()
 }
 
+// Main application window.
 type DlgMain struct {
 	wnd              ui.WindowMain
 	lstMp3s          ui.ListView

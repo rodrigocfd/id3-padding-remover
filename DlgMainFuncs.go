@@ -78,8 +78,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 				newItem.SetText(1, data.Text)
 
 			case *id3v2.FrameDataUserText:
-				newItem.SetText(1, data.Descr)
-				me.lstFrames.Items().Add("", data.Text) // subsequent line
+				newItem.SetText(1, fmt.Sprintf("%s / %s", data.Descr, data.Text))
 
 			case *id3v2.FrameDataBinary:
 				binLen := uint64(len(data.Data))
