@@ -64,11 +64,12 @@ func (me *DlgRun) events() {
 			me.errors = me.job()
 			me.wnd.RunUiThread(func() { // return to UI thread after job is finished
 				if len(me.errors) > 0 {
-					text := "Errors:\n"
-					for _, err := range me.errors {
-						text += err.Error() + "\n"
+					text := ""
+					for _, err := range me.errors { // show errors of all files
+						text += err.Error() + "\n\n"
 					}
-					prompt.Error(me.wnd, "Error", win.StrOptNone{}, text)
+					text = text[:len(text)-2]
+					prompt.Error(me.wnd, "Error", win.StrOptVal("Errors found"), text)
 				}
 				me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_NOPROGRESS)
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
