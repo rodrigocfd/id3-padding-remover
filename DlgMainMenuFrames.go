@@ -30,14 +30,11 @@ func (me *DlgMain) eventsMenuFrames() {
 
 		selFrameItems := me.lstFrames.Items().Selected()
 		for _, selFrameItem := range selFrameItems { // scan all lines of frames listview
+			idxFrame := selFrameItem.Index() // index of frame within frames slice
 			name4 := selFrameItem.Text(0)
-			if name4 == "" { // just an extension of a previous frame line?
-				continue
-			}
-
-			idxFrame := int(selFrameItem.LParam()) // index of frame within frames slice
 			selFrame := tag.Frames()[idxFrame]
-			if selFrame.Name4() != name4 {
+
+			if selFrame.Name4() != name4 { // additional security check
 				prompt.Error(me.wnd, "This is bad", win.StrOptSome("Mismatched frames"),
 					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
 						selFrame.Name4(), name4, idxFrame))
@@ -45,6 +42,11 @@ func (me *DlgMain) eventsMenuFrames() {
 			}
 
 			idxsToDelete = append(idxsToDelete, idxFrame)
+		}
+
+		if !prompt.OkCancel(me.wnd, "Deleting frames", win.StrOptNone(),
+			fmt.Sprintf("Are you sure you want to delete %d frame(s)?", len(idxsToDelete))) {
+			return
 		}
 
 		tag.DeleteFrames(func(idx int, _ *id3v2.Frame) (willDelete bool) {

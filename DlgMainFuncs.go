@@ -67,11 +67,9 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
 		cachedTag := me.cachedTags[selMp3s[0]]
 
-		for idxFrame, frame := range cachedTag.Frames() { // read each frame of the tag
+		for _, frame := range cachedTag.Frames() { // read each frame of the tag
 			newItem := me.lstFrames.Items().
 				Add(frame.Name4()) // add new item, first column displays frame name
-
-			newItem.SetLParam(win.LPARAM(idxFrame)) // keep frame index, used when deleting a frame
 
 			switch data := frame.Data().(type) {
 			case *id3v2.FrameDataText:
