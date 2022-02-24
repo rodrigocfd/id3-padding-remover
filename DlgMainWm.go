@@ -44,6 +44,15 @@ func (me *DlgMain) eventsWm() {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
 	})
 
+	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
+		switch p.Hmenu() {
+		case me.lstMp3s.ContextMenu():
+			me.initMenuPopupFiles(p)
+		case me.lstFrames.ContextMenu():
+			me.initMenuPopupFrames(p)
+		}
+	})
+
 	me.wnd.On().WmDropFiles(func(p wm.DropFiles) {
 		droppedFiles := p.Hdrop().ListFilesAndFinish()
 		droppedMp3s := make([]string, 0, len(droppedFiles)) // MP3 files effectively found

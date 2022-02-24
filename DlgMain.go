@@ -53,7 +53,8 @@ func NewDlgMain() *DlgMain {
 
 	me.eventsWm()
 	me.eventsLstFiles()
-	me.eventsMenu()
+	me.eventsMenuFiles()
+	me.eventsMenuFrames()
 	return me
 }
 

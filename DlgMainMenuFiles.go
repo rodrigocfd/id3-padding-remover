@@ -15,29 +15,17 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
-func (me *DlgMain) eventsMenu() {
-	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
-		switch p.Hmenu() {
-		case me.lstMp3s.ContextMenu():
-			cmdIds := []int{MNU_MP3_DELETE,
-				MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
-				MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
-			for _, cmdId := range cmdIds {
-				p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
-					me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
-			}
+func (me *DlgMain) initMenuPopupFiles(p wm.InitMenuPopup) {
+	cmdIds := []int{MNU_MP3_DELETE,
+		MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
+		MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
+	for _, cmdId := range cmdIds {
+		p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
+			me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
+	}
+}
 
-		case me.lstFrames.ContextMenu():
-			selFrameNames4 := make([]string, 0, me.lstFrames.Items().SelectedCount())
-			for _, name4 := range me.lstFrames.Columns().SelectedTexts(0) {
-				if name4 != "" {
-					selFrameNames4 = append(selFrameNames4, name4) // only non-empty names
-				}
-			}
-			p.Hmenu().EnableMenuItem(
-				win.MenuItemCmd(MNU_FRAMES_REM), len(selFrameNames4) > 0)
-		}
-	})
+func (me *DlgMain) eventsMenuFiles() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_OPEN, func(_ wm.Command) {
 		fod := shell.NewIFileOpenDialog(
@@ -275,51 +263,6 @@ func (me *DlgMain) eventsMenu() {
 				memStats.NumGC,
 				win.Str.FmtBytes(memStats.NextGC),
 			))
-
-		me.updateMemoryStatus()
-	})
-
-	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
-		t0 := timecount.New()
-		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0] // single selected MP3 file
-		tag := me.cachedTags[selMp3]
-		idxsToDelete := make([]int, 0, me.lstFrames.Items().SelectedCount())
-
-		selFrameItems := me.lstFrames.Items().Selected()
-		for _, selFrameItem := range selFrameItems { // scan all lines of frames listview
-			name4 := selFrameItem.Text(0)
-			if name4 == "" { // just an extension of a previous frame line?
-				continue
-			}
-
-			idxFrame := int(selFrameItem.LParam()) // index of frame within frames slice
-			selFrame := tag.Frames()[idxFrame]
-			if selFrame.Name4() != name4 {
-				prompt.Error(me.wnd, "This is bad", win.StrOptSome("Mismatched frames"),
-					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
-						selFrame.Name4(), name4, idxFrame))
-				return // halt any further processing
-			}
-
-			idxsToDelete = append(idxsToDelete, idxFrame)
-		}
-
-		tag.DeleteFrames(func(idx int, _ *id3v2.Frame) (willDelete bool) {
-			for _, idxFrame := range idxsToDelete {
-				if idx == idxFrame {
-					return true
-				}
-			}
-			return false
-		})
-
-		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
-			me.displayFramesOfSelectedFiles()
-			prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
-				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
-					len(idxsToDelete), t0.ElapsedMs()))
-			me.lstMp3s.Focus()
-		}
 
 		me.updateMemoryStatus()
 	})
