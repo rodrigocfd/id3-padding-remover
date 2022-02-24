@@ -19,7 +19,7 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			prompt.Error(nil, "Panic", nil,
+			prompt.Error(nil, "Panic", win.StrOptNone(),
 				fmt.Sprintf("PANIC @ %v\n\n%v\n\n%s",
 					time.Now(), r, string(debug.Stack())))
 		}

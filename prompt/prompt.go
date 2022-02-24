@@ -33,7 +33,7 @@ func _Base(parent ui.AnyParent,
 	if parent != nil {
 		tdc.HwndParent = parent.Hwnd()
 	}
-	if header, ok := header.(win.StrOptVal); ok { // not empty?
+	if header, ok := header.Str(); ok { // not empty?
 		tdc.PszMainInstruction = string(header)
 	}
 

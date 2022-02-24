@@ -69,7 +69,7 @@ func (me *DlgRun) events() {
 						text += err.Error() + "\n\n"
 					}
 					text = text[:len(text)-2]
-					prompt.Error(me.wnd, "Error", win.StrOptVal("Errors found"), text)
+					prompt.Error(me.wnd, "Error", win.StrOptSome("Errors found"), text)
 				}
 				me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_NOPROGRESS)
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
