@@ -74,10 +74,8 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 			switch data := frame.Data().(type) {
 			case *id3v2.FrameDataText:
 				newItem.SetText(1, data.Text)
-
 			case *id3v2.FrameDataUserText:
 				newItem.SetText(1, fmt.Sprintf("%s / %s", data.Descr, data.Text))
-
 			case *id3v2.FrameDataBinary:
 				binLen := uint64(len(data.Data))
 				newItem.SetText(1,
@@ -86,11 +84,9 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 						float64(binLen)*100/ // percent of whole tag size
 							float64(cachedTag.Mp3Offset())),
 				)
-
 			case *id3v2.FrameDataComment:
 				newItem.SetText(1,
 					fmt.Sprintf("[%s] %s", data.Lang3, data.Text))
-
 			case *id3v2.FrameDataPicture:
 				binLen := uint64(len(data.Data))
 				newItem.SetText(1,
