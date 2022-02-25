@@ -117,7 +117,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 }
 
 func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
-	for _, selItem := range me.lstMp3s.Items().Selected() {
+	for _, selItem := range me.lstMp3s.Items().SelectedItems() {
 		selMp3 := selItem.Text(0)
 		theTag := me.cachedTags[selMp3] // tag of the MP3 we're going to rename
 

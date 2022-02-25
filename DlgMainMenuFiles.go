@@ -16,12 +16,12 @@ import (
 )
 
 func (me *DlgMain) initMenuPopupFiles(p wm.InitMenuPopup) {
+	atLeastOneSel := me.lstMp3s.Items().SelectedCount() > 0
 	cmdIds := []int{MNU_MP3_DELETE,
 		MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
 		MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
 	for _, cmdId := range cmdIds {
-		p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId),
-			me.lstMp3s.Items().SelectedCount() > 0) // 1 or more files currently selected
+		p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId), atLeastOneSel)
 	}
 }
 

@@ -11,37 +11,69 @@ import (
 )
 
 func (me *DlgMain) initMenuPopupFrames(p wm.InitMenuPopup) {
-	selFrameNames4 := make([]string, 0, me.lstFrames.Items().SelectedCount())
-	for _, name4 := range me.lstFrames.Columns().SelectedTexts(0) {
-		if name4 != "" {
-			selFrameNames4 = append(selFrameNames4, name4) // only non-empty names
-		}
+	atLeastOneSel := me.lstFrames.Items().SelectedCount() > 0
+	cmdIds := []int{MNU_FRAMES_MOVEUP, MNU_FRAMES_REM}
+	for _, cmdId := range cmdIds {
+		p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId), atLeastOneSel)
 	}
-	p.Hmenu().EnableMenuItem(
-		win.MenuItemCmd(MNU_FRAMES_REM), len(selFrameNames4) > 0)
 }
 
 func (me *DlgMain) eventsMenuFrames() {
-	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_MOVEUP, func(_ wm.Command) {
 		t0 := timecount.New()
 		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0] // single selected MP3 file
 		tag := me.cachedTags[selMp3]
-		idxsToDelete := make([]int, 0, me.lstFrames.Items().SelectedCount())
+		idxsToMove := me.lstFrames.Items().SelectedIndexes()
 
-		selFrameItems := me.lstFrames.Items().Selected()
-		for _, selFrameItem := range selFrameItems { // scan all lines of frames listview
-			idxFrame := selFrameItem.Index() // index of frame within frames slice
-			name4 := selFrameItem.Text(0)
-			selFrame := tag.Frames()[idxFrame]
+		if idxsToMove[0] == 0 {
+			prompt.Error(me.wnd, "Bad move", win.StrOptNone(), "First item cannot be moved up.")
+			return
+		}
 
-			if selFrame.Name4() != name4 { // additional security check
-				prompt.Error(me.wnd, "This is bad", win.StrOptSome("Mismatched frames"),
+		for _, idxToMove := range idxsToMove { // security check: frame name matches?
+			frame := tag.Frames()[idxToMove]
+			item := me.lstFrames.Items().Get(idxToMove)
+
+			if item.Text(0) != frame.Name4() {
+				prompt.Error(me.wnd, "This is bad", win.StrOptSome("Mismatched frame"),
 					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
-						selFrame.Name4(), name4, idxFrame))
-				return // halt any further processing
+						item.Text(0), frame.Name4(), idxToMove))
+				return
 			}
+		}
 
-			idxsToDelete = append(idxsToDelete, idxFrame)
+		for _, idxToMove := range idxsToMove { // swap each selected frame
+			tmp := tag.Frames()[idxToMove-1]
+			tag.Frames()[idxToMove-1] = tag.Frames()[idxToMove]
+			tag.Frames()[idxToMove] = tmp
+		}
+
+		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
+			me.displayFramesOfSelectedFiles()
+			prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+				fmt.Sprintf("%d frame(s) moved up in %.2f ms.",
+					len(idxsToMove), t0.ElapsedMs()))
+			me.lstMp3s.Focus()
+		}
+
+		me.updateMemoryStatus()
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
+		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0] // single selected MP3 file
+		tag := me.cachedTags[selMp3]
+		idxsToDelete := me.lstFrames.Items().SelectedIndexes()
+
+		for _, idxToDelete := range idxsToDelete { // security check: frame name matches?
+			frame := tag.Frames()[idxToDelete]
+			item := me.lstFrames.Items().Get(idxToDelete)
+
+			if item.Text(0) != frame.Name4() {
+				prompt.Error(me.wnd, "This is bad", win.StrOptSome("Mismatched frame"),
+					fmt.Sprintf("Mismatched frame names: %s and %s (index %d).",
+						item.Text(0), frame.Name4(), idxToDelete))
+				return
+			}
 		}
 
 		if !prompt.OkCancel(me.wnd, "Deleting frames", win.StrOptNone(),
@@ -49,9 +81,10 @@ func (me *DlgMain) eventsMenuFrames() {
 			return
 		}
 
-		tag.DeleteFrames(func(idx int, _ *id3v2.Frame) (willDelete bool) {
-			for _, idxFrame := range idxsToDelete {
-				if idx == idxFrame {
+		t0 := timecount.New()
+		tag.DeleteFrames(func(i int, _ *id3v2.Frame) (willDelete bool) {
+			for _, idxToDelete := range idxsToDelete {
+				if i == idxToDelete {
 					return true
 				}
 			}
