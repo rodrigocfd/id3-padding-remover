@@ -24,7 +24,7 @@ func _Base(parent ui.AnyParent,
 	btns co.TDCBF, ico co.TD_ICON) co.ID {
 
 	tdc := win.TASKDIALOGCONFIG{
-		DwFlags:         co.TDF_ALLOW_DIALOG_CANCELLATION,
+		DwFlags:         co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
 		DwCommonButtons: btns,
 		PszWindowTitle:  title,
 		HMainIcon:       win.TdcIconTdi(ico),
