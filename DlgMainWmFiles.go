@@ -6,6 +6,7 @@ import (
 )
 
 func (me *DlgMain) eventsLstFiles() {
+
 	me.lstMp3s.On().LvnInsertItem(func(_ *win.NMLISTVIEW) {
 		me.updateTitlebarCount(me.lstMp3s.Items().Count())
 	})

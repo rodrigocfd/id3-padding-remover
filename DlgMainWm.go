@@ -11,6 +11,7 @@ import (
 )
 
 func (me *DlgMain) eventsWm() {
+
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
 		// File icon image list.
 		// ListView doesn't have LVS_SHAREIMAGELISTS, so it'll be automatically destroyed.

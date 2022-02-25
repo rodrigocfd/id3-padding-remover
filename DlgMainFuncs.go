@@ -67,9 +67,12 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
 		cachedTag := me.cachedTags[selMp3s[0]]
 
-		for _, frame := range cachedTag.Frames() { // read each frame of the tag
+		// Read each frame of the tag, and display in the list.
+		// Since operations can be made directly on the list, the order of the
+		// items in the list must match the order of the frames slice.
+		for _, frame := range cachedTag.Frames() {
 			newItem := me.lstFrames.Items().
-				Add(frame.Name4()) // add new item, first column displays frame name
+				Add(frame.Name4()) // first column displays frame name
 
 			switch data := frame.Data().(type) {
 			case *id3v2.FrameDataText:
