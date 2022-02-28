@@ -13,12 +13,13 @@ func (me *DlgMain) updateMemoryStatus() {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 
-	parts := me.statusBar.Parts()
-	parts.SetText(0, fmt.Sprintf("Objects mem: %s", win.Str.FmtBytes(memStats.HeapAlloc)))
-	parts.SetText(1, fmt.Sprintf("Reserved sys: %s", win.Str.FmtBytes(memStats.HeapSys)))
-	parts.SetText(2, fmt.Sprintf("Idle spans: %s", win.Str.FmtBytes(memStats.HeapIdle)))
-	parts.SetText(3, fmt.Sprintf("GC cycles: %d", memStats.NumGC))
-	parts.SetText(4, fmt.Sprintf("Next GC: %s", win.Str.FmtBytes(memStats.NextGC)))
+	me.statusBar.Parts().SetAllTexts(
+		fmt.Sprintf("Objects mem: %s", win.Str.FmtBytes(memStats.HeapAlloc)),
+		fmt.Sprintf("Reserved sys: %s", win.Str.FmtBytes(memStats.HeapSys)),
+		fmt.Sprintf("Idle spans: %s", win.Str.FmtBytes(memStats.HeapIdle)),
+		fmt.Sprintf("GC cycles: %d", memStats.NumGC),
+		fmt.Sprintf("Next GC: %s", win.Str.FmtBytes(memStats.NextGC)),
+	)
 }
 
 func (me *DlgMain) updateTitlebarCount(total int) {
@@ -38,15 +39,17 @@ func (me *DlgMain) addMp3sToList(mp3s []string) {
 	for _, mp3 := range mp3s {
 		tag := me.cachedTags[mp3]
 
-		padding := "N/A"
-		if !tag.IsEmpty() {
+		var padding string
+		if tag.IsEmpty() {
+			padding = "N/A"
+		} else {
 			padding = strconv.Itoa(tag.Padding())
 		}
 
 		if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
 			me.lstMp3s.Items().AddWithIcon(0, mp3, padding)
 		} else {
-			item.SetText(1, padding) // update padding
+			item.SetText(1, padding) // file already in list; update padding
 		}
 	}
 
@@ -60,16 +63,16 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 
 	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
 
-	if len(selMp3s) > 1 { // multiple files selected, no tags are shown
+	if len(selMp3s) > 1 { // multiple files selected, no frames are shown
 		me.lstFrames.Items().
 			Add("", fmt.Sprintf("%d selected...", len(selMp3s)))
 
-	} else if len(selMp3s) == 1 { // only 1 file selected, we display its tag
+	} else if len(selMp3s) == 1 { // only 1 file selected, we display its frames
 		cachedTag := me.cachedTags[selMp3s[0]]
 
-		// Read each frame of the tag, and display in the list.
-		// Since operations can be made directly on the list, the order of the
-		// items in the list must match the order of the frames slice.
+		// Read each frame of the tag, and display it on the list.
+		// Since operations can be made directly on the list items, the order of
+		// the items in the list must match the order of the frames slice.
 		for _, frame := range cachedTag.Frames() {
 			newItem := me.lstFrames.Items().
 				Add(frame.Name4()) // first column displays frame name
@@ -120,12 +123,12 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 		selMp3 := selItem.Text(0)
 		theTag := me.cachedTags[selMp3] // tag of the MP3 we're going to rename
 
-		var trackNoStr string
+		var trackNumStr string
 		if withTrackPrefix {
-			if trackNoConverted, has := theTag.TextByFrameId(id3v2.FRAMETXT_TRACK); !has {
+			if trackNumFromFrame, has := theTag.TextByFrameId(id3v2.FRAMETXT_TRACK); !has {
 				return 0, fmt.Errorf("track frame absent")
 			} else {
-				trackNoStr = trackNoConverted
+				trackNumStr = trackNumFromFrame
 			}
 		}
 
@@ -141,11 +144,11 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 
 		var newPath string
 		if withTrackPrefix {
-			if trackNo, err := strconv.Atoi(trackNoStr); err != nil {
-				return 0, fmt.Errorf("invalid track format: %s", trackNoStr)
+			if trackNumInt, err := strconv.Atoi(trackNumStr); err != nil {
+				return 0, fmt.Errorf("invalid track value: %s", trackNumStr)
 			} else {
 				newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
-					win.Path.GetPath(selMp3), trackNo, artist, title)
+					win.Path.GetPath(selMp3), trackNumInt, artist, title)
 			}
 		} else {
 			newPath = fmt.Sprintf("%s\\%s - %s.mp3",
@@ -153,14 +156,14 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 		}
 
 		if newPath != selMp3 { // file name actually changed?
+			if err := win.MoveFile(selMp3, newPath); err != nil {
+				return 0, fmt.Errorf("failed to rename:\n%s\nto\n%s", selMp3, newPath)
+			}
+
 			delete(me.cachedTags, selMp3)   // remove cached tag
 			me.cachedTags[newPath] = theTag // re-insert tag under new name
 			selItem.SetText(0, newPath)     // rename list view item
 			renamedCount++
-
-			if err := win.MoveFile(selMp3, newPath); err != nil {
-				return 0, fmt.Errorf("failed to rename:\n%s\nto\n%s", selMp3, newPath)
-			}
 		}
 	}
 	return renamedCount, nil

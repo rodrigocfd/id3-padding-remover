@@ -31,7 +31,7 @@ func (me *DlgMain) eventsMenuFrames() {
 			return
 		}
 
-		for _, idxToMove := range idxsToMove { // swap each selected frame
+		for _, idxToMove := range idxsToMove { // swap each selected frame within the Frames slice
 			tmp := tag.Frames()[idxToMove-1]
 			tag.Frames()[idxToMove-1] = tag.Frames()[idxToMove]
 			tag.Frames()[idxToMove] = tmp
@@ -39,10 +39,14 @@ func (me *DlgMain) eventsMenuFrames() {
 
 		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
 			me.displayFramesOfSelectedFiles()
+			for _, idxToMove := range idxsToMove { // restore the selected items
+				me.lstFrames.Items().Get(idxToMove - 1).Select(true)
+			}
+			me.lstFrames.Focus()
+
 			prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d frame(s) moved up in %.2f ms.",
 					len(idxsToMove), t0.ElapsedMs()))
-			me.lstMp3s.Focus()
 		}
 
 		me.updateMemoryStatus()
