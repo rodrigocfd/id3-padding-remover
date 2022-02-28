@@ -226,7 +226,7 @@ func (t *Tag) TextByFrameId(frameId FRAMETXT) (string, bool) {
 		case *FrameDataText:
 			return data.Text, true
 		case *FrameDataComment:
-			return data.Text, true
+			return data.Text, true // for comments, we return Text, not Descr field
 		default:
 			panic(fmt.Sprintf("Cannot retrieve text from frame %s.", frameId))
 		}
@@ -279,17 +279,17 @@ func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
 //
 // If so, returns the value itself.
 func TagSameValueAcrossAll(tags []*Tag, frameId FRAMETXT) (string, bool) {
-	if firstText, ok := tags[0].TextByFrameId(frameId); ok {
+	if firstTagText, ok := tags[0].TextByFrameId(frameId); ok {
 		for i := 1; i < len(tags); i++ {
-			if otherText, hasFrame := tags[i].TextByFrameId(frameId); hasFrame {
-				if otherText != firstText {
+			if otherTagText, hasFrame := tags[i].TextByFrameId(frameId); hasFrame {
+				if otherTagText != firstTagText {
 					return "", false
 				}
 			} else { // frame absent in subsequent tag
 				return "", false
 			}
 		}
-		return firstText, true
+		return firstTagText, true
 	} else { // frame absent in first tag
 		return "", false
 	}

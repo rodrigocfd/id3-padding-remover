@@ -1,4 +1,5 @@
 # Builds the final application.
+# Run inside res/ directory.
 
 echo "Building application..."
 cd ..

@@ -22,6 +22,7 @@ func New() TimeCount {
 	}
 }
 
+// Returns how many milliseconds ellapsed since the TimeCount creation.
 func (me *TimeCount) ElapsedMs() float64 {
 	tFin := float64(win.QueryPerformanceCounter())
 	return ((tFin - me.t0) / frequency) * 1000

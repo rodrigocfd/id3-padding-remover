@@ -68,9 +68,11 @@ func NewDlgFields(
 	for i := range fieldBuilds {
 		fields[i].FrameId = fieldBuilds[i].FrameId
 		fields[i].Chk = ui.NewCheckBoxDlg(wnd, fieldBuilds[i].ChkId, ui.HORZ_NONE, ui.VERT_NONE)
-		if fieldBuilds[i].FrameId == id3v2.FRAMETXT_GENRE { // genre is a combobox
+
+		switch fieldBuilds[i].FrameId {
+		case id3v2.FRAMETXT_GENRE: // genre is edited through a combobox
 			fields[i].Txt = ui.NewComboBoxDlg(wnd, fieldBuilds[i].TxtId, ui.HORZ_NONE, ui.VERT_NONE)
-		} else { // everything else is just a textbox
+		default: // all other fields use ordinary textboxes
 			fields[i].Txt = ui.NewEditDlg(wnd, fieldBuilds[i].TxtId, ui.HORZ_NONE, ui.VERT_NONE)
 		}
 	}

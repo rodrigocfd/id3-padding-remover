@@ -14,6 +14,7 @@ import (
 )
 
 func (me *DlgFields) eventsWm() {
+
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
 		if genresTxt := win.Path.ExePath() + "\\id3fit-genres.txt"; !win.Path.Exists(genresTxt) {
 			prompt.Error(me.wnd, "No genres file", win.StrOptNone(),

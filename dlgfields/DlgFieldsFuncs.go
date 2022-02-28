@@ -41,13 +41,13 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 }
 
 func (me *DlgFields) enableButtonsIfAtLeastOneChecked() {
-	atLeastOneEnabled := false
+	atLeastOneChecked := false
 	for _, otherField := range me.fields {
 		if otherField.Txt.Hwnd().IsWindowEnabled() {
-			atLeastOneEnabled = true
+			atLeastOneChecked = true
 			break
 		}
 	}
-	me.btnClearChecks.Hwnd().EnableWindow(atLeastOneEnabled)
-	me.btnSave.Hwnd().EnableWindow(atLeastOneEnabled)
+	me.btnClearChecks.Hwnd().EnableWindow(atLeastOneChecked)
+	me.btnSave.Hwnd().EnableWindow(atLeastOneChecked)
 }
