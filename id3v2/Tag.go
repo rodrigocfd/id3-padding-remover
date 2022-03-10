@@ -179,10 +179,12 @@ func (t *Tag) SerializeToFile(mp3Path string) error {
 		}
 	}
 
-	// Move the MP3 data block inside the file, back or forth.
-	destPos := int(currentTag.Mp3Offset()) + diff
-	srcPos := currentTag.Mp3Offset()
-	copy(foutMem[destPos:], foutMem[srcPos:])
+	if diff != 0 {
+		// Move the MP3 data block inside the file, back or forth.
+		destPos := currentTag.Mp3Offset() + diff
+		srcPos := currentTag.Mp3Offset()
+		copy(foutMem[destPos:], foutMem[srcPos:])
+	}
 
 	// Copy the new tag into the file, no padding.
 	copy(foutMem, newTagBlob)
