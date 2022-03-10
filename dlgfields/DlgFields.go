@@ -55,7 +55,7 @@ func NewDlgFields(
 		{FrameId: id3v2.FRAMETXT_ALBUM, ChkId: CHK_ALBUM, TxtId: TXT_ALBUM},
 		{FrameId: id3v2.FRAMETXT_TRACK, ChkId: CHK_TRACK, TxtId: TXT_TRACK},
 		{FrameId: id3v2.FRAMETXT_YEAR, ChkId: CHK_YEAR, TxtId: TXT_YEAR},
-		{FrameId: id3v2.FRAMETXT_GENRE, ChkId: CHK_GENRE, TxtId: CMB_GENRE},
+		{FrameId: id3v2.FRAMETXT_GENRE, ChkId: CHK_GENRE, TxtId: CMB_GENRE}, // the only combo
 		{FrameId: id3v2.FRAMETXT_PERFORMER, ChkId: CHK_PERFORMER, TxtId: TXT_PERFORMER},
 		{FrameId: id3v2.FRAMETXT_COMPOSER, ChkId: CHK_COMPOSER, TxtId: TXT_COMPOSER},
 		{FrameId: id3v2.FRAMETXT_LYRICIST, ChkId: CHK_LYRICIST, TxtId: TXT_LYRICIST},
@@ -63,7 +63,6 @@ func NewDlgFields(
 		{FrameId: id3v2.FRAMETXT_ORIG_ARTIST, ChkId: CHK_ORIG_ARTIST, TxtId: TXT_ORIG_ARTIST},
 		{FrameId: id3v2.FRAMETXT_ORIG_ALBUM, ChkId: CHK_ORIG_ALBUM, TxtId: TXT_ORIG_ALBUM},
 		{FrameId: id3v2.FRAMETXT_ORIG_YEAR, ChkId: CHK_ORIG_YEAR, TxtId: TXT_ORIG_YEAR},
-		{FrameId: id3v2.FRAMETXT_PERFORMER, ChkId: CHK_PERFORMER, TxtId: TXT_PERFORMER},
 		{FrameId: id3v2.FRAMETXT_COMMENT, ChkId: CHK_COMMENT, TxtId: TXT_COMMENT},
 	}
 	fields := make([]Field, len(fieldBuilds))
