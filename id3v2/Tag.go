@@ -211,6 +211,13 @@ func (t *Tag) DeleteFrames(fun func(i int, f *Frame) (willDelete bool)) {
 	t.frames = newFrames // throw the old one away
 }
 
+// Swaps to frames within the slice.
+func (t *Tag) SwapFrames(indexA, indexB int) {
+	tmp := t.frames[indexA]
+	t.frames[indexA] = t.frames[indexB]
+	t.frames[indexB] = tmp
+}
+
 // Retrieves the specified frame.
 func (t *Tag) FrameByName4(name4 string) (*Frame, bool) {
 	for _, frame := range t.frames {

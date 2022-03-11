@@ -30,9 +30,7 @@ func (me *DlgMain) eventsMenuFrames() {
 		// so no invalid frames are selected.
 
 		for _, idxToMove := range idxsToMove { // swap each selected frame within the Frames slice
-			tmp := tag.Frames()[idxToMove-1]
-			tag.Frames()[idxToMove-1] = tag.Frames()[idxToMove]
-			tag.Frames()[idxToMove] = tmp
+			tag.SwapFrames(idxToMove, idxToMove-1)
 		}
 
 		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
