@@ -65,18 +65,14 @@ func (me *DlgFields) eventsWm() {
 		t0 := timecount.New()
 
 		for _, field := range me.fields {
+			// Checked fields are be updated.
+			// Unchecked ones remain untouched.
 			if field.Chk.IsChecked() {
 				newText := strings.TrimSpace(field.Txt.Text())
 				for _, tag := range me.tagsLoaded {
 					// Empty text will delete the frame.
 					// Tags are changed but not flushed to disk here, it's DlgMain's job.
 					tag.SetTextByFrameId(field.FrameId, newText)
-				}
-			} else {
-				for _, tag := range me.tagsLoaded {
-					tag.DeleteFrames(func(_ int, frame *id3v2.Frame) (willDelete bool) {
-						return frame.Name4() == string(field.FrameId)
-					})
 				}
 			}
 		}
