@@ -12,10 +12,10 @@ import (
 
 func (me *DlgMain) initMenuPopupFrames(p wm.InitMenuPopup) {
 	atLeastOneSel := me.lstFrames.Items().SelectedCount() > 0
-	cmdIds := []int{MNU_FRAMES_MOVEUP, MNU_FRAMES_REM}
-	for _, cmdId := range cmdIds {
-		p.Hmenu().EnableMenuItem(win.MenuItemCmd(cmdId), atLeastOneSel)
-	}
+	firstIsSel := me.lstFrames.Items().Get(0).IsSelected()
+
+	p.Hmenu().EnableMenuItem(win.MenuItemCmd(MNU_FRAMES_MOVEUP), atLeastOneSel && !firstIsSel)
+	p.Hmenu().EnableMenuItem(win.MenuItemCmd(MNU_FRAMES_REM), atLeastOneSel)
 }
 
 func (me *DlgMain) eventsMenuFrames() {
@@ -26,10 +26,8 @@ func (me *DlgMain) eventsMenuFrames() {
 		tag := me.cachedTags[selMp3]
 		idxsToMove := me.lstFrames.Items().SelectedIndexes()
 
-		if idxsToMove[0] == 0 {
-			prompt.Error(me.wnd, "Bad move", win.StrOptNone(), "First item cannot be moved up.")
-			return
-		}
+		// Assumes validation has been made on WM_INITMENUPOPUP,
+		// so no invalid frames are selected.
 
 		for _, idxToMove := range idxsToMove { // swap each selected frame within the Frames slice
 			tmp := tag.Frames()[idxToMove-1]
