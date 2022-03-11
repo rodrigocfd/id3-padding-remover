@@ -135,6 +135,7 @@ func _TagParseFrames(src []byte) (frames []*Frame, padding int, e error) {
 
 // Serializes the tag into a []byte.
 func (t *Tag) Serialize() []byte {
+	t._apicAsLastFrame()
 	serializedFrames := make([]byte, 0, len(t.frames)*30) // arbitrary
 	for _, frame := range t.frames {
 		serializedFrames = append(serializedFrames, frame.Serialize()...)
@@ -150,6 +151,20 @@ func (t *Tag) Serialize() []byte {
 
 	finalBlob = append(finalBlob, serializedFrames...)
 	return finalBlob
+}
+
+func (t *Tag) _apicAsLastFrame() {
+	idx, _, has := t.FrameByName4("APIC")
+	if !has { // no APIC frame?
+		return
+	}
+
+	numFrames := len(t.frames)
+	if idx == numFrames-1 { // already last frame?
+		return
+	}
+
+	t.SwapFrames(idx, numFrames-1)
 }
 
 // Saves or removes a tag in an MP3 file.
@@ -218,19 +233,19 @@ func (t *Tag) SwapFrames(indexA, indexB int) {
 	t.frames[indexB] = tmp
 }
 
-// Retrieves the specified frame.
-func (t *Tag) FrameByName4(name4 string) (*Frame, bool) {
-	for _, frame := range t.frames {
+// Retrieves the index and the frame according to its name.
+func (t *Tag) FrameByName4(name4 string) (int, *Frame, bool) {
+	for i, frame := range t.frames {
 		if frame.Name4() == name4 {
-			return frame, true
+			return i, frame, true
 		}
 	}
-	return nil, false
+	return -1, nil, false
 }
 
 // Retrieves the text of the given frame.
 func (t *Tag) TextByFrameId(frameId FRAMETXT) (string, bool) {
-	if frame, has := t.FrameByName4(string(frameId)); has {
+	if _, frame, has := t.FrameByName4(string(frameId)); has {
 		switch data := frame.data.(type) {
 		case *FrameDataText:
 			return data.Text, true
@@ -246,7 +261,7 @@ func (t *Tag) TextByFrameId(frameId FRAMETXT) (string, bool) {
 
 // Sets the text of the given frame, which will be created if not existing.
 func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
-	if frame, has := t.FrameByName4(string(frameId)); has {
+	if _, frame, has := t.FrameByName4(string(frameId)); has {
 		switch data := frame.data.(type) {
 		case *FrameDataText:
 			if text == "" { // empty text will delete the frame

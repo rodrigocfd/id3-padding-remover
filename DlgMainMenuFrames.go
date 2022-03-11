@@ -14,7 +14,15 @@ func (me *DlgMain) initMenuPopupFrames(p wm.InitMenuPopup) {
 	atLeastOneSel := me.lstFrames.Items().SelectedCount() > 0
 	firstIsSel := me.lstFrames.Items().Get(0).IsSelected()
 
-	p.Hmenu().EnableMenuItem(win.MenuItemCmd(MNU_FRAMES_MOVEUP), atLeastOneSel && !firstIsSel)
+	isApicSelected := false
+	for _, selItem := range me.lstFrames.Items().SelectedItems() {
+		if selItem.Text(0) == "APIC" {
+			isApicSelected = true
+			break
+		}
+	}
+
+	p.Hmenu().EnableMenuItem(win.MenuItemCmd(MNU_FRAMES_MOVEUP), atLeastOneSel && !firstIsSel && !isApicSelected)
 	p.Hmenu().EnableMenuItem(win.MenuItemCmd(MNU_FRAMES_REM), atLeastOneSel)
 }
 
