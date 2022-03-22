@@ -30,7 +30,7 @@ func ParseAnyStrings(src []byte) ([]string, error) {
 
 // Parses one or more null-separated ISO-8859-1 strings.
 func ParseIso88591Strings(src []byte) []string {
-	src = TrimRightZeros8(src) // avoid an extra empty string
+	src = TrimRightZeros(src) // avoid an extra empty string
 	if len(src) == 0 {
 		return []string{}
 	}
@@ -61,13 +61,13 @@ func ParseUnicodeStrings(src []byte) []string {
 	}
 
 	src16 := Slice8To16(src)
-	src16 = TrimRightZeros16(src16) // avoid an extra empty string
+	src16 = TrimRightZeros(src16) // avoid an extra empty string
 	if len(src16) == 0 {
 		return []string{}
 	}
 
 	texts := make([]string, 0, 2) // arbitrary
-	parts := Split16(src16, 0x0000)
+	parts := Split(src16, 0x0000)
 	for _, part := range parts {
 		var endianDecoder binary.ByteOrder = binary.LittleEndian // little-endian by default
 		if part[0] == _BOM_LE || part[0] == _BOM_BE {
