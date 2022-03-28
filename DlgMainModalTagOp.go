@@ -54,24 +54,14 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 	}
 
 	saveOp := func(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
-		var waitGroup sync.WaitGroup
-		var mutex sync.Mutex
 		savingErrors := make([]error, 0, len(mp3s))
-
-		for _, mp3 := range mp3s {
-			waitGroup.Add(1)
-			go func(mp3 string, tag *id3v2.Tag) { // spawn one goroutine per file
-				defer waitGroup.Done()
-				if err := tag.SerializeToFile(mp3); err != nil {
-					mutex.Lock()
-					savingErrors = append(savingErrors,
-						fmt.Errorf("saving \"%s\" failed: %w", mp3, err))
-					mutex.Unlock()
-				}
-			}(mp3, cachedTags[mp3])
+		for _, mp3 := range mp3s { // save sequentially to stay safe from writing errors
+			tag := cachedTags[mp3]
+			if err := tag.SerializeToFile(mp3); err != nil {
+				savingErrors = append(savingErrors,
+					fmt.Errorf("saving \"%s\" failed: %w", mp3, err))
+			}
 		}
-		waitGroup.Wait()
-
 		return savingErrors
 	}
 

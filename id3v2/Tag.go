@@ -174,40 +174,34 @@ func (t *Tag) SerializeToFile(mp3Path string) error {
 		newTagBlob = t.Serialize()
 	}
 
-	fout, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_RW_EXISTING)
+	fout, err := win.FileOpen(mp3Path, co.FILE_OPEN_RW_EXISTING)
 	if err != nil {
 		return fmt.Errorf("opening file to serialize: %w", err)
 	}
 	defer fout.Close()
-	foutMem := fout.HotSlice()
 
-	currentTag, err := TagParseFromBinary(foutMem) // tag currently saved in the MP3 file
+	currentContents, err := fout.ReadAll() // read the whole MP3 file into a []byte
+	if err != nil {
+		return fmt.Errorf("reading contents before serializing: %w", err)
+	}
+
+	currentTag, err := TagParseFromBinary(currentContents) // parse tag currently saved in the MP3 file
 	if err != nil {
 		return fmt.Errorf("reading current tag: %w", err)
 	}
 
-	diff := len(newTagBlob) - currentTag.Mp3Offset() // size difference between new/old tags
+	if err := fout.Resize(0); err != nil { // truncate MP3 file
+		return fmt.Errorf("truncating file before serializing: %w", err)
+	}
 
-	if diff > 0 { // new tag is larger, we need to make room
-		if err := fout.Resize(fout.Size() + diff); err != nil {
-			return fmt.Errorf("increasing file room: %w", err)
+	if len(newTagBlob) > 0 {
+		if _, err := fout.Write(newTagBlob); err != nil { // write new tag to MP3 file
+			return fmt.Errorf("writing new tag: %w", err)
 		}
 	}
 
-	if diff != 0 {
-		// Move the MP3 data block inside the file, back or forth.
-		destPos := currentTag.Mp3Offset() + diff
-		srcPos := currentTag.Mp3Offset()
-		copy(foutMem[destPos:], foutMem[srcPos:])
-	}
-
-	// Copy the new tag into the file, no padding.
-	copy(foutMem, newTagBlob)
-
-	if diff < 0 { // new tag is shorter, shrink
-		if err := fout.Resize(fout.Size() + diff); err != nil {
-			return fmt.Errorf("decreasing file room: %w", err)
-		}
+	if _, err := fout.Write(currentContents[currentTag.Mp3Offset():]); err != nil { // write MP3 itself
+		return fmt.Errorf("writing MP3 own data: %w", err)
 	}
 
 	return nil
