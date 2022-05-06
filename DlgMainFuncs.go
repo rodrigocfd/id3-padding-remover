@@ -54,14 +54,14 @@ func (me *DlgMain) addMp3sToList(mp3s []string) {
 	}
 
 	me.lstMp3s.SetRedraw(true)
-	me.lstMp3s.Columns().SetWidthToFill(0)
+	me.lstMp3s.Columns().Get(0).SetWidthToFill()
 }
 
 func (me *DlgMain) displayFramesOfSelectedFiles() {
 	me.lstFrames.SetRedraw(false)
 	me.lstFrames.Items().DeleteAll() // clear all tag displays
 
-	selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+	selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 	if len(selMp3s) > 1 { // multiple files selected, no frames are shown
 		me.lstFrames.Items().
@@ -108,7 +108,7 @@ func (me *DlgMain) displayFramesOfSelectedFiles() {
 	}
 
 	me.lstFrames.SetRedraw(true)
-	me.lstFrames.Columns().SetWidthToFill(1)
+	me.lstFrames.Columns().Get(1).SetWidthToFill()
 	me.lstFrames.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
 
 	selTags := make([]*id3v2.Tag, 0, len(selMp3s)) // filter the tags of currently selected files

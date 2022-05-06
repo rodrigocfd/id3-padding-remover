@@ -66,7 +66,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_PAD, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 		// Simply saving will remove the padding.
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
@@ -82,7 +82,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
@@ -104,7 +104,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_REM_RG_PIC, func(_ wm.Command) {
 		t0 := timecount.New()
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 		for _, selMp3 := range selMp3s {
 			tag := me.cachedTags[selMp3]
@@ -125,7 +125,7 @@ func (me *DlgMain) eventsMenuFiles() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DEL_TAG, func(_ wm.Command) {
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 		if !prompt.OkCancel(me.wnd, "Delete tag", win.StrOptNone(),
 			fmt.Sprintf("Completely remove the tag from %d file(s)?", len(selMp3s))) {
 			return
@@ -166,7 +166,7 @@ func (me *DlgMain) eventsMenuFiles() {
 		}
 
 		newFolder := fod.GetResultDisplayName(shellco.SIGDN_FILESYSPATH)
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 		newCopiedFiles := make([]string, 0, len(selMp3s))
 		t0 := timecount.New()
 

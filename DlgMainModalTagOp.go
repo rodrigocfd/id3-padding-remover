@@ -59,7 +59,7 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 			tag := cachedTags[mp3]
 			if err := tag.SerializeToFile(mp3); err != nil {
 				savingErrors = append(savingErrors,
-					fmt.Errorf("saving \"%s\" failed: %w", mp3, err))
+					fmt.Errorf("saving \"%s\" failed: %w", mp3, err)) // save error and keep going
 			}
 		}
 		return savingErrors

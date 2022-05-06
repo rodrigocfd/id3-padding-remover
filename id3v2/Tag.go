@@ -194,7 +194,7 @@ func (t *Tag) SerializeToFile(mp3Path string) error {
 		return fmt.Errorf("truncating file before serializing: %w", err)
 	}
 
-	if len(newTagBlob) > 0 {
+	if len(newTagBlob) > 0 { // is the tag non-empty?
 		if _, err := fout.Write(newTagBlob); err != nil { // write new tag to MP3 file
 			return fmt.Errorf("writing new tag: %w", err)
 		}
@@ -278,7 +278,7 @@ func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
 		}
 
 	} else { // frame does not exist yet
-		newFrame := _FrameNewEmpty(string(frameId))
+		newFrame := _FrameNewEmpty(string(frameId)) // may contain any FrameData type
 		if frameId == FRAMETXT_COMMENT {
 			newFrame.data = &FrameDataComment{
 				Lang3: "eng",
@@ -297,18 +297,18 @@ func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
 //
 // If so, returns the value itself.
 func TagSameValueAcrossAll(tags []*Tag, frameId FRAMETXT) (string, bool) {
-	if firstTagText, ok := tags[0].TextByFrameId(frameId); ok {
-		for i := 1; i < len(tags); i++ {
+	if firstTagText, ok := tags[0].TextByFrameId(frameId); ok { // try to retrieve frame text from 1st tag
+		for i := 1; i < len(tags); i++ { // run on each subsequent tag
 			if otherTagText, hasFrame := tags[i].TextByFrameId(frameId); hasFrame {
 				if otherTagText != firstTagText {
-					return "", false
+					return "", false // frame exists in subsequent tag, but text is different from 1st tag
 				}
-			} else { // frame absent in subsequent tag
-				return "", false
+			} else {
+				return "", false // frame absent in subsequent tag
 			}
 		}
 		return firstTagText, true
-	} else { // frame absent in first tag
-		return "", false
+	} else {
+		return "", false // frame absent in first tag
 	}
 }

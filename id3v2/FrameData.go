@@ -142,7 +142,7 @@ func _FrameDataPictureParse(src []byte) (*FrameDataPicture, error) {
 	f := &FrameDataPicture{}
 
 	mimeParts := bytes.SplitN(src, []byte{0x00}, 2)
-	f.Mime = string(string(mimeParts[0])) // assume ISO-8859-1 mime
+	f.Mime = string(mimeParts[0]) // assume ISO-8859-1 mime
 	src = mimeParts[1]
 
 	f.Type = PICTYPE(src[0])

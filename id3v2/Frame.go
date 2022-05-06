@@ -90,8 +90,8 @@ func (f *Frame) Serialize() []byte {
 
 func (f *Frame) IsReplayGain() bool {
 	if f.name4 == "TXXX" {
-		if frameUsrTxt, ok := f.data.(*FrameDataUserText); ok {
-			return strings.HasPrefix(frameUsrTxt.Descr, "replaygain_")
+		if frameUserTxt, ok := f.data.(*FrameDataUserText); ok {
+			return strings.HasPrefix(frameUserTxt.Descr, "replaygain_")
 		}
 	}
 	return false

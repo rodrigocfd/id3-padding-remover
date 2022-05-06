@@ -57,7 +57,7 @@ func (me *DlgMain) eventsMenuFrames() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_REM, func(_ wm.Command) {
-		selMp3 := me.lstMp3s.Columns().SelectedTexts(0)[0] // single selected MP3 file
+		selMp3 := me.lstMp3s.Columns().Get(0).SelectedTexts()[0] // single selected MP3 file
 		tag := me.cachedTags[selMp3]
 		idxsToDelete := me.lstFrames.Items().SelectedIndexes()
 

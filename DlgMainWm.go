@@ -21,12 +21,12 @@ func (me *DlgMain) eventsWm() {
 
 		// MP3 files list view creation.
 		me.lstMp3s.Columns().Add([]int{1, 60}, "File", "Padding")
-		me.lstMp3s.Columns().SetWidthToFill(0)
+		me.lstMp3s.Columns().Get(0).SetWidthToFill()
 
 		// Tag values list view creation.
 		me.lstFrames.SetExtendedStyle(true, co.LVS_EX_GRIDLINES)
 		me.lstFrames.Columns().Add([]int{50, 1}, "Field", "Value")
-		me.lstFrames.Columns().SetWidthToFill(1)
+		me.lstFrames.Columns().Get(1).SetWidthToFill()
 		me.lstFrames.Hwnd().EnableWindow(false)
 
 		// Status bar parts.
@@ -37,8 +37,8 @@ func (me *DlgMain) eventsWm() {
 	})
 
 	me.wnd.On().WmSize(func(_ wm.Size) {
-		me.lstMp3s.Columns().SetWidthToFill(0)
-		me.lstFrames.Columns().SetWidthToFill(1)
+		me.lstMp3s.Columns().Get(0).SetWidthToFill()
+		me.lstFrames.Columns().Get(1).SetWidthToFill()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(int(co.ID_CANCEL), func(_ wm.Command) {
@@ -86,7 +86,7 @@ func (me *DlgMain) eventsWm() {
 		// Tags have been modified, but not saved to disk yet.
 		// Here we save them and reload the cache.
 
-		selMp3s := me.lstMp3s.Columns().SelectedTexts(0)
+		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
