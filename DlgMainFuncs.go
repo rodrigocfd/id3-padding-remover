@@ -55,6 +55,7 @@ func (me *DlgMain) addMp3sToList(mp3s []string) {
 
 	me.lstMp3s.SetRedraw(true)
 	me.lstMp3s.Columns().Get(0).SetWidthToFill()
+	me.displayFramesOfSelectedFiles()
 }
 
 func (me *DlgMain) displayFramesOfSelectedFiles() {

@@ -90,7 +90,6 @@ func (me *DlgMain) eventsWm() {
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
-			me.displayFramesOfSelectedFiles()
 			prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
