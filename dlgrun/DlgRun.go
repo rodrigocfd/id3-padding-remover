@@ -1,8 +1,6 @@
 package dlgrun
 
 import (
-	"id3fit/prompt"
-
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
@@ -69,7 +67,7 @@ func (me *DlgRun) events() {
 						text += err.Error() + "\n\n"
 					}
 					text = text[:len(text)-2]
-					prompt.Error(me.wnd, "Error", win.StrOptSome("Errors found"), text)
+					ui.Prompt.Error(me.wnd, "Error", win.StrOptSome("Errors found"), text)
 				}
 				me.taskbar.SetProgressState(hRootOwner, shellco.TBPF_NOPROGRESS)
 				me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)

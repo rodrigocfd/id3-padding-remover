@@ -3,7 +3,6 @@ package dlgfields
 import (
 	"fmt"
 	"id3fit/id3v2"
-	"id3fit/prompt"
 	"id3fit/timecount"
 	"strings"
 
@@ -17,7 +16,7 @@ func (me *DlgFields) eventsWm() {
 
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
 		if genresTxt := win.Path.ExePath() + "\\id3fit-genres.txt"; !win.Path.Exists(genresTxt) {
-			prompt.Error(me.wnd, "No genres file", win.StrOptNone(),
+			ui.Prompt.Error(me.wnd, "No genres file", win.StrOptNone(),
 				fmt.Sprintf("Genres file not found:\n\n%s", genresTxt))
 		} else {
 			genres := func() []string {

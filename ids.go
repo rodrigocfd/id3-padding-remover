@@ -29,5 +29,5 @@ const (
 const (
 	MNU_FRAMES = iota + 300
 	MNU_FRAMES_MOVEUP
-	MNU_FRAMES_REM
+	MNU_FRAMES_DEL
 )
