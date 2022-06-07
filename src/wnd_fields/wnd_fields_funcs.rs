@@ -9,7 +9,7 @@ use super::{ids, Field, WndFields};
 
 impl WndFields {
 	pub fn new(
-		parent: &impl Parent,
+		parent: &impl GuiParent,
 		tags_cache: Arc<Mutex<HashMap<String, id3v2::Tag>>>,
 		pos: w::POINT,
 		resize_behavior: (gui::Horz, gui::Vert)) -> Self
@@ -56,11 +56,10 @@ impl WndFields {
 		new_self
 	}
 
-	pub fn on_save<F>(&self, callback: F) -> w::ErrResult<()>
+	pub fn on_save<F>(&self, callback: F)
 		where F: Fn() -> w::ErrResult<()> + 'static,
 	{
-		*self.save_cb.try_borrow_mut()? = Some(Box::new(callback)); // store callback
-		Ok(())
+		*self.save_cb.try_borrow_mut().unwrap() = Some(Box::new(callback)); // store callback
 	}
 
 	pub fn feed(&self, sel_mp3s: Vec<String>) -> w::ErrResult<()> {
@@ -83,7 +82,7 @@ impl WndFields {
 
 			field.chk.hwnd().EnableWindow(!sel_mp3s.is_empty()); // if zero MP3s selected, disable checkboxes
 			field.chk.set_check_state(chk_state);
-			field.txt.set_text(text)?;
+			field.txt.set_text(text);
 			field.txt.hwnd().EnableWindow(chk_state == gui::CheckState::Checked);
 		}
 

@@ -17,5 +17,6 @@ fn main() {
 }
 
 fn run_app() -> w::ErrResult<i32> {
-	wnd_main::WndMain::new()?.run()
+	wnd_main::WndMain::new()?
+		.run().map_err(|err| err.into())
 }

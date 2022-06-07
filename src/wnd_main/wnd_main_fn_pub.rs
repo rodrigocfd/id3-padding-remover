@@ -7,14 +7,14 @@ use crate::wnd_fields::WndFields;
 use super::{ids, WndMain};
 
 impl WndMain {
-	pub fn new() -> w::ErrResult<Self> {
+	pub fn new() -> Self {
 		use gui::{Horz as H, ListView, Vert as V, WindowMain};
 
 		let mnu_mp3s = w::HINSTANCE::NULL
-			.LoadMenu(w::IdStr::Id(ids::MNU_MP3S))?
+			.LoadMenu(w::IdStr::Id(ids::MNU_MP3S)).unwrap()
 			.GetSubMenu(0).unwrap();
 		let mnu_frames = w::HINSTANCE::NULL
-			.LoadMenu(w::IdStr::Id(ids::MNU_FRAMES))?
+			.LoadMenu(w::IdStr::Id(ids::MNU_FRAMES)).unwrap()
 			.GetSubMenu(0).unwrap();
 
 		let tags_cache = Arc::new(Mutex::new(HashMap::default()));
@@ -27,12 +27,12 @@ impl WndMain {
 		let new_self = Self {
 			wnd, lst_mp3s, wnd_fields, lst_frames,
 			tags_cache,
-			app_name: util::app_name_from_res()?,
+			app_name: util::app_name_from_res(),
 		};
 		new_self._events();
 		new_self._menu_mp3s_events();
 		new_self._menu_frames_events();
-		Ok(new_self)
+		new_self
 	}
 
 	pub fn run(&self) -> gui::RunResult<i32> {

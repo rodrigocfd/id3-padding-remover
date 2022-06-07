@@ -18,7 +18,7 @@ impl WndFields {
 					w::WString::parse_str(fin.as_slice())?.to_string()
 				};
 
-				cmb_genre.items().add(&genres_text.lines().collect::<Vec<_>>())?;
+				cmb_genre.items().add(&genres_text.lines().collect::<Vec<_>>());
 				Ok(true)
 			}
 		});
@@ -27,10 +27,10 @@ impl WndFields {
 			field.chk.on().bn_clicked({ // add event on each checkbox
 				let (self2, field) = (self.clone(), field.clone());
 				move || {
-					field.chk.focus()?;
+					field.chk.focus();
 					field.txt.hwnd().EnableWindow(field.chk.is_checked());
 					if field.chk.is_checked() {
-						field.txt.focus()?;
+						field.txt.focus();
 					}
 					self2._enable_buttons_if_at_least_one_checked();
 					Ok(())
@@ -57,7 +57,7 @@ impl WndFields {
 					if !field.chk.is_checked() { continue; } // skip unchecked textboxes
 
 					let sel_mp3s = self2.sel_mp3s.try_borrow_mut()?;
-					let new_text = field.txt.text()?.trim().to_owned(); // text typed by the user
+					let new_text = field.txt.text().trim().to_owned(); // text typed by the user
 
 					for (_, sel_tag) in self2.tags_cache.lock().unwrap()
 						.iter_mut()

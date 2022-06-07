@@ -4,7 +4,7 @@ use winsafe::{prelude::*, self as w, gui, msg};
 use super::{ids, WndProgress};
 
 impl WndProgress {
-	pub fn new<F>(parent: &impl Parent, job: F) -> Self
+	pub fn new<F>(parent: &impl GuiParent, job: F) -> Self
 		where F: Fn() -> w::ErrResult<()> + Send + 'static,
 	{
 		use gui::{Horz, Vert};
@@ -18,9 +18,8 @@ impl WndProgress {
 		new_self
 	}
 
-	pub fn show(&self) -> w::ErrResult<i32> {
+	pub fn show(&self) -> i32 {
 		self.wnd.show_modal()
-			.map_err(|e| e.into())
 	}
 
 	fn _events(&self) {

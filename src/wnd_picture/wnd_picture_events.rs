@@ -15,7 +15,7 @@ impl WndPicture {
 				if let Some(image) = self2.image.try_borrow()?.as_ref() {
 					let rc_cli = self2.wnd.hwnd().GetClientRect()?;
 
-					let ipic = w::idl::IPicture::from_slice(&image, true)?;
+					let ipic = w::IPicture::from_slice(&image, true)?;
 					let sz_pic = ipic.size_px(Some(hdc))?;
 
 					let hdc_mem = hdc.CreateCompatibleDC()?;

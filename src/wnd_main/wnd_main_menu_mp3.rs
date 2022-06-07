@@ -8,17 +8,17 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_OPEN, {
 			let self2 = self.clone();
 			move || {
-				let fileo = w::CoCreateInstance::<w::shell::IFileOpenDialog>(
-					&w::shell::clsid::FileOpenDialog,
+				let fileo = w::CoCreateInstance::<w::IFileOpenDialog>(
+					&co::CLSID::FileOpenDialog,
 					None,
 					co::CLSCTX::INPROC_SERVER,
 				)?;
 
 				fileo.SetOptions(
 					fileo.GetOptions()?
-						| w::shell::co::FOS::FORCEFILESYSTEM
-						| w::shell::co::FOS::FILEMUSTEXIST
-						| w::shell::co::FOS::ALLOWMULTISELECT,
+						| co::FOS::FORCEFILESYSTEM
+						| co::FOS::FILEMUSTEXIST
+						| co::FOS::ALLOWMULTISELECT,
 				)?;
 
 				fileo.SetFileTypes(&[
@@ -37,7 +37,7 @@ impl WndMain {
 						&fileo.GetResults()?.iter()?
 							.map(|shi|
 								shi.and_then(|shi|
-									shi.GetDisplayName(w::shell::co::SIGDN::FILESYSPATH),
+									shi.GetDisplayName(co::SIGDN::FILESYSPATH),
 								),
 							)
 							.collect::<w::HrResult<Vec<_>>>()?,
@@ -52,8 +52,10 @@ impl WndMain {
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_DELETE, {
 			let lst_files = self.lst_mp3s.clone();
-			move || lst_files.items().delete_selected()
-				.map_err(|e| e.into())
+			move || {
+				lst_files.items().delete_selected();
+				Ok(())
+			}
 		});
 
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MP3S_REM_PAD, {

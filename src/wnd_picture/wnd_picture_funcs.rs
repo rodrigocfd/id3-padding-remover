@@ -5,7 +5,7 @@ use winsafe::{prelude::*, self as w, co, gui};
 use super::WndPicture;
 
 impl WndPicture {
-	pub fn new(parent: &impl Parent,
+	pub fn new(parent: &impl GuiParent,
 		position: w::POINT, size: w::SIZE,
 		resize_behavior: (gui::Horz, gui::Vert)) -> Self
 	{

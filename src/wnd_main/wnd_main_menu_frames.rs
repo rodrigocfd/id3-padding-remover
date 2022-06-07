@@ -25,7 +25,7 @@ impl WndMain {
 					{
 						if sel_item.text(0).is_empty() { continue; } // discard auxiliar lines
 
-						let frame_index = sel_item.lparam()?; // sequential frame index within tag
+						let frame_index = sel_item.lparam(); // sequential frame index within tag
 						tag.frames_mut().remove(frame_index as _);
 						count += 1;
 					}
@@ -60,7 +60,7 @@ impl WndMain {
 				let sel_mp3 = self2.lst_mp3s.items().iter_selected()
 					.next().unwrap().text(0); // assume there's only 1 selected MP3
 				let frame_index = self2.lst_frames.items().iter_selected()
-					.next().unwrap().lparam()? as usize; // assume there's only 1 selected (and valid) frame
+					.next().unwrap().lparam() as usize; // assume there's only 1 selected (and valid) frame
 
 				{
 					let mut tags_cache = self2.tags_cache.lock().unwrap();

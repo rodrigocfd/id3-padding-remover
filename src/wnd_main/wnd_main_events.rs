@@ -4,28 +4,28 @@ use crate::util;
 use super::{ids, PreDelete, TagOp, WndMain};
 
 impl WndMain {
-	pub(super) fn _events(&self) -> w::ErrResult<()> {
+	pub(super) fn _events(&self) {
 		self.wnd.on().wm_init_dialog({
 			let self2 = self.clone();
 			move |_| {
 				// Since it doesn't have LVS_SHAREIMAGELISTS style, the image list
 				// will be automatically deleted by the list view.
 				let himgl = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
-				himgl.AddIconFromShell(&["mp3"])?;
+				himgl.add_icon_from_shell(&["mp3"])?;
 				self2.lst_mp3s.set_image_list(co::LVSIL::SMALL, himgl);
 
 				self2.lst_mp3s.columns().add(&[
 					("File", 0),
 					("Padding", 60),
-				])?;
-				self2.lst_mp3s.columns().set_width_to_fill(0)?;
+				]);
+				self2.lst_mp3s.columns().set_width_to_fill(0);
 
 				self2.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
 				self2.lst_frames.columns().add(&[
 					("Frame", 65),
 					("Value", 0),
-				])?;
-				self2.lst_frames.columns().set_width_to_fill(1)?;
+				]);
+				self2.lst_frames.columns().set_width_to_fill(1);
 				self2.lst_frames.hwnd().EnableWindow(false);
 
 				self2._titlebar_count(PreDelete::No)?;
@@ -37,8 +37,8 @@ impl WndMain {
 			let self2 = self.clone();
 			move |p| {
 				if p.request != co::SIZE_R::MINIMIZED {
-					self2.lst_mp3s.columns().set_width_to_fill(0)?;
-					self2.lst_frames.columns().set_width_to_fill(1)?;
+					self2.lst_mp3s.columns().set_width_to_fill(0);
+					self2.lst_frames.columns().set_width_to_fill(1);
 				}
 				Ok(())
 			}
@@ -167,28 +167,29 @@ impl WndMain {
 			move || {
 				let clock = util::Timer::start()?;
 
-				if let Err(e) = self2._modal_tag_op( // WndFields itself won't save the tags
+				match self2._modal_tag_op( // WndFields itself won't save the tags
 					TagOp::SaveAndLoad,
 					&self2.lst_mp3s.items()
 						.iter_selected()
 						.map(|sel_item| sel_item.text(0))
 						.collect::<Vec<_>>(),
 				) {
-					util::prompt::err(self2.wnd.hwnd(),
-						"Error", Some("Tag updating failed"), &e.to_string())?;
-				} else {
-					self2._display_sel_tags_frames()?;
-					util::prompt::info(self2.wnd.hwnd(),
-						"Operation successful", Some("Success"),
-						&format!("Tag updated in {} file(s) in {:.2} ms.",
-							self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+					Err(e) => {
+						util::prompt::err(self2.wnd.hwnd(),
+							"Error", Some("Tag updating failed"), &e.to_string())?;
+					},
+					Ok(_) => {
+						self2._display_sel_tags_frames()?;
+						util::prompt::info(self2.wnd.hwnd(),
+							"Operation successful", Some("Success"),
+							&format!("Tag updated in {} file(s) in {:.2} ms.",
+								self2.lst_mp3s.items().selected_count(), clock.now_ms()?))?;
+					},
 				}
 
-				self2.lst_mp3s.focus()?;
+				self2.lst_mp3s.focus();
 				Ok(())
 			}
-		})?;
-
-		Ok(())
+		});
 	}
 }

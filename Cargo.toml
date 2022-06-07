@@ -11,7 +11,7 @@ codegen-units = 1
 
 [dependencies]
 defer-lite = { version = "1.0.0" }
-winsafe = { path = "../winsafe", features = ["idl", "shell"] }
+winsafe = { path = "../winsafe", features = ["gui", "oleaut", "version"] }
 
 # https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes
 # RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-pc-windows-msvc

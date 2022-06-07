@@ -23,68 +23,69 @@ impl WndMain {
 		tag_op: TagOp,
 		mp3_names: &[impl AsRef<str>]) -> Result<(), Mp3Error>
 	{
-		let process_err: Arc<Mutex<Option<Mp3Error>>>
-			= Arc::new(Mutex::new(None)); // will receive any error from the processing closure
+		// let process_err: Arc<Mutex<Option<Mp3Error>>>
+		// 	= Arc::new(Mutex::new(None)); // will receive any error from the processing closure
 
-		WndProgress::new(&self.wnd, { // show the progress modal window
-			let process_err = process_err.clone();
-			let tags_cache = self.tags_cache.clone();
-			let arc_mp3_names = Arc::new(
-				mp3_names.iter()
-					.map(|mp3_name| mp3_name.as_ref().to_owned())
-					.collect::<Vec<_>>(),
-			);
+		// WndProgress::new(&self.wnd, { // show the progress modal window
+		// 	let process_err = process_err.clone();
+		// 	let tags_cache = self.tags_cache.clone();
+		// 	let arc_mp3_names = Arc::new(
+		// 		mp3_names.iter()
+		// 			.map(|mp3_name| mp3_name.as_ref().to_owned())
+		// 			.collect::<Vec<_>>(),
+		// 	);
 
-			move || { // this closure will run in a spawned thread
-				for mp3_name in arc_mp3_names.iter() {
-					if tag_op == TagOp::SaveAndLoad {
-						let tags_cache = tags_cache.lock().unwrap();
-						let cached_tag = tags_cache.get(mp3_name).unwrap();
-						if let Err(e) = cached_tag.write(mp3_name) {
-							*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
-							break; // nothing else will be done
-						}
-					}
+		// 	move || { // this closure will run in a spawned thread
+		// 		for mp3_name in arc_mp3_names.iter() {
+		// 			if tag_op == TagOp::SaveAndLoad {
+		// 				let tags_cache = tags_cache.lock().unwrap();
+		// 				let cached_tag = tags_cache.get(mp3_name).unwrap();
+		// 				if let Err(e) = cached_tag.write(mp3_name) {
+		// 					*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
+		// 					break; // nothing else will be done
+		// 				}
+		// 			}
 
-					let loaded_tag = match id3v2::Tag::read(mp3_name) {
-						Ok(tag) => tag,
-						Err(e) => {
-							*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
-							break; // nothing else will be done
-						},
-					};
-					tags_cache.lock().unwrap().insert(mp3_name.clone(), loaded_tag); // store new loaded tag
-				}
-				Ok(())
-			}
-		}).show();
+		// 			let loaded_tag = match id3v2::Tag::read(mp3_name) {
+		// 				Ok(tag) => tag,
+		// 				Err(e) => {
+		// 					*process_err.lock().unwrap() = Some(Mp3Error::new(mp3_name, e)); // store error
+		// 					break; // nothing else will be done
+		// 				},
+		// 			};
+		// 			tags_cache.lock().unwrap().insert(mp3_name.clone(), loaded_tag); // store new loaded tag
+		// 		}
+		// 		Ok(())
+		// 	}
+		// }).show()
+		// 	.map(|_| ())?;
 
-		if let Some(e) = process_err.lock().unwrap().take() { // an error happened during processing?
-			return Err(e);
-		}
+		// if let Some(e) = process_err.lock().unwrap().take() { // an error happened during processing?
+		// 	return Err(e);
+		// }
 
-		self.lst_mp3s.set_redraw(false);
+		// self.lst_mp3s.set_redraw(false);
 
-		for mp3_name in mp3_names.iter().map(|m| m.as_ref()) { // add files + paddings on the listview
-			let padding_txt = {
-				let tags_cache = self.tags_cache.lock().unwrap();
-				let tag = tags_cache.get(mp3_name).unwrap();
-				if tag.is_empty() {
-					"N/A".to_owned() // if the file has no tag, there's no padding
-				} else {
-					tag.padding().to_string()
-				}
-			};
+		// for mp3_name in mp3_names.iter().map(|m| m.as_ref()) { // add files + paddings on the listview
+		// 	let padding_txt = {
+		// 		let tags_cache = self.tags_cache.lock().unwrap();
+		// 		let tag = tags_cache.get(mp3_name).unwrap();
+		// 		if tag.is_empty() {
+		// 			"N/A".to_owned() // if the file has no tag, there's no padding
+		// 		} else {
+		// 			tag.padding().to_string()
+		// 		}
+		// 	};
 
-			match self.lst_mp3s.items().find(mp3_name) { // is the MP3 already in the list?
-				Some(item) => { item.set_text(1, &padding_txt); },
-				None => { self.lst_mp3s.items().add(&[mp3_name, &padding_txt], Some(0)); }
-			}
-		}
+		// 	match self.lst_mp3s.items().find(mp3_name) {
+		// 		Some(item) => { item.set_text(1, &padding_txt); },
+		// 		None => { self.lst_mp3s.items().add(&[mp3_name, &padding_txt], Some(0)); },
+		// 	}
+		// }
 
-		self.lst_mp3s.set_redraw(true);
-		self.lst_mp3s.columns().set_width_to_fill(0);
-		self._titlebar_count(PreDelete::No)?;
+		// self.lst_mp3s.set_redraw(true);
+		// self.lst_mp3s.columns().set_width_to_fill(0);
+		// self._titlebar_count(PreDelete::No)?;
 		Ok(())
 	}
 
