@@ -71,7 +71,7 @@ func (me *DlgMain) eventsWm() {
 		}
 
 		if len(droppedMp3s) == 0 { // no MP3 files have been drag n' dropped
-			ui.Prompt.Error(me.wnd, "No files added", win.StrOptSome("No files"),
+			ui.TaskDlg.Error(me.wnd, "No files added", win.StrOptSome("No files"),
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
 			if me.modalTagOp(droppedMp3s, TAG_OP_LOAD) {
@@ -90,7 +90,7 @@ func (me *DlgMain) eventsWm() {
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()

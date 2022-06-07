@@ -48,7 +48,7 @@ func (me *DlgMain) eventsMenuFrames() {
 			}
 			me.lstFrames.Focus()
 
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d frame(s) moved up in %.2f ms.",
 					len(idxsToMove), t0.ElapsedMs()))
 		}
@@ -61,7 +61,7 @@ func (me *DlgMain) eventsMenuFrames() {
 		tag := me.cachedTags[selMp3]
 		idxsToDelete := me.lstFrames.Items().SelectedIndexes()
 
-		proceed := ui.Prompt.OkCancelEx(me.wnd, "Delete frames", win.StrOptNone(),
+		proceed := ui.TaskDlg.OkCancelEx(me.wnd, "Delete frames", win.StrOptNone(),
 			fmt.Sprintf("Are you sure you want to delete %d frame(s)?", len(idxsToDelete)),
 			win.StrOptSome("Delete"), win.StrOptNone())
 		if !proceed {
@@ -80,7 +80,7 @@ func (me *DlgMain) eventsMenuFrames() {
 
 		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
 			me.displayFramesOfSelectedFiles()
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",
 					len(idxsToDelete), t0.ElapsedMs()))
 			me.lstMp3s.Focus()

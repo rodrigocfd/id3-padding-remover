@@ -72,7 +72,7 @@ func (me *DlgMain) eventsMenuFiles() {
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
 
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("Padding removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -94,7 +94,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -116,7 +116,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -128,7 +128,7 @@ func (me *DlgMain) eventsMenuFiles() {
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_DEL_TAG, func(_ wm.Command) {
 		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
-		proceed := ui.Prompt.OkCancelEx(me.wnd, "Delete tag", win.StrOptNone(),
+		proceed := ui.TaskDlg.OkCancelEx(me.wnd, "Delete tag", win.StrOptNone(),
 			fmt.Sprintf("Permanently delete the tag from %d file(s)?", len(selMp3s)),
 			win.StrOptSome("Delete"), win.StrOptNone())
 		if !proceed {
@@ -146,7 +146,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
 			me.addMp3sToList(selMp3s)
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
 					len(selMp3s), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -178,19 +178,19 @@ func (me *DlgMain) eventsMenuFiles() {
 			newPath := fmt.Sprintf("%s\\%s",
 				newFolder, win.Path.GetFileName(selMp3))
 			if win.Path.Exists(newPath) {
-				ui.Prompt.Error(me.wnd, "Existing file", win.StrOptNone(),
+				ui.TaskDlg.Error(me.wnd, "Existing file", win.StrOptNone(),
 					fmt.Sprintf("File already exists:\n%s", newPath))
 				return
 			}
 			if err := win.CopyFile(selMp3, newPath, false); err != nil {
-				ui.Prompt.Error(me.wnd, "Copy error", win.StrOptNone(), err.Error())
+				ui.TaskDlg.Error(me.wnd, "Copy error", win.StrOptNone(), err.Error())
 				return
 			}
 			newCopiedFiles = append(newCopiedFiles, newPath)
 		}
 
 		if len(newCopiedFiles) == 0 {
-			ui.Prompt.Info(me.wnd, "No copies", win.StrOptNone(), "No files have been copied.")
+			ui.TaskDlg.Info(me.wnd, "No copies", win.StrOptNone(), "No files have been copied.")
 			return
 		}
 
@@ -203,7 +203,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 		if me.modalTagOp(newCopiedFiles, TAG_OP_LOAD) {
 			me.addMp3sToList(newCopiedFiles) // load the files that have been copied to the new folder
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) reloaded in %.2f ms.",
 					len(newCopiedFiles), t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -215,9 +215,9 @@ func (me *DlgMain) eventsMenuFiles() {
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME, func(_ wm.Command) {
 		t0 := timecount.New()
 		if count, err := me.renameSelectedFiles(false); err != nil {
-			ui.Prompt.Error(me.wnd, "Renaming error", win.StrOptNone(), "Error: "+err.Error())
+			ui.TaskDlg.Error(me.wnd, "Renaming error", win.StrOptNone(), "Error: "+err.Error())
 		} else {
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -229,9 +229,9 @@ func (me *DlgMain) eventsMenuFiles() {
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_RENAME_PREFIX, func(_ wm.Command) {
 		t0 := timecount.New()
 		if count, err := me.renameSelectedFiles(true); err != nil {
-			ui.Prompt.Error(me.wnd, "Renaming error", win.StrOptNone(), "Error: "+err.Error())
+			ui.TaskDlg.Error(me.wnd, "Renaming error", win.StrOptNone(), "Error: "+err.Error())
 		} else {
-			ui.Prompt.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
+			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) renamed in %.2f ms.",
 					count, t0.ElapsedMs()))
 			me.lstMp3s.Focus()
@@ -251,7 +251,7 @@ func (me *DlgMain) eventsMenuFiles() {
 		var memStats runtime.MemStats
 		runtime.ReadMemStats(&memStats)
 
-		ui.Prompt.Info(me.wnd, "About",
+		ui.TaskDlg.Info(me.wnd, "About",
 			win.StrOptSome(fmt.Sprintf("%s %d.%d.%d", productName, vMaj, vMin, vPat)),
 			fmt.Sprintf("Rodrigo César de Freitas Dias (C) 2021\n"+
 				"rcesar@gmail.com\n\n"+

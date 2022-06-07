@@ -18,7 +18,7 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			ui.Prompt.Error(nil, "Panic", win.StrOptNone(),
+			ui.TaskDlg.Error(nil, "Panic", win.StrOptNone(),
 				fmt.Sprintf("PANIC @ %v\n\n%v\n\n%s",
 					time.Now(), r, string(debug.Stack())))
 		}
