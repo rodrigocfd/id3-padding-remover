@@ -52,36 +52,32 @@ const (
 	PICTYPE_PUBLISHER_LOGO       PICTYPE = 0x14
 )
 
-var _TABLE_PICTYPE_STR map[PICTYPE]string
+var _TABLE_PICTYPE_STR map[PICTYPE]string = map[PICTYPE]string{
+	PICTYPE_OTHER:                "Other",
+	PICTYPE_FILE_ICON_PNG_32:     "32x32 pixels 'file icon' (PNG only)",
+	PICTYPE_FILE_ICON_OTHER:      "Other file icon",
+	PICTYPE_COVER_FRONT:          "Cover (front)",
+	PICTYPE_COVER_BACK:           "Cover (back)",
+	PICTYPE_LEAFLET:              "Leaflet page",
+	PICTYPE_CD_LABEL_SIDE:        "Media (e.g. lable side of CD)",
+	PICTYPE_LEAD_ARTIST:          "Lead artist/lead performer/soloist",
+	PICTYPE_ARTIST:               "Artist/performer",
+	PICTYPE_CONDUCTOR:            "Conductor",
+	PICTYPE_BAND:                 "Band/Orchestra",
+	PICTYPE_COMPOSER:             "Composer",
+	PICTYPE_LYRICIST:             "Lyricist/text writer",
+	PICTYPE_REC_LOCATION:         "Recording Location",
+	PICTYPE_DURING_RECORDING:     "During recording",
+	PICTYPE_DURING_PERFORMANCE:   "During performance",
+	PICTYPE_MOVIE_CAPTURE:        "Movie/video screen capture",
+	PICTYPE_BRIGHT_COLOURED_FISH: "A bright coloured fish",
+	PICTYPE_ILLUSTRATION:         "Illustration",
+	PICTYPE_BAND_LOGO:            "Band/artist logotype",
+	PICTYPE_PUBLISHER_LOGO:       "Publisher/Studio logotype",
+}
 
 // Returns the descriptive name of the PICTYPE.
 func (p PICTYPE) String() string {
-	if _TABLE_PICTYPE_STR == nil { // create and populate the map only once
-		_TABLE_PICTYPE_STR = make(map[PICTYPE]string, 21)
-
-		_TABLE_PICTYPE_STR[PICTYPE_OTHER] = "Other"
-		_TABLE_PICTYPE_STR[PICTYPE_FILE_ICON_PNG_32] = "32x32 pixels 'file icon' (PNG only)"
-		_TABLE_PICTYPE_STR[PICTYPE_FILE_ICON_OTHER] = "Other file icon"
-		_TABLE_PICTYPE_STR[PICTYPE_COVER_FRONT] = "Cover (front)"
-		_TABLE_PICTYPE_STR[PICTYPE_COVER_BACK] = "Cover (back)"
-		_TABLE_PICTYPE_STR[PICTYPE_LEAFLET] = "Leaflet page"
-		_TABLE_PICTYPE_STR[PICTYPE_CD_LABEL_SIDE] = "Media (e.g. lable side of CD)"
-		_TABLE_PICTYPE_STR[PICTYPE_LEAD_ARTIST] = "Lead artist/lead performer/soloist"
-		_TABLE_PICTYPE_STR[PICTYPE_ARTIST] = "Artist/performer"
-		_TABLE_PICTYPE_STR[PICTYPE_CONDUCTOR] = "Conductor"
-		_TABLE_PICTYPE_STR[PICTYPE_BAND] = "Band/Orchestra"
-		_TABLE_PICTYPE_STR[PICTYPE_COMPOSER] = "Composer"
-		_TABLE_PICTYPE_STR[PICTYPE_LYRICIST] = "Lyricist/text writer"
-		_TABLE_PICTYPE_STR[PICTYPE_REC_LOCATION] = "Recording Location"
-		_TABLE_PICTYPE_STR[PICTYPE_DURING_RECORDING] = "During recording"
-		_TABLE_PICTYPE_STR[PICTYPE_DURING_PERFORMANCE] = "During performance"
-		_TABLE_PICTYPE_STR[PICTYPE_MOVIE_CAPTURE] = "Movie/video screen capture"
-		_TABLE_PICTYPE_STR[PICTYPE_BRIGHT_COLOURED_FISH] = "A bright coloured fish"
-		_TABLE_PICTYPE_STR[PICTYPE_ILLUSTRATION] = "Illustration"
-		_TABLE_PICTYPE_STR[PICTYPE_BAND_LOGO] = "Band/artist logotype"
-		_TABLE_PICTYPE_STR[PICTYPE_PUBLISHER_LOGO] = "Publisher/Studio logotype"
-	}
-
 	if descr, ok := _TABLE_PICTYPE_STR[p]; ok {
 		return descr
 	} else {
