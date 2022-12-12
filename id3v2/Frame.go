@@ -21,14 +21,14 @@ func (f *Frame) Flags() [2]byte    { return f.flags }
 func (f *Frame) Data() FrameData   { return f.data }
 
 // Constructor.
-func _FrameNewEmpty(name4 string) *Frame {
+func _NewFrameEmpty(name4 string) *Frame {
 	return &Frame{
 		name4: name4,
 	}
 }
 
 // Constructor.
-func _FrameParse(src []byte) (*Frame, error) {
+func _NewFrameParse(src []byte) (*Frame, error) {
 	// Parse the 10-byte frame header.
 	f := &Frame{
 		name4:        string(src[0:4]),
@@ -40,14 +40,14 @@ func _FrameParse(src []byte) (*Frame, error) {
 
 	// Parse the frame contents.
 	if f.name4 == "COMM" {
-		data, err := _FrameDataCommentParse(src)
+		data, err := _NewFrameDataComment(src)
 		if err != nil {
 			return nil, fmt.Errorf("parsing COMM: %w", err)
 		}
 		f.data = data
 
 	} else if f.name4 == "APIC" {
-		data, err := _FrameDataPictureParse(src)
+		data, err := _NewFrameDataPicture(src)
 		if err != nil {
 			return nil, fmt.Errorf("parsing APIC: %w", err)
 		}
@@ -71,7 +71,7 @@ func _FrameParse(src []byte) (*Frame, error) {
 		}
 
 	} else { // anything else is treated as raw binary
-		f.data = _FrameDataBinaryParse(src)
+		f.data = _NewFrameDataBinary(src)
 	}
 
 	return f, nil

@@ -26,30 +26,30 @@ func (me *Tag) IsEmpty() bool     { return len(me.frames) == 0 }
 
 // Constructor; creates a new tag with no frames.
 // If saved, will actually remove the tag from file.
-func TagNewEmpty() *Tag {
+func NewTagEmpty() *Tag {
 	return &Tag{}
 }
 
 // Constructor; parses the tag from an MP3 file.
-func TagParseFromFile(mp3Path string) (*Tag, error) {
+func NewTagParseFromFile(mp3Path string) (*Tag, error) {
 	fin, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
 	if err != nil {
 		return nil, err
 	}
 	defer fin.Close()
 
-	return TagParseFromBinary(fin.HotSlice())
+	return NewTagParseFromBinary(fin.HotSlice())
 }
 
 // Constructor; parses the tag from a binary blob.
-func TagParseFromBinary(src []byte) (*Tag, error) {
+func NewTagParseFromBinary(src []byte) (*Tag, error) {
 	declaredSize, mp3Offset, err := _TagParseHeader(src)
 	if err != nil {
 		return nil, err
 	}
 
 	if declaredSize == 0 && mp3Offset == 0 {
-		return TagNewEmpty(), nil // file has no tag
+		return NewTagEmpty(), nil // file has no tag
 	}
 
 	frames, padding, err := _TagParseFrames(src[10:declaredSize])
@@ -116,7 +116,7 @@ func _TagParseFrames(src []byte) (frames []*Frame, padding int, e error) {
 			break
 		}
 
-		newFrame, err := _FrameParse(src)
+		newFrame, err := _NewFrameParse(src)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -185,7 +185,7 @@ func (t *Tag) SerializeToFile(mp3Path string) error {
 		return fmt.Errorf("reading contents before serializing: %w", err)
 	}
 
-	currentTag, err := TagParseFromBinary(currentContents) // parse tag currently saved in the MP3 file
+	currentTag, err := NewTagParseFromBinary(currentContents) // parse tag currently saved in the MP3 file
 	if err != nil {
 		return fmt.Errorf("reading current tag: %w", err)
 	}
@@ -278,7 +278,7 @@ func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
 		}
 
 	} else { // frame does not exist yet
-		newFrame := _FrameNewEmpty(string(frameId)) // may contain any FrameData type
+		newFrame := _NewFrameEmpty(string(frameId)) // may contain any FrameData type
 		if frameId == FRAMETXT_COMMENT {
 			newFrame.data = &FrameDataComment{
 				Lang3: "eng",

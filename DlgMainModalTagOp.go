@@ -31,7 +31,7 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 			waitGroup.Add(1)
 			go func(mp3 string) { // spawn one goroutine per file
 				defer waitGroup.Done()
-				if tag, err := id3v2.TagParseFromFile(mp3); err != nil {
+				if tag, err := id3v2.NewTagParseFromFile(mp3); err != nil {
 					mutex.Lock()
 					parsingErrors = append(parsingErrors,
 						fmt.Errorf("parsing \"%s\" failed: %w", mp3, err))

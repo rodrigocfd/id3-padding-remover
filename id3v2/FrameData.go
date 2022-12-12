@@ -55,7 +55,8 @@ type FrameDataBinary struct {
 
 func (*FrameDataBinary) implFrameData() {}
 
-func _FrameDataBinaryParse(src []byte) *FrameDataBinary {
+// Constructor.
+func _NewFrameDataBinary(src []byte) *FrameDataBinary {
 	f := &FrameDataBinary{
 		Data: make([]byte, len(src)),
 	}
@@ -77,7 +78,8 @@ type FrameDataComment struct {
 
 func (*FrameDataComment) implFrameData() {}
 
-func _FrameDataCommentParse(src []byte) (*FrameDataComment, error) {
+// Constructor.
+func _NewFrameDataComment(src []byte) (*FrameDataComment, error) {
 	encodingByte := src[0]
 	if encodingByte != 0x00 && encodingByte != 0x01 {
 		return nil, fmt.Errorf("unknown encoding: %d", encodingByte)
@@ -131,7 +133,8 @@ type FrameDataPicture struct {
 
 func (*FrameDataPicture) implFrameData() {}
 
-func _FrameDataPictureParse(src []byte) (*FrameDataPicture, error) {
+// Constructor.
+func _NewFrameDataPicture(src []byte) (*FrameDataPicture, error) {
 	encodingByte := src[0]
 	if encodingByte != 0x00 && encodingByte != 0x01 {
 		return nil, fmt.Errorf("unknown encoding: %d", encodingByte)
