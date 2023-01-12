@@ -5,6 +5,7 @@ import (
 	"id3fit/id3v2"
 	"id3fit/timecount"
 	"runtime"
+	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/ui/wm"
@@ -255,12 +256,13 @@ func (me *DlgMain) eventsMenuFiles() {
 			win.StrOptSome(fmt.Sprintf("%s %d.%d.%d", productName, vMaj, vMin, vPat)),
 			fmt.Sprintf("Rodrigo César de Freitas Dias (C) 2021\n"+
 				"rcesar@gmail.com\n\n"+
-				"This application was written in Go with Windigo library.\n\n"+
+				"This application was written in Go %s with Windigo library.\n\n"+
 				"Objects mem: %s\n"+
 				"Reserved sys: %s\n"+
 				"Idle spans: %s\n"+
 				"GC cycles: %d\n"+
 				"Next GC: %s",
+				strings.TrimLeft(runtime.Version(), "go"),
 				win.Str.FmtBytes(memStats.HeapAlloc),
 				win.Str.FmtBytes(memStats.HeapSys),
 				win.Str.FmtBytes(memStats.HeapIdle),
