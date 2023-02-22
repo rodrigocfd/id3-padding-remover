@@ -243,8 +243,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 	me.wnd.On().WmCommandAccelMenu(MNU_MP3_ABOUT, func(_ wm.Command) {
 		resNfo, _ := win.ResourceInfoLoad(win.HINSTANCE(0).GetModuleFileName())
-		verNfo, _ := resNfo.FixedFileInfo()
-		vMaj, vMin, vPat, _ := verNfo.ProductVersion()
+		vMaj, vMin, vPat, _ := resNfo.ProductVersion()
 
 		blocks := resNfo.Blocks()
 		productName, _ := blocks[0].ProductName()
