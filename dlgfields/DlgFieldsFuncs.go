@@ -7,10 +7,13 @@ import (
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
+// Stores the callback to be called when the user clicks the Save button.
+// This is called after the tag slice is updated.
 func (me *DlgFields) OnSave(cb func(t0 timecount.TimeCount)) {
 	me.onSaveCb = cb
 }
 
+// Puts the contents of the multiple tags into the fields.
 func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 	for _, field := range me.fields {
 		field.Chk.Hwnd().EnableWindow(len(tags) > 0) // if zero MP3s selected, disable checkboxes
@@ -36,7 +39,7 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 		}
 	}
 
-	me.tagsLoaded = tags
+	me.tagsLoaded = tags // keep the tags slice, will be written when user clicks Save
 	me.enableButtonsIfAtLeastOneChecked()
 }
 

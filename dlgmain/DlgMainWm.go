@@ -48,9 +48,9 @@ func (me *DlgMain) eventsWm() {
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		switch p.Hmenu() {
 		case me.lstMp3s.ContextMenu():
-			me.initMenuPopupFiles(p)
+			me.prepareContextMenuFiles(p) // from the files listview
 		case me.lstFrames.ContextMenu():
-			me.initMenuPopupFrames(p)
+			me.prepareContextMenuFrames(p) // from the frames listview
 		}
 	})
 
@@ -74,7 +74,7 @@ func (me *DlgMain) eventsWm() {
 			ui.TaskDlg.Error(me.wnd, "No files added", win.StrOptSome("No files"),
 				fmt.Sprintf("%d items dropped, no MP3 found.", len(droppedFiles)))
 		} else {
-			if me.modalTagOp(droppedMp3s, TAG_OP_LOAD) {
+			if me.modalTagOp(TAG_OP_LOAD, droppedMp3s...) {
 				me.addMp3sToList(droppedMp3s)
 			}
 		}
@@ -88,7 +88,7 @@ func (me *DlgMain) eventsWm() {
 
 		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
-		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3s...) {
 			me.addMp3sToList(selMp3s)
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) saved in %.2f ms.",

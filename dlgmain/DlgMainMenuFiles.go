@@ -16,9 +16,9 @@ import (
 	"github.com/rodrigocfd/windigo/win/com/shell/shellco"
 )
 
-func (me *DlgMain) initMenuPopupFiles(p wm.InitMenuPopup) {
+func (me *DlgMain) prepareContextMenuFiles(p wm.InitMenuPopup) {
 	atLeastOneSel := me.lstMp3s.Items().SelectedCount() > 0
-	cmdIds := []int{MNU_MP3_DELETE,
+	cmdIds := []int{MNU_MP3_DELETE, // these menu entries are enabled if at least 1 file is selected
 		MNU_MP3_REM_PAD, MNU_MP3_REM_RG, MNU_MP3_REM_RG_PIC, MNU_MP3_DEL_TAG,
 		MNU_MP3_COPY_TO_FOLDER, MNU_MP3_RENAME, MNU_MP3_RENAME_PREFIX}
 	for _, cmdId := range cmdIds {
@@ -50,7 +50,7 @@ func (me *DlgMain) eventsMenuFiles() {
 
 		if fod.Show(me.wnd.Hwnd()) {
 			mp3s := fod.ListResultDisplayNames(shellco.SIGDN_FILESYSPATH)
-			if me.modalTagOp(mp3s, TAG_OP_LOAD) {
+			if me.modalTagOp(TAG_OP_LOAD, mp3s...) {
 				me.addMp3sToList(mp3s)
 			}
 		}
@@ -70,7 +70,7 @@ func (me *DlgMain) eventsMenuFiles() {
 		selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
 
 		// Simply saving will remove the padding.
-		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3s...) {
 			me.addMp3sToList(selMp3s)
 
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
@@ -93,7 +93,7 @@ func (me *DlgMain) eventsMenuFiles() {
 			})
 		}
 
-		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3s...) {
 			me.addMp3sToList(selMp3s)
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("ReplayGain removed from %d file(s) in %.2f ms.",
@@ -115,7 +115,7 @@ func (me *DlgMain) eventsMenuFiles() {
 			})
 		}
 
-		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3s...) {
 			me.addMp3sToList(selMp3s)
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("ReplayGain and album art removed from %d file(s) in %.2f ms.",
@@ -145,7 +145,7 @@ func (me *DlgMain) eventsMenuFiles() {
 			})
 		}
 
-		if me.modalTagOp(selMp3s, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3s...) {
 			me.addMp3sToList(selMp3s)
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("Tag deleted from %d file(s) in %.2f ms.",
@@ -202,7 +202,7 @@ func (me *DlgMain) eventsMenuFiles() {
 		}
 		me.lstMp3s.SetRedraw(true)
 
-		if me.modalTagOp(newCopiedFiles, TAG_OP_LOAD) {
+		if me.modalTagOp(TAG_OP_LOAD, newCopiedFiles...) {
 			me.addMp3sToList(newCopiedFiles) // load the files that have been copied to the new folder
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d file(s) reloaded in %.2f ms.",

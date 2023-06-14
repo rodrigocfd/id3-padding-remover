@@ -10,7 +10,7 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *DlgMain) initMenuPopupFrames(p wm.InitMenuPopup) {
+func (me *DlgMain) prepareContextMenuFrames(p wm.InitMenuPopup) {
 	atLeastOneSel := me.lstFrames.Items().SelectedCount() > 0
 	firstIsSel := me.lstFrames.Items().Get(0).IsSelected()
 
@@ -41,7 +41,7 @@ func (me *DlgMain) eventsMenuFrames() {
 			tag.SwapFrames(idxToMove, idxToMove-1)
 		}
 
-		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3) {
 			me.displayFramesOfSelectedFiles()
 			for _, idxToMove := range idxsToMove { // restore the selected items
 				me.lstFrames.Items().Get(idxToMove - 1).Select(true)
@@ -78,7 +78,7 @@ func (me *DlgMain) eventsMenuFrames() {
 			return false
 		})
 
-		if me.modalTagOp([]string{selMp3}, TAG_OP_SAVE_AND_RELOAD) {
+		if me.modalTagOp(TAG_OP_SAVE_AND_RELOAD, selMp3) {
 			me.displayFramesOfSelectedFiles()
 			ui.TaskDlg.Info(me.wnd, "Process finished", win.StrOptSome("Success"),
 				fmt.Sprintf("%d frame(s) deleted from tag in %.2f ms.",

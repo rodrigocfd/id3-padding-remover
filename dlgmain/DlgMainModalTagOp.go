@@ -19,17 +19,17 @@ const (
 //
 // Returns false if any error occurred. Error messages are displayed in the
 // DlgRun itself.
-func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
+func (me *DlgMain) modalTagOp(tagOp TAG_OP, mp3s ...string) bool {
 	dlg := dlgrun.NewDlgRun()
 	return dlg.Show(me.wnd, func() []error {
 		switch tagOp {
 		case TAG_OP_LOAD:
-			return loadOp(mp3s, me.cachedTags)
+			return loadOp(me.cachedTags, mp3s...)
 		case TAG_OP_SAVE_AND_RELOAD:
-			if errors := saveOp(mp3s, me.cachedTags); len(errors) > 0 {
+			if errors := saveOp(me.cachedTags, mp3s...); len(errors) > 0 {
 				return errors
 			} else {
-				return loadOp(mp3s, me.cachedTags)
+				return loadOp(me.cachedTags, mp3s...)
 			}
 		default:
 			panic("Invalid TAG_OP.")
@@ -38,7 +38,7 @@ func (me *DlgMain) modalTagOp(mp3s []string, tagOp TAG_OP) bool {
 }
 
 // Loads the tags from the MP3 files.
-func loadOp(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
+func loadOp(cachedTags map[string]*id3v2.Tag, mp3s ...string) []error {
 	var waitGroup sync.WaitGroup
 	var mutex sync.Mutex
 	parsingErrors := make([]error, 0, len(mp3s))
@@ -71,7 +71,7 @@ func loadOp(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
 }
 
 // Saves the tags into the MP3 files.
-func saveOp(mp3s []string, cachedTags map[string]*id3v2.Tag) []error {
+func saveOp(cachedTags map[string]*id3v2.Tag, mp3s ...string) []error {
 	savingErrors := make([]error, 0, len(mp3s))
 	for _, mp3 := range mp3s { // save sequentially to stay safe from writing errors
 		tag := cachedTags[mp3]
