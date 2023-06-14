@@ -1,4 +1,4 @@
-package main
+package dlgmain
 
 const (
 	APP_TITLE = "ID3 Fit"

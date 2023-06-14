@@ -1,4 +1,4 @@
-package main
+package dlgmain
 
 import (
 	"github.com/rodrigocfd/windigo/win"
