@@ -228,7 +228,7 @@ func (t *Tag) SwapFrames(indexA, indexB int) {
 }
 
 // Retrieves the index and the frame according to its name.
-func (t *Tag) FrameByName4(name4 string) (int, *Frame, bool) {
+func (t *Tag) FrameByName4(name4 string) (idx int, f *Frame, exists bool) {
 	for i, frame := range t.frames {
 		if frame.Name4() == name4 {
 			return i, frame, true
@@ -255,7 +255,7 @@ func (t *Tag) TextByFrameId(frameId FRAMETXT) (string, bool) {
 
 // Sets the text of the given frame, which will be created if not existing.
 func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
-	if _, frame, has := t.FrameByName4(string(frameId)); has {
+	if _, frame, has := t.FrameByName4(string(frameId)); has { // frame already exists
 		switch data := frame.data.(type) {
 		case *FrameDataText:
 			if text == "" { // empty text will delete the frame

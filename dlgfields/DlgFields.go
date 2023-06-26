@@ -37,8 +37,8 @@ type DlgFields struct {
 	btnClearChecks ui.Button
 	btnSave        ui.Button
 
-	onSaveCb   func(t0 timecount.TimeCount)
-	tagsLoaded []*id3v2.Tag
+	onSaveCb     func(t0 timecount.TimeCount) // Called when user clicks Save.
+	selectedTags []*id3v2.Tag                 // Tags of MP3 files currently selected.
 }
 
 func NewDlgFields(

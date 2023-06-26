@@ -14,12 +14,12 @@ func (me *DlgFields) OnSave(cb func(t0 timecount.TimeCount)) {
 }
 
 // Puts the contents of the multiple tags into the fields.
-func (me *DlgFields) Feed(tags []*id3v2.Tag) {
+func (me *DlgFields) Feed(selectedTags []*id3v2.Tag) {
 	for _, field := range me.fields {
-		field.Chk.Hwnd().EnableWindow(len(tags) > 0) // if zero MP3s selected, disable checkboxes
+		field.Chk.Hwnd().EnableWindow(len(selectedTags) > 0) // if zero MP3s selected, disable checkboxes
 	}
 
-	if len(tags) == 0 { // zero MP3s selected
+	if len(selectedTags) == 0 { // zero MP3s selected
 		for _, field := range me.fields {
 			field.Chk.SetCheckState(co.BST_UNCHECKED)
 			field.Txt.SetText("")
@@ -27,7 +27,7 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 		}
 	} else {
 		for _, field := range me.fields {
-			if text, same := id3v2.TagSameValueAcrossAll(tags, field.FrameId); same {
+			if text, same := id3v2.TagSameValueAcrossAll(selectedTags, field.FrameId); same {
 				field.Chk.SetCheckState(co.BST_CHECKED)
 				field.Txt.SetText(text)
 				field.Txt.Hwnd().EnableWindow(true)
@@ -39,7 +39,7 @@ func (me *DlgFields) Feed(tags []*id3v2.Tag) {
 		}
 	}
 
-	me.tagsLoaded = tags // keep the tags slice, will be written when user clicks Save
+	me.selectedTags = selectedTags // keep the tags slice, will be updated when user clicks Save
 	me.enableButtonsIfAtLeastOneChecked()
 }
 
