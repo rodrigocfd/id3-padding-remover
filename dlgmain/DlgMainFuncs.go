@@ -1,6 +1,7 @@
 package dlgmain
 
 import (
+	"errors"
 	"fmt"
 	"id3fit/id3v2"
 	"runtime"
@@ -127,7 +128,7 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 		var trackNumStr string
 		if withTrackPrefix {
 			if trackNumFromFrame, has := theTag.TextByFrameId(id3v2.FRAMETXT_TRACK); !has {
-				return 0, fmt.Errorf("track frame absent")
+				return 0, errors.New("track frame absent")
 			} else {
 				trackNumStr = trackNumFromFrame
 			}
@@ -135,12 +136,12 @@ func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, 
 
 		artist, has := theTag.TextByFrameId(id3v2.FRAMETXT_ARTIST)
 		if !has {
-			return 0, fmt.Errorf("artist frame absent")
+			return 0, errors.New("artist frame absent")
 		}
 
 		title, has := theTag.TextByFrameId(id3v2.FRAMETXT_TITLE)
 		if !has {
-			return 0, fmt.Errorf("title frame absent")
+			return 0, errors.New("title frame absent")
 		}
 
 		var newPath string

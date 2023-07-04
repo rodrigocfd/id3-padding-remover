@@ -3,6 +3,7 @@ package id3v2
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"id3fit/id3v2/util"
 
@@ -69,7 +70,7 @@ func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 	// Find MP3 offset.
 	mp3Offset, has := util.FindMp3Signature(src)
 	if !has {
-		return 0, 0, fmt.Errorf("no MP3 signature found")
+		return 0, 0, errors.New("no MP3 signature found")
 	}
 
 	// Check ID3 magic bytes.
@@ -86,9 +87,9 @@ func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 
 	// Validate unsupported flags.
 	if (src[5] & 0b1000_0000) != 0 {
-		return 0, 0, fmt.Errorf("unsynchronised tag not supported")
+		return 0, 0, errors.New("unsynchronised tag not supported")
 	} else if (src[5] & 0b0100_0000) != 0 {
-		return 0, 0, fmt.Errorf("tag extended header not supported")
+		return 0, 0, errors.New("tag extended header not supported")
 	}
 
 	// Read declared tag size.

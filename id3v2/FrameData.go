@@ -2,6 +2,7 @@ package id3v2
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"id3fit/id3v2/util"
 )
@@ -99,7 +100,7 @@ func _NewFrameDataComment(src []byte) (*FrameDataComment, error) {
 
 	switch len(texts) {
 	case 0:
-		return nil, fmt.Errorf("comment frame has no texts")
+		return nil, errors.New("comment frame has no texts")
 	case 1:
 		f.Text = texts[0] // in case of 1 text, be lenient and assume empty description
 	case 2:
