@@ -41,10 +41,6 @@ func (me *DlgMain) eventsWm() {
 		me.lstFrames.Columns().Get(1).SetWidthToFill()
 	})
 
-	me.wnd.On().WmCommandAccelMenu(int(co.ID_CANCEL), func(_ wm.Command) {
-		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0) // close on ESC
-	})
-
 	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
 		switch p.Hmenu() {
 		case me.lstMp3s.ContextMenu():
