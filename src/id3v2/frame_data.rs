@@ -1,6 +1,7 @@
 use super::consts::PicType;
 use super::str_engine;
 
+/// Polymorphic data of a frame.
 pub enum FrameData {
 	Text(Text),
 	UserText(UserText),
