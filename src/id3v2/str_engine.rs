@@ -4,16 +4,16 @@ const BOM_LE: u16 = 0xfeff;
 const BOM_BE: u16 = 0xfffe;
 
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
-pub fn any(src: &[u8]) -> w::AnyResult<Vec<String>> {
+pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	match src[0] {
-		0x00 => iso_88591(src),
-		0x01 => unicode(src),
+		0x00 => parse_iso_88591(src),
+		0x01 => parse_unicode(src),
 		_ => Err(format!("Unrecognized encoding: {}.", src[0]).into()),
 	}
 }
 
 /// Parses one or more null-separated ISO-8859-1 strings.
-pub fn iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
+pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	let mut src = src;
 	if let Some(idx) = src.iter().rposition(|b| *b != 0x00) {
 		src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
@@ -41,7 +41,7 @@ pub fn iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 }
 
 /// Parses one or more null-separated Unicode strings.
-pub fn unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
+pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	let mut src = src;
 	if src.len() % 1 != 0 {
 		// Length is not even, something is not quite right.
@@ -83,4 +83,55 @@ pub fn unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		}
 	}
 	Ok(texts)
+}
+
+/// Serializes the strings as null-terminated, returning the encoding byte and
+/// the serialized bytes.
+pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
+	let mut is_unicode = false;
+	let mut estimated_len_bytes = 0;
+
+	for one_str in strs.iter().map(|s| s.as_ref()) {
+		estimated_len_bytes += one_str.chars().count() + 1; // all strings will be null-terminated
+
+		if !is_unicode { // we still don't know if it's Unicode?
+			let has_unicode_char = one_str.chars()
+				.position(|ch| ch as u32 > 0xff)
+				.is_some();
+			if has_unicode_char { // at least 1 string is Unicode
+				is_unicode = true;
+				break;
+			}
+		}
+	}
+
+	if is_unicode { // chars will be serialized as u16
+		estimated_len_bytes *= 2;
+		estimated_len_bytes += 2 * strs.len(); // BOM bytes for each string
+	}
+
+	let mut buf = Vec::<u8>::with_capacity(estimated_len_bytes);
+	for one_str in strs.iter().map(|s| s.as_ref()) {
+		if is_unicode {
+			// Insert BOM bytes for each string.
+			// Strings will be encoded as little-endian.
+			buf.extend(&BOM_LE.to_le_bytes());
+		}
+
+		for ch in one_str.chars() { // write each char of the string
+			if is_unicode {
+				buf.extend(&(ch as u16).to_le_bytes());
+			} else {
+				buf.push(ch as _);
+			}
+		}
+
+		if is_unicode {
+			buf.extend(&[0x00, 0x00]); // append terminating null
+		} else {
+			buf.push(0x00);
+		}
+	}
+
+	(if is_unicode { 0x01 } else { 0x00 }, buf)
 }
