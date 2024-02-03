@@ -1,5 +1,7 @@
 use winsafe::{self as w};
+
 use super::frame_data::FrameData;
+use super::str_engine;
 
 /// A unit of data within a tag.
 pub struct Frame {
@@ -18,12 +20,7 @@ impl Frame {
 		let mut src = src;
 
 		// Parse the 10-byte frame header.
-		let name4 = w::WString::from_wchars_slice(
-			&src[0..4].iter()
-				.map(|b| *b as u16)
-				.chain(std::iter::once(0x0000))
-				.collect::<Vec<_>>(),
-		);
+		let name4 = str_engine::from_ascii(&src[0..4]);
 		let original_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte tag header
 		let flags = (src[8], src[9]);
 
@@ -31,8 +28,8 @@ impl Frame {
 		src = &src[10..original_size as usize];
 
 		// Parse the frame contents.
+		let data = FrameData::parse(&name4, src)?;
 
-
-		unimplemented!()
+		Ok(Self { name4, original_size, flags, data })
 	}
 }

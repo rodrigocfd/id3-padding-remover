@@ -3,6 +3,16 @@ use winsafe::{self as w};
 const BOM_LE: u16 = 0xfeff;
 const BOM_BE: u16 = 0xfffe;
 
+/// Converts a simple non-null-terminated ASCII slice into a string.
+pub fn from_ascii(src: &[u8]) -> String {
+	w::WString::from_wchars_slice(
+		&src.iter()
+			.map(|b| *b as u16)
+			.chain(std::iter::once(0x0000))
+			.collect::<Vec<_>>(),
+	).to_string()
+}
+
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
 pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	match src[0] {
