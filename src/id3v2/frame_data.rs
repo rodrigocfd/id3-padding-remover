@@ -85,7 +85,7 @@ impl FrameData {
 			}
 			src = descr_parts.nth(0).unwrap();
 		} else { // Unicode
-			let idx_zero = src.windows(2).position(|bb| bb[0] == 0x00 && bb[1] == 0x00).unwrap();
+			let idx_zero = src.windows(2).position(|bb| bb == &[0x00, 0x01]).unwrap();
 			let mut texts = str_engine::parse_unicode(&src[..idx_zero])?;
 			if texts.len() > 0 { // description may be absent
 				descr = texts.remove(0);
