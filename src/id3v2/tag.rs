@@ -57,4 +57,33 @@ impl Tag {
 
 		Ok((declared_size, mp3_offset))
 	}
+
+	/// Returns the frames and the padding.
+	fn parse_frames(src: &[u8]) -> w::AnyResult<(Vec<Frame>, u32)> {
+		let mut src = src;
+		let mut frames = Vec::with_capacity(10); // arbitrary
+		let mut padding = 0;
+
+		loop {
+			if src.is_empty() { // end of tag, no padding found
+				break;
+			} else if src.iter().all(|b| *b == 0x00) { // we entered a padding region after all frames
+				padding = src.len() as _;
+				break;
+			}
+
+			let new_frame = Frame::parse(src)?;
+			if new_frame.original_size > src.len() as _ { // means the size was serialized with error
+				return Err(format!(
+					"Frame size is greater than available size: {} vs {}.",
+					new_frame.original_size, src.len(),
+				).into());
+			}
+
+			src = &src[new_frame.original_size as _..];
+			frames.push(new_frame); // add the frame to our collection
+		}
+
+		Ok((frames, padding))
+	}
 }
