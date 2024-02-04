@@ -13,6 +13,24 @@ pub struct Tag {
 }
 
 impl Tag {
+	/// Reads the tag from an MP3 file.
+	pub fn read_from_file(mp3_path: &str) -> w::AnyResult<Self> {
+		let fin = w::FileMapped::open(mp3_path, w::FileAccess::ExistingReadOnly)?;
+		Self::parse(fin.as_slice())
+	}
+
+	/// Parses the tag from a binary blob.
+	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
+		let (declared_size, mp3_offset) = Self::parse_header(src)?;
+		if declared_size == 0 && mp3_offset == 0 {
+			return Ok(Self::default()); // file has no tag
+		}
+
+		let (frames, padding) = Self::parse_frames(src)?;
+
+		Ok(Self { declared_size, mp3_offset, padding, frames })
+	}
+
 	/// Returns declared size and MP3 offset.
 	fn parse_header(src: &[u8]) -> w::AnyResult<(u32, u32)> {
 		// Find MP3 offset.
