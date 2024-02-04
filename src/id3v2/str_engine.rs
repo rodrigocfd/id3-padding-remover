@@ -59,7 +59,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..src.len() - 1];
 	}
 
-	let mut src16 = unsafe {
+	let mut src16 = unsafe { // cast to &[u16]
 		std::slice::from_raw_parts(src.as_ptr() as *const u16, src.len() / 2)
 	};
 	if let Some(idx) = src16.iter().rposition(|ch| *ch != 0x0000) {

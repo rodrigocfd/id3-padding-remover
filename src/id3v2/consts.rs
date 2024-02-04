@@ -53,3 +53,12 @@ impl std::fmt::Display for PicType {
 		})
 	}
 }
+
+impl PicType {
+	pub fn from_u8(n: u8) -> Self {
+		if n > 0x14 {
+			panic!("Invalid PicType value: {}.", n);
+		}
+		unsafe { std::mem::transmute(n) }
+	}
+}

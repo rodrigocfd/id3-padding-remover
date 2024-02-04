@@ -13,6 +13,7 @@ pub enum FrameData {
 }
 
 impl FrameData {
+	/// Parses the bytes according to the 4-char frame name.
 	pub fn parse(name4: &str, src: &[u8]) -> w::AnyResult<Self> {
 		if name4 == "COMM" {
 			Self::parse_comm(src)
@@ -45,15 +46,15 @@ impl FrameData {
 		let mut descr = String::default();
 		let text;
 
-		let texts = str_engine::parse_any(src)?;
+		let mut texts = str_engine::parse_any(src)?;
 		match texts.len() {
 			0 => return Err("Comment frame has no texts.".into()),
 			1 => {
-				text = texts[0].clone(); // in case of 1 text, be lenient and assume empty description
+				text = texts.remove(0); // in case of 1 text, be lenient and assume empty description
 			},
 			2 => {
-				descr = texts[0].clone();
-				text = texts[1].clone();
+				text = texts.remove(1);
+				descr = texts.remove(0);
 			},
 			_ => return Err(format!("Comment frame has {} texts.", texts.len()).into()),
 		}
@@ -68,10 +69,34 @@ impl FrameData {
 		}
 		src = &src[1..]; // skip encoding byte
 
-		unimplemented!()
+		let mut mime_parts = src.splitn(2, |b| *b == 0x00);
+		let mime = str_engine::from_ascii(mime_parts.nth(0).unwrap()); // assume ASCII mime
+		src = mime_parts.nth(0).unwrap();
 
+		let pic_type = PicType::from_u8(src[0]);
+		src = &src[1..]; // skip picture type
+
+		let mut descr = String::default();
+		if enc_byte == 0x00 { // ISO-8859-1
+			let mut descr_parts = src.splitn(2, |b| *b == 0x00);
+			let mut texts = str_engine::parse_iso_88591(descr_parts.nth(0).unwrap())?;
+			if texts.len() > 0 { // description may be absent
+				descr = texts.remove(0);
+			}
+			src = descr_parts.nth(0).unwrap();
+		} else { // Unicode
+			let idx_zero = src.windows(2).position(|bb| bb[0] == 0x00 && bb[1] == 0x00).unwrap();
+			let mut texts = str_engine::parse_unicode(&src[..idx_zero])?;
+			if texts.len() > 0 { // description may be absent
+				descr = texts.remove(0);
+			}
+			src = &src[idx_zero + 1..];
+		}
+
+		Ok(Self::Picture(Picture { mime, pic_type, descr, data: src.to_vec() }))
 	}
 
+	/// Serializes the data into bytes.
 	pub fn serialize(&self) -> Vec<u8> {
 		match self {
 			FrameData::Text(t) => {
