@@ -32,4 +32,22 @@ impl Frame {
 
 		Ok(Self { name4, original_size, flags, data })
 	}
+
+	pub fn serialize(&self) -> Vec<u8> {
+		let serialized_data = self.data.serialize();
+		str_engine::to_ascii(&self.name4).iter().map(|b| *b)
+			.chain((serialized_data.len() as u32).to_be_bytes()) // won't count 10-byte header
+			.chain([self.flags.0, self.flags.1].into_iter())
+			.chain(serialized_data.into_iter())
+			.collect()
+	}
+
+	pub fn is_replay_gain(&self) -> bool {
+		if self.name4 == "TXXX" {
+			if let FrameData::UserText(f) = &self.data {
+				return f.descr.starts_with("replaygain_");
+			}
+		}
+		false
+	}
 }

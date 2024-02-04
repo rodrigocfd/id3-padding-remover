@@ -13,6 +13,13 @@ pub fn from_ascii(src: &[u8]) -> String {
 	).to_string()
 }
 
+/// Converts a string to simple non-null-terminated ASCII bytes.
+pub fn to_ascii(s: &str) -> Vec<u8> {
+	s.chars()
+		.map(|ch| ch as u8)
+		.collect()
+}
+
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
 pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	match src[0] {
