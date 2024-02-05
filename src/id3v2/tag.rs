@@ -26,7 +26,7 @@ impl Tag {
 			return Ok(Self::default()); // file has no tag
 		}
 
-		let (frames, padding) = Self::parse_frames(src)?;
+		let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
 
 		Ok(Self { declared_size, mp3_offset, padding, frames })
 	}

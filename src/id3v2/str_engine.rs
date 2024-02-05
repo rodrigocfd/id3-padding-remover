@@ -23,8 +23,8 @@ pub fn to_ascii(s: &str) -> Vec<u8> {
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
 pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	match src[0] {
-		0x00 => parse_iso_88591(src),
-		0x01 => parse_unicode(src),
+		0x00 => parse_iso_88591(&src[1..]),
+		0x01 => parse_unicode(&src[1..]),
 		_ => Err(format!("Unrecognized encoding: {}.", src[0]).into()),
 	}
 }
@@ -36,24 +36,26 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src.is_empty() {
-		return Ok(Vec::<String>::default());
+		return Ok(Vec::default());
 	}
 
-	let mut texts = Vec::<String>::with_capacity(2); // arbitrary
 	let mut buf16 = Vec::<u16>::default();
-	for part in src.split(|b| *b == 0x00) {
-		if part.is_empty() {
-			texts.push(String::default()); // empty strings are also added
-		} else {
-			buf16.clear();
-			buf16.extend(
-				part.iter()
-					.map(|ch| *ch as u16) // simple expansion from u8 to u16, for each char
-					.chain(std::iter::once(0x0000)), // terminating null
-			);
-			texts.push(w::WString::from_wchars_slice(&buf16).to_string_checked()?);
-		}
-	}
+	let texts = src.split(|b| *b == 0x00)
+		.map(|part| {
+			if part.is_empty() {
+				Ok( String::default() ) // empty strings are also added
+			} else {
+				buf16.clear();
+				buf16.extend(
+					part.iter()
+						.map(|ch| *ch as u16) // simple expansion from u8 to u16, for each char
+						.chain(std::iter::once(0x0000)), // terminating null
+				);
+				Ok( w::WString::from_wchars_slice(&buf16).to_string_checked()? )
+			}
+		})
+		.collect::<w::AnyResult<Vec<_>>>()?;
+
 	Ok(texts)
 }
 
@@ -76,29 +78,31 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		return Ok(Vec::<String>::default());
 	}
 
-	let mut texts = Vec::<String>::with_capacity(2); // arbitrary
 	let mut buf16 = Vec::<u16>::default();
-	for mut part in src16.split(|ch| *ch == 0x0000) {
-		let mut is_little_endian = true; // little-endian by default
-		if part[0] == BOM_LE || part[0] == BOM_BE {
-			if part[0] == BOM_BE {
-				is_little_endian = false;
+	let texts = src16.split(|ch| *ch == 0x0000)
+		.map(|mut part| {
+			let mut is_little_endian = true; // little-endian by default
+			if part[0] == BOM_LE || part[0] == BOM_BE {
+				if part[0] == BOM_BE {
+					is_little_endian = false;
+				}
+				part = &part[1..]; // skip BOM
 			}
-			part = &part[1..]; // skip BOM
-		}
 
-		if part.is_empty() {
-			texts.push(String::default()); // empty strings are also added
-		} else {
-			buf16.clear();
-			buf16.extend(
-				part.iter()
-					.map(|ch| if is_little_endian { *ch } else { ch.swap_bytes() })
-					.chain(std::iter::once(0x0000)), // terminating null
-			);
-			texts.push(w::WString::from_wchars_slice(&buf16).to_string_checked()?);
-		}
-	}
+			if part.is_empty() {
+				Ok( String::default() ) // empty strings are also added
+			} else {
+				buf16.clear();
+				buf16.extend(
+					part.iter()
+						.map(|ch| if is_little_endian { *ch } else { ch.swap_bytes() })
+						.chain(std::iter::once(0x0000)), // terminating null
+				);
+				Ok( w::WString::from_wchars_slice(&buf16).to_string_checked()? )
+			}
+		})
+		.collect::<w::AnyResult<Vec<_>>>()?;
+
 	Ok(texts)
 }
 
