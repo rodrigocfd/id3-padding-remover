@@ -1,5 +1,6 @@
 use winsafe::{prelude::*, gui};
 
+mod ctor;
 mod events;
 
 #[derive(Clone)]
