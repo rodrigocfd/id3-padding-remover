@@ -9,10 +9,11 @@ impl WndMain {
 		use gui::{Horz as H, Vert as V};
 
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_APP), None);
-		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, (H::Resize, V::Resize), None);
+		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, (H::Resize, V::Resize), Some(ids::MNU_MAIN));
 
 		let new_self = Self { wnd, lst_files };
 		new_self.events();
+		new_self.context_menu();
 		Ok(new_self)
 	}
 

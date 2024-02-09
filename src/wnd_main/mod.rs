@@ -1,5 +1,6 @@
 use winsafe::{prelude::*, gui};
 
+mod context_menu;
 mod ctor;
 mod events;
 mod funcs;
