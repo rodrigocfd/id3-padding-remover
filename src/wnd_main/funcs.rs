@@ -1,4 +1,4 @@
-use winsafe::{prelude::*};
+use winsafe::{self as w, prelude::*};
 
 use super::WndMain;
 
@@ -7,5 +7,10 @@ impl WndMain {
 		let num_files = self.lst_files.items().count();
 		let num_selec = self.lst_files.items().selected_count();
 		self.wnd.set_text(&format!("ID3 Fit ({}/{})", num_selec, num_files));
+	}
+
+	pub(super) fn add_files(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
+
+		Ok(())
 	}
 }
