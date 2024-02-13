@@ -1,4 +1,4 @@
-use winsafe::{prelude::*, gui};
+use winsafe::gui;
 
 mod context_menu;
 mod ctor;

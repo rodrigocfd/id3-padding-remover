@@ -1,6 +1,5 @@
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::ids;
 use super::WndMain;
 
 impl WndMain {
@@ -14,6 +13,10 @@ impl WndMain {
 				("File", 240),
 				("Artist", 120),
 				("Title", 120),
+				("Album", 120),
+				("Track", 40),
+				("Year", 40),
+				("Genre", 80),
 			]);
 
 			Ok(true)

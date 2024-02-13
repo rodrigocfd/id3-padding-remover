@@ -1,7 +1,7 @@
 [package]
 name = "id3-fit"
 description = "Removes padding from ID3v2 tags, and does other stuff."
-version = "1.0.0"
+version = "4.0.0"
 authors = ["Rodrigo Cesar de Freitas Dias <rcesar@gmail.com>"]
 edition = "2021"
 
@@ -11,7 +11,7 @@ codegen-units = 1
 #panic = "abort"
 
 [dependencies]
-winsafe = { path = "../winsafe", features = ["gui"] }
+winsafe = { path = "../winsafe", features = ["gui", "version"] }
 
 # https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes
 # RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-pc-windows-msvc
