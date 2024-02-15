@@ -20,7 +20,7 @@ impl std::fmt::Display for FrameData {
 			F::UserText(ut) => ut.text.clone(),
 			F::Binary(b) => format!("{} bytes", b.data.len()),
 			F::Comment(c) => c.text.clone(),
-			F::Picture(p) => format!("Pic {} bytes", p.data.len()),
+			F::Picture(p) => format!("Pic {} {} bytes", p.mime, p.data.len()),
 		})
 	}
 }

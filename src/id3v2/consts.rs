@@ -15,7 +15,7 @@ impl Field {
 	pub const fn name4(&self) -> &str {
 		use Field as F;
 		match self {
-			F::Artist => "TOPE",
+			F::Artist => "TPE1",
 			F::Title => "TIT2",
 			F::Album => "TALB",
 			F::Track => "TRCK",
