@@ -1,4 +1,5 @@
 /// Encodes a big-endian number as synch-safe.
+#[must_use]
 pub fn encode(mut n: u32) -> u32 {
 	let mut out: u32 = 0;
 	let mut mask: u32 = 0x7f;
@@ -15,6 +16,7 @@ pub fn encode(mut n: u32) -> u32 {
 }
 
 /// Decodes a big-endian number as synch-safe.
+#[must_use]
 pub fn decode(n: u32) -> u32 {
 	let mut out: u32 = 0;
 	let mut mask: u32 = 0x7f00_0000;

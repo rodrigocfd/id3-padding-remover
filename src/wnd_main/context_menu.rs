@@ -29,7 +29,7 @@ impl WndMain {
 				self2.add_files(
 					&fileo.GetResults()?
 						.iter()?
-						.map(|shi| Ok(shi?.GetDisplayName(co::SIGDN::FILESYSPATH)?))
+						.map(|shi| shi?.GetDisplayName(co::SIGDN::FILESYSPATH))
 						.collect::<w::HrResult<Vec<_>>>()?,
 				)?;
 			}

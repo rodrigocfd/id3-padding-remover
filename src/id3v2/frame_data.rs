@@ -12,8 +12,22 @@ pub enum FrameData {
 	Picture(Picture),
 }
 
+impl std::fmt::Display for FrameData {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		use FrameData as F;
+		write!(f, "{}", match self {
+			F::Text(t) => t.text.clone(),
+			F::UserText(ut) => ut.text.clone(),
+			F::Binary(b) => format!("{} bytes", b.data.len()),
+			F::Comment(c) => c.text.clone(),
+			F::Picture(p) => format!("Pic {} bytes", p.data.len()),
+		})
+	}
+}
+
 impl FrameData {
 	/// Parses the bytes according to the 4-char frame name.
+	#[must_use]
 	pub fn parse(name4: &str, src: &[u8]) -> w::AnyResult<Self> {
 		if name4 == "COMM" {
 			Self::parse_comm(src)
@@ -32,6 +46,7 @@ impl FrameData {
 		}
 	}
 
+	#[must_use]
 	fn parse_comm(src: &[u8]) -> w::AnyResult<Self> {
 		let mut src = src;
 		let enc_byte = src[0];
@@ -61,6 +76,7 @@ impl FrameData {
 		Ok(Self::Comment(Comment { lang3, descr, text }))
 	}
 
+	#[must_use]
 	fn parse_apic(src: &[u8]) -> w::AnyResult<Self> {
 		let mut src = src;
 		let enc_byte = src[0];
@@ -97,6 +113,7 @@ impl FrameData {
 	}
 
 	/// Serializes the data into bytes.
+	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
 		match self {
 			FrameData::Text(t) => {

@@ -1,3 +1,30 @@
+/// Known tag fields.
+#[derive(Clone, Copy)]
+pub enum Field {
+	Artist,
+	Title,
+	Album,
+	Track,
+	Year,
+	Genre,
+}
+
+impl Field {
+	/// Returns the raw 4-char identifier of the frame.
+	#[must_use]
+	pub const fn name4(&self) -> &str {
+		use Field as F;
+		match self {
+			F::Artist => "TOPE",
+			F::Title => "TIT2",
+			F::Album => "TALB",
+			F::Track => "TRCK",
+			F::Year => "TYER",
+			F::Genre => "TCON",
+		}
+	}
+}
+
 /// APIC picture types.
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -55,6 +82,7 @@ impl std::fmt::Display for PicType {
 }
 
 impl PicType {
+	#[must_use]
 	pub fn from_u8(n: u8) -> Self {
 		if n > 0x14 {
 			panic!("Invalid PicType value: {}.", n);

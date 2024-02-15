@@ -16,6 +16,7 @@ pub struct Frame {
 }
 
 impl Frame {
+	#[must_use]
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
 		let mut src = src;
 
@@ -33,6 +34,7 @@ impl Frame {
 		Ok(Self { name4, original_size, flags, data })
 	}
 
+	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
 		let serialized_data = self.data.serialize();
 		str_engine::to_ascii(&self.name4).iter().map(|b| *b)
@@ -42,6 +44,7 @@ impl Frame {
 			.collect()
 	}
 
+	#[must_use]
 	pub fn is_replay_gain(&self) -> bool {
 		if self.name4 == "TXXX" {
 			if let FrameData::UserText(f) = &self.data {

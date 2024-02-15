@@ -1,5 +1,6 @@
 use winsafe::{self as w};
 
+use super::consts::Field;
 use super::frame::Frame;
 use super::synch_safe;
 
@@ -14,12 +15,14 @@ pub struct Tag {
 
 impl Tag {
 	/// Reads the tag from an MP3 file.
+	#[must_use]
 	pub fn read_from_file(mp3_path: &str) -> w::AnyResult<Self> {
 		let fin = w::FileMapped::open(mp3_path, w::FileAccess::ExistingReadOnly)?;
 		Self::parse(fin.as_slice())
 	}
 
 	/// Parses the tag from a binary blob.
+	#[must_use]
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
 		let (declared_size, mp3_offset) = Self::parse_header(src)?;
 		if declared_size == 0 && mp3_offset == 0 {
@@ -27,11 +30,11 @@ impl Tag {
 		}
 
 		let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
-
 		Ok(Self { declared_size, mp3_offset, padding, frames })
 	}
 
 	/// Returns declared size and MP3 offset.
+	#[must_use]
 	fn parse_header(src: &[u8]) -> w::AnyResult<(u32, u32)> {
 		// Find MP3 offset.
 		let mp3_offset = match src.windows(2)
@@ -77,6 +80,7 @@ impl Tag {
 	}
 
 	/// Returns the frames and the padding.
+	#[must_use]
 	fn parse_frames(src: &[u8]) -> w::AnyResult<(Vec<Frame>, u32)> {
 		let mut src = src;
 		let mut frames = Vec::with_capacity(10); // arbitrary
@@ -103,5 +107,13 @@ impl Tag {
 		}
 
 		Ok((frames, padding))
+	}
+
+	/// Returns the given known field as a single string.
+	#[must_use]
+	pub fn field(&self, f: Field) -> Option<String> {
+		self.frames.iter()
+			.find(|frame| frame.name4 == f.name4())
+			.map(|frame| frame.data.to_string())
 	}
 }

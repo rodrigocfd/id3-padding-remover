@@ -10,13 +10,13 @@ impl WndMain {
 
 			self2.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
 			self2.lst_files.columns().add(&[
-				("File", 240),
-				("Artist", 120),
-				("Title", 120),
-				("Album", 120),
+				("File", 380),
+				("Artist", 160),
+				("Title", 180),
+				("Album", 180),
 				("Track", 40),
 				("Year", 40),
-				("Genre", 80),
+				("Genre", 100),
 			]);
 
 			Ok(true)

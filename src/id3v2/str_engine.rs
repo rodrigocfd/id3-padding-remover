@@ -4,6 +4,7 @@ const BOM_LE: u16 = 0xfeff;
 const BOM_BE: u16 = 0xfffe;
 
 /// Converts a simple non-null-terminated ASCII slice into a string.
+#[must_use]
 pub fn from_ascii(src: &[u8]) -> String {
 	w::WString::from_wchars_slice(
 		&src.iter()
@@ -14,6 +15,7 @@ pub fn from_ascii(src: &[u8]) -> String {
 }
 
 /// Converts a string to simple non-null-terminated ASCII bytes.
+#[must_use]
 pub fn to_ascii(s: &str) -> Vec<u8> {
 	s.chars()
 		.map(|ch| ch as u8)
@@ -21,6 +23,7 @@ pub fn to_ascii(s: &str) -> Vec<u8> {
 }
 
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
+#[must_use]
 pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	match src[0] {
 		0x00 => parse_iso_88591(&src[1..]),
@@ -30,6 +33,7 @@ pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
 }
 
 /// Parses one or more null-separated ISO-8859-1 strings.
+#[must_use]
 pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	let mut src = src;
 	if let Some(idx) = src.iter().rposition(|b| *b != 0x00) {
@@ -60,6 +64,7 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 }
 
 /// Parses one or more null-separated Unicode strings.
+#[must_use]
 pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 	let mut src = src;
 	if src.len() % 1 != 0 {
@@ -108,6 +113,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 
 /// Serializes the strings as null-terminated, returning the encoding byte and
 /// the serialized bytes.
+#[must_use]
 pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
 	let mut is_unicode = false;
 	let mut estimated_len_bytes = 0;
