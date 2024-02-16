@@ -2,6 +2,7 @@ use winsafe::seq_ids;
 
 seq_ids! {
 	ICO_APP = 101;
+	ACC_MAIN
 }
 
 seq_ids! {
