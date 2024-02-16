@@ -4,7 +4,6 @@ use winsafe::gui;
 
 use crate::id3v2;
 
-mod wnd_main_ctx_menu;
 mod wnd_main_ctor;
 mod wnd_main_wm;
 mod wnd_main_funcs;

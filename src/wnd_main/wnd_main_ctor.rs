@@ -1,11 +1,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use winsafe::{self as w, prelude::*, gui};
+use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::ids;
 use super::WndMain;
 
 impl WndMain {
+	/// Creates a new `WndMain` object.
 	#[must_use]
 	pub fn new() -> w::AnyResult<Self> {
 		use gui::{Horz as H, Vert as V};
@@ -15,12 +16,30 @@ impl WndMain {
 		let tags = Rc::new(RefCell::new(Vec::default()));
 
 		let new_self = Self { wnd, lst_files, tags };
-		new_self.events();
-		new_self.context_menu();
+		new_self.wm_events();
 		Ok(new_self)
 	}
 
+	/// Runs the `WndMain` as the main application window.
 	pub fn run(&self) -> w::AnyResult<i32> {
 		self.wnd.run_main(None)
+	}
+
+	/// Initializes the `WndMain` window.
+	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
+		self.update_num_files();
+
+		self.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
+		self.lst_files.columns().add(&[
+			("File", 380),
+			("Artist", 160),
+			("Title", 180),
+			("Album", 180),
+			("Track", 40),
+			("Year", 40),
+			("Genre", 100),
+		]);
+
+		Ok(true)
 	}
 }
