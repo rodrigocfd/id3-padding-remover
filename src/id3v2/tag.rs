@@ -109,11 +109,13 @@ impl Tag {
 		Ok((frames, padding))
 	}
 
-	/// Returns the given known field as a single string.
+	/// Returns the given known field as a single string, or an empty string if
+	/// the field is absent.
 	#[must_use]
-	pub fn field(&self, f: Field) -> Option<String> {
+	pub fn field(&self, f: Field) -> String {
 		self.frames.iter()
 			.find(|frame| frame.name4 == f.name4())
 			.map(|frame| frame.data.to_string())
+			.unwrap_or_default()
 	}
 }

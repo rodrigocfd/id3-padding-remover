@@ -4,10 +4,10 @@ use winsafe::gui;
 
 use crate::id3v2;
 
-mod context_menu;
-mod ctor;
-mod events;
-mod funcs;
+mod wnd_main_ctx_menu;
+mod wnd_main_ctor;
+mod wnd_main_wm;
+mod wnd_main_funcs;
 
 #[derive(Clone)]
 pub struct WndMain {

@@ -11,6 +11,8 @@ impl WndMain {
 	}
 
 	pub(super) fn add_files(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
+		self.lst_files.set_redraw(false);
+
 		let self2 = self.clone();
 		files.iter()
 			.map(|file| file.as_ref())
@@ -24,17 +26,18 @@ impl WndMain {
 				let tag = id3v2::Tag::read_from_file(file)?;
 				self2.lst_files.items().add(&[
 					file,
-					&tag.field(id3v2::Field::Artist).unwrap_or_default(),
-					&tag.field(id3v2::Field::Title).unwrap_or_default(),
-					&tag.field(id3v2::Field::Album).unwrap_or_default(),
-					&tag.field(id3v2::Field::Track).unwrap_or_default(),
-					&tag.field(id3v2::Field::Year).unwrap_or_default(),
-					&tag.field(id3v2::Field::Genre).unwrap_or_default(),
+					&tag.field(id3v2::Field::Artist),
+					&tag.field(id3v2::Field::Title),
+					&tag.field(id3v2::Field::Album),
+					&tag.field(id3v2::Field::Track),
+					&tag.field(id3v2::Field::Year),
+					&tag.field(id3v2::Field::Genre),
 				], None);
 
 				Ok(())
 			})?;
 
+		self.lst_files.set_redraw(true);
 		self.update_num_files();
 		Ok(())
 	}
