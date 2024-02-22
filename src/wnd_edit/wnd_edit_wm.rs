@@ -15,9 +15,9 @@ impl WndEdit {
 			Ok(())
 		});
 
-		let wnd = self.wnd.clone();
+		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), move || {
-			wnd.hwnd().SendMessage(msg::wm::Close {}); // close on ESC
+			self2.wnd.hwnd().SendMessage(msg::wm::Close {}); // close on ESC
 			Ok(())
 		});
 	}

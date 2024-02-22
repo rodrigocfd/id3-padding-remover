@@ -45,13 +45,13 @@ impl WndMain {
 			Ok(())
 		});
 
-		let wnd = self.wnd.clone();
+		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 			let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 			let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
 			let version_parts = hversion.version_info()?.dwFileVersion();
 
-			wnd.hwnd().TaskDialog(
+			self2.wnd.hwnd().TaskDialog(
 				None,
 				Some("About"),
 				Some("ID3 Fit"),

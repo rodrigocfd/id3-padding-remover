@@ -28,7 +28,7 @@ impl WndMain {
 
 	/// Initializes the `WndMain` window.
 	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
-		self.update_num_files();
+		self.update_num_files(self.lst_files.items().count());
 
 		self.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
 		self.lst_files.columns().add(&[

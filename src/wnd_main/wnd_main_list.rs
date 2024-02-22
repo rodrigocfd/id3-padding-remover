@@ -6,7 +6,7 @@ impl WndMain {
 	pub(super) fn list_events(&self) {
 		let self2 = self.clone();
 		self.lst_files.on().lvn_item_changed(move |_| {
-			self2.update_num_files();
+			self2.update_num_files(self2.lst_files.items().count());
 			Ok(())
 		});
 
@@ -18,6 +18,11 @@ impl WndMain {
 			Ok(())
 		});
 
-		todo!() // on_delete to update count, which is currently +1
+		let self2 = self.clone();
+		self.lst_files.on().lvn_delete_item(move |_| {
+			// Notification is sent before the list is updated.
+			self2.update_num_files(self2.lst_files.items().count() - 1);
+			Ok(())
+		});
 	}
 }

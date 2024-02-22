@@ -4,10 +4,9 @@ use crate::id3v2;
 use super::WndMain;
 
 impl WndMain {
-	pub(super) fn update_num_files(&self) {
-		let num_files = self.lst_files.items().count();
+	pub(super) fn update_num_files(&self, tot_files: u32) {
 		let num_selec = self.lst_files.items().selected_count();
-		self.wnd.set_text(&format!("ID3 Fit ({}/{})", num_selec, num_files));
+		self.wnd.set_text(&format!("ID3 Fit ({}/{})", num_selec, tot_files));
 	}
 
 	pub(super) fn add_files(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
@@ -38,7 +37,7 @@ impl WndMain {
 			})?;
 
 		self.lst_files.set_redraw(true);
-		self.update_num_files();
+		self.update_num_files(self.lst_files.items().count());
 		Ok(())
 	}
 }
