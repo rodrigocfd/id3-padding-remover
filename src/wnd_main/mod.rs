@@ -5,8 +5,9 @@ use winsafe::gui;
 use crate::id3v2;
 
 mod wnd_main_ctor;
-mod wnd_main_wm;
 mod wnd_main_funcs;
+mod wnd_main_list;
+mod wnd_main_wm;
 
 #[derive(Clone)]
 pub struct WndMain {

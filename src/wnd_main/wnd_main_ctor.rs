@@ -17,6 +17,7 @@ impl WndMain {
 
 		let new_self = Self { wnd, lst_files, tags };
 		new_self.wm_events();
+		new_self.list_events();
 		Ok(new_self)
 	}
 

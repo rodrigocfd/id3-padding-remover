@@ -13,10 +13,7 @@ impl WndMain {
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_OPEN, move || {
 			let fileo = w::CoCreateInstance::<w::IFileOpenDialog>(
-				&co::CLSID::FileOpenDialog,
-				None,
-				co::CLSCTX::INPROC_SERVER,
-			)?;
+				&co::CLSID::FileOpenDialog, None, co::CLSCTX::INPROC_SERVER)?;
 
 			fileo.SetOptions(
 				fileo.GetOptions()?
@@ -45,8 +42,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 			let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 			let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
-			let version_info = hversion.version_info()?;
-			let version_parts = version_info.dwFileVersion();
+			let version_parts = hversion.version_info()?.dwFileVersion();
 
 			wnd.hwnd().TaskDialog(
 				None,
