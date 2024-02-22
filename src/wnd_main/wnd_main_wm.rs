@@ -1,6 +1,6 @@
-use winsafe::{self as w, prelude::*, co, gui};
+use winsafe::{self as w, prelude::*, co};
 
-use crate::ids;
+use crate::{ids, wnd_edit::WndEdit};
 use super::WndMain;
 
 impl WndMain {
@@ -35,6 +35,13 @@ impl WndMain {
 						.collect::<w::HrResult<Vec<_>>>()?,
 				)?;
 			}
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_EDIT, move || {
+			let wnd_edit = WndEdit::new(&self2.wnd);
+			wnd_edit.show()?;
 			Ok(())
 		});
 

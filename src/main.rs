@@ -2,6 +2,7 @@
 
 mod id3v2;
 mod ids;
+mod wnd_edit;
 mod wnd_main;
 
 use winsafe::{self as w, prelude::*, co};

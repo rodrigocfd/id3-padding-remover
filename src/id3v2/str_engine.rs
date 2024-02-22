@@ -40,7 +40,7 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src.is_empty() {
-		return Ok(Vec::default());
+		return Ok( Vec::default() );
 	}
 
 	let mut buf16 = Vec::<u16>::default();
@@ -80,7 +80,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src16 = &src16[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src16.is_empty() {
-		return Ok(Vec::<String>::default());
+		return Ok( Vec::default() );
 	}
 
 	let mut buf16 = Vec::<u16>::default();

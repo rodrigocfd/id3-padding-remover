@@ -17,5 +17,7 @@ impl WndMain {
 			}
 			Ok(())
 		});
+
+		todo!() // on_delete to update count, which is currently +1
 	}
 }
