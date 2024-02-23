@@ -46,6 +46,12 @@ impl WndMain {
 		});
 
 		let self2 = self.clone();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_REMOVE, move || {
+			self2.lst_files.items().delete_selected();
+			Ok(())
+		});
+
+		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 			let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 			let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
