@@ -1,9 +1,19 @@
 use winsafe::{self as w, prelude::*, co};
 
+use crate::ids;
 use super::WndMain;
 
 impl WndMain {
 	pub(super) fn list_events(&self) {
+		let self2 = self.clone();
+		self.wnd.on().wm_init_menu_popup(move |p| {
+			if self2.lst_files.context_menu().unwrap() == &p.hmenu {
+				p.hmenu.EnableMenuItem(w::IdPos::Id(ids::MNU_MAIN_EDIT),
+					self2.lst_files.items().selected_count() > 0)?; // at least 1 file selected?
+			}
+			Ok(())
+		});
+
 		let self2 = self.clone();
 		self.lst_files.on().lvn_item_changed(move |_| {
 			self2.update_num_files(self2.lst_files.items().count());
