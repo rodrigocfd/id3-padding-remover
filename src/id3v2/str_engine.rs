@@ -127,7 +127,6 @@ pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
 				.is_some();
 			if has_unicode_char { // at least 1 string is Unicode
 				is_unicode = true;
-				break;
 			}
 		}
 	}
