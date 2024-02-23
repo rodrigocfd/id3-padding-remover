@@ -12,29 +12,32 @@ impl WndMain {
 	pub(super) fn add_files(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
 		self.lst_files.set_redraw(false);
 
-		let self2 = self.clone();
-		files.iter()
-			.map(|file| file.as_ref())
-			.try_for_each(|file| -> w::AnyResult<()> {
-				if !w::path::has_extension(file, &[".mp3"]) {
-					return Err(format!("Not an MP3 file: {}", file).into());
-				} else if self2.lst_files.items().find(file).is_some() {
-					return Ok(()); // ignore already existing files
-				}
+		{
+			let mut tags_ref = self.all_tags.try_borrow_mut()?;
+			files.iter()
+				.map(|mp3_path| mp3_path.as_ref())
+				.try_for_each(|mp3_path| {
+					if !w::path::has_extension(mp3_path, &[".mp3"]) {
+						return Err(format!("Not an MP3 file: {}", mp3_path).into());
+					} else if self.lst_files.items().find(mp3_path).is_some() {
+						return Ok(()); // ignore already existing files
+					}
 
-				let tag = id3v2::Tag::read_from_file(file)?;
-				self2.lst_files.items().add(&[
-					file,
-					&tag.field(id3v2::Field::Artist),
-					&tag.field(id3v2::Field::Title),
-					&tag.field(id3v2::Field::Album),
-					&tag.field(id3v2::Field::Track),
-					&tag.field(id3v2::Field::Year),
-					&tag.field(id3v2::Field::Genre),
-				], None);
+					let tag = id3v2::Tag::read_from_file(mp3_path)?;
+					self.lst_files.items().add(&[
+						mp3_path,
+						&tag.field(id3v2::Field::Artist),
+						&tag.field(id3v2::Field::Title),
+						&tag.field(id3v2::Field::Album),
+						&tag.field(id3v2::Field::Track),
+						&tag.field(id3v2::Field::Year),
+						&tag.field(id3v2::Field::Genre),
+					], None);
+					tags_ref.insert(mp3_path.to_owned(), tag); // keep the tag
 
-				Ok(())
-			})?;
+					w::AnyResult::Ok(())
+				})?;
+		}
 
 		self.lst_files.set_redraw(true);
 		self.update_num_files(self.lst_files.items().count());

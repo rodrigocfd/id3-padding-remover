@@ -40,8 +40,16 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_EDIT, move || {
-			let wnd_edit = WndEdit::new(&self2.wnd);
+			let wnd_edit = WndEdit::new(
+				&self2.wnd,
+				self2.all_tags.clone(),
+				self2.lst_files.items() // currently selected MP3 paths
+					.iter_selected()
+					.map(|sel_item| sel_item.text(0))
+					.collect(),
+			);
 			wnd_edit.show()?;
+
 			Ok(())
 		});
 

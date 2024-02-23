@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use winsafe::{self as w, prelude::*, co, gui};
 
@@ -13,9 +14,9 @@ impl WndMain {
 
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_APP), Some(ids::ACC_MAIN));
 		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, (H::Resize, V::Resize), Some(ids::MNU_MAIN));
-		let tags = Rc::new(RefCell::new(Vec::default()));
+		let all_tags = Rc::new(RefCell::new(HashMap::default()));
 
-		let new_self = Self { wnd, lst_files, tags };
+		let new_self = Self { wnd, lst_files, all_tags };
 		new_self.wm_events();
 		new_self.list_events();
 		Ok(new_self)
