@@ -2,6 +2,7 @@ use winsafe::{self as w};
 
 use super::consts::Field;
 use super::frame::Frame;
+use super::str_engine;
 use super::synch_safe;
 
 /// Metadata of a single MP3 file.
@@ -117,5 +118,21 @@ impl Tag {
 			.find(|frame| frame.name4 == f.name4())
 			.map(|frame| frame.data.to_string())
 			.unwrap_or_default()
+	}
+
+	/// Serializes the tag into a `Vec<u8>`.
+	#[must_use]
+	pub fn serialize(&self) -> Vec<u8> {
+		let serialized_frames = self.frames.iter()
+			.flat_map(|frame| frame.serialize())
+			.collect::<Vec<_>>();
+		let synch_safe_data_size = synch_safe::encode(serialized_frames.len() as _); // won't count 10-byte header
+
+		str_engine::to_ascii("ID3").into_iter() // magic bytes
+			.chain([0x03, 0x00].into_iter()) // tag version 2.3.0
+			.chain([0x00].into_iter()) // flags
+			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
+			.chain(serialized_frames.into_iter())
+			.collect()
 	}
 }

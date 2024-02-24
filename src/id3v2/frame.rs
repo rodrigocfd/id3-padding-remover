@@ -37,7 +37,7 @@ impl Frame {
 	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
 		let serialized_data = self.data.serialize();
-		str_engine::to_ascii(&self.name4).iter().map(|b| *b)
+		str_engine::to_ascii(&self.name4).into_iter()
 			.chain((serialized_data.len() as u32).to_be_bytes()) // won't count 10-byte header
 			.chain([self.flags.0, self.flags.1].into_iter())
 			.chain(serialized_data.into_iter())
