@@ -6,18 +6,18 @@ use super::str_engine;
 /// A unit of data within a tag.
 pub struct Frame {
 	/// Uniquely identifies the frame type.
-	pub name4: String,
+	name4: String,
 	/// Includes 10-byte frame header.
-	pub original_size: u32,
+	original_size: u32,
 	/// Almost always zero.
-	pub flags: (u8, u8),
+	flags: (u8, u8),
 	/// Polymorphic data.
-	pub data: FrameData,
+	data: FrameData,
 }
 
 impl Frame {
 	#[must_use]
-	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
+	pub(in crate::id3v2) fn parse(src: &[u8]) -> w::AnyResult<Self> {
 		let mut src = src;
 
 		// Parse the 10-byte frame header.
@@ -35,13 +35,33 @@ impl Frame {
 	}
 
 	#[must_use]
-	pub fn serialize(&self) -> Vec<u8> {
+	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
 		let serialized_data = self.data.serialize();
 		str_engine::to_ascii(&self.name4).into_iter()
 			.chain((serialized_data.len() as u32).to_be_bytes()) // won't count 10-byte header
 			.chain([self.flags.0, self.flags.1].into_iter())
 			.chain(serialized_data.into_iter())
 			.collect()
+	}
+
+	#[must_use]
+	pub const fn name4(&self) -> &String {
+		&self.name4
+	}
+
+	#[must_use]
+	pub const fn original_size(&self) -> u32 {
+		self.original_size
+	}
+
+	#[must_use]
+	pub const fn flags(&self) -> (u8, u8) {
+		self.flags
+	}
+
+	#[must_use]
+	pub const fn data(&self) -> &FrameData {
+		&self.data
 	}
 
 	#[must_use]

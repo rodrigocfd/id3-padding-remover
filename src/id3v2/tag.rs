@@ -8,10 +8,10 @@ use super::synch_safe;
 /// Metadata of a single MP3 file.
 #[derive(Default)]
 pub struct Tag {
-	pub declared_size: u32,
-	pub mp3_offset: u32,
-	pub padding: u32,
-	pub frames: Vec<Frame>,
+	declared_size: u32,
+	mp3_offset: u32,
+	padding: u32,
+	frames: Vec<Frame>,
 }
 
 impl Tag {
@@ -96,14 +96,14 @@ impl Tag {
 			}
 
 			let new_frame = Frame::parse(src)?;
-			if new_frame.original_size > src.len() as _ { // means the size was serialized with error
+			if new_frame.original_size() > src.len() as _ { // means the size was serialized with error
 				return Err(format!(
 					"Frame size is greater than available size: {} vs {}.",
-					new_frame.original_size, src.len(),
+					new_frame.original_size(), src.len(),
 				).into());
 			}
 
-			src = &src[new_frame.original_size as _..];
+			src = &src[new_frame.original_size() as _..];
 			frames.push(new_frame); // add the frame to our collection
 		}
 
@@ -115,8 +115,8 @@ impl Tag {
 	#[must_use]
 	pub fn field(&self, f: Field) -> String {
 		self.frames.iter()
-			.find(|frame| frame.name4 == f.name4())
-			.map(|frame| frame.data.to_string())
+			.find(|frame| frame.name4() == f.name4())
+			.map(|frame| frame.data().to_string())
 			.unwrap_or_default()
 	}
 
@@ -134,5 +134,25 @@ impl Tag {
 			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
 			.chain(serialized_frames.into_iter())
 			.collect()
+	}
+
+	#[must_use]
+	pub const fn declared_size(&self) -> u32 {
+		self.declared_size
+	}
+
+	#[must_use]
+	pub const fn mp3_offset(&self) -> u32 {
+		self.mp3_offset
+	}
+
+	#[must_use]
+	pub const fn padding(&self) -> u32 {
+		self.padding
+	}
+
+	#[must_use]
+	pub const fn frames(&self) -> &Vec<Frame> {
+		&self.frames
 	}
 }
