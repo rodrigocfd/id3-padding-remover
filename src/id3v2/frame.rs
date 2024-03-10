@@ -15,6 +15,12 @@ pub struct Frame {
 	data: FrameData,
 }
 
+impl std::fmt::Display for Frame {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		write!(f, "{}: {}", self.name4, self.data)
+	}
+}
+
 impl Frame {
 	#[must_use]
 	pub(in crate::id3v2) fn parse(src: &[u8]) -> w::AnyResult<Self> {

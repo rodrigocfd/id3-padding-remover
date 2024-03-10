@@ -14,6 +14,19 @@ pub struct Tag {
 	frames: Vec<Frame>,
 }
 
+impl std::fmt::Display for Tag {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		write!(f, "Off: {}, pad: {}\n{}",
+			self.mp3_offset,
+			self.padding,
+			self.frames.iter()
+				.map(|f| f.to_string())
+				.collect::<Vec<_>>()
+				.join("\n"),
+		)
+	}
+}
+
 impl Tag {
 	/// Reads the tag from an MP3 file.
 	#[must_use]
@@ -27,11 +40,11 @@ impl Tag {
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
 		let (declared_size, mp3_offset) = Self::parse_header(src)?;
 		if declared_size == 0 && mp3_offset == 0 {
-			return Ok(Self::default()); // file has no tag
+			Ok(Self::default()) // file has no tag
+		} else {
+			let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
+			Ok(Self { declared_size, mp3_offset, padding, frames })
 		}
-
-		let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
-		Ok(Self { declared_size, mp3_offset, padding, frames })
 	}
 
 	/// Returns declared size and MP3 offset.
@@ -110,16 +123,6 @@ impl Tag {
 		Ok((frames, padding))
 	}
 
-	/// Returns the given known field as a single string, or an empty string if
-	/// the field is absent.
-	#[must_use]
-	pub fn field(&self, f: Field) -> String {
-		self.frames.iter()
-			.find(|frame| frame.name4() == f.name4())
-			.map(|frame| frame.data().to_string())
-			.unwrap_or_default()
-	}
-
 	/// Serializes the tag into a `Vec<u8>`.
 	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
@@ -134,6 +137,29 @@ impl Tag {
 			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
 			.chain(serialized_frames.into_iter())
 			.collect()
+	}
+
+	/// Saves the tag to an MP3 file. If there are no frames, the tag will be
+	/// entirely removed from the file.
+	pub fn save_to_file(&self, mp3_path: &str) -> w::AnyResult<()> {
+		let fout = w::File::open(mp3_path, w::FileAccess::ExistingRW)?;
+		let current_contents = fout.read_all()?; // read the whole MP3 into a buffer
+		let current_tag = Self::parse(&current_contents)?; // parse tag currently saved in the MP3 file
+
+		fout.set_size(0)?;
+		if self.frames.is_empty() {
+			fout.write(
+				&current_contents[current_tag.mp3_offset as _..], // no tag will be written
+			)?;
+		} else {
+			fout.write(
+				&self.serialize().into_iter()
+					.chain(current_contents[current_tag.mp3_offset as _..].iter().map(|b| *b))
+					.collect::<Vec<_>>(),
+			)?;
+		}
+
+		Ok(())
 	}
 
 	#[must_use]
@@ -154,5 +180,15 @@ impl Tag {
 	#[must_use]
 	pub const fn frames(&self) -> &Vec<Frame> {
 		&self.frames
+	}
+
+	/// Returns the given known field as a single string, or an empty string if
+	/// the field is absent.
+	#[must_use]
+	pub fn field(&self, f: Field) -> String {
+		self.frames.iter()
+			.find(|frame| frame.name4() == f.name4())
+			.map(|frame| frame.data().to_string())
+			.unwrap_or_default()
 	}
 }

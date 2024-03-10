@@ -1,5 +1,5 @@
 /// Known tag fields.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Field {
 	Artist,
 	Title,
@@ -26,7 +26,7 @@ impl Field {
 }
 
 /// APIC picture types.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PicType {
 	Other = 0x00,
@@ -62,7 +62,7 @@ impl std::fmt::Display for PicType {
 			P::CoverFront => "Cover (front)",
 			P::CoverBack => "Cover (back)",
 			P::Leaflet => "Leaflet page",
-			P::CdLabelSide => "Media (e.g. lable side of CD)",
+			P::CdLabelSide => "Media (e.g. label side of CD)",
 			P::LeadArtist => "Lead artist/lead performer/soloist",
 			P::Artist => "Artist/performer",
 			P::Conductor => "Conductor",

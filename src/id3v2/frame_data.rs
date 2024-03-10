@@ -37,12 +37,12 @@ impl FrameData {
 			let texts = str_engine::parse_any(src)?;
 			match texts.len() {
 				0 => Err(format!("Frame {} contains no texts.", name4).into()),
-				1 => Ok( Self::Text(Text { text: texts[0].clone() }) ),
-				2 => Ok( Self::UserText(UserText { descr: texts[0].clone(), text: texts[1].clone() }) ),
+				1 => Ok(Self::Text(Text { text: texts[0].clone() })),
+				2 => Ok(Self::UserText(UserText { descr: texts[0].clone(), text: texts[1].clone() })),
 				_ => Err(format!("Frame {} contains {} texts.", name4, texts.len()).into()),
 			}
 		} else { // anything else is treated as raw binary
-			Ok( Self::Binary(Binary { data: src.to_vec() }) )
+			Ok(Self::Binary(Binary { data: src.to_vec() }))
 		}
 	}
 
@@ -73,7 +73,7 @@ impl FrameData {
 			},
 			_ => return Err(format!("Comment frame has {} texts.", texts.len()).into()),
 		}
-		Ok( Self::Comment(Comment { lang3, descr, text }) )
+		Ok(Self::Comment(Comment { lang3, descr, text }))
 	}
 
 	#[must_use]
@@ -109,7 +109,7 @@ impl FrameData {
 			src = &src[idx_zero + 1..];
 		}
 
-		Ok( Self::Picture(Picture { mime, pic_type, descr, data: src.to_vec() }) )
+		Ok(Self::Picture(Picture { mime, pic_type, descr, data: src.to_vec() }))
 	}
 
 	/// Serializes the data into bytes.
