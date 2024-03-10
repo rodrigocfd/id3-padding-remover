@@ -7,10 +7,11 @@ use winsafe::{self as w, prelude::*, co, gui};
 use crate::{id3v2, ids};
 use super::{Field, WndEdit};
 
+/// No horizontal or vertical changes.
 const NN: (gui::Horz, gui::Vert) = (gui::Horz::None, gui::Vert::None);
 
 impl Field {
-	fn new(parent: &impl GuiParent, chk_id: u16) -> Self {
+	fn new_edit(parent: &impl GuiParent, chk_id: u16) -> Self {
 		Self {
 			chk: gui::CheckBox::new_dlg(parent, chk_id, NN),
 			txt: Arc::new(gui::Edit::new_dlg(parent, chk_id + 1, NN)),
@@ -33,16 +34,24 @@ impl WndEdit {
 			wnd: wnd.clone(),
 			btn_ok: gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN),
 			btn_cancel: gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN),
-			fld_artist: Field::new(&wnd, ids::CHK_ARTIST),
-			fld_title: Field::new(&wnd, ids::CHK_TITLE),
-			fld_subtitle: Field::new(&wnd, ids::CHK_SUBTITLE),
-			fld_album: Field::new(&wnd, ids::CHK_ALBUM),
-			fld_track: Field::new(&wnd, ids::CHK_TRACK),
-			fld_year: Field::new(&wnd, ids::CHK_YEAR),
+			fld_artist: Field::new_edit(&wnd, ids::CHK_ARTIST),
+			fld_title: Field::new_edit(&wnd, ids::CHK_TITLE),
+			fld_subtitle: Field::new_edit(&wnd, ids::CHK_SUBTITLE),
+			fld_album: Field::new_edit(&wnd, ids::CHK_ALBUM),
+			fld_track: Field::new_edit(&wnd, ids::CHK_TRACK),
+			fld_year: Field::new_edit(&wnd, ids::CHK_YEAR),
 			fld_genre: Field {
 				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
 				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
 			},
+			fld_composer: Field::new_edit(&wnd, ids::CHK_COMPOSER),
+			fld_lyricist: Field::new_edit(&wnd, ids::CHK_LYRICIST),
+			fld_comment: Field::new_edit(&wnd, ids::CHK_COMMENT),
+			fld_performer: Field::new_edit(&wnd, ids::CHK_PERFORMER),
+			fld_publisher: Field::new_edit(&wnd, ids::CHK_PUBLISHER),
+			fld_orig_artist: Field::new_edit(&wnd, ids::CHK_ORIG_ARTIST),
+			fld_orig_album: Field::new_edit(&wnd, ids::CHK_ORIG_ALBUM),
+			fld_orig_year: Field::new_edit(&wnd, ids::CHK_ORIG_YEAR),
 			all_tags,
 			selected_paths,
 		};

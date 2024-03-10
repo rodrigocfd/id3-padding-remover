@@ -8,14 +8,14 @@ pub enum Field {
 	Track,
 	Year,
 	Genre,
-	Performer,
 	Composer,
 	Lyricist,
+	Comment,
+	Performer,
 	Publisher,
 	OrigArtist,
 	OrigAlbum,
 	OrigYear,
-	Comment,
 }
 
 impl Field {
@@ -31,14 +31,14 @@ impl Field {
 			F::Track => "TRCK",
 			F::Year => "TYER",
 			F::Genre => "TCON",
-			F::Performer => "TPE3",
 			F::Composer => "TCOM",
 			F::Lyricist => "TEXT",
+			F::Comment => "COMM",
+			F::Performer => "TPE3",
 			F::Publisher => "TPUB",
 			F::OrigArtist => "TOPE",
 			F::OrigAlbum => "TOAL",
 			F::OrigYear => "TORY",
-			F::Comment => "COMM",
 		}
 	}
 }
