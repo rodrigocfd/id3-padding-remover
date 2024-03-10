@@ -3,10 +3,19 @@
 pub enum Field {
 	Artist,
 	Title,
+	Subtitle,
 	Album,
 	Track,
 	Year,
 	Genre,
+	Performer,
+	Composer,
+	Lyricist,
+	Publisher,
+	OrigArtist,
+	OrigAlbum,
+	OrigYear,
+	Comment,
 }
 
 impl Field {
@@ -17,10 +26,19 @@ impl Field {
 		match self {
 			F::Artist => "TPE1",
 			F::Title => "TIT2",
+			F::Subtitle => "TIT3",
 			F::Album => "TALB",
 			F::Track => "TRCK",
 			F::Year => "TYER",
 			F::Genre => "TCON",
+			F::Performer => "TPE3",
+			F::Composer => "TCOM",
+			F::Lyricist => "TEXT",
+			F::Publisher => "TPUB",
+			F::OrigArtist => "TOPE",
+			F::OrigAlbum => "TOAL",
+			F::OrigYear => "TORY",
+			F::Comment => "COMM",
 		}
 	}
 }
