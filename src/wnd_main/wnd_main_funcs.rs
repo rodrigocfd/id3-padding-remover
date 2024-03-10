@@ -24,7 +24,6 @@ impl WndMain {
 					}
 
 					let tag = id3v2::Tag::read_from_file(mp3_path)?;
-					println!("{tag}");
 					self.lst_files.items().add(&[
 						mp3_path,
 						&tag.field(id3v2::Field::Artist),
