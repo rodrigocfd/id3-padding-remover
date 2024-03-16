@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use winsafe::gui;
 
@@ -17,5 +16,5 @@ pub struct WndMain {
 	lst_files_h: gui::Header,
 
 	/// Each tag is indexed by its file path.
-	all_tags: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+	all_tags: Rc<RefCell<Vec<id3v2::PathAndTag>>>,
 }

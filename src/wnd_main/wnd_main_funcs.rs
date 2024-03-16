@@ -26,14 +26,14 @@ impl WndMain {
 					let tag = id3v2::Tag::read_from_file(mp3_path)?;
 					self.lst_files.items().add(&[
 						mp3_path,
-						&tag.field(id3v2::Field::Artist),
-						&tag.field(id3v2::Field::Title),
-						&tag.field(id3v2::Field::Album),
-						&tag.field(id3v2::Field::Track),
-						&tag.field(id3v2::Field::Year),
-						&tag.field(id3v2::Field::Genre),
+						&tag.known_field(id3v2::Field::Artist).unwrap_or_default(),
+						&tag.known_field(id3v2::Field::Title).unwrap_or_default(),
+						&tag.known_field(id3v2::Field::Album).unwrap_or_default(),
+						&tag.known_field(id3v2::Field::Track).unwrap_or_default(),
+						&tag.known_field(id3v2::Field::Year).unwrap_or_default(),
+						&tag.known_field(id3v2::Field::Genre).unwrap_or_default(),
 					], None);
-					tags_ref.insert(mp3_path.to_owned(), tag); // keep the tag
+					tags_ref.push(id3v2::PathAndTag::new(mp3_path, tag)); // keep the tag
 
 					w::AnyResult::Ok(())
 				})?;

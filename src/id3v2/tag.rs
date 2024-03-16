@@ -182,13 +182,18 @@ impl Tag {
 		&self.frames
 	}
 
-	/// Returns the given known field as a single string, or an empty string if
-	/// the field is absent.
+	/// Returns the given known field as a single string, if present amongst the
+	/// tag frames.
 	#[must_use]
-	pub fn field(&self, f: Field) -> String {
+	pub fn known_field(&self, f: Field) -> Option<String> {
 		self.frames.iter()
 			.find(|frame| frame.name4() == f.name4())
 			.map(|frame| frame.data().to_string())
-			.unwrap_or_default()
+	}
+
+	/// Does the known field exist amongst the tag frames?
+	#[must_use]
+	pub fn has_known_field(&self, f: Field) -> bool {
+		self.known_field(f).is_some()
 	}
 }

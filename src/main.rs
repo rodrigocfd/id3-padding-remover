@@ -9,7 +9,7 @@ use winsafe::{self as w, prelude::*, co};
 use wnd_main::WndMain;
 
 fn main() {
-	if let Err(e) = (|| WndMain::new()?.run())() {
+	if let Err(e) = (|| WndMain::new().run())() {
 		w::HWND::NULL.MessageBox(
 			&e.to_string(), "Uncaught error", co::MB::ICONERROR).unwrap();
 	}

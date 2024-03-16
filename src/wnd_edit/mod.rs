@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use winsafe::{gui, prelude::*};
@@ -11,32 +10,20 @@ mod wnd_edit_wm;
 
 #[derive(Clone)]
 pub struct WndEdit {
-	wnd:             gui::WindowModal,
-	btn_ok:          gui::Button,
-	btn_cancel:      gui::Button,
-	fld_artist:      Field,
-	fld_title:       Field,
-	fld_subtitle:    Field,
-	fld_album:       Field,
-	fld_track:       Field,
-	fld_year:        Field,
-	fld_genre:       Field,
-	fld_composer:    Field,
-	fld_lyricist:    Field,
-	fld_comment:     Field,
-	fld_performer:   Field,
-	fld_publisher:   Field,
-	fld_orig_artist: Field,
-	fld_orig_album:  Field,
-	fld_orig_year:   Field,
+	wnd:         gui::WindowModal,
+	btn_ok:      gui::Button,
+	btn_cancel:  gui::Button,
+	field_packs: Rc<RefCell<Vec<FieldPack>>>,
 
 	/// Each tag is indexed by its file path.
-	all_tags: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+	all_tags:       Rc<RefCell<Vec<id3v2::PathAndTag>>>,
 	selected_paths: Vec<String>,
 }
 
+/// Known tag field identifier, checkbox and textbox.
 #[derive(Clone)]
-struct Field {
-	chk: gui::CheckBox,
-	txt: Arc<dyn GuiWindowText>,
+struct FieldPack {
+	field: id3v2::Field,
+	chk:   gui::CheckBox,
+	txt:   Arc<dyn GuiWindowText>,
 }

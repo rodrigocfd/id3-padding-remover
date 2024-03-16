@@ -1,30 +1,32 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::{id3v2, ids};
-use super::{Field, WndEdit};
+use super::{FieldPack, WndEdit};
 
-/// No horizontal or vertical changes.
-const NN: (gui::Horz, gui::Vert) = (gui::Horz::None, gui::Vert::None);
-
-impl Field {
-	fn new_edit(parent: &impl GuiParent, chk_id: u16) -> Self {
+impl FieldPack {
+	fn new_edit(field: id3v2::Field, parent: &impl GuiParent, chk_id: u16) -> Self {
 		Self {
+			field,
 			chk: gui::CheckBox::new_dlg(parent, chk_id, NN),
 			txt: Arc::new(gui::Edit::new_dlg(parent, chk_id + 1, NN)),
 		}
 	}
 }
 
+//------------------------------------------------------------------------------
+
+/// No horizontal or vertical changes.
+pub const NN: (gui::Horz, gui::Vert) = (gui::Horz::None, gui::Vert::None);
+
 impl WndEdit {
 	/// Creates a new `WndEdit` object.
 	#[must_use]
 	pub fn new(
 		parent: &impl GuiParent,
-		all_tags: Rc<RefCell<HashMap<String, id3v2::Tag>>>,
+		all_tags: Rc<RefCell<Vec<id3v2::PathAndTag>>>,
 		selected_paths: Vec<String>,
 	) -> Self
 	{
@@ -34,24 +36,27 @@ impl WndEdit {
 			wnd: wnd.clone(),
 			btn_ok: gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN),
 			btn_cancel: gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN),
-			fld_artist: Field::new_edit(&wnd, ids::CHK_ARTIST),
-			fld_title: Field::new_edit(&wnd, ids::CHK_TITLE),
-			fld_subtitle: Field::new_edit(&wnd, ids::CHK_SUBTITLE),
-			fld_album: Field::new_edit(&wnd, ids::CHK_ALBUM),
-			fld_track: Field::new_edit(&wnd, ids::CHK_TRACK),
-			fld_year: Field::new_edit(&wnd, ids::CHK_YEAR),
-			fld_genre: Field {
-				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
-				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
-			},
-			fld_composer: Field::new_edit(&wnd, ids::CHK_COMPOSER),
-			fld_lyricist: Field::new_edit(&wnd, ids::CHK_LYRICIST),
-			fld_comment: Field::new_edit(&wnd, ids::CHK_COMMENT),
-			fld_performer: Field::new_edit(&wnd, ids::CHK_PERFORMER),
-			fld_publisher: Field::new_edit(&wnd, ids::CHK_PUBLISHER),
-			fld_orig_artist: Field::new_edit(&wnd, ids::CHK_ORIG_ARTIST),
-			fld_orig_album: Field::new_edit(&wnd, ids::CHK_ORIG_ALBUM),
-			fld_orig_year: Field::new_edit(&wnd, ids::CHK_ORIG_YEAR),
+			field_packs: Rc::new(RefCell::new(vec![
+				FieldPack::new_edit(id3v2::Field::Artist, &wnd, ids::CHK_ARTIST),
+				FieldPack::new_edit(id3v2::Field::Title, &wnd, ids::CHK_TITLE),
+				FieldPack::new_edit(id3v2::Field::Subtitle, &wnd, ids::CHK_SUBTITLE),
+				FieldPack::new_edit(id3v2::Field::Album, &wnd, ids::CHK_ALBUM),
+				FieldPack::new_edit(id3v2::Field::Track, &wnd, ids::CHK_TRACK),
+				FieldPack::new_edit(id3v2::Field::Year, &wnd, ids::CHK_YEAR),
+				FieldPack {
+					field: id3v2::Field::Genre,
+					chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
+					txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
+				},
+				FieldPack::new_edit(id3v2::Field::Composer, &wnd, ids::CHK_COMPOSER),
+				FieldPack::new_edit(id3v2::Field::Lyricist, &wnd, ids::CHK_LYRICIST),
+				FieldPack::new_edit(id3v2::Field::Comment, &wnd, ids::CHK_COMMENT),
+				FieldPack::new_edit(id3v2::Field::Performer, &wnd, ids::CHK_PERFORMER),
+				FieldPack::new_edit(id3v2::Field::Publisher, &wnd, ids::CHK_PUBLISHER),
+				FieldPack::new_edit(id3v2::Field::OrigArtist, &wnd, ids::CHK_ORIG_ARTIST),
+				FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
+				FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
+			])),
 			all_tags,
 			selected_paths,
 		};
@@ -66,7 +71,50 @@ impl WndEdit {
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
+		self.field_packs.try_borrow()?
+			.iter()
+			.try_for_each(|field_pack| {
+				let all_tags = self.all_tags.try_borrow()?;
+				let edited_tags = all_tags.iter()
+					.filter(|path_and_tag| self.selected_paths.contains(&path_and_tag.mp3_path))
+					.collect::<Vec<_>>();
 
+				if edited_tags.len() == 1 { // just 1 MP3 being edited?
+					self.wnd.set_text("Edit tag");
+					edited_tags[0].tag.known_field(field_pack.field)
+						.as_ref()
+						.map(|field| {
+							field_pack.txt.set_text(field);
+							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
+						});
+				} else { // multiple MP3s being edited
+					self.wnd.set_text(&format!("Edit {} tags", edited_tags.len()));
+					let maybe_idx_first = edited_tags.iter()
+						.position(|path_and_tag|
+							path_and_tag.tag.has_known_field(field_pack.field)
+						);
+					match maybe_idx_first {
+						Some(idx_first) => { // index of first MP3 which has the field
+							let first_val = edited_tags[idx_first].tag.known_field(field_pack.field).unwrap();
+							let all_equal = edited_tags.iter()
+								.all(|path_and_tag|
+									path_and_tag.tag.known_field(field_pack.field)
+										.unwrap_or_default() == first_val
+								);
+							if all_equal {
+								field_pack.txt.set_text(&first_val);
+								field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
+							} else {
+								field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+							}
+						},
+						None => { // no MP3 has this field
+							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+						},
+					}
+				}
+				w::AnyResult::Ok(())
+			})?;
 		Ok(true)
 	}
 }
