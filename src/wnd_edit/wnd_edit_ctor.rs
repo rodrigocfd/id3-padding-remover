@@ -81,12 +81,15 @@ impl WndEdit {
 
 				if edited_tags.len() == 1 { // just 1 MP3 being edited?
 					self.wnd.set_text("Edit tag");
-					edited_tags[0].tag.known_field(field_pack.field)
-						.as_ref()
-						.map(|field| {
+					match &edited_tags[0].tag.known_field(field_pack.field) {
+						Some(field) => { // the MP3 has this field
 							field_pack.txt.set_text(field);
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
-						});
+						},
+						None => { // the MP3 doesn't have this field
+							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+						},
+					}
 				} else { // multiple MP3s being edited
 					self.wnd.set_text(&format!("Edit {} tags", edited_tags.len()));
 					let maybe_idx_first = edited_tags.iter()
@@ -113,6 +116,7 @@ impl WndEdit {
 						},
 					}
 				}
+
 				w::AnyResult::Ok(())
 			})?;
 		Ok(true)

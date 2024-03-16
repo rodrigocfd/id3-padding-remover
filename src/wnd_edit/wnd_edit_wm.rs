@@ -20,5 +20,20 @@ impl WndEdit {
 			self2.wnd.hwnd().SendMessage(msg::wm::Close {}); // close on ESC
 			Ok(())
 		});
+
+		self.field_packs.borrow()
+			.iter()
+			.for_each(|field_pack| {
+				let fp2 = field_pack.clone();
+				field_pack.chk.on().bn_clicked(move || {
+					if fp2.chk.is_checked() {
+						fp2.txt.hwnd().EnableWindow(true);
+						fp2.txt.focus();
+					} else {
+						fp2.txt.hwnd().EnableWindow(false);
+					}
+					Ok(())
+				});
+			});
 	}
 }

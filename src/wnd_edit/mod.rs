@@ -20,10 +20,14 @@ pub struct WndEdit {
 	selected_paths: Vec<String>,
 }
 
+trait ChildFocus: GuiWindowText + GuiChildFocus {}
+impl ChildFocus for gui::ComboBox {}
+impl ChildFocus for gui::Edit {}
+
 /// Known tag field identifier, checkbox and textbox.
 #[derive(Clone)]
 struct FieldPack {
 	field: id3v2::Field,
 	chk:   gui::CheckBox,
-	txt:   Arc<dyn GuiWindowText>,
+	txt:   Arc<dyn ChildFocus>,
 }
