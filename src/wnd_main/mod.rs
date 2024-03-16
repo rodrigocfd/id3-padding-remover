@@ -12,8 +12,9 @@ mod wnd_main_wm;
 
 #[derive(Clone)]
 pub struct WndMain {
-	wnd:       gui::WindowMain,
-	lst_files: gui::ListView,
+	wnd:         gui::WindowMain,
+	lst_files:   gui::ListView,
+	lst_files_h: gui::Header,
 
 	/// Each tag is indexed by its file path.
 	all_tags: Rc<RefCell<HashMap<String, id3v2::Tag>>>,

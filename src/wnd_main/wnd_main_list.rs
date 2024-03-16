@@ -39,5 +39,11 @@ impl WndMain {
 			self2.update_num_files(self2.lst_files.items().count() - 1);
 			Ok(())
 		});
+
+		let self2 = self.clone();
+		self.lst_files_h.on().hdn_item_click(move |p| {
+			println!("Clicked {}, ID {}", p.iItem, self2.lst_files_h.ctrl_id());
+			Ok(())
+		});
 	}
 }
