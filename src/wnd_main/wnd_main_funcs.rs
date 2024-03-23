@@ -42,7 +42,7 @@ impl WndMain {
 		if tag.has_frame("APIC") { item.set_text(2, "✓"); }
 
 		[id3v2::Field::Artist, id3v2::Field::Title, id3v2::Field::Album, id3v2::Field::Track,
-			id3v2::Field::Year, id3v2::Field::Genre]
+			id3v2::Field::Year, id3v2::Field::Genre, id3v2::Field::Comment]
 			.iter()
 			.map(|field| tag.known_field(*field).unwrap_or_default())
 			.enumerate()

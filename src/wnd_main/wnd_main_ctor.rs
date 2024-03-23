@@ -43,9 +43,10 @@ impl WndMain {
 			("Artist", 160),
 			("Title", 180),
 			("Album", 180),
-			("Track", 40),
+			("T#", 30),
 			("Year", 40),
 			("Genre", 100),
+			("Comment", 80),
 		]);
 
 		Ok(true)
