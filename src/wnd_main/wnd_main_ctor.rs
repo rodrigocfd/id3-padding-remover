@@ -1,9 +1,8 @@
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::{id3v2, ids};
+use crate::ids;
 use super::WndMain;
 
 impl WndMain {

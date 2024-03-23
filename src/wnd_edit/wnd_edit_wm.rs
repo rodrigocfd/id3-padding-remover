@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*, co, gui, msg};
+use winsafe::{self as w, prelude::*, msg};
 
 use super::WndEdit;
 
@@ -10,7 +10,7 @@ impl WndEdit {
 		});
 
 		let self2 = self.clone();
-		self.wnd.on().wm_command_accel_menu(co::DLGID::OK.into(), move || {
+		self.btn_ok.on().bn_clicked(move || {
 			let mut all_tags = self2.all_tags.try_borrow_mut()?;
 			let mut edited_tags = all_tags.iter_mut()
 				.filter(|path_and_tag| self2.selected_paths.contains(&path_and_tag.mp3_path))
@@ -37,8 +37,8 @@ impl WndEdit {
 		});
 
 		let self2 = self.clone();
-		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), move || {
-			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?; // close on ESC
+		self.btn_cancel.on().bn_clicked(move || { // will also fire on Esc
+			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?;
 			Ok(())
 		});
 
