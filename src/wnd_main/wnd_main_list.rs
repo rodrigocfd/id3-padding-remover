@@ -38,6 +38,14 @@ impl WndMain {
 		});
 
 		let self2 = self.clone();
+		self.lst_files.on().nm_dbl_clk(move |_| {
+			self2.wnd.hwnd().SendMessage(msg::wm::Command {
+				event: w::AccelMenuCtrl::Accel(ids::MNU_MAIN_EDIT),
+			});
+			Ok(())
+		});
+
+		let self2 = self.clone();
 		self.lst_files.on().lvn_delete_item(move |_| {
 			// Notification is sent before the list is updated.
 			self2.update_num_files(self2.lst_files.items().count() - 1);
