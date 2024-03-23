@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*};
+use winsafe::{self as w, prelude::*, gui};
 
 use crate::id3v2;
 use super::WndMain;
@@ -24,15 +24,8 @@ impl WndMain {
 					}
 
 					let tag = id3v2::Tag::read_from_file(mp3_path)?;
-					self.lst_files.items().add(&[
-						mp3_path,
-						&tag.known_field(id3v2::Field::Artist).unwrap_or_default(),
-						&tag.known_field(id3v2::Field::Title).unwrap_or_default(),
-						&tag.known_field(id3v2::Field::Album).unwrap_or_default(),
-						&tag.known_field(id3v2::Field::Track).unwrap_or_default(),
-						&tag.known_field(id3v2::Field::Year).unwrap_or_default(),
-						&tag.known_field(id3v2::Field::Genre).unwrap_or_default(),
-					], None);
+					let new_item = self.lst_files.items().add(&[mp3_path], None);
+					self.write_tag_to_listview(new_item, &tag);
 					tags_ref.push(id3v2::PathAndTag::new(mp3_path, tag)); // keep the tag
 
 					w::AnyResult::Ok(())
@@ -41,6 +34,25 @@ impl WndMain {
 
 		self.lst_files.set_redraw(true);
 		self.update_num_files(self.lst_files.items().count());
+		Ok(())
+	}
+
+	pub(super) fn write_tag_to_listview(&self, item: gui::spec::ListViewItem, tag: &id3v2::Tag) {
+		[id3v2::Field::Artist, id3v2::Field::Title, id3v2::Field::Album, id3v2::Field::Track,
+			id3v2::Field::Year, id3v2::Field::Genre]
+			.iter()
+			.map(|field| tag.known_field(*field).unwrap_or_default())
+			.enumerate()
+			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 1, &field_val));
+	}
+
+	pub(super) fn remove_selected_files(&self) -> w::AnyResult<()> {
+		let sel_paths = self.lst_files.items()
+			.iter_selected()
+			.map(|item| item.text(0)).collect::<Vec<_>>();
+		self.all_tags.try_borrow_mut()?
+			.retain(|path_and_tag| !sel_paths.contains(&path_and_tag.mp3_path)); // remove from memory
+		self.lst_files.items().delete_selected();
 		Ok(())
 	}
 }

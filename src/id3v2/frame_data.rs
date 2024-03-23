@@ -1,6 +1,6 @@
 use winsafe::{self as w};
 
-use super::consts::PicType;
+use super::consts::{Field, PicType};
 use super::str_engine;
 
 /// Polymorphic data of a frame.
@@ -26,9 +26,24 @@ impl std::fmt::Display for FrameData {
 }
 
 impl FrameData {
+	/// Creates data from a string.
+	#[must_use]
+	pub(in crate::id3v2) fn new_from_string(f: Field, val: &str) -> Self {
+		match f {
+			Field::Comment => Self::Comment(Comment {
+				lang3: "eng".to_owned(),
+				descr: "".to_owned(), // will have empty description
+				text: val.to_owned(),
+			}),
+			_ => Self::Text(Text {
+				text: val.to_owned(),
+			}),
+		}
+	}
+
 	/// Parses the bytes according to the 4-char frame name.
 	#[must_use]
-	pub fn parse(name4: &str, src: &[u8]) -> w::AnyResult<Self> {
+	pub(in crate::id3v2) fn parse(name4: &str, src: &[u8]) -> w::AnyResult<Self> {
 		if name4 == "COMM" {
 			Self::parse_comm(src)
 		} else if name4 == "APIC" {
@@ -114,7 +129,7 @@ impl FrameData {
 
 	/// Serializes the data into bytes.
 	#[must_use]
-	pub fn serialize(&self) -> Vec<u8> {
+	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
 		match self {
 			FrameData::Text(t) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&t.text]);
@@ -147,6 +162,23 @@ impl FrameData {
 					.collect()
 			},
 		}
+	}
+
+	/// Tries to set the value as a string, returning an error if not possible.
+	pub(in crate::id3v2) fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
+		Ok(match self {
+			FrameData::Text(t) => {
+				t.text = val.to_owned();
+			},
+			FrameData::UserText(ut) => {
+				ut.text = val.to_owned();
+			},
+			FrameData::Binary(_) => return Err("Binary data cannot be set as string.".into()),
+			FrameData::Comment(c) => {
+				c.text = val.to_owned();
+			},
+			FrameData::Picture(_) => return Err("Picture data cannot be set as string.".into()),
+		})
 	}
 }
 

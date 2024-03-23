@@ -11,13 +11,34 @@ impl WndEdit {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(co::DLGID::OK.into(), move || {
+			let mut all_tags = self2.all_tags.try_borrow_mut()?;
+			let mut edited_tags = all_tags.iter_mut()
+				.filter(|path_and_tag| self2.selected_paths.contains(&path_and_tag.mp3_path))
+				.map(|path_and_tag| &mut path_and_tag.tag)
+				.collect::<Vec<_>>();
 
+			self2.field_packs.try_borrow()?
+				.iter()
+				.try_for_each(|field_pack| {
+					if field_pack.chk.is_checked() { // field is checked?
+						edited_tags.iter_mut() // for each MP3 being edited
+							.try_for_each(|tag| {
+								tag.set_known_field( // save the text to tag in Vec
+									field_pack.field,
+									field_pack.txt.text().trim(),
+								)?;
+								w::AnyResult::Ok(())
+							})?;
+					}
+					w::AnyResult::Ok(())
+				})?;
+			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?;
 			Ok(())
 		});
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(co::DLGID::CANCEL.into(), move || {
-			self2.wnd.hwnd().SendMessage(msg::wm::Close {}); // close on ESC
+			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?; // close on ESC
 			Ok(())
 		});
 

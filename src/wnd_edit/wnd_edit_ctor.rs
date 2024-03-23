@@ -71,17 +71,18 @@ impl WndEdit {
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
+		let all_tags = self.all_tags.try_borrow()?;
+		let edited_tags = all_tags.iter()
+			.filter(|path_and_tag| self.selected_paths.contains(&path_and_tag.mp3_path))
+			.map(|path_and_tag| &path_and_tag.tag)
+			.collect::<Vec<_>>();
+
 		self.field_packs.try_borrow()?
 			.iter()
 			.try_for_each(|field_pack| {
-				let all_tags = self.all_tags.try_borrow()?;
-				let edited_tags = all_tags.iter()
-					.filter(|path_and_tag| self.selected_paths.contains(&path_and_tag.mp3_path))
-					.collect::<Vec<_>>();
-
 				if edited_tags.len() == 1 { // just 1 MP3 being edited?
 					self.wnd.set_text("Edit tag");
-					match &edited_tags[0].tag.known_field(field_pack.field) {
+					match &edited_tags[0].known_field(field_pack.field) {
 						Some(field) => { // the MP3 has this field
 							field_pack.txt.set_text(field);
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
@@ -92,19 +93,18 @@ impl WndEdit {
 					}
 				} else { // multiple MP3s being edited
 					self.wnd.set_text(&format!("Edit {} tags", edited_tags.len()));
-					let maybe_idx_first = edited_tags.iter()
-						.position(|path_and_tag|
-							path_and_tag.tag.has_known_field(field_pack.field)
-						);
+					let maybe_idx_first = edited_tags.iter() // index of first MP3 which has the field
+						.position(|tag| tag.has_known_field(field_pack.field));
 					match maybe_idx_first {
-						Some(idx_first) => { // index of first MP3 which has the field
-							let first_val = edited_tags[idx_first].tag.known_field(field_pack.field).unwrap();
-							let all_equal = edited_tags.iter()
-								.all(|path_and_tag|
-									path_and_tag.tag.known_field(field_pack.field)
+						Some(idx_first) => { // at least 1 MP3 has this field
+							let first_val = edited_tags[idx_first].known_field(field_pack.field).unwrap();
+							let val_equal_in_all_mp3s = edited_tags.iter()
+								.skip(1)
+								.all(|tag|
+									tag.known_field(field_pack.field)
 										.unwrap_or_default() == first_val
 								);
-							if all_equal {
+							if val_equal_in_all_mp3s {
 								field_pack.txt.set_text(&first_val);
 								field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
 							} else {

@@ -1,17 +1,13 @@
 use winsafe::{self as w};
 
+use super::consts::Field;
 use super::frame_data::FrameData;
 use super::str_engine;
 
 /// A unit of data within a tag.
 pub struct Frame {
-	/// Uniquely identifies the frame type.
 	name4: String,
-	/// Includes 10-byte frame header.
-	original_size: u32,
-	/// Almost always zero.
 	flags: (u8, u8),
-	/// Polymorphic data.
 	data: FrameData,
 }
 
@@ -23,12 +19,22 @@ impl std::fmt::Display for Frame {
 
 impl Frame {
 	#[must_use]
-	pub(in crate::id3v2) fn parse(src: &[u8]) -> w::AnyResult<Self> {
+	pub(in crate::id3v2) fn new_from_string(f: Field, val: &str) -> Self {
+		Self {
+			name4: f.name4().to_owned(),
+			flags: (0, 0),
+			data: FrameData::new_from_string(f, val),
+		}
+	}
+
+	/// Also returns declared size, including 10-byte frame header.
+	#[must_use]
+	pub(in crate::id3v2) fn parse(src: &[u8]) -> w::AnyResult<(Self, u32)> {
 		let mut src = src;
 
 		// Parse the 10-byte frame header.
 		let name4 = str_engine::from_ascii(&src[0..4]);
-		let original_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte tag header
+		let original_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte frame header
 		let flags = (src[8], src[9]);
 
 		// Skip frame header, truncate to frame size.
@@ -37,7 +43,7 @@ impl Frame {
 		// Parse the frame contents.
 		let data = FrameData::parse(&name4, src)?;
 
-		Ok(Self { name4, original_size, flags, data })
+		Ok((Self { name4, flags, data }, original_size))
 	}
 
 	#[must_use]
@@ -53,11 +59,6 @@ impl Frame {
 	#[must_use]
 	pub const fn name4(&self) -> &String {
 		&self.name4
-	}
-
-	#[must_use]
-	pub const fn original_size(&self) -> u32 {
-		self.original_size
 	}
 
 	#[must_use]
@@ -78,5 +79,9 @@ impl Frame {
 			}
 		}
 		false
+	}
+
+	pub fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
+		self.data.set_string(val)
 	}
 }

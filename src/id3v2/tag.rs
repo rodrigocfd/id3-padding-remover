@@ -8,7 +8,6 @@ use super::synch_safe;
 /// Metadata of a single MP3 file.
 #[derive(Default)]
 pub struct Tag {
-	declared_size: u32,
 	mp3_offset: u32,
 	padding: u32,
 	frames: Vec<Frame>,
@@ -43,7 +42,7 @@ impl Tag {
 			Ok(Self::default()) // file has no tag
 		} else {
 			let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
-			Ok(Self { declared_size, mp3_offset, padding, frames })
+			Ok(Self { mp3_offset, padding, frames })
 		}
 	}
 
@@ -108,15 +107,15 @@ impl Tag {
 				break;
 			}
 
-			let new_frame = Frame::parse(src)?;
-			if new_frame.original_size() > src.len() as _ { // means the size was serialized with error
+			let (new_frame, original_size) = Frame::parse(src)?;
+			if original_size > src.len() as _ { // means the size was serialized with error
 				return Err(format!(
 					"Frame size is greater than available size: {} vs {}.",
-					new_frame.original_size(), src.len(),
+					original_size, src.len(),
 				).into());
 			}
 
-			src = &src[new_frame.original_size() as _..];
+			src = &src[original_size as _..];
 			frames.push(new_frame); // add the frame to our collection
 		}
 
@@ -163,11 +162,6 @@ impl Tag {
 	}
 
 	#[must_use]
-	pub const fn declared_size(&self) -> u32 {
-		self.declared_size
-	}
-
-	#[must_use]
 	pub const fn mp3_offset(&self) -> u32 {
 		self.mp3_offset
 	}
@@ -182,6 +176,12 @@ impl Tag {
 		&self.frames
 	}
 
+	/// Does the known field exist amongst the tag frames?
+	#[must_use]
+	pub fn has_known_field(&self, f: Field) -> bool {
+		self.known_field(f).is_some()
+	}
+
 	/// Returns the given known field as a single string, if present amongst the
 	/// tag frames.
 	#[must_use]
@@ -191,9 +191,21 @@ impl Tag {
 			.map(|frame| frame.data().to_string())
 	}
 
-	/// Does the known field exist amongst the tag frames?
-	#[must_use]
-	pub fn has_known_field(&self, f: Field) -> bool {
-		self.known_field(f).is_some()
+	/// Tries to set the known field as string, returning an error if not
+	/// possible. If the field does not exist, it will be created.
+	pub fn set_known_field(&mut self, f: Field, val: &str) -> w::AnyResult<()> {
+		if val.is_empty() {
+			if let Some(idx) = self.frames.iter().position(|frame| frame.name4() == f.name4()) {
+				self.frames.remove(idx); // empty string will remove the frame
+			}
+		} else {
+			match self.frames.iter_mut()
+				.find(|frame| frame.name4() == f.name4())
+			{
+				Some(frame) => frame.set_string(val)?, // field does exist, update
+				None => self.frames.push(Frame::new_from_string(f, val)), // no such field exists, create new
+			}
+		}
+		Ok(())
 	}
 }

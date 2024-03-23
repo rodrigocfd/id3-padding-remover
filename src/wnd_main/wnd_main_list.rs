@@ -28,7 +28,7 @@ impl WndMain {
 		let self2 = self.clone();
 		self.lst_files.on().lvn_key_down(move |p| {
 			if p.wVKey == co::VK::DELETE { // on DEL key, remove selected files from the list
-				self2.lst_files.items().delete_selected();
+				self2.remove_selected_files()?;
 			}
 			Ok(())
 		});
