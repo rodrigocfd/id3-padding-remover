@@ -38,12 +38,15 @@ impl WndMain {
 	}
 
 	pub(super) fn write_tag_to_listview(&self, item: gui::spec::ListViewItem, tag: &id3v2::Tag) {
+		item.set_text(1, &tag.padding().to_string());
+		if tag.has_frame("APIC") { item.set_text(2, "✓"); }
+
 		[id3v2::Field::Artist, id3v2::Field::Title, id3v2::Field::Album, id3v2::Field::Track,
 			id3v2::Field::Year, id3v2::Field::Genre]
 			.iter()
 			.map(|field| tag.known_field(*field).unwrap_or_default())
 			.enumerate()
-			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 1, &field_val));
+			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 3, &field_val));
 	}
 
 	pub(super) fn remove_selected_files(&self) -> w::AnyResult<()> {

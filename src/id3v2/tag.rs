@@ -176,10 +176,16 @@ impl Tag {
 		&self.frames
 	}
 
+	/// Does the frame exist amongs the tag frames?
+	#[must_use]
+	pub fn has_frame(&self, name4: &str) -> bool {
+		self.frames.iter().any(|frame| frame.name4() == name4)
+	}
+
 	/// Does the known field exist amongst the tag frames?
 	#[must_use]
 	pub fn has_known_field(&self, f: Field) -> bool {
-		self.known_field(f).is_some()
+		self.has_frame(f.name4())
 	}
 
 	/// Returns the given known field as a single string, if present amongst the
