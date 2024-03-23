@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*, co};
+use winsafe::{self as w, prelude::*, co, msg};
 
 use crate::ids;
 use super::WndMain;
@@ -29,6 +29,10 @@ impl WndMain {
 		self.lst_files.on().lvn_key_down(move |p| {
 			if p.wVKey == co::VK::DELETE { // on DEL key, remove selected files from the list
 				self2.remove_selected_files()?;
+			} else if p.wVKey == co::VK::RETURN { // on Enter key, edit the selected tags
+				self2.wnd.hwnd().SendMessage(msg::wm::Command {
+					event: w::AccelMenuCtrl::Accel(ids::MNU_MAIN_EDIT),
+				});
 			}
 			Ok(())
 		});

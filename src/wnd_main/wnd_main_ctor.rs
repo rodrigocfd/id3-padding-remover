@@ -35,6 +35,7 @@ impl WndMain {
 	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
 		self.update_num_files(self.lst_files.items().count());
 
+		self.lst_files.context_menu().unwrap().SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
 		self.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
 		self.lst_files.columns().add(&[
 			("File", 380),

@@ -40,6 +40,10 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_EDIT, move || {
+			if self2.lst_files.items().selected_count() == 0 {
+				return Ok(()); // Enter key will hit here even if there are no selected items
+			}
+
 			let wnd_edit = WndEdit::new(
 				&self2.wnd,
 				self2.all_tags.clone(), // pointer to all tags in memory
