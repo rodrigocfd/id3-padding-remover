@@ -23,10 +23,10 @@ impl WndMain {
 						return Ok(()); // ignore already existing files
 					}
 
-					let tag = id3v2::Tag::read_from_file(mp3_path)?;
+					let path_and_tag = id3v2::PathAndTag::read_from_file(mp3_path)?;
 					let new_item = self.lst_files.items().add(&[mp3_path], None);
-					self.write_tag_to_listview(new_item, &tag);
-					tags_ref.push(id3v2::PathAndTag::new(mp3_path, tag)); // keep the tag
+					self.write_tag_to_listview(new_item, &path_and_tag.tag);
+					tags_ref.push(path_and_tag); // keep the tag
 
 					w::AnyResult::Ok(())
 				})?;
