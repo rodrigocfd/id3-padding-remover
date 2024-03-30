@@ -57,7 +57,6 @@ impl WndMain {
 			let version_parts = hversion.version_info()?.dwFileVersion();
 
 			self2.wnd.hwnd().TaskDialog(
-				None,
 				Some("About"),
 				Some("ID3 Fit"),
 				Some(&format!(
