@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
+use try_iterator::prelude::*;
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::{id3v2, ids};
@@ -26,8 +27,7 @@ impl WndEdit {
 	#[must_use]
 	pub fn new(
 		parent: &impl GuiParent,
-		all_tags: Rc<RefCell<Vec<id3v2::PathAndTag>>>,
-		selected_paths: Vec<String>,
+		sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>,
 	) -> Self
 	{
 		let wnd = gui::WindowModal::new_dlg(parent, ids::DLG_EDIT);
@@ -57,8 +57,7 @@ impl WndEdit {
 				FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
 				FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
 			])),
-			all_tags,
-			selected_paths,
+			sel_tags,
 		};
 		new_self.wm_events();
 		new_self
@@ -71,18 +70,12 @@ impl WndEdit {
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
-		let all_tags = self.all_tags.try_borrow()?;
-		let edited_tags = all_tags.iter()
-			.filter(|path_and_tag| self.selected_paths.contains(&path_and_tag.mp3_path))
-			.map(|path_and_tag| &path_and_tag.tag)
-			.collect::<Vec<_>>();
-
 		self.field_packs.try_borrow()?
 			.iter()
 			.try_for_each(|field_pack| {
-				if edited_tags.len() == 1 { // just 1 MP3 being edited?
+				if self.sel_tags.len() == 1 { // just 1 MP3 being edited?
 					self.wnd.set_text("Edit tag");
-					match &edited_tags[0].known_field(field_pack.field) {
+					match &self.sel_tags[0].try_borrow()?.known_field(field_pack.field) {
 						Some(field) => { // the MP3 has this field
 							field_pack.txt.set_text(field);
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
@@ -92,18 +85,27 @@ impl WndEdit {
 						},
 					}
 				} else { // multiple MP3s being edited
-					self.wnd.set_text(&format!("Edit {} tags", edited_tags.len()));
-					let maybe_idx_first = edited_tags.iter() // index of first MP3 which has the field
-						.position(|tag| tag.has_known_field(field_pack.field));
+					self.wnd.set_text(&format!("Edit {} tags", self.sel_tags.len()));
+					let maybe_idx_first = self.sel_tags.iter() // index of first MP3 which has the field
+						.try_position(|tag| {
+							let has = tag.try_borrow()?.has_known_field(field_pack.field);
+							w::AnyResult::Ok(has)
+						})?;
+
 					match maybe_idx_first {
 						Some(idx_first) => { // at least 1 MP3 has this field
-							let first_val = edited_tags[idx_first].known_field(field_pack.field).unwrap();
-							let val_equal_in_all_mp3s = edited_tags.iter()
+							let first_val = self.sel_tags[idx_first]
+								.try_borrow()?
+								.known_field(field_pack.field).unwrap();
+							let val_equal_in_all_mp3s = self.sel_tags.iter()
 								.skip(1)
-								.all(|tag|
-									tag.known_field(field_pack.field)
-										.unwrap_or_default() == first_val
-								);
+								.try_all(|tag| {
+									let is_all = tag.try_borrow()?
+										.known_field(field_pack.field)
+										.unwrap_or_default() == first_val;
+									w::AnyResult::Ok(is_all)
+								})?;
+
 							if val_equal_in_all_mp3s {
 								field_pack.txt.set_text(&first_val);
 								field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);

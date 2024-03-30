@@ -14,10 +14,7 @@ pub struct WndEdit {
 	btn_ok:      gui::Button,
 	btn_cancel:  gui::Button,
 	field_packs: Rc<RefCell<Vec<FieldPack>>>,
-
-	/// Each tag is indexed by its file path.
-	all_tags:       Rc<RefCell<Vec<id3v2::PathAndTag>>>,
-	selected_paths: Vec<String>,
+	sel_tags:    Vec<Rc<RefCell<id3v2::Tag>>>,
 }
 
 trait ChildFocus: GuiWindowText + GuiChildFocus {}

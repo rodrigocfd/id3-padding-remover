@@ -1,5 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::ids;
@@ -18,7 +16,6 @@ impl WndMain {
 			wnd,
 			lst_files: lst_files.clone(),
 			lst_files_h: gui::Header::from_list_view(&lst_files),
-			all_tags: Rc::new(RefCell::new(Vec::default())),
 		};
 		new_self.wm_events();
 		new_self.list_events();

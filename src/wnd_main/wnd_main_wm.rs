@@ -1,6 +1,6 @@
 use winsafe::{self as w, prelude::*, co};
 
-use crate::{ids, wnd_edit::WndEdit};
+use crate::ids;
 use super::WndMain;
 
 impl WndMain {
@@ -40,39 +40,13 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_EDIT, move || {
-			if self2.lst_files.items().selected_count() == 0 {
-				return Ok(()); // Enter key will hit here even if there are no selected items
-			}
-
-			let wnd_edit = WndEdit::new(
-				&self2.wnd,
-				self2.all_tags.clone(), // pointer to all tags in memory
-				self2.lst_files.items() // currently selected MP3 paths
-					.iter_selected()
-					.map(|sel_item| sel_item.text(0))
-					.collect(),
-			);
-			wnd_edit.show()?;
-
-			self2.lst_files.set_redraw(false);
-			{
-				let all_tags = self2.all_tags.try_borrow()?;
-				self2.lst_files.items() // update the listview values of all selected tags
-					.iter_selected()
-					.for_each(|sel_item| {
-						let mp3_path = sel_item.text(0);
-						all_tags.iter()
-							.find(|path_and_tag| path_and_tag.mp3_path == mp3_path)
-							.map(|path_and_tag| self2.write_tag_to_listview(sel_item, &path_and_tag.tag));
-					});
-			}
-			self2.lst_files.set_redraw(true);
+			self2.edit_selected()?;
 			Ok(())
 		});
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_REMOVE, move || {
-			self2.remove_selected_files()?;
+			self2.lst_files.items().delete_selected();
 			Ok(())
 		});
 

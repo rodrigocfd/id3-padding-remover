@@ -28,20 +28,16 @@ impl WndMain {
 		let self2 = self.clone();
 		self.lst_files.on().lvn_key_down(move |p| {
 			if p.wVKey == co::VK::DELETE { // on DEL key, remove selected files from the list
-				self2.remove_selected_files()?;
+				self2.lst_files.items().delete_selected();
 			} else if p.wVKey == co::VK::RETURN { // on Enter key, edit the selected tags
-				self2.wnd.hwnd().SendMessage(msg::wm::Command {
-					event: w::AccelMenuCtrl::Accel(ids::MNU_MAIN_EDIT),
-				});
+				self2.edit_selected()?;
 			}
 			Ok(())
 		});
 
 		let self2 = self.clone();
 		self.lst_files.on().nm_dbl_clk(move |_| {
-			self2.wnd.hwnd().SendMessage(msg::wm::Command {
-				event: w::AccelMenuCtrl::Accel(ids::MNU_MAIN_EDIT),
-			});
+			self2.edit_selected()?;
 			Ok(())
 		});
 

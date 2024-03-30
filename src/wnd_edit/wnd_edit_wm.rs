@@ -11,34 +11,26 @@ impl WndEdit {
 
 		let self2 = self.clone();
 		self.btn_ok.on().bn_clicked(move || {
-			let mut all_tags = self2.all_tags.try_borrow_mut()?;
-			let mut edited_tags = all_tags.iter_mut()
-				.filter(|path_and_tag| self2.selected_paths.contains(&path_and_tag.mp3_path))
-				.map(|path_and_tag| &mut path_and_tag.tag)
-				.collect::<Vec<_>>();
-
 			self2.field_packs.try_borrow()?
 				.iter()
 				.try_for_each(|field_pack| {
 					if field_pack.chk.is_checked() { // field is checked?
-						edited_tags.iter_mut() // for each MP3 being edited
-							.try_for_each(|tag| {
-								tag.set_known_field( // save the text to tag in Vec
-									field_pack.field,
-									field_pack.txt.text().trim(),
-								)?;
+						self2.sel_tags.iter()
+							.try_for_each(|rc_tag| { // for each MP3 being edited
+								let mut tag = rc_tag.try_borrow_mut()?;
+								tag.set_known_field(field_pack.field, field_pack.txt.text().trim())?;
 								w::AnyResult::Ok(())
 							})?;
 					}
 					w::AnyResult::Ok(())
 				})?;
-			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?;
+			self2.wnd.close();
 			Ok(())
 		});
 
 		let self2 = self.clone();
 		self.btn_cancel.on().bn_clicked(move || { // will also fire on Esc
-			self2.wnd.hwnd().PostMessage(msg::wm::Close {})?;
+			self2.wnd.close();
 			Ok(())
 		});
 
