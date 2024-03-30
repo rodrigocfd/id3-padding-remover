@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*, msg};
+use winsafe::{self as w, prelude::*};
 
 use super::WndEdit;
 

@@ -11,12 +11,9 @@ impl WndMain {
 
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_APP), Some(ids::ACC_MAIN));
 		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, (H::Resize, V::Resize), Some(ids::MNU_MAIN));
+		let lst_files_h = gui::Header::from_list_view(&lst_files);
 
-		let new_self = Self {
-			wnd,
-			lst_files: lst_files.clone(),
-			lst_files_h: gui::Header::from_list_view(&lst_files),
-		};
+		let new_self = Self { wnd, lst_files, lst_files_h };
 		new_self.wm_events();
 		new_self.list_events();
 		new_self

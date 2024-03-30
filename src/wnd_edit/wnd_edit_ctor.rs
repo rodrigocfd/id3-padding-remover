@@ -31,34 +31,31 @@ impl WndEdit {
 	) -> Self
 	{
 		let wnd = gui::WindowModal::new_dlg(parent, ids::DLG_EDIT);
+		let btn_ok = gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN);
+		let btn_cancel = gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN);
+		let field_packs = Rc::new(RefCell::new(vec![
+			FieldPack::new_edit(id3v2::Field::Artist, &wnd, ids::CHK_ARTIST),
+			FieldPack::new_edit(id3v2::Field::Title, &wnd, ids::CHK_TITLE),
+			FieldPack::new_edit(id3v2::Field::Subtitle, &wnd, ids::CHK_SUBTITLE),
+			FieldPack::new_edit(id3v2::Field::Album, &wnd, ids::CHK_ALBUM),
+			FieldPack::new_edit(id3v2::Field::Track, &wnd, ids::CHK_TRACK),
+			FieldPack::new_edit(id3v2::Field::Year, &wnd, ids::CHK_YEAR),
+			FieldPack {
+				field: id3v2::Field::Genre,
+				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
+				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
+			},
+			FieldPack::new_edit(id3v2::Field::Composer, &wnd, ids::CHK_COMPOSER),
+			FieldPack::new_edit(id3v2::Field::Lyricist, &wnd, ids::CHK_LYRICIST),
+			FieldPack::new_edit(id3v2::Field::Comment, &wnd, ids::CHK_COMMENT),
+			FieldPack::new_edit(id3v2::Field::Performer, &wnd, ids::CHK_PERFORMER),
+			FieldPack::new_edit(id3v2::Field::Publisher, &wnd, ids::CHK_PUBLISHER),
+			FieldPack::new_edit(id3v2::Field::OrigArtist, &wnd, ids::CHK_ORIG_ARTIST),
+			FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
+			FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
+		]));
 
-		let new_self = Self {
-			wnd: wnd.clone(),
-			btn_ok: gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN),
-			btn_cancel: gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN),
-			field_packs: Rc::new(RefCell::new(vec![
-				FieldPack::new_edit(id3v2::Field::Artist, &wnd, ids::CHK_ARTIST),
-				FieldPack::new_edit(id3v2::Field::Title, &wnd, ids::CHK_TITLE),
-				FieldPack::new_edit(id3v2::Field::Subtitle, &wnd, ids::CHK_SUBTITLE),
-				FieldPack::new_edit(id3v2::Field::Album, &wnd, ids::CHK_ALBUM),
-				FieldPack::new_edit(id3v2::Field::Track, &wnd, ids::CHK_TRACK),
-				FieldPack::new_edit(id3v2::Field::Year, &wnd, ids::CHK_YEAR),
-				FieldPack {
-					field: id3v2::Field::Genre,
-					chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
-					txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
-				},
-				FieldPack::new_edit(id3v2::Field::Composer, &wnd, ids::CHK_COMPOSER),
-				FieldPack::new_edit(id3v2::Field::Lyricist, &wnd, ids::CHK_LYRICIST),
-				FieldPack::new_edit(id3v2::Field::Comment, &wnd, ids::CHK_COMMENT),
-				FieldPack::new_edit(id3v2::Field::Performer, &wnd, ids::CHK_PERFORMER),
-				FieldPack::new_edit(id3v2::Field::Publisher, &wnd, ids::CHK_PUBLISHER),
-				FieldPack::new_edit(id3v2::Field::OrigArtist, &wnd, ids::CHK_ORIG_ARTIST),
-				FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
-				FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
-			])),
-			sel_tags,
-		};
+		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, sel_tags };
 		new_self.wm_events();
 		new_self
 	}

@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*, co, msg};
+use winsafe::{self as w, prelude::*, co};
 
 use crate::ids;
 use super::WndMain;
