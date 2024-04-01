@@ -11,7 +11,7 @@ codegen-units = 1
 #panic = "abort"
 
 [dependencies]
-try-iterator = { path = "../try-iterator" }
+try-iterator = { version = "1.*" }
 winsafe = { path = "../winsafe", features = ["gui", "version"] }
 
 # https://doc.rust-lang.org/reference/linkage.html#static-and-dynamic-c-runtimes
