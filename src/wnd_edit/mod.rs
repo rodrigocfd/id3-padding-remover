@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use winsafe::{gui, prelude::*};
 
-use crate::id3v2;
+use crate::{id3v2, wnd_picture::WndPicture};
 
 mod wnd_edit_ctor;
 mod wnd_edit_wm;
@@ -14,6 +14,7 @@ pub struct WndEdit {
 	btn_ok:      gui::Button,
 	btn_cancel:  gui::Button,
 	field_packs: Rc<RefCell<Vec<FieldPack>>>,
+	wnd_pic:     WndPicture,
 	sel_tags:    Vec<Rc<RefCell<id3v2::Tag>>>,
 }
 

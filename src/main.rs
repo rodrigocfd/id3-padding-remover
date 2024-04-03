@@ -4,6 +4,7 @@ mod id3v2;
 mod ids;
 mod wnd_edit;
 mod wnd_main;
+mod wnd_picture;
 
 use winsafe::{self as w, prelude::*, co};
 use wnd_main::WndMain;

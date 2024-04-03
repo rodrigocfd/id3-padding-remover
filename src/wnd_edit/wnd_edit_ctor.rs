@@ -4,7 +4,7 @@ use std::sync::Arc;
 use try_iterator::prelude::*;
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::{id3v2, ids};
+use crate::{id3v2, ids, wnd_picture::WndPicture};
 use super::{FieldPack, WndEdit};
 
 impl FieldPack {
@@ -54,8 +54,9 @@ impl WndEdit {
 			FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
 			FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
 		]));
+		let wnd_pic = WndPicture::new(&wnd, (466, 10), (90, 90), NN);
 
-		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, sel_tags };
+		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, wnd_pic, sel_tags };
 		new_self.wm_events();
 		new_self
 	}

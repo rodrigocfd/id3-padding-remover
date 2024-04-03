@@ -4,7 +4,7 @@ use crate::id3v2;
 
 mod wnd_main_ctor;
 mod wnd_main_funcs;
-mod wnd_main_list;
+mod wnd_main_lvn;
 mod wnd_main_wm;
 
 #[derive(Clone)]
