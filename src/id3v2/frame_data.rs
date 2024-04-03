@@ -104,7 +104,7 @@ impl FrameData {
 		let mime = str_engine::from_ascii(mime_parts.nth(0).unwrap()); // assume ASCII mime
 		src = mime_parts.nth(0).unwrap();
 
-		let pic_type = PicType::from_u8(src[0]);
+		let pic_type = PicType::from(src[0]);
 		src = &src[1..]; // skip picture type
 
 		let mut descr = String::default();

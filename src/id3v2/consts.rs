@@ -99,9 +99,8 @@ impl std::fmt::Display for PicType {
 	}
 }
 
-impl PicType {
-	#[must_use]
-	pub fn from_u8(n: u8) -> Self {
+impl From<u8> for PicType {
+	fn from(n: u8) -> Self {
 		if n > 0x14 {
 			panic!("Invalid PicType value: {}.", n);
 		}
