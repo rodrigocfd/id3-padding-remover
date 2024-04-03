@@ -6,7 +6,7 @@ impl WndEdit {
 	pub(super) fn wm_events(&self) {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_dialog(move |_| {
-			self2.init_dialog()
+			self2.on_init_dialog()
 		});
 
 		let self2 = self.clone();

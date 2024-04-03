@@ -71,6 +71,10 @@ impl Frame {
 		&self.data
 	}
 
+	pub fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
+		self.data.set_string(val)
+	}
+
 	#[must_use]
 	pub fn is_replay_gain(&self) -> bool {
 		if self.name4 == "TXXX" {
@@ -79,9 +83,5 @@ impl Frame {
 			}
 		}
 		false
-	}
-
-	pub fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
-		self.data.set_string(val)
 	}
 }

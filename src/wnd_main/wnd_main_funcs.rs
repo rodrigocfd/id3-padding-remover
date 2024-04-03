@@ -68,7 +68,7 @@ impl WndMain {
 			.map(|sel_item| sel_item.data().unwrap())
 			.collect::<Vec<_>>();
 
-		let wnd_edit = WndEdit::new(&self.wnd, rc_tags);
+		let wnd_edit = WndEdit::new(&self.wnd, rc_tags)?;
 		wnd_edit.show()?;
 
 		self.lst_files.set_redraw(false);

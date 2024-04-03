@@ -1,6 +1,7 @@
 use winsafe::{self as w};
 
 use super::consts::Field;
+use super::frame_data::{FrameData, Picture};
 use super::frame::Frame;
 use super::str_engine;
 use super::synch_safe;
@@ -162,18 +163,8 @@ impl Tag {
 	}
 
 	#[must_use]
-	pub const fn mp3_offset(&self) -> u32 {
-		self.mp3_offset
-	}
-
-	#[must_use]
 	pub const fn padding(&self) -> u32 {
 		self.padding
-	}
-
-	#[must_use]
-	pub const fn frames(&self) -> &Vec<Frame> {
-		&self.frames
 	}
 
 	/// Does the frame exist amongs the tag frames?
@@ -213,5 +204,17 @@ impl Tag {
 			}
 		}
 		Ok(())
+	}
+
+	/// Returns the first APIC frame, if present.
+	pub fn apic(&self) -> Option<&Picture> {
+		self.frames.iter()
+			.find(|frame| frame.name4() == "APIC")
+			.map(|frame| {
+				match frame.data() {
+					FrameData::Picture(pic) => pic,
+					_ => panic!("APIC with non-picture content.")
+				}
+			})
 	}
 }

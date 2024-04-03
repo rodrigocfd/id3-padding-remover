@@ -201,9 +201,21 @@ pub struct Comment {
 	pub text: String,
 }
 
+#[derive(Eq)]
 pub struct Picture {
 	pub mime: String,
 	pub pic_type: PicType,
 	pub descr: String,
 	pub data: Vec<u8>,
+}
+
+impl PartialEq for Picture {
+	fn eq(&self, other: &Picture) -> bool {
+		self.mime == other.mime
+			&& self.pic_type == other.pic_type
+			&& self.descr == other.descr
+			&& self.data.iter()
+				.zip(other.data.iter())
+				.all(|(a, b)| a == b)
+	}
 }

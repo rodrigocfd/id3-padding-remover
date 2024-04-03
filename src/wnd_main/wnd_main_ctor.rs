@@ -25,7 +25,7 @@ impl WndMain {
 	}
 
 	/// Initializes the `WndMain` window.
-	pub(super) fn init_dialog(&self) -> w::AnyResult<bool> {
+	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
 		self.update_num_files(self.lst_files.items().count());
 
 		self.lst_files.context_menu().unwrap().SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
