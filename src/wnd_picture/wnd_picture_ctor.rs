@@ -27,14 +27,14 @@ impl WndPicture {
 			resize_behavior,
 			..gui::WindowControlOpts::default()
 		});
+		let ipic = Self::load_picture(sel_tags)?;
 
-		let new_self = Self { wnd };
+		let new_self = Self { wnd, ipic };
 		new_self.events();
-		new_self.load_picture_if_due(sel_tags)?;
 		Ok(new_self)
 	}
 
-	fn load_picture_if_due(&self, sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<()> {
+	fn load_picture(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Option<w::IPicture>> {
 		let maybe_idx_first = sel_tags.iter()
 			.try_position(|tag| {
 				let has = tag.try_borrow()?.apic().is_some();
@@ -51,10 +51,19 @@ impl WndPicture {
 				})?;
 
 			if val_equal_in_all_mp3s {
-				println!("YES");
+				let stream = w::SHCreateMemStream(
+					&sel_tags[idx_first].try_borrow()?
+						.apic()
+						.unwrap()
+						.data,
+				)?;
+				let ipic = w::OleLoadPicture(&stream, None, true)?;
+				Ok(Some(ipic))
+			} else {
+				Ok(None)
 			}
+		} else {
+			Ok(None)
 		}
-
-		Ok(())
 	}
 }
