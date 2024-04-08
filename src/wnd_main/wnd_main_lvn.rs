@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use winsafe::{self as w, prelude::*, co};
 
 use crate::ids;
@@ -50,7 +51,8 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.lst_files_h.on().hdn_item_click(move |p| {
-			println!("Clicked {}, ID {}", p.iItem, self2.lst_files_h.ctrl_id());
+			let col = p.iItem as u32;
+			self2.lst_files.items().sort(|a, b| a.text(col).cmp(&b.text(col)));
 			Ok(())
 		});
 	}

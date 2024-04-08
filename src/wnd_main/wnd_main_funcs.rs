@@ -35,6 +35,7 @@ impl WndMain {
 				}
 			})?;
 
+		self.lst_files.items().sort(|a, b| a.text(0).cmp(&b.text(0))); // sort by path
 		self.lst_files.set_redraw(true);
 		self.update_num_files(self.lst_files.items().count());
 		Ok(())
