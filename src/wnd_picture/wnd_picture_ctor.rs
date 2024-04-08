@@ -35,13 +35,13 @@ impl WndPicture {
 	}
 
 	fn load_picture(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Option<w::IPicture>> {
-		let maybe_idx_first = sel_tags.iter()
+		let maybe_idx_first_mp3 = sel_tags.iter() // index of first MP3 which has APIC
 			.try_position(|tag| {
 				let has = tag.try_borrow()?.apic().is_some();
 				w::AnyResult::Ok(has)
 			})?;
 
-		if let Some(idx_first) = maybe_idx_first { // at last 1 MP3 has APIC
+		if let Some(idx_first) = maybe_idx_first_mp3 { // at last 1 MP3 has APIC
 			let val_equal_in_all_mp3s = sel_tags.iter()
 				.skip(1)
 				.try_all(|tag| {

@@ -77,13 +77,13 @@ impl WndEdit {
 					if self.sel_tags.len() == 1 { "" } else { "s" },
 				));
 
-				let maybe_idx_first = self.sel_tags.iter() // index of first MP3 which has the field
+				let maybe_idx_first_mp3 = self.sel_tags.iter() // index of first MP3 which has the field
 					.try_position(|tag| {
 						let has = tag.try_borrow()?.has_known_field(field_pack.field);
 						w::AnyResult::Ok(has)
 					})?;
 
-				match maybe_idx_first {
+				match maybe_idx_first_mp3 {
 					Some(idx_first) => { // at least 1 MP3 has this field
 						let first_val = self.sel_tags[idx_first]
 							.try_borrow()?
