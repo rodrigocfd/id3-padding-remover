@@ -11,6 +11,26 @@ impl WndMain {
 		});
 
 		let self2 = self.clone();
+		self.wnd.on().wm_drop_files(move |mut p| {
+			let dropped_files = p.hdrop.DragQueryFile()?
+				.collect::<w::SysResult<Vec<_>>>()?;
+			let mut valid_files = Vec::<String>::with_capacity(dropped_files.len());
+
+			for file in dropped_files.iter() {
+				if w::path::is_directory(file) {
+					for sub_file in w::path::dir_list(file, Some("*.mp3")) {
+						valid_files.push(sub_file?); // search only 1 level below
+					}
+				} else if w::path::has_extension(file, &[".mp3"]) {
+					valid_files.push(file.clone());
+				}
+			}
+
+			self2.add_files_to_list(&valid_files)?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_OPEN, move || {
 			let fileo = w::CoCreateInstance::<w::IFileOpenDialog>(
 				&co::CLSID::FileOpenDialog, None, co::CLSCTX::INPROC_SERVER)?;
@@ -28,7 +48,7 @@ impl WndMain {
 			fileo.SetFileTypeIndex(1)?;
 
 			if fileo.Show(self2.wnd.hwnd())? {
-				self2.add_files(
+				self2.add_files_to_list(
 					&fileo.GetResults()?
 						.iter()?
 						.map(|shi| shi?.GetDisplayName(co::SIGDN::FILESYSPATH))

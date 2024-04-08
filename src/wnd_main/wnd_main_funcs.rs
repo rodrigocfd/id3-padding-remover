@@ -9,7 +9,7 @@ impl WndMain {
 		self.wnd.set_text(&format!("ID3 Fit ({}/{})", num_selec, tot_files));
 	}
 
-	pub(super) fn add_files(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
+	pub(super) fn add_files_to_list(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
 		self.lst_files.set_redraw(false);
 
 		files.iter()
