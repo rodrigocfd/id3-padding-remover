@@ -26,7 +26,7 @@ impl WndMain {
 							item
 						},
 						None => { // MP3 not in the list yet?
-							let new_item = self.lst_files.items().add(&[mp3_path], None, tag); // save tag in the item
+							let new_item = self.lst_files.items().add(&[mp3_path], Some(0), tag); // save tag in the item
 							new_item
 						},
 					};

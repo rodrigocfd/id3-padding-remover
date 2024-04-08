@@ -28,6 +28,10 @@ impl WndMain {
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
 		self.update_num_files(self.lst_files.items().count());
 
+		let il = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
+		il.add_icons_from_shell(&["mp3"])?;
+
+		self.lst_files.set_image_list(co::LVSIL::SMALL, il);
 		self.lst_files.context_menu().unwrap().SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
 		self.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
 		self.lst_files.columns().add(&[
