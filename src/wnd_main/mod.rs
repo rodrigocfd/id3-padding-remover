@@ -14,5 +14,5 @@ pub struct WndMain {
 	wnd:          gui::WindowMain,
 	lst_files:    gui::ListView<id3v2::Tag>,
 	lst_files_h:  gui::Header,
-	cur_sort_col: Rc<Cell<u32>>,
+	cur_sort_col: Rc<Cell<(u32, bool)>>, // index, reversed
 }

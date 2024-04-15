@@ -14,7 +14,7 @@ impl WndMain {
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_APP), Some(ids::ACC_MAIN));
 		let lst_files = gui::ListView::new_dlg(&wnd, ids::LST_FILES, (H::Resize, V::Resize), Some(ids::MNU_MAIN));
 		let lst_files_h = gui::Header::from_list_view(&lst_files);
-		let cur_sort_col = Rc::new(Cell::new(0));
+		let cur_sort_col = Rc::new(Cell::new((0xffff_ffff, false)));
 
 		let new_self = Self { wnd, lst_files, lst_files_h, cur_sort_col };
 		new_self.wm_events();
@@ -51,6 +51,7 @@ impl WndMain {
 			("Comment", 80),
 		]);
 
+		self.sort_list(0, true); // sort by path initially
 		Ok(true)
 	}
 }

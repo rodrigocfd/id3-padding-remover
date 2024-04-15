@@ -35,9 +35,7 @@ impl WndMain {
 				}
 			})?;
 
-		self.lst_files.items().sort(|a, b| a.text(0).cmp(&b.text(0))); // sort by path
-		self.cur_sort_col.set(0);
-
+		self.sort_list(0, true); // force re-sort by path
 		self.lst_files.set_redraw(true);
 		self.update_num_files(self.lst_files.items().count());
 		Ok(())
@@ -87,5 +85,25 @@ impl WndMain {
 			})?;
 		self.lst_files.set_redraw(true);
 		Ok(())
+	}
+
+	pub(super) fn sort_list(&self, new_col: u32, force_asc: bool) {
+		let (cur_col, reversed) = self.cur_sort_col.get();
+		self.lst_files_h.items().get(cur_col).set_arrow(gui::HeaderArrow::None);
+
+		if force_asc || new_col != cur_col {
+			self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)));
+			self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Asc);
+			self.cur_sort_col.set((new_col, false));
+		} else {
+			if !reversed {
+				self.lst_files.items().sort(|a, b| b.text(new_col).cmp(&a.text(new_col)));
+				self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Desc);
+			} else {
+				self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)));
+				self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Asc);
+			}
+			self.cur_sort_col.set((new_col, !reversed));
+		}
 	}
 }
