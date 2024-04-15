@@ -30,7 +30,7 @@ impl WndMain {
 							new_item
 						},
 					};
-					self.write_tag_to_listview(&item)?;
+					self.print_tag_in_listview(&item)?;
 					w::AnyResult::Ok(())
 				}
 			})?;
@@ -41,7 +41,7 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn write_tag_to_listview(&self,
+	pub(super) fn print_tag_in_listview(&self,
 		item: &gui::spec::ListViewItem<'_, id3v2::Tag>,
 	) -> w::AnyResult<()>
 	{
@@ -76,10 +76,10 @@ impl WndMain {
 		self.lst_files.items()
 			.iter_selected()
 			.try_for_each(|sel_item| {
-				self.write_tag_to_listview(&sel_item)?; // update the list with the new values
+				self.print_tag_in_listview(&sel_item)?; // update the list with the new values
 
-				// let rc_tag = sel_item.data().unwrap(); // retrieve tag saved in the listview item
-				// rc_tag.try_borrow()?.save_to_file(&sel_item.text(0))?; // save to MP3 file
+				let rc_tag = sel_item.data().unwrap(); // retrieve tag saved in the listview item
+				rc_tag.try_borrow()?.save_to_file(&sel_item.text(0))?; // save to MP3 file
 
 				w::AnyResult::Ok(())
 			})?;
