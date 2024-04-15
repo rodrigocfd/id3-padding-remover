@@ -15,6 +15,7 @@ pub struct WndEdit {
 	btn_cancel:  gui::Button,
 	field_packs: Rc<RefCell<Vec<FieldPack>>>,
 	wnd_pic:     WndPicture,
+	lst_frames:  gui::ListView,
 	sel_tags:    Vec<Rc<RefCell<id3v2::Tag>>>,
 }
 

@@ -54,9 +54,10 @@ impl WndEdit {
 			FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
 			FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
 		]));
-		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (466, 10), (90, 90), NN)?;
+		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (264, 22), (90, 90), NN)?;
+		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
 
-		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, wnd_pic, sel_tags };
+		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, wnd_pic, sel_tags, lst_frames };
 		new_self.wm_events();
 		Ok(new_self)
 	}
@@ -111,6 +112,14 @@ impl WndEdit {
 
 				w::AnyResult::Ok(())
 			})?;
+
+		self.lst_frames.columns().add(&[
+			("Frame", 56),
+			("Value", 1),
+		]);
+		self.lst_frames.columns().get(1).set_width_to_fill();
+		self.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
+
 		Ok(true)
 	}
 }
