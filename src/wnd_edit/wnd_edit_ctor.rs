@@ -134,15 +134,15 @@ impl WndEdit {
 		self.lst_frames.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
 
 		if self.sel_tags.len() > 1 {
-			self.lst_frames.items().add(&["", &format!("{} items...", self.sel_tags.len())], None, ());
+			self.lst_frames.items().add(&["", &format!("{} files...", self.sel_tags.len())], None, ());
+		} else {
+			let sel_tag = self.sel_tags[0].try_borrow()?;
+			sel_tag.frames()
+				.iter()
+				.for_each(|frame| {
+					self.lst_frames.items().add(&[frame.name4(), &frame.data().to_string()], None, ());
+				});
 		}
-
-		let sel_tag = self.sel_tags[0].try_borrow()?;
-		sel_tag.frames()
-			.iter()
-			.for_each(|frame| {
-				self.lst_frames.items().add(&[frame.name4(), &frame.data().to_string()], None, ());
-			});
 
 		Ok(())
 	}
