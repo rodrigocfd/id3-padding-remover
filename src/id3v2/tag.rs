@@ -167,6 +167,11 @@ impl Tag {
 		self.padding
 	}
 
+	#[must_use]
+	pub const fn frames(&self) -> &Vec<Frame> {
+		&self.frames
+	}
+
 	/// Does the frame exist amongs the tag frames?
 	#[must_use]
 	pub fn has_frame(&self, name4: &str) -> bool {

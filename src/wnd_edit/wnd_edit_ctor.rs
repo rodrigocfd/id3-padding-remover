@@ -69,6 +69,19 @@ impl WndEdit {
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
+		self.lst_frames.columns().add(&[
+			("Frame", 56),
+			("Value", 1),
+		]);
+		self.lst_frames.columns().get(1).set_width_to_fill();
+		self.lst_frames.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
+
+		self.fill_text_fields()?;
+		self.fill_tag_fields()?;
+		Ok(true)
+	}
+
+	fn fill_text_fields(&self) -> w::AnyResult<()> {
 		self.field_packs.try_borrow()?
 			.iter()
 			.try_for_each(|field_pack| {
@@ -111,15 +124,21 @@ impl WndEdit {
 				}
 
 				w::AnyResult::Ok(())
-			})?;
+			})
+	}
 
-		self.lst_frames.columns().add(&[
-			("Frame", 56),
-			("Value", 1),
-		]);
-		self.lst_frames.columns().get(1).set_width_to_fill();
-		self.lst_frames.set_extended_style(true, co::LVS_EX::GRIDLINES);
+	fn fill_tag_fields(&self) -> w::AnyResult<()> {
+		if self.sel_tags.len() > 1 {
+			self.lst_frames.items().add(&["", &format!("{} items...", self.sel_tags.len())], None, ());
+		}
 
-		Ok(true)
+		let sel_tag = self.sel_tags[0].try_borrow()?;
+		sel_tag.frames()
+			.iter()
+			.for_each(|frame| {
+				self.lst_frames.items().add(&[frame.name4(), &frame.data().to_string()], None, ());
+			});
+
+		Ok(())
 	}
 }
