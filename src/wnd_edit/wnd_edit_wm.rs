@@ -24,12 +24,14 @@ impl WndEdit {
 					}
 					w::AnyResult::Ok(())
 				})?;
+			self2.modal_return.set(true);
 			self2.wnd.close();
 			Ok(())
 		});
 
 		let self2 = self.clone();
 		self.btn_cancel.on().bn_clicked(move || { // will also fire on Esc
+			self2.modal_return.set(false);
 			self2.wnd.close();
 			Ok(())
 		});
@@ -38,7 +40,7 @@ impl WndEdit {
 			.iter()
 			.for_each(|field_pack| {
 				let fp2 = field_pack.clone();
-				field_pack.chk.on().bn_clicked(move || {
+				field_pack.chk.on().bn_clicked(move || { // event on each checkbox
 					if fp2.chk.is_checked() {
 						fp2.txt.hwnd().EnableWindow(true);
 						fp2.txt.focus();

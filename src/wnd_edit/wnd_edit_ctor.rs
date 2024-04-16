@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
 use try_iterator::prelude::*;
@@ -56,26 +56,24 @@ impl WndEdit {
 		]));
 		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (255, 22), (100, 100), NN)?;
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
+		let modal_return = Rc::new(Cell::new(false));
 
-		let new_self = Self { wnd, btn_ok, btn_cancel, field_packs, wnd_pic, sel_tags, lst_frames };
+		let new_self = Self {
+			wnd,
+			btn_ok, btn_cancel, field_packs, wnd_pic,
+			sel_tags, lst_frames, modal_return,
+		};
 		new_self.wm_events();
 		Ok(new_self)
 	}
 
-	pub fn show(&self) -> w::AnyResult<()> {
+	pub fn show(&self) -> w::AnyResult<bool> {
 		self.wnd.show_modal()
-			.map(|_| ())
+			.map(|_| self.modal_return.get())
 	}
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
-		self.lst_frames.columns().add(&[
-			("Frame", 56),
-			("Value", 1),
-		]);
-		self.lst_frames.columns().get(1).set_width_to_fill();
-		self.lst_frames.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
-
 		self.fill_text_fields()?;
 		self.fill_tag_fields()?;
 		Ok(true)
@@ -128,6 +126,13 @@ impl WndEdit {
 	}
 
 	fn fill_tag_fields(&self) -> w::AnyResult<()> {
+		self.lst_frames.columns().add(&[
+			("Frame", 56),
+			("Value", 1),
+		]);
+		self.lst_frames.columns().get(1).set_width_to_fill();
+		self.lst_frames.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
+
 		if self.sel_tags.len() > 1 {
 			self.lst_frames.items().add(&["", &format!("{} items...", self.sel_tags.len())], None, ());
 		}
