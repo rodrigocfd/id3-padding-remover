@@ -8,8 +8,9 @@ impl WndMain {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_menu_popup(move |p| {
 			if self2.lst_files.context_menu().unwrap() == &p.hmenu {
-				[ids::MNU_MAIN_EDIT, ids::MNU_MAIN_REMOVE].into_iter()
-					.try_for_each(|id|
+				[ids::MNU_MAIN_EDIT, ids::MNU_MAIN_REMOVE,
+					ids::MNU_MAIN_STRIP_RG, ids::MNU_MAIN_STRIP_RG_ART]
+					.into_iter().try_for_each(|id|
 						p.hmenu.EnableMenuItem(
 							w::IdPos::Id(id),
 							self2.lst_files.items().selected_count() > 0, // at least 1 file selected?

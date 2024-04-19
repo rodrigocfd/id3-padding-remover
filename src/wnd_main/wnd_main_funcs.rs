@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*, gui};
+use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::{id3v2, wnd_edit::WndEdit};
 use super::WndMain;
@@ -48,7 +48,7 @@ impl WndMain {
 		let rc_tag = item.data().unwrap(); // retrieve tag saved in the listview item
 		let tag = rc_tag.try_borrow()?;
 		item.set_text(1, &tag.padding().to_string());
-		if tag.has_frame("APIC") { item.set_text(2, "✓"); }
+		item.set_text(2, if tag.has_frame("APIC") { "✓" } else { "" });
 
 		[id3v2::Field::Artist, id3v2::Field::Title, id3v2::Field::Album, id3v2::Field::Track,
 			id3v2::Field::Year, id3v2::Field::Genre, id3v2::Field::Comment]
@@ -64,12 +64,12 @@ impl WndMain {
 			return Ok(()); // Enter key will hit here even if there are no selected items
 		}
 
-		let rc_tags = self.lst_files.items()
+		let rc_sel_tags = self.lst_files.items()
 			.iter_selected()
 			.map(|sel_item| sel_item.data().unwrap())
 			.collect::<Vec<_>>();
 
-		let wnd_edit = WndEdit::new(&self.wnd, rc_tags)?;
+		let wnd_edit = WndEdit::new(&self.wnd, rc_sel_tags)?;
 		if wnd_edit.show()? {
 			self.lst_files.set_redraw(false);
 			self.lst_files.items()
@@ -83,6 +83,38 @@ impl WndMain {
 					w::AnyResult::Ok(())
 				})?;
 			self.lst_files.set_redraw(true);
+		}
+		Ok(())
+	}
+
+	pub(super) fn strip_replaygain_art(&self, strip_art: bool) -> w::AnyResult<()> {
+		let sel_count = self.lst_files.items().selected_count();
+		if self.wnd.hwnd().TaskDialog(
+			Some(if strip_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" }),
+			None,
+			Some(&format!("Strip ReplayGain {} frames of {} tag{}?",
+				if strip_art { "and art" } else { "" },
+				sel_count,
+				if sel_count == 1 { "" } else { "s" },
+			)),
+			co::TDCBF::OK | co::TDCBF::CANCEL,
+			w::IconRes::Warn,
+		)? == co::DLGID::OK {
+			self.lst_files.items()
+				.iter_selected()
+				.try_for_each(|sel_item| {
+					{
+						let rc_tag = sel_item.data().unwrap(); // retrieve tag saved in the listview item
+						let mut tag = rc_tag.try_borrow_mut()?;
+						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
+						if strip_art {
+							tag.frames_mut().retain(|frame| frame.name4() != "APIC");
+						}
+						tag.save_to_file(&sel_item.text(0))?; // save to MP3 file
+					}
+					self.print_tag_in_listview(&sel_item)?;
+					w::AnyResult::Ok(())
+				})?;
 		}
 		Ok(())
 	}

@@ -71,6 +71,18 @@ impl WndMain {
 		});
 
 		let self2 = self.clone();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_STRIP_RG, move || {
+			self2.strip_replaygain_art(false)?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_STRIP_RG_ART, move || {
+			self2.strip_replaygain_art(true)?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 			let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 			let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;

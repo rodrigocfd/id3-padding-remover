@@ -62,11 +62,6 @@ impl Frame {
 	}
 
 	#[must_use]
-	pub const fn flags(&self) -> (u8, u8) {
-		self.flags
-	}
-
-	#[must_use]
 	pub const fn data(&self) -> &FrameData {
 		&self.data
 	}

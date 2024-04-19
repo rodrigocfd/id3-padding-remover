@@ -172,6 +172,11 @@ impl Tag {
 		&self.frames
 	}
 
+	#[must_use]
+	pub fn frames_mut(&mut self) -> &mut Vec<Frame> {
+		&mut self.frames
+	}
+
 	/// Does the frame exist amongs the tag frames?
 	#[must_use]
 	pub fn has_frame(&self, name4: &str) -> bool {
