@@ -17,7 +17,7 @@ impl std::fmt::Display for FrameData {
 		use FrameData as F;
 		write!(f, "{}", match self {
 			F::Text(t) => t.text.clone(),
-			F::UserText(ut) => ut.text.clone(),
+			F::UserText(ut) => format!("{} {}", ut.descr, ut.text),
 			F::Binary(b) => format!("{} bytes", b.data.len()),
 			F::Comment(c) => c.text.clone(),
 			F::Picture(p) => format!("Pic {} {} bytes", p.mime, p.data.len()),
