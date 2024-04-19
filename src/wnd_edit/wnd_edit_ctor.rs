@@ -54,7 +54,7 @@ impl WndEdit {
 			FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
 			FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
 		]));
-		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (255, 22), (100, 100), NN)?;
+		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (264, 22), (100, 100), NN)?;
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
 		let modal_return = Rc::new(Cell::new(false));
 
