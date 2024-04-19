@@ -4,7 +4,7 @@ use std::sync::Arc;
 use try_iterator::prelude::*;
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::{id3v2, ids, wnd_picture::WndPicture};
+use crate::{genres::GENRES, id3v2, ids, wnd_picture::WndPicture};
 use super::{FieldPack, WndEdit};
 
 impl FieldPack {
@@ -88,6 +88,14 @@ impl WndEdit {
 					self.sel_tags.len(),
 					if self.sel_tags.len() == 1 { "" } else { "s" },
 				));
+
+				if field_pack.field == id3v2::Field::Genre { // feed the genres to the combo
+					field_pack.txt.as_any()
+						.downcast_ref::<gui::ComboBox>()
+						.expect("ComboBox downcast failed.")
+						.items()
+						.add(GENRES);
+				}
 
 				let maybe_idx_first_mp3 = self.sel_tags.iter() // index of first MP3 which has the field
 					.try_position(|tag| {
