@@ -1,7 +1,7 @@
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::{id3v2, wnd_edit::WndEdit};
-use super::WndMain;
+use super::{LIST_COLS, WndMain};
 
 impl WndMain {
 	pub(super) fn update_num_files(&self, tot_files: u32) {
@@ -50,9 +50,8 @@ impl WndMain {
 		item.set_text(1, &tag.padding().to_string());
 		item.set_text(2, if tag.frame("APIC").is_some() { "✓" } else { "" });
 
-		["TPE1", "TIT2", "TALB", "TRCK", "TYER", "TCON", "COMM"]
-			.iter()
-			.map(|field| match tag.frame(*field) {
+		LIST_COLS.iter().skip(3)
+			.map(|(_, _, field)| match tag.frame(*field) {
 				Some(frame) => frame.data().to_string(),
 				None => "".to_owned(),
 			})

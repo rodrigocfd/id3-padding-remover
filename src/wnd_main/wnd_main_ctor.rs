@@ -3,7 +3,7 @@ use std::rc::Rc;
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::ids;
-use super::WndMain;
+use super::{LIST_COLS, WndMain};
 
 impl WndMain {
 	/// Creates a new `WndMain` object.
@@ -38,18 +38,11 @@ impl WndMain {
 		});
 		self.lst_files.context_menu().unwrap().SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
 		self.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
-		self.lst_files.columns().add(&[
-			("File", 380),
-			("Pad", 50),
-			("Art", 30),
-			("Artist", 160),
-			("Title", 180),
-			("Album", 180),
-			("T#", 30),
-			("Year", 40),
-			("Genre", 100),
-			("Comment", 80),
-		]);
+		self.lst_files.columns().add(
+			&LIST_COLS.iter()
+				.map(|(title, cx, _)| (*title, *cx))
+				.collect::<Vec<_>>(),
+		);
 
 		self.sort_list(0, true); // sort by path initially
 		Ok(true)

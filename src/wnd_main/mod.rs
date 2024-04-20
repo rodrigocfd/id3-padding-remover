@@ -16,3 +16,16 @@ pub struct WndMain {
 	lst_files_h:  gui::Header,
 	cur_sort_col: Rc<Cell<(u32, bool)>>, // index, reversed
 }
+
+const LIST_COLS: &[(&str, u32, &str)] = &[
+	("File", 380, ""),
+	("Pad", 50, ""),
+	("Art", 30, ""),
+	("Artist", 160, "TPE1"),
+	("Title", 180, "TIT2"),
+	("Album", 180, "TALB"),
+	("T#", 30, "TRCK"),
+	("Year", 40, "TYER"),
+	("Genre", 100, "TCON"),
+	("Comment", 80, "COMM"),
+];
