@@ -86,6 +86,7 @@ impl WndMain {
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 			let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 			let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
+			let (lang0, cp0) = hversion.langs_and_cps()?[0];
 			let version_parts = hversion.version_info()?.dwFileVersion();
 
 			self2.wnd.hwnd().TaskDialog(
@@ -94,8 +95,9 @@ impl WndMain {
 				Some(&format!(
 					"Version {}.{}.{}\n\
 					Writen in Rust with WinSafe library.\n\n\
-					Rodrigo César de Freitas Dias © 2024",
+					{}",
 					version_parts[0], version_parts[1], version_parts[2],
+					hversion.str_val(lang0, cp0, "LegalCopyright")?,
 				)),
 				co::TDCBF::OK,
 				w::IconRes::Info,
