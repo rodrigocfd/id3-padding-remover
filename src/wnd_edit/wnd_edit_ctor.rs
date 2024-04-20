@@ -55,13 +55,14 @@ impl WndEdit {
 			FieldPack::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
 		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (264, 22), (100, 100), NN)?;
+		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, NN);
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
 		let modal_return = Rc::new(Cell::new(false));
 
 		let new_self = Self {
 			wnd,
 			btn_ok, btn_cancel, field_packs, wnd_pic,
-			sel_tags, lst_frames, modal_return,
+			btn_uncheck, lst_frames, sel_tags, modal_return,
 		};
 		new_self.wm_events();
 		Ok(new_self)
@@ -79,12 +80,12 @@ impl WndEdit {
 			self.sel_tags.len(),
 			if self.sel_tags.len() == 1 { "" } else { "s" },
 		));
-		self.fill_text_fields()?;
+		self.fill_chks_and_txts()?;
 		self.fill_listview_fields()?;
 		Ok(true)
 	}
 
-	fn fill_text_fields(&self) -> w::AnyResult<()> {
+	fn fill_chks_and_txts(&self) -> w::AnyResult<()> {
 		self.field_packs.try_borrow()?
 			.iter()
 			.try_for_each(|field_pack| {

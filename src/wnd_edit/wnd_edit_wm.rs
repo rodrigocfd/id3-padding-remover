@@ -1,4 +1,4 @@
-use winsafe::{self as w, prelude::*};
+use winsafe::{self as w, prelude::*, gui};
 
 use super::WndEdit;
 
@@ -7,6 +7,16 @@ impl WndEdit {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_dialog(move |_| {
 			self2.on_init_dialog()
+		});
+
+		let self2 = self.clone();
+		self.btn_uncheck.on().bn_clicked(move || {
+			self2.field_packs.try_borrow()?
+				.iter()
+				.for_each(|field_pack| {
+					field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+				});
+			Ok(())
 		});
 
 		let self2 = self.clone();
