@@ -41,7 +41,7 @@ impl WndMain {
 		self.lst_files.columns().add(&[
 			("File", 380),
 			("Pad", 50),
-			("Pic", 30),
+			("Art", 30),
 			("Artist", 160),
 			("Title", 180),
 			("Album", 180),
