@@ -37,33 +37,35 @@ impl WndPicture {
 	fn load_picture(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Option<w::IPicture>> {
 		let maybe_idx_first_mp3 = sel_tags.iter() // index of first MP3 which has APIC
 			.try_position(|tag| {
-				let has = tag.try_borrow()?.apic().is_some();
+				let has = tag.try_borrow()?.frame("APIC").is_some();
 				w::AnyResult::Ok(has)
 			})?;
 
-		if let Some(idx_first) = maybe_idx_first_mp3 { // at last 1 MP3 has APIC
-			let val_equal_in_all_mp3s = sel_tags.iter()
-				.skip(1)
-				.try_all(|tag| {
-					let is_equal_to_1st = sel_tags[idx_first].try_borrow()?.apic().unwrap()
-						== tag.try_borrow()?.apic().unwrap();
-					w::AnyResult::Ok(is_equal_to_1st)
-				})?;
+		match maybe_idx_first_mp3 {
+			Some(idx_first) => { // at last 1 MP3 has APIC
+				let first_tag = sel_tags[idx_first].try_borrow()?;
+				let first_apic = first_tag.frame("APIC").unwrap();
 
-			if val_equal_in_all_mp3s {
-				let stream = w::SHCreateMemStream(
-					&sel_tags[idx_first].try_borrow()?
-						.apic()
-						.unwrap()
-						.data,
-				)?;
-				let ipic = w::OleLoadPicture(&stream, None, true)?;
-				Ok(Some(ipic))
-			} else {
-				Ok(None)
-			}
-		} else {
-			Ok(None)
+				let apic_equal_in_all_mp3s = sel_tags.iter()
+					.skip(idx_first + 1)
+					.try_all(|tag| {
+						let is_equal_to_1st = match tag.try_borrow()?.frame("APIC") {
+							None => false, // this MP3 has no APIC
+							Some(apic) => apic == first_apic,
+						};
+						w::AnyResult::Ok(is_equal_to_1st)
+					})?;
+
+				if apic_equal_in_all_mp3s {
+					let id3v2::FrameData::Picture(apic_data) = first_apic.data() else { panic!("APIC fail.") };
+					let stream = w::SHCreateMemStream(&apic_data.data)?;
+					let ipic = w::OleLoadPicture(&stream, None, true)?;
+					Ok(Some(ipic))
+				} else {
+					Ok(None)
+				}
+			},
+			None => Ok(None), // no MP3 has APIC
 		}
 	}
 }

@@ -28,7 +28,7 @@ impl ChildFocus for gui::Edit {}
 /// Known tag field identifier, checkbox and textbox.
 #[derive(Clone)]
 struct FieldPack {
-	field: id3v2::Field,
+	name4: String,
 	chk:   gui::CheckBox,
 	txt:   Arc<dyn ChildFocus>,
 }

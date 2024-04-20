@@ -18,7 +18,7 @@ impl WndEdit {
 						self2.sel_tags.iter()
 							.try_for_each(|rc_tag| { // for each MP3 being edited
 								let mut tag = rc_tag.try_borrow_mut()?;
-								tag.set_known_field(field_pack.field, field_pack.txt.text().trim())?;
+								tag.set_frame_str(&field_pack.name4, field_pack.txt.text().trim())?;
 								w::AnyResult::Ok(())
 							})?;
 					}

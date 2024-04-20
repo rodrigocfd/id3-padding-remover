@@ -1,6 +1,6 @@
 use winsafe::{self as w};
 
-use super::consts::{Field, PicType};
+use super::consts::PicType;
 use super::str_engine;
 
 /// Polymorphic data of a frame.
@@ -25,19 +25,60 @@ impl std::fmt::Display for FrameData {
 	}
 }
 
+impl Eq for FrameData {}
+
+impl PartialEq for FrameData {
+	fn eq(&self, other: &Self) -> bool {
+		use FrameData as F;
+		match self {
+			F::Text(t) => match other {
+				F::Text(t2) => t.text == t2.text,
+				_ => false,
+			},
+			F::UserText(ut) => match other {
+				F::UserText(ut2) => ut.descr == ut2.descr
+					&& ut.text == ut2.text,
+				_ => false,
+			},
+			F::Binary(b) => match other {
+				F::Binary(b2) => b.data.iter().zip(b2.data.iter()).all(|(a, b)| a == b),
+				_ => false,
+			},
+			F::Comment(c) => match other {
+				F::Comment(c2) => c.lang3 == c2.lang3
+					&& c.descr == c2.descr
+					&& c.text == c2.text,
+				_ => false,
+			},
+			F::Picture(p) => match other {
+				F::Picture(p2) => p.mime == p2.mime
+					&& p.pic_type == p2.pic_type
+					&& p.descr == p2.descr
+					&& p.data.iter().zip(p2.data.iter()).all(|(a, b)| a == b),
+				_ => false,
+			},
+		}
+	}
+}
+
 impl FrameData {
-	/// Creates data from a string.
+	/// Creates a data from a string. If not possible, returns an error.
 	#[must_use]
-	pub(in crate::id3v2) fn new_from_string(f: Field, val: &str) -> Self {
-		match f {
-			Field::Comment => Self::Comment(Comment {
-				lang3: "eng".to_owned(),
-				descr: "".to_owned(), // will have empty description
+	pub(in crate::id3v2) fn new_from_string(name4: &str, val: &str) -> w::AnyResult<Self> {
+		if name4 == "TXXX" {
+			Err("Cannot create a single-text TXXX frame.".into())
+		} else if name4.starts_with('T') {
+			Ok(Self::Text(Text {
 				text: val.to_owned(),
-			}),
-			_ => Self::Text(Text {
+			}))
+		} else if name4 == "COMM" {
+			Ok(Self::Comment(Comment {
+				lang3: "".to_owned(),
+				descr: "".to_owned(),
 				text: val.to_owned(),
-			}),
+			}))
+		} else {
+			Err(format!("Cannot create a single-text {name4} frame.").into())
 		}
 	}
 
@@ -48,7 +89,7 @@ impl FrameData {
 			Self::parse_comm(src)
 		} else if name4 == "APIC" {
 			Self::parse_apic(src)
-		} else if name4.starts_with("T") {
+		} else if name4.starts_with('T') {
 			let texts = str_engine::parse_any(src)?;
 			match texts.len() {
 				0 => Err(format!("Frame {} contains no texts.", name4).into()),
@@ -201,21 +242,9 @@ pub struct Comment {
 	pub text: String,
 }
 
-#[derive(Eq)]
 pub struct Picture {
 	pub mime: String,
 	pub pic_type: PicType,
 	pub descr: String,
 	pub data: Vec<u8>,
-}
-
-impl PartialEq for Picture {
-	fn eq(&self, other: &Picture) -> bool {
-		self.mime == other.mime
-			&& self.pic_type == other.pic_type
-			&& self.descr == other.descr
-			&& self.data.iter()
-				.zip(other.data.iter())
-				.all(|(a, b)| a == b)
-	}
 }

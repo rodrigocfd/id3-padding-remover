@@ -1,7 +1,5 @@
 use winsafe::{self as w};
 
-use super::consts::Field;
-use super::frame_data::{FrameData, Picture};
 use super::frame::Frame;
 use super::str_engine;
 use super::synch_safe;
@@ -177,54 +175,25 @@ impl Tag {
 		&mut self.frames
 	}
 
-	/// Does the frame exist amongs the tag frames?
 	#[must_use]
-	pub fn has_frame(&self, name4: &str) -> bool {
-		self.frames.iter().any(|frame| frame.name4() == name4)
-	}
-
-	/// Does the known field exist amongst the tag frames?
-	#[must_use]
-	pub fn has_known_field(&self, f: Field) -> bool {
-		self.has_frame(f.name4())
-	}
-
-	/// Returns the given known field as a single string, if present amongst the
-	/// tag frames.
-	#[must_use]
-	pub fn known_field(&self, f: Field) -> Option<String> {
+	pub fn frame(&self, name4: &str) -> Option<&Frame> {
 		self.frames.iter()
-			.find(|frame| frame.name4() == f.name4())
-			.map(|frame| frame.data().to_string())
+			.find(|frame| frame.name4() == name4)
 	}
 
-	/// Tries to set the known field as string, returning an error if not
-	/// possible. If the field does not exist, it will be created.
-	pub fn set_known_field(&mut self, f: Field, val: &str) -> w::AnyResult<()> {
-		if val.is_empty() {
-			if let Some(idx) = self.frames.iter().position(|frame| frame.name4() == f.name4()) {
-				self.frames.remove(idx); // empty string will remove the frame
+	/// Tries to set the frame value as a simple text, returning an error if not
+	/// possible. If frame does not exist, creates it.
+	pub fn set_frame_str(&mut self, name4: &str, text: &str) -> w::AnyResult<()> {
+		if text.is_empty() {
+			if let Some(idx) = self.frames.iter().position(|frame| frame.name4() == name4) {
+				self.frames.remove(idx); // empty string will remove frame
 			}
-		} else {
-			match self.frames.iter_mut()
-				.find(|frame| frame.name4() == f.name4())
-			{
-				Some(frame) => frame.set_string(val)?, // field does exist, update
-				None => self.frames.push(Frame::new_from_string(f, val)), // no such field exists, create new
+		} else { // text is not empty
+			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
+				Some(frame) => frame.set_string(text)?, // field exists, update
+				None => self.frames.push(Frame::new_from_string(name4, text)?), // create simple text frame
 			}
 		}
 		Ok(())
-	}
-
-	/// Returns the first APIC frame, if present.
-	pub fn apic(&self) -> Option<&Picture> {
-		self.frames.iter()
-			.find(|frame| frame.name4() == "APIC")
-			.map(|frame| {
-				match frame.data() {
-					FrameData::Picture(pic) => pic,
-					_ => panic!("APIC with non-picture content.")
-				}
-			})
 	}
 }

@@ -8,9 +8,9 @@ use crate::{genres::GENRES, id3v2, ids, wnd_picture::WndPicture};
 use super::{FieldPack, WndEdit};
 
 impl FieldPack {
-	fn new_edit(field: id3v2::Field, parent: &impl GuiParent, chk_id: u16) -> Self {
+	fn new_edit(name4: &str, parent: &impl GuiParent, chk_id: u16) -> Self {
 		Self {
-			field,
+			name4: name4.to_owned(),
 			chk: gui::CheckBox::new_dlg(parent, chk_id, NN),
 			txt: Arc::new(gui::Edit::new_dlg(parent, chk_id + 1, NN)),
 		}
@@ -34,25 +34,25 @@ impl WndEdit {
 		let btn_ok = gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN);
 		let btn_cancel = gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN);
 		let field_packs = Rc::new(RefCell::new(vec![
-			FieldPack::new_edit(id3v2::Field::Artist, &wnd, ids::CHK_ARTIST),
-			FieldPack::new_edit(id3v2::Field::Title, &wnd, ids::CHK_TITLE),
-			FieldPack::new_edit(id3v2::Field::Subtitle, &wnd, ids::CHK_SUBTITLE),
-			FieldPack::new_edit(id3v2::Field::Album, &wnd, ids::CHK_ALBUM),
-			FieldPack::new_edit(id3v2::Field::Track, &wnd, ids::CHK_TRACK),
-			FieldPack::new_edit(id3v2::Field::Year, &wnd, ids::CHK_YEAR),
+			FieldPack::new_edit("TPE1", &wnd, ids::CHK_ARTIST),
+			FieldPack::new_edit("TIT2", &wnd, ids::CHK_TITLE),
+			FieldPack::new_edit("TIT3", &wnd, ids::CHK_SUBTITLE),
+			FieldPack::new_edit("TALB", &wnd, ids::CHK_ALBUM),
+			FieldPack::new_edit("TRCK", &wnd, ids::CHK_TRACK),
+			FieldPack::new_edit("TYER", &wnd, ids::CHK_YEAR),
 			FieldPack {
-				field: id3v2::Field::Genre,
+				name4: "TCON".to_owned(),
 				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
 				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
 			},
-			FieldPack::new_edit(id3v2::Field::Composer, &wnd, ids::CHK_COMPOSER),
-			FieldPack::new_edit(id3v2::Field::Lyricist, &wnd, ids::CHK_LYRICIST),
-			FieldPack::new_edit(id3v2::Field::Comment, &wnd, ids::CHK_COMMENT),
-			FieldPack::new_edit(id3v2::Field::Performer, &wnd, ids::CHK_PERFORMER),
-			FieldPack::new_edit(id3v2::Field::Publisher, &wnd, ids::CHK_PUBLISHER),
-			FieldPack::new_edit(id3v2::Field::OrigArtist, &wnd, ids::CHK_ORIG_ARTIST),
-			FieldPack::new_edit(id3v2::Field::OrigAlbum, &wnd, ids::CHK_ORIG_ALBUM),
-			FieldPack::new_edit(id3v2::Field::OrigYear, &wnd, ids::CHK_ORIG_YEAR),
+			FieldPack::new_edit("TPE3", &wnd, ids::CHK_PERFORMER),
+			FieldPack::new_edit("TPUB", &wnd, ids::CHK_PUBLISHER),
+			FieldPack::new_edit("TOPE", &wnd, ids::CHK_ORIG_ARTIST),
+			FieldPack::new_edit("TOAL", &wnd, ids::CHK_ORIG_ALBUM),
+			FieldPack::new_edit("TORY", &wnd, ids::CHK_ORIG_YEAR),
+			FieldPack::new_edit("TCOM", &wnd, ids::CHK_COMPOSER),
+			FieldPack::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
+			FieldPack::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
 		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (264, 22), (100, 100), NN)?;
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
@@ -74,8 +74,13 @@ impl WndEdit {
 
 	/// Initializes the `WndEdit` window.
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
+		self.wnd.set_text(&format!(
+			"Edit {} file{}",
+			self.sel_tags.len(),
+			if self.sel_tags.len() == 1 { "" } else { "s" },
+		));
 		self.fill_text_fields()?;
-		self.fill_tag_fields()?;
+		self.fill_listview_fields()?;
 		Ok(true)
 	}
 
@@ -83,13 +88,7 @@ impl WndEdit {
 		self.field_packs.try_borrow()?
 			.iter()
 			.try_for_each(|field_pack| {
-				self.wnd.set_text(&format!(
-					"Edit {} tag{}",
-					self.sel_tags.len(),
-					if self.sel_tags.len() == 1 { "" } else { "s" },
-				));
-
-				if field_pack.field == id3v2::Field::Genre { // feed the genres to the combo
+				if field_pack.name4 == "TCON" { // feed the genres to the combo
 					field_pack.txt.as_any()
 						.downcast_ref::<gui::ComboBox>()
 						.expect("ComboBox downcast failed.")
@@ -99,26 +98,27 @@ impl WndEdit {
 
 				let maybe_idx_first_mp3 = self.sel_tags.iter() // index of first MP3 which has the field
 					.try_position(|tag| {
-						let has = tag.try_borrow()?.has_known_field(field_pack.field);
+						let has = tag.try_borrow()?.frame(&field_pack.name4).is_some();
 						w::AnyResult::Ok(has)
 					})?;
 
 				match maybe_idx_first_mp3 {
 					Some(idx_first) => { // at least 1 MP3 has this field
-						let first_val = self.sel_tags[idx_first]
-							.try_borrow()?
-							.known_field(field_pack.field).unwrap();
-						let val_equal_in_all_mp3s = self.sel_tags.iter()
-							.skip(1)
+						let first_tag = self.sel_tags[idx_first].try_borrow()?;
+						let first_frame = first_tag.frame(&field_pack.name4).unwrap();
+
+						let frame_equal_in_all_mp3s = self.sel_tags.iter()
+							.skip(idx_first + 1)
 							.try_all(|tag| {
-								let is_equal_to_1st = tag.try_borrow()?
-									.known_field(field_pack.field)
-									.unwrap_or_default() == first_val;
+								let is_equal_to_1st = match tag.try_borrow()?.frame(&field_pack.name4) {
+									None => false, // this MP3 doesn't have this field
+									Some(frame) => frame == first_frame,
+								};
 								w::AnyResult::Ok(is_equal_to_1st)
 							})?;
 
-						if val_equal_in_all_mp3s {
-							field_pack.txt.set_text(&first_val);
+						if frame_equal_in_all_mp3s {
+							field_pack.txt.set_text(&first_frame.data().to_string());
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
 						} else {
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
@@ -133,7 +133,7 @@ impl WndEdit {
 			})
 	}
 
-	fn fill_tag_fields(&self) -> w::AnyResult<()> {
+	fn fill_listview_fields(&self) -> w::AnyResult<()> {
 		self.lst_frames.columns().add(&[
 			("Frame", 56),
 			("Value", 1),

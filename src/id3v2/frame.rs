@@ -1,10 +1,10 @@
 use winsafe::{self as w};
 
-use super::consts::Field;
 use super::frame_data::FrameData;
 use super::str_engine;
 
 /// A unit of data within a tag.
+#[derive(PartialEq, Eq)]
 pub struct Frame {
 	name4: String,
 	flags: (u8, u8),
@@ -19,12 +19,12 @@ impl std::fmt::Display for Frame {
 
 impl Frame {
 	#[must_use]
-	pub(in crate::id3v2) fn new_from_string(f: Field, val: &str) -> Self {
-		Self {
-			name4: f.name4().to_owned(),
+	pub(in crate::id3v2) fn new_from_string(name4: &str, text: &str) -> w::AnyResult<Self> {
+		Ok(Self {
+			name4: name4.to_owned(),
 			flags: (0, 0),
-			data: FrameData::new_from_string(f, val),
-		}
+			data: FrameData::new_from_string(name4, text)?,
+		})
 	}
 
 	/// Also returns declared size, including 10-byte frame header.
