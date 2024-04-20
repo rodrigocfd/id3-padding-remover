@@ -1,6 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod genres;
 mod id3v2;
 mod ids;
 mod wnd_edit;

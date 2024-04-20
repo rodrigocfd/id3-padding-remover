@@ -4,8 +4,8 @@ use std::sync::Arc;
 use try_iterator::prelude::*;
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::{genres::GENRES, id3v2, ids, wnd_picture::WndPicture};
-use super::{FieldPack, WndEdit};
+use crate::{id3v2, ids, wnd_picture::WndPicture};
+use super::{FieldPack, GENRES, WndEdit};
 
 impl FieldPack {
 	fn new_edit(name4: &str, parent: &impl GuiParent, chk_id: u16) -> Self {
