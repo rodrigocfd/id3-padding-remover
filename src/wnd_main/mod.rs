@@ -18,14 +18,17 @@ pub struct WndMain {
 }
 
 const LIST_COLS: &[(&str, u32, &str)] = &[
-	("File", 380, ""),
+	("File", 400, ""),
 	("Pad", 50, ""),
 	("Art", 30, ""),
-	("Artist", 160, "TPE1"),
-	("Title", 180, "TIT2"),
-	("Album", 180, "TALB"),
+	("Artist", 90, "TPE1"),
 	("T#", 30, "TRCK"),
+	("Title", 100, "TIT2"),
+	("Album", 100, "TALB"),
 	("Year", 40, "TYER"),
-	("Genre", 100, "TCON"),
+	("Genre", 90, "TCON"),
+	("Performer", 80, "TPE3"),
+	("Composer", 80, "TCOM"),
+	("Lyricist", 80, "TEXT"),
 	("Comment", 80, "COMM"),
 ];

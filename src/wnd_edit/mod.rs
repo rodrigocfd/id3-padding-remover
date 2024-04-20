@@ -34,7 +34,7 @@ struct FieldPack {
 	txt:   Arc<dyn ChildFocus>,
 }
 
-pub const GENRES: &[&str] = &[
+const GENRES: &[&str] = &[
 	"Alternative rock",
 	"Axé",
 	"Black metal",
