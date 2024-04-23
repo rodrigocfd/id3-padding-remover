@@ -49,14 +49,16 @@ impl WndMain {
 		let tag = rc_tag.try_borrow()?;
 		item.set_text(1, &tag.padding().to_string());
 		item.set_text(2, if tag.frame("APIC").is_some() { "✓" } else { "" });
+		item.set_text(3, if tag.has_replay_gain() { "✓" } else { "" });
 
-		LIST_COLS.iter().skip(3)
+		LIST_COLS.iter()
+			.skip(4)
 			.map(|(_, _, field)| match tag.frame(*field) {
 				Some(frame) => frame.data().to_string(),
 				None => "".to_owned(),
 			})
 			.enumerate()
-			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 3, &field_val));
+			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 4, &field_val));
 		Ok(())
 	}
 

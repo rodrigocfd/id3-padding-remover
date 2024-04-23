@@ -21,6 +21,7 @@ const LIST_COLS: &[(&str, u32, &str)] = &[
 	("File", 400, ""),
 	("Pad", 50, ""),
 	("Art", 30, ""),
+	("RG", 30, ""),
 	("Artist", 90, "TPE1"),
 	("T#", 30, "TRCK"),
 	("Title", 100, "TIT2"),

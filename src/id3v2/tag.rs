@@ -1,5 +1,6 @@
 use winsafe::{self as w};
 
+use super::frame_data::FrameData;
 use super::frame::Frame;
 use super::str_engine;
 use super::synch_safe;
@@ -179,6 +180,23 @@ impl Tag {
 	pub fn frame(&self, name4: &str) -> Option<&Frame> {
 		self.frames.iter()
 			.find(|frame| frame.name4() == name4)
+	}
+
+	/// Any ReplayGain frame present?
+	#[must_use]
+	pub fn has_replay_gain(&self) -> bool {
+		self.frames.iter()
+			.find(|frame| {
+				if frame.name4() == "TXXX" {
+					if let FrameData::UserText(ut) = frame.data() {
+						if ut.descr.starts_with("replaygain") {
+							return true;
+						}
+					}
+				}
+				false
+			})
+			.is_some()
 	}
 
 	/// Tries to set the frame value as a simple text, returning an error if not
