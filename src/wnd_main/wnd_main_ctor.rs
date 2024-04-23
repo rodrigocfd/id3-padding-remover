@@ -44,6 +44,11 @@ impl WndMain {
 				.collect::<Vec<_>>(),
 		);
 
+		[1, 5, 8].iter() // padding, track #, year
+			.for_each(|i| self.lst_files_h.items().get(*i).set_justify(gui::HeaderJustify::Right));
+		[2, 3].iter() // art, RG
+			.for_each(|i| self.lst_files_h.items().get(*i).set_justify(gui::HeaderJustify::Center));
+
 		self.sort_list(0, true); // sort by path initially
 		Ok(true)
 	}
