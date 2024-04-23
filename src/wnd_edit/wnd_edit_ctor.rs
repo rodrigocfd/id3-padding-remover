@@ -54,7 +54,7 @@ impl WndEdit {
 			FieldPack::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
 			FieldPack::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
-		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (264, 22), (100, 100), NN)?;
+		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (250, 22), (120, 120), NN)?;
 		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, NN);
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, NN, None);
 		let modal_return = Rc::new(Cell::new(false));
