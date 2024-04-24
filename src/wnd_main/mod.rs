@@ -28,8 +28,9 @@ const LIST_COLS: &[(&str, u32, &str)] = &[
 	("Album", 100, "TALB"),
 	("Year", 40, "TYER"),
 	("Genre", 90, "TCON"),
-	("Performer", 80, "TPE3"),
-	("Composer", 80, "TCOM"),
-	("Lyricist", 80, "TEXT"),
-	("Comment", 80, "COMM"),
+	("Performer", 70, "TPE3"),
+	("Composer", 70, "TCOM"),
+	("Lyricist", 70, "TEXT"),
+	("Orig. artist", 70, "TOPE"),
+	("Comment", 70, "COMM"),
 ];
