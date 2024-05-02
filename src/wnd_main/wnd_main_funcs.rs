@@ -92,17 +92,20 @@ impl WndMain {
 
 	pub(super) fn strip_replaygain_art(&self, strip_art: bool) -> w::AnyResult<()> {
 		let sel_count = self.lst_files.items().selected_count();
-		if self.wnd.hwnd().TaskDialog(
-			Some(if strip_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" }),
-			None,
-			Some(&format!("Strip ReplayGain {} frames of {} tag{}?",
+		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
+			hwnd_parent: Some(self.wnd.hwnd()),
+			window_title: Some(if strip_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" }.to_owned()),
+			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
+			common_buttons: co::TDCBF::OK | co::TDCBF::CANCEL,
+			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
+			content: Some(format!("Strip ReplayGain {} frames of {} tag{}?",
 				if strip_art { "and art" } else { "" },
 				sel_count,
 				if sel_count == 1 { "" } else { "s" },
 			)),
-			co::TDCBF::OK | co::TDCBF::CANCEL,
-			w::IconRes::Warn,
-		)? == co::DLGID::OK {
+			..Default::default()
+		})?;
+		if res == co::DLGID::OK {
 			self.lst_files.items()
 				.iter_selected()
 				.try_for_each(|sel_item| {

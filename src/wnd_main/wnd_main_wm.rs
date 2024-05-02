@@ -89,19 +89,22 @@ impl WndMain {
 			let (lang0, cp0) = hversion.langs_and_cps()?[0];
 			let version_parts = hversion.version_info()?.dwFileVersion();
 
-			self2.wnd.hwnd().TaskDialog(
-				Some("About"),
-				Some("ID3 Fit"),
-				Some(&format!(
+			w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
+				hwnd_parent: Some(self2.wnd.hwnd()),
+				window_title: Some("About".to_owned()),
+				main_instruction: Some("ID3 Fit".to_owned()),
+				main_icon: w::IconIdTd::Td(co::TD_ICON::INFORMATION),
+				common_buttons: co::TDCBF::OK,
+				flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
+				content: Some(format!(
 					"Version {}.{}.{}\n\
 					Writen in Rust with WinSafe library.\n\n\
 					{}",
 					version_parts[0], version_parts[1], version_parts[2],
 					hversion.str_val(lang0, cp0, "LegalCopyright")?,
 				)),
-				co::TDCBF::OK,
-				w::IconRes::Info,
-			)?;
+				..Default::default()
+			})?;
 			Ok(())
 		});
 	}
