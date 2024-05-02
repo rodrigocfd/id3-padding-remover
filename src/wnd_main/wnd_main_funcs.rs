@@ -94,11 +94,11 @@ impl WndMain {
 		let sel_count = self.lst_files.items().selected_count();
 		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
 			hwnd_parent: Some(self.wnd.hwnd()),
-			window_title: Some(if strip_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" }.to_owned()),
+			window_title: Some(if strip_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" }),
 			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
 			common_buttons: co::TDCBF::OK | co::TDCBF::CANCEL,
 			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
-			content: Some(format!("Strip ReplayGain {} frames of {} tag{}?",
+			content: Some(&format!("Strip ReplayGain {} frames of {} tag{}?",
 				if strip_art { "and art" } else { "" },
 				sel_count,
 				if sel_count == 1 { "" } else { "s" },

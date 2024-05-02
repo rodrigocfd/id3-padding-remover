@@ -91,12 +91,12 @@ impl WndMain {
 
 			w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
 				hwnd_parent: Some(self2.wnd.hwnd()),
-				window_title: Some("About".to_owned()),
-				main_instruction: Some("ID3 Fit".to_owned()),
+				window_title: Some("About"),
+				main_instruction: Some("ID3 Fit"),
 				main_icon: w::IconIdTd::Td(co::TD_ICON::INFORMATION),
 				common_buttons: co::TDCBF::OK,
 				flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
-				content: Some(format!(
+				content: Some(&format!(
 					"Version {}.{}.{}\n\
 					Writen in Rust with WinSafe library.\n\n\
 					{}",
