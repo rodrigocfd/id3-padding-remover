@@ -20,7 +20,7 @@ impl FieldPack {
 //------------------------------------------------------------------------------
 
 /// No horizontal or vertical changes.
-pub const NN: (gui::Horz, gui::Vert) = (gui::Horz::None, gui::Vert::None);
+const NN: (gui::Horz, gui::Vert) = (gui::Horz::None, gui::Vert::None);
 
 impl WndEdit {
 	/// Creates a new `WndEdit` object.
