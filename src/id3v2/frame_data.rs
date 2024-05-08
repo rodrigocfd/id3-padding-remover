@@ -18,9 +18,9 @@ impl std::fmt::Display for FrameData {
 		write!(f, "{}", match self {
 			F::Text(t) => t.text.clone(),
 			F::UserText(ut) => format!("{} {}", ut.descr, ut.text),
-			F::Binary(b) => format!("{} bytes", b.data.len()),
+			F::Binary(b) => format_bytes(b.data.len()),
 			F::Comment(c) => c.text.clone(),
-			F::Picture(p) => format!("Pic {} {} bytes", p.mime, p.data.len()),
+			F::Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
 		})
 	}
 }
@@ -247,4 +247,13 @@ pub struct Picture {
 	pub pic_type: PicType,
 	pub descr: String,
 	pub data: Vec<u8>,
+}
+
+/// More than 1,000 bytes will be converted to KB.
+fn format_bytes(b: usize) -> String {
+	if b > 1000 {
+		format!("{:.1} KB", (b as f64) / 1000.0)
+	} else {
+		format!("{} bytes", b)
+	}
 }

@@ -1,6 +1,7 @@
 /// APIC picture types.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[allow(unused)]
 pub enum PicType {
 	Other = 0x00,
 	FileIconPng32 = 0x01,
