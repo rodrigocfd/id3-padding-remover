@@ -73,9 +73,13 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..src.len() - 1];
 	}
 
-	let mut src16 = unsafe { // cast to &[u16]
-		std::slice::from_raw_parts(src.as_ptr() as *const u16, src.len() / 2)
-	};
+	// Copying to buffer because slice::from_raw_parts() was crashing due to
+	// possible pointer misalignment in some files.
+	let src16_buf = src.chunks(2)
+		.map(|by| w::MAKEWORD(by[0], by[1]))
+		.collect::<Vec<_>>();
+	let mut src16 = src16_buf.as_slice();
+
 	if let Some(idx) = src16.iter().rposition(|ch| *ch != 0x0000) {
 		src16 = &src16[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
