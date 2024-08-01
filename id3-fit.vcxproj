@@ -73,18 +73,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(Platform)_$(Configuration)\</IntDir>
+    <IncludePath>..\windlg;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(Platform)_$(Configuration)\</IntDir>
+    <IncludePath>..\windlg;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(Platform)_$(Configuration)\</IntDir>
+    <IncludePath>..\windlg;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(Platform)_$(Configuration)\</IntDir>
+    <IncludePath>..\windlg;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,10 +161,64 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\windlg\windlg\CheckRadio.h" />
+    <ClInclude Include="..\windlg\windlg\Com.h" />
+    <ClInclude Include="..\windlg\windlg\ComboBox.h" />
+    <ClInclude Include="..\windlg\windlg\CustomControl.h" />
+    <ClInclude Include="..\windlg\windlg\Dialog.h" />
+    <ClInclude Include="..\windlg\windlg\DialogMain.h" />
+    <ClInclude Include="..\windlg\windlg\DialogModal.h" />
+    <ClInclude Include="..\windlg\windlg\dpi.h" />
+    <ClInclude Include="..\windlg\windlg\File.h" />
+    <ClInclude Include="..\windlg\windlg\ImgList.h" />
+    <ClInclude Include="..\windlg\windlg\ini.h" />
+    <ClInclude Include="..\windlg\windlg\lib.h" />
+    <ClInclude Include="..\windlg\windlg\ListView.h" />
+    <ClInclude Include="..\windlg\windlg\Menu.h" />
+    <ClInclude Include="..\windlg\windlg\NativeControl.h" />
+    <ClInclude Include="..\windlg\windlg\path.h" />
+    <ClInclude Include="..\windlg\windlg\ProgressBar.h" />
+    <ClInclude Include="..\windlg\windlg\StatusBar.h" />
+    <ClInclude Include="..\windlg\windlg\str.h" />
+    <ClInclude Include="..\windlg\windlg\TimeCount.h" />
+    <ClInclude Include="..\windlg\windlg\vec.h" />
+    <ClInclude Include="..\windlg\windlg\VersionInfo.h" />
+    <ClInclude Include="..\windlg\windlg\Window.h" />
+    <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\DlgMain.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\windlg\windlg\CheckRadio.cpp" />
+    <ClCompile Include="..\windlg\windlg\Com.cpp" />
+    <ClCompile Include="..\windlg\windlg\ComboBox.cpp" />
+    <ClCompile Include="..\windlg\windlg\CustomControl.cpp" />
+    <ClCompile Include="..\windlg\windlg\Dialog.cpp" />
+    <ClCompile Include="..\windlg\windlg\DialogMain.cpp" />
+    <ClCompile Include="..\windlg\windlg\DialogModal.cpp" />
+    <ClCompile Include="..\windlg\windlg\dpi.cpp" />
+    <ClCompile Include="..\windlg\windlg\File.cpp" />
+    <ClCompile Include="..\windlg\windlg\ImgList.cpp" />
+    <ClCompile Include="..\windlg\windlg\ini.cpp" />
+    <ClCompile Include="..\windlg\windlg\ListView.cpp" />
+    <ClCompile Include="..\windlg\windlg\Menu.cpp" />
+    <ClCompile Include="..\windlg\windlg\NativeControl.cpp" />
+    <ClCompile Include="..\windlg\windlg\path.cpp" />
+    <ClCompile Include="..\windlg\windlg\ProgressBar.cpp" />
+    <ClCompile Include="..\windlg\windlg\StatusBar.cpp" />
+    <ClCompile Include="..\windlg\windlg\str.cpp" />
+    <ClCompile Include="..\windlg\windlg\TimeCount.cpp" />
+    <ClCompile Include="..\windlg\windlg\VersionInfo.cpp" />
+    <ClCompile Include="..\windlg\windlg\Window.cpp" />
     <ClCompile Include="src\DlgMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\id3-fit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="res\win10.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\foul-bachelor-frog.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
