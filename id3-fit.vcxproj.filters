@@ -16,37 +16,13 @@
     <Filter Include="WinDlg">
       <UniqueIdentifier>{db265cd5-a011-418f-8bff-44ec0d1be06b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ID3v2">
+      <UniqueIdentifier>{485d4ea6-e7ee-4dbb-8df5-25e50b363022}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\DlgMain.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\NativeControl.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\path.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\ProgressBar.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\StatusBar.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\str.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\TimeCount.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\vec.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\VersionInfo.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\Window.h">
-      <Filter>WinDlg</Filter>
     </ClInclude>
     <ClInclude Include="..\windlg\windlg\CheckRadio.h">
       <Filter>WinDlg</Filter>
@@ -90,8 +66,38 @@
     <ClInclude Include="..\windlg\windlg\Menu.h">
       <Filter>WinDlg</Filter>
     </ClInclude>
+    <ClInclude Include="..\windlg\windlg\NativeControl.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\path.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\ProgressBar.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\StatusBar.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\str.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\TimeCount.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\vec.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\VersionInfo.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\Window.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
     <ClInclude Include="res\resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\id3v2\strEngine.h">
+      <Filter>ID3v2</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="..\windlg\windlg\Window.cpp">
       <Filter>WinDlg</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\strEngine.cpp">
+      <Filter>ID3v2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
