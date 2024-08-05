@@ -188,7 +188,7 @@
     <ClInclude Include="src\DlgMain.h" />
     <ClInclude Include="src\id3v2\Frame.h" />
     <ClInclude Include="src\id3v2\FrameData.h" />
-    <ClInclude Include="src\id3v2\strEngine.h" />
+    <ClInclude Include="src\id3v2\util.h" />
     <ClInclude Include="src\id3v2\Tag.h" />
   </ItemGroup>
   <ItemGroup>
@@ -216,7 +216,7 @@
     <ClCompile Include="src\DlgMain.cpp" />
     <ClCompile Include="src\id3v2\Frame.cpp" />
     <ClCompile Include="src\id3v2\FrameData.cpp" />
-    <ClCompile Include="src\id3v2\strEngine.cpp" />
+    <ClCompile Include="src\id3v2\util.cpp" />
     <ClCompile Include="src\id3v2\Tag.cpp" />
   </ItemGroup>
   <ItemGroup>

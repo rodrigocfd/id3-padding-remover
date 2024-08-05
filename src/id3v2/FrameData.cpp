@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <windlg/lib.h>
 #include "FrameData.h"
-#include "strEngine.h"
+#include "util.h"
 using std::span, std::vector, std::wstring;
 using namespace lib;
 using namespace id3;
@@ -44,7 +44,7 @@ FrameData FrameData::Parse(WCHAR name4[4], span<BYTE> src)
 	} else if (str::eq(name4, L"APIC")) {
 		frameData.val = _ParseApic(src);
 	} else if (name4[0] == L'T') {
-		vector<wstring> texts = strEngine::parseAny(src);
+		vector<wstring> texts = util::parseStr(src);
 		switch (texts.size()) {
 		[[unlikely]] case 0:
 			throw std::runtime_error( str::toAnsi(str::fmt(L"Frame %s contains no texts", name4)) );
@@ -75,7 +75,7 @@ FrameComment FrameData::_ParseComm(span<BYTE> src)
 	for (size_t i = 0; i < 3; ++i) comm.lang3[i] = src[i];
 	src = src.subspan(3); // skip lang chars
 
-	vector<wstring> texts = strEngine::parseAny(src);
+	vector<wstring> texts = util::parseStr(src);
 	switch (texts.size()) {
 	[[unlikely]] case 0:
 		throw std::runtime_error("COMM frame has no texts");
@@ -101,15 +101,30 @@ FramePicture FrameData::_ParseApic(span<BYTE> src)
 	src = src.subspan(1); // skip encoding byte
 
 	FramePicture picture{};
-	vector<span<BYTE>> mimeParts = vec::split(src, 0x00);
+	vector<span<BYTE>> mimeParts = vec::split(src, 0x00, {2});
 
 	picture.mime = str::newReserved(mimeParts[0].size());
 	for (size_t i = 0; i < mimeParts[0].size(); ++i)
 		picture.mime += static_cast<WCHAR>(mimeParts[0][i]);
 
-	picture.type = static_cast<PicType>(mimeParts[1][0]);
+	src = mimeParts[1];
+	picture.type = static_cast<PicType>(src[0]);
+	src = src.subspan(1); // skip picture type
 
+	if (encBy == 0x00) { // ISO 8859-1
+		vector<span<BYTE>> descrParts = vec::split(src, 0x00, {2});
+		vector<wstring> texts = util::parseIso88591(descrParts[0]);
+		if (!texts.empty()) // description may be absent
+			picture.descr = std::move(texts[0]);
+		src = descrParts[1];
+	} else { // Unicode
+		auto idxZero = util::positionOf2(src, 0x00, 0x01).value();
+		vector<wstring> texts = util::parseUnicode(src.subspan(0, idxZero));
+		if (!texts.empty()) // description may be absent
+			picture.descr = std::move(texts[0]);
+		src = src.subspan(idxZero + 1);
+	}
 
-
+	picture.data.assign(src.begin(), src.end());
 	return picture;
 }

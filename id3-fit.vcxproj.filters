@@ -96,7 +96,7 @@
     <ClInclude Include="res\resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\id3v2\strEngine.h">
+    <ClInclude Include="src\id3v2\util.h">
       <Filter>ID3v2</Filter>
     </ClInclude>
     <ClInclude Include="src\id3v2\FrameData.h">
@@ -176,7 +176,7 @@
     <ClCompile Include="..\windlg\windlg\Window.cpp">
       <Filter>WinDlg</Filter>
     </ClCompile>
-    <ClCompile Include="src\id3v2\strEngine.cpp">
+    <ClCompile Include="src\id3v2\util.cpp">
       <Filter>ID3v2</Filter>
     </ClCompile>
     <ClCompile Include="src\id3v2\FrameData.cpp">

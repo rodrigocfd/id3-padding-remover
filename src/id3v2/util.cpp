@@ -1,15 +1,15 @@
 #include <algorithm>
 #include <stdexcept>
 #include <windlg/lib.h>
-#include "strEngine.h"
-using std::span, std::vector, std::wstring, std::wstring_view;
+#include "util.h"
+using std::optional, std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
 constexpr WORD BOM_LE = 0xfeff;
 constexpr WORD BOM_BE = 0xfffe;
 
-vector<wstring> strEngine::parseAny(span<BYTE> src)
+vector<wstring> util::parseStr(span<BYTE> src)
 {
 	switch (src[0]) {
 		case 0x00: return parseIso88591(src.subspan(1));
@@ -18,7 +18,7 @@ vector<wstring> strEngine::parseAny(span<BYTE> src)
 	}
 }
 
-vector<wstring> strEngine::parseIso88591(span<BYTE> src)
+vector<wstring> util::parseIso88591(span<BYTE> src)
 {
 	auto idxLastNonZero = vec::positionRevIf(src, [](const BYTE& by) -> bool { return by != 0x00; });
 	if (idxLastNonZero.has_value())
@@ -42,7 +42,7 @@ vector<wstring> strEngine::parseIso88591(span<BYTE> src)
 	return texts;
 }
 
-vector<wstring> strEngine::parseUnicode(span<BYTE> src)
+vector<wstring> util::parseUnicode(span<BYTE> src)
 {
 	if (src.size() % 2) [[unlikely]] {
 		// Length is not even, something is not quite right.
@@ -81,7 +81,7 @@ vector<wstring> strEngine::parseUnicode(span<BYTE> src)
 	return texts;
 }
 
-strEngine::SerializedStrs strEngine::serialize(std::vector<std::wstring>& strs)
+util::SerializedStrs util::serializeStrs(std::vector<std::wstring>& strs)
 {
 	bool isUnicode = false;
 	size_t estimatedLenBytes = 0;
@@ -129,13 +129,26 @@ strEngine::SerializedStrs strEngine::serialize(std::vector<std::wstring>& strs)
 	};
 }
 
-UINT strEngine::uintFromBeBytes(span<BYTE> src)
+UINT util::uintFromBeBytes(span<BYTE> src)
 {
+	if (src.size() != 4) [[unlikely]] {
+		throw std::invalid_argument("UINT must be converted from 4 bytes");
+	}
 	return MAKELONG(MAKEWORD(src[3], src[2]), MAKEWORD(src[1], src[0]));
 }
 
+optional<size_t> util::positionOf2(span<BYTE> src, BYTE elem1, BYTE elem2)
+{
+	for (size_t i = 0; i < src.size() - 1; ++i) {
+		if (src[i] == elem1 && src[i + 1] == elem2)
+			return {i};
+	}
+	return std::nullopt;
+}
 
-UINT strEngine::syncSafe::encode(UINT num)
+
+
+UINT util::syncSafe::encode(UINT num)
 {
 	int out, mask = 0x7f;
 	while (mask ^ 0x7fff'ffff) {
@@ -148,7 +161,7 @@ UINT strEngine::syncSafe::encode(UINT num)
 	return out;
 }
 
-UINT strEngine::syncSafe::decode(UINT num)
+UINT util::syncSafe::decode(UINT num)
 {
 	int out = 0, mask = 0x7f00'0000;
 	while (mask) {

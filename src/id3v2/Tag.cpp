@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <windlg/lib.h>
 #include "Tag.h"
-#include "strEngine.h"
+#include "util.h"
 using std::span, std::vector;
 using namespace lib;
 using namespace id3;
@@ -26,16 +26,11 @@ Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
 	HeaderInfo nfo{};
 
 	// Retrieve MP3 offset.
-	nfo.mp3Offset = -1;
-	for (size_t i = 0; i < src.size() - 1; ++i) {
-		if (src[i] == 0xff && src[i + 1] == 0xfb) { // https://stackoverflow.com/a/7302482/6923555
-			nfo.mp3Offset = static_cast<UINT>(i);
-			break;
-		}
-	}
-	if (nfo.mp3Offset == -1) [[unlikely]] {
+	auto maybeMp3Offset = util::positionOf2(src, 0xff, 0xfb); // https://stackoverflow.com/a/7302482/6923555
+	if (!maybeMp3Offset.has_value()) [[unlikely]] {
 		throw std::runtime_error("No MP3 signature found");
 	}
+	nfo.mp3Offset = static_cast<UINT>(maybeMp3Offset.value());
 
 	// Check ID3 magic bytes.
 	if ( !(src[0] == 'I' && src[1] == 'D' && src[2] == '3') ) {
@@ -54,7 +49,7 @@ Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
 		throw std::runtime_error("Tag extended header not supported");
 	}
 
-	nfo.declaredSize = strEngine::syncSafe::decode(strEngine::uintFromBeBytes(src.subspan(6, 4)));
+	nfo.declaredSize = util::syncSafe::decode(util::uintFromBeBytes(src.subspan(6, 4)));
 	if (nfo.declaredSize > nfo.mp3Offset) {
 		auto msg = str::fmt(L"--- Declared size: %d > offset: %d\n", nfo.declaredSize, nfo.mp3Offset);
 		OutputDebugStringW(msg.c_str());
