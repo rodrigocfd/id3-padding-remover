@@ -186,7 +186,10 @@
     <ClInclude Include="..\windlg\windlg\Window.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\DlgMain.h" />
+    <ClInclude Include="src\id3v2\Frame.h" />
+    <ClInclude Include="src\id3v2\FrameData.h" />
     <ClInclude Include="src\id3v2\strEngine.h" />
+    <ClInclude Include="src\id3v2\Tag.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\windlg\windlg\CheckRadio.cpp" />
@@ -211,7 +214,10 @@
     <ClCompile Include="..\windlg\windlg\VersionInfo.cpp" />
     <ClCompile Include="..\windlg\windlg\Window.cpp" />
     <ClCompile Include="src\DlgMain.cpp" />
+    <ClCompile Include="src\id3v2\Frame.cpp" />
+    <ClCompile Include="src\id3v2\FrameData.cpp" />
     <ClCompile Include="src\id3v2\strEngine.cpp" />
+    <ClCompile Include="src\id3v2\Tag.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc" />

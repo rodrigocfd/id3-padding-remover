@@ -4,7 +4,7 @@
 #include <vector>
 #include <Windows.h>
 
-namespace strEngine {
+namespace id3::strEngine {
 
 [[nodiscard]] std::vector<std::wstring> parseAny(std::span<BYTE> src);
 [[nodiscard]] std::vector<std::wstring> parseIso88591(std::span<BYTE> src);
@@ -16,5 +16,12 @@ struct SerializedStrs final {
 	std::vector<BYTE> data;
 };
 [[nodiscard]] SerializedStrs serialize(std::vector<std::wstring>& strs);
+
+[[nodiscard]] UINT uintFromBeBytes(std::span<BYTE> src);
+
+namespace syncSafe {
+	[[nodiscard]] UINT encode(UINT num);
+	[[nodiscard]] UINT decode(UINT num);
+}
 
 }

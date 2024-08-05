@@ -99,6 +99,15 @@
     <ClInclude Include="src\id3v2\strEngine.h">
       <Filter>ID3v2</Filter>
     </ClInclude>
+    <ClInclude Include="src\id3v2\FrameData.h">
+      <Filter>ID3v2</Filter>
+    </ClInclude>
+    <ClInclude Include="src\id3v2\Frame.h">
+      <Filter>ID3v2</Filter>
+    </ClInclude>
+    <ClInclude Include="src\id3v2\Tag.h">
+      <Filter>ID3v2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\DlgMain.cpp">
@@ -168,6 +177,15 @@
       <Filter>WinDlg</Filter>
     </ClCompile>
     <ClCompile Include="src\id3v2\strEngine.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\FrameData.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\Frame.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\Tag.cpp">
       <Filter>ID3v2</Filter>
     </ClCompile>
   </ItemGroup>

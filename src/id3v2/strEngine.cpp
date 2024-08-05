@@ -4,6 +4,7 @@
 #include "strEngine.h"
 using std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
+using namespace id3;
 
 constexpr WORD BOM_LE = 0xfeff;
 constexpr WORD BOM_BE = 0xfffe;
@@ -11,8 +12,8 @@ constexpr WORD BOM_BE = 0xfffe;
 vector<wstring> strEngine::parseAny(span<BYTE> src)
 {
 	switch (src[0]) {
-		case 0x00: return parseIso88591(src);
-		case 0x01: return parseUnicode(src);
+		case 0x00: return parseIso88591(src.subspan(1));
+		case 0x01: return parseUnicode(src.subspan(1));
 		default:   throw std::invalid_argument(str::toAnsi( str::fmt(L"Unrecognized encoding: %d", src[0]) ));
 	}
 }
@@ -126,4 +127,34 @@ strEngine::SerializedStrs strEngine::serialize(std::vector<std::wstring>& strs)
 		.enc = static_cast<BYTE>(isUnicode ? 0x01 : 0x00),
 		.data = std::move(buf),
 	};
+}
+
+UINT strEngine::uintFromBeBytes(span<BYTE> src)
+{
+	return MAKELONG(MAKEWORD(src[3], src[2]), MAKEWORD(src[1], src[0]));
+}
+
+
+UINT strEngine::syncSafe::encode(UINT num)
+{
+	int out, mask = 0x7f;
+	while (mask ^ 0x7fff'ffff) {
+		out = num & ~mask;
+		out <<= 1;
+		out |= num & mask;
+		mask = ((mask + 1) << 8) - 1;
+		num = out;
+	}
+	return out;
+}
+
+UINT strEngine::syncSafe::decode(UINT num)
+{
+	int out = 0, mask = 0x7f00'0000;
+	while (mask) {
+		out >>= 1;
+		out |= num & mask;
+		mask >>= 8;
+	}
+	return out;
 }
