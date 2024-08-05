@@ -99,9 +99,6 @@
     <ClInclude Include="src\id3v2\util.h">
       <Filter>ID3v2</Filter>
     </ClInclude>
-    <ClInclude Include="src\id3v2\FrameData.h">
-      <Filter>ID3v2</Filter>
-    </ClInclude>
     <ClInclude Include="src\id3v2\Frame.h">
       <Filter>ID3v2</Filter>
     </ClInclude>
@@ -177,9 +174,6 @@
       <Filter>WinDlg</Filter>
     </ClCompile>
     <ClCompile Include="src\id3v2\util.cpp">
-      <Filter>ID3v2</Filter>
-    </ClCompile>
-    <ClCompile Include="src\id3v2\FrameData.cpp">
       <Filter>ID3v2</Filter>
     </ClCompile>
     <ClCompile Include="src\id3v2\Frame.cpp">
