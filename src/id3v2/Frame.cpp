@@ -6,32 +6,32 @@ using std::span, std::vector, std::wstring;
 using namespace lib;
 using namespace id3;
 
-LPCWSTR Frame::Picture::TypeToString(PicType t)
+LPCWSTR Frame::Picture::TypeToString(Type t)
 {
-	using enum PicType;
+	using enum Type;
 	switch (t) {
-	case Other: return L"Other";
-	case FileIconPng32: return L"32x32 pixels 'file icon' (PNG only)";
-	case FileIconOther: return L"Other file icon";
-	case CoverFront: return L"Cover (front)";
-	case CoverBack: return L"Cover (back)";
-	case Leaflet: return L"Leaflet page";
-	case CdLabelSide: return L"Media (e.g. label side of CD)";
-	case LeadArtist: return L"Lead artist/lead performer/soloist";
-	case Artist: return L"Artist/performer";
-	case Conductor: return L"Conductor";
-	case Band: return L"Band/Orchestra";
-	case Composer: return L"Composer";
-	case Lyricist: return L"Lyricist/text writer";
-	case RecLocation: return L"Recording Location";
-	case DuringRecording: return L"During recording";
-	case DuringPerformance: return L"During performance";
-	case MovieCapture: return L"Movie/video screen capture";
-	case BrightColouredFish: return L"A bright coloured fish";
-	case Illustration: return L"Illustration";
-	case BandLogo: return L"Band/artist logotype";
-	case PublisherLogo: return L"Publisher/Studio logotype";
-	default: throw new std::invalid_argument("Unknown picture type");
+		case Other: return L"Other";
+		case FileIconPng32: return L"32x32 pixels 'file icon' (PNG only)";
+		case FileIconOther: return L"Other file icon";
+		case CoverFront: return L"Cover (front)";
+		case CoverBack: return L"Cover (back)";
+		case Leaflet: return L"Leaflet page";
+		case CdLabelSide: return L"Media (e.g. label side of CD)";
+		case LeadArtist: return L"Lead artist/lead performer/soloist";
+		case Artist: return L"Artist/performer";
+		case Conductor: return L"Conductor";
+		case Band: return L"Band/Orchestra";
+		case Composer: return L"Composer";
+		case Lyricist: return L"Lyricist/text writer";
+		case RecLocation: return L"Recording Location";
+		case DuringRecording: return L"During recording";
+		case DuringPerformance: return L"During performance";
+		case MovieCapture: return L"Movie/video screen capture";
+		case BrightColouredFish: return L"A bright coloured fish";
+		case Illustration: return L"Illustration";
+		case BandLogo: return L"Band/artist logotype";
+		case PublisherLogo: return L"Publisher/Studio logotype";
+		default: throw new std::invalid_argument("Unknown picture type");
 	}
 }
 
@@ -121,7 +121,7 @@ Frame::Picture Frame::_ParseApic(span<BYTE> src)
 		picture.mime += static_cast<WCHAR>(mimeParts[0][i]);
 
 	src = mimeParts[1];
-	picture.type = static_cast<PicType>(src[0]);
+	picture.type = static_cast<Picture::Type>(src[0]);
 	src = src.subspan(1); // skip picture type
 
 	if (encBy == 0x00) { // ISO 8859-1

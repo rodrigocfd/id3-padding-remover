@@ -66,6 +66,7 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 			break;
 		} else if (vec::all(src, 0x00)) { // we entered a padding region after all frames
 			nfo.padding = static_cast<UINT>(src.size());
+			break;
 		}
 
 		Frame frame = Frame::Parse(src);

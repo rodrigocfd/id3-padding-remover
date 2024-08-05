@@ -23,7 +23,7 @@ struct Frame final {
 		std::wstring text;
 	};
 	struct Picture final {
-		enum class PicType: BYTE {
+		enum class Type: BYTE {
 			Other = 0x00,
 			FileIconPng32 = 0x01,
 			FileIconOther = 0x02,
@@ -46,10 +46,10 @@ struct Frame final {
 			BandLogo = 0x13,
 			PublisherLogo = 0x14,
 		};
-		[[nodiscard]] static LPCWSTR TypeToString(PicType t);
+		[[nodiscard]] static LPCWSTR TypeToString(Type t);
 
 		std::wstring mime;
-		PicType type;
+		Type type;
 		std::wstring descr;
 		std::vector<BYTE> bin;
 	};

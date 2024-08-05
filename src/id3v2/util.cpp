@@ -74,7 +74,7 @@ vector<wstring> util::parseUnicode(span<BYTE> src)
 		} else {
 			auto buf = str::newReserved(block.size());
 			for (auto&& ch : block)
-				buf += (isLE ? ch : MAKEWORD(HIWORD(ch), LOWORD(ch))); // reverse bytes of WORD if big-endian
+				buf += (isLE ? MAKEWORD(HIWORD(ch), LOWORD(ch)) : ch);
 			texts.emplace_back(std::move(buf));
 		}
 	}
