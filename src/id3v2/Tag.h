@@ -11,7 +11,14 @@ struct Tag final {
 	UINT padding = 0;
 	std::vector<Frame> frames;
 
-	[[nodiscard]] static Tag Parse(std::span<BYTE> src);
+	Tag() = delete;
+	Tag(const Tag&) = delete;
+	constexpr Tag(Tag&&) = default;
+	Tag& operator=(const Tag&) = delete;
+	constexpr Tag& operator=(Tag&&) = default;
+
+	explicit Tag(std::span<BYTE> src) { _parseBin(src); }
+	explicit Tag(std::wstring_view mp3);
 
 private:
 	struct HeaderInfo final {
@@ -23,6 +30,7 @@ private:
 		UINT padding = 0;
 	};
 
+	void _parseBin(std::span<BYTE> src);
 	[[nodiscard]] static HeaderInfo _ParseHeader(std::span<BYTE> src);
 	[[nodiscard]] static FramesInfo _ParseFrames(std::span<BYTE> src);
 };

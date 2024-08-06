@@ -2,23 +2,26 @@
 #include <windlg/lib.h>
 #include "Tag.h"
 #include "util.h"
-using std::span, std::vector;
+using std::span, std::vector, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
-Tag Tag::Parse(span<BYTE> src)
+Tag::Tag(wstring_view mp3)
+{
+	lib::FileMapped f{mp3, lib::FileMapped::Access::ExistingReadOnly};
+	_parseBin(f.asSpan());
+}
+
+void Tag::_parseBin(span<BYTE> src)
 {
 	HeaderInfo headerNfo = _ParseHeader(src);
-	if (!headerNfo.declaredSize && !headerNfo.mp3Offset) {
-		return {}; // MP3 has no ID3v2 tag
-	} else {
-		FramesInfo framesNfo = _ParseFrames(src.subspan(10, headerNfo.mp3Offset - 10));
-		return {
-			.mp3Offset = headerNfo.mp3Offset,
-			.padding = framesNfo.padding,
-			.frames = std::move(framesNfo.frames),
-		};
-	}
+	if (!headerNfo.declaredSize && !headerNfo.mp3Offset)
+		return; // MP3 has no ID3v2 tag
+
+	FramesInfo framesNfo = _ParseFrames(src.subspan(10, headerNfo.mp3Offset - 10));
+	mp3Offset = headerNfo.mp3Offset;
+	padding = framesNfo.padding;
+	frames = std::move(framesNfo.frames);
 }
 
 Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
@@ -69,7 +72,7 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 			break;
 		}
 
-		Frame frame = Frame::Parse(src);
+		Frame frame{src};
 		if (frame.declaredSize > src.size()) { // means the size was serialized with error
 			throw std::runtime_error(
 				str::toAnsi(str::fmt(L"Declared frame size greater than available size: %d vs %d",

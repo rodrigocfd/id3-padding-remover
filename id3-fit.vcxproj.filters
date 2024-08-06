@@ -107,7 +107,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\DlgMain.cpp">
+    <ClCompile Include="src\DlgMain_events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\windlg\windlg\CheckRadio.cpp">
@@ -181,6 +181,9 @@
     </ClCompile>
     <ClCompile Include="src\id3v2\Tag.cpp">
       <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgMain_funcs.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

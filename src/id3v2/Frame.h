@@ -56,11 +56,17 @@ struct Frame final {
 	using Data = std::variant<Text, UserText, Binary, Comment, Picture>;
 
 	WCHAR name4[5] = {L'\0'};
-	std::array<BYTE, 2> flags;
 	UINT declaredSize = 0;
+	std::array<BYTE, 2> flags;
 	Data data;
 
-	[[nodiscard]] static Frame Parse(std::span<BYTE> src);
+	Frame() = delete;
+	Frame(const Frame&) = delete;
+	constexpr Frame(Frame&&) = default;
+	Frame& operator=(const Frame&) = delete;
+	constexpr Frame& operator=(Frame&&) = default;
+
+	explicit Frame(std::span<BYTE> src);
 
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);
