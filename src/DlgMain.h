@@ -22,9 +22,10 @@ private:
 	INT_PTR onListDeleteItem(LPARAM lp);
 	INT_PTR onListHeaderClick(LPARAM lp);
 
-	void _addMp3sToList(const std::vector<std::wstring>& mp3s);
-	void _addOneMp3ToList(std::wstring_view mp3);
-	void _updateNumFiles(UINT numFiles);
+	void _addMp3sToList(const std::vector<std::wstring>& mp3s) const;
+	void _addOneMp3ToList(std::wstring_view mp3) const;
+	void _updateNumFiles(UINT numFiles) const;
+	void _sortList() const;
 
 	lib::ImgList _imgList;
 	struct { int col; bool asc; } _sort = {.col = 0, .asc = true};

@@ -3,7 +3,7 @@
 #include "../res/resource.h"
 using std::optional, std::vector, std::wstring, std::wstring_view;
 
-void DlgMain::_addMp3sToList(const vector<wstring>& mp3s)
+void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 {
 	vector<wstring> invalids;
 	for (auto&& mp3 : mp3s) {
@@ -30,9 +30,10 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s)
 		}
 	}
 	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
+	_sortList();
 }
 
-void DlgMain::_addOneMp3ToList(wstring_view mp3)
+void DlgMain::_addOneMp3ToList(wstring_view mp3) const
 {
 	lib::ListView lv{this, LST_FILES};
 	int idxItem = -1;
@@ -46,15 +47,40 @@ void DlgMain::_addOneMp3ToList(wstring_view mp3)
 	}
 
 	auto item = lv.items[idxItem];
-	auto pTag = new id3::Tag{mp3}; // store pointer to Tag in item
+	id3::Tag* pTag = nullptr;
+	try {
+		pTag = new id3::Tag{mp3}; // store pointer to Tag in item
+	} catch (const std::exception& e) {
+		item.remove();
+		auto msg = lib::str::fmt(L"%s\n\n%s", mp3, lib::str::toWide(e.what()));
+		dlg.msgBox(L"Tag parsing error", {}, msg, TDCBF_OK_BUTTON, TD_ERROR_ICON);
+		return;
+	}
+
 	item.setData(pTag);
 	item.setText(std::to_wstring(pTag->padding), 1);
 	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value())
 		item.setText(L"\u2713", 2); // checkmark
 }
 
-void DlgMain::_updateNumFiles(UINT numFiles)
+void DlgMain::_updateNumFiles(UINT numFiles) const
 {
 	setText(lib::str::fmt(L"ID3 Fit (%d/%d)",
 		lib::ListView{this, LST_FILES}.items.countSelected(), numFiles));
+}
+
+void DlgMain::_sortList() const
+{
+	lib::ListView{this, LST_FILES}.items.sort([this](lib::ListView::Item a, lib::ListView::Item b) -> int {
+		int cmp = 0;
+		if (_sort.col == 1) { // by padding
+			auto pTagA = a.data<const id3::Tag*>();
+			auto pTagB = b.data<const id3::Tag*>();
+			cmp = pTagA->padding - pTagB->padding;
+		} else { // by text
+			cmp = lstrcmpiW(a.text().c_str(), b.text().c_str());
+		}
+		return _sort.asc ? cmp : -cmp;
+	});
+
 }

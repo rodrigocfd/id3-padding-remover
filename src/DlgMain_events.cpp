@@ -119,7 +119,6 @@ INT_PTR DlgMain::onListHeaderClick(LPARAM lp)
 	lv.columns[pNmh->iItem].setSortArrow(willSortAsc ? HDF_SORTUP : HDF_SORTDOWN); // draw arrow
 	_sort = {.col = pNmh->iItem, .asc = willSortAsc}; // update state
 
-
-
+	_sortList();
 	return TRUE;
 }
