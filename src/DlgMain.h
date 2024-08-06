@@ -23,6 +23,7 @@ private:
 	INT_PTR onListHeaderClick(LPARAM lp);
 
 	void _addMp3sToList(const std::vector<std::wstring>& mp3s);
+	void _addOneMp3ToList(std::wstring_view mp3);
 	void _updateNumFiles(UINT numFiles);
 
 	lib::ImgList _imgList;

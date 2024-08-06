@@ -2,7 +2,7 @@
 #include <windlg/lib.h>
 #include "Tag.h"
 #include "util.h"
-using std::span, std::vector, std::wstring_view;
+using std::optional, std::span, std::vector, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
@@ -10,6 +10,15 @@ Tag::Tag(wstring_view mp3)
 {
 	lib::FileMapped f{mp3, lib::FileMapped::Access::ExistingReadOnly};
 	_parseBin(f.asSpan());
+}
+
+optional<Frame*> Tag::frameByName4(std::wstring_view name4)
+{
+	for (auto&& frame : frames) {
+		if (lib::str::eqI(frame.name4, name4))
+			return &frame;
+	}
+	return std::nullopt;
 }
 
 void Tag::_parseBin(span<BYTE> src)

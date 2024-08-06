@@ -51,7 +51,11 @@ INT_PTR DlgMain::onInitDialog()
 	lib::ListView lv{this, LST_FILES};
 	lv.setImageList(_imgList)
 		.setFullRowSelect();
-	lv.columns.add({{L"File", 200}});
+	lv.columns.add(L"File", lib::dpi::x(300));
+	lv.columns.add(L"Pad", lib::dpi::x(50)).setJustification(HDF_RIGHT);
+	lv.columns.add(L"Pic", lib::dpi::x(30)).setJustification(HDF_CENTER);
+
+
 
 
 	return TRUE;

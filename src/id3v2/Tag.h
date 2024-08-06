@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <span>
 #include <vector>
 #include <Windows.h>
@@ -19,6 +20,8 @@ struct Tag final {
 
 	explicit Tag(std::span<BYTE> src) { _parseBin(src); }
 	explicit Tag(std::wstring_view mp3);
+
+	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4);
 
 private:
 	struct HeaderInfo final {
