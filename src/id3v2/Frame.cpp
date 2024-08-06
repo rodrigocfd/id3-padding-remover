@@ -40,7 +40,11 @@ Frame::Frame(span<BYTE> src)
 {
 	// Parse the 10-byte frame header.
 	for (size_t i = 0; i < 4; ++i) name4[i] = src[i];
+	
 	declaredSize = util::uintFromBeBytes(src.subspan(4, 4)) + 10; // also count 10-byte frame header
+	if (declaredSize < src.size()) // if serialized with error, be complacent
+		declaredSize = static_cast<UINT>(src.size());
+
 	flags = {src[8], src[9]};
 
 	// Skip frame header, truncate to declared frame size.

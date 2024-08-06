@@ -11,7 +11,8 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s)
 			invalids.emplace_back(mp3);
 	}
 	if (!invalids.empty()) {
-		wstring buf{L"Non-MP3 file(s):"};
+		auto buf = lib::str::newReserved(22 * invalids.size()); // arbitrary
+		buf = L"Non-MP3 file(s):";
 		for (const auto& mp3 : invalids) {
 			buf.append(L"\n");
 			buf.append(mp3);
