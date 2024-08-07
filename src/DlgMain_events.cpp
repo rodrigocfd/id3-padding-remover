@@ -51,15 +51,22 @@ INT_PTR DlgMain::onInitDialog()
 	lib::ListView lv{this, LST_FILES};
 	lv.setImageList(_imgList)
 		.setFullRowSelect();
-	lv.columns.add(L"File", lib::dpi::x(320));
+	lv.columns.add(L"File", lib::dpi::x(400)).setSortArrow(HDF_SORTUP);
 	lv.columns.add(L"Pad", lib::dpi::x(50)).setJustification(HDF_RIGHT);
 	lv.columns.add(L"Pic", lib::dpi::x(30)).setJustification(HDF_CENTER);
 	lv.columns.add(L"RG", lib::dpi::x(30)).setJustification(HDF_CENTER);
-	lv.columns.add(L"Artist", lib::dpi::x(100));
+	lv.columns.add(L"Artist", lib::dpi::x(90));
 	lv.columns.add(L"Year", lib::dpi::x(40)).setJustification(HDF_CENTER);
 	lv.columns.add(L"Album", lib::dpi::x(100));
-
-
+	lv.columns.add(L"T#", lib::dpi::x(30)).setJustification(HDF_RIGHT);
+	lv.columns.add(L"Title", lib::dpi::x(100));
+	lv.columns.add(L"Genre", lib::dpi::x(90));
+	lv.columns.add(L"Performer", lib::dpi::x(70));
+	lv.columns.add(L"Composer", lib::dpi::x(70));
+	lv.columns.add(L"Lyricist", lib::dpi::x(70));
+	lv.columns.add(L"Orig. artist", lib::dpi::x(70));
+	lv.columns.add(L"Comment", lib::dpi::x(70));
+	lv.columns[0].setWidthToFill();
 
 	return TRUE;
 }
@@ -71,6 +78,9 @@ void DlgMain::onDropTarget(const vector<wstring>& files)
 
 INT_PTR DlgMain::onSize(WPARAM wp, LPARAM lp)
 {
+	if (wp != SIZE_MINIMIZED)
+		lib::ListView{this, LST_FILES}.columns[0].setWidthToFill();
+
 	return TRUE;
 }
 

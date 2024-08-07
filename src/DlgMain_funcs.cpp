@@ -30,6 +30,7 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 		}
 	}
 	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
+	lib::ListView{this, LST_FILES}.columns[0].setWidthToFill();
 	_sortList();
 }
 
@@ -76,9 +77,15 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	renderSimple(L"TPE1", 4);
 	renderSimple(L"TYER", 5);
 	renderSimple(L"TALB", 6);
-
-
-	
+	renderSimple(L"TRCK", 7);
+	renderSimple(L"TIT2", 8);
+	renderSimple(L"TCON", 9);
+	renderSimple(L"TPE3", 10);
+	renderSimple(L"TCOM", 11);
+	renderSimple(L"TEXT", 12);
+	renderSimple(L"TOPE", 13);
+	if (auto comm = pTag->frameByName4(L"COMM"); comm.has_value())
+		item.setText(std::get_if<id3::Frame::Comment>(&comm.value()->data)->text, 14);
 }
 
 void DlgMain::_updateNumFiles(UINT numFiles) const
@@ -97,7 +104,7 @@ void DlgMain::_sortList() const
 			auto pTagB = b.data<const id3::Tag*>();
 			cmp = pTagA->padding - pTagB->padding;
 		} else { // by text
-			cmp = lstrcmpiW(a.text().c_str(), b.text().c_str());
+			cmp = lstrcmpiW(a.text(_sort.col).c_str(), b.text(_sort.col).c_str());
 		}
 		return _sort.asc ? cmp : -cmp;
 	});
