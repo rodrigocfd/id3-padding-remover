@@ -20,22 +20,24 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 		case WM_INITMENUPOPUP: return onInitMenuPopup(wp);
 		case WM_COMMAND:
 			switch (LOWORD(wp)) {
-				case MNU_FILE_OPEN:  return onMenuFileOpen();
-				case MNU_FILE_ABOUT: return onMenuFileAbout();
-				default:             return FALSE;
+				case MNU_FILE_OPEN:   return onMenuFileOpen();
+				case MNU_FILE_EDIT:   return onMenuFileEdit();
+				case MNU_FILE_REMOVE: return onMenuFileRemove();
+				case MNU_FILE_ABOUT:  return onMenuFileAbout();
+				default:              return FALSE;
 			}
 		case WM_NOTIFY:
 			switch (reinterpret_cast<NMHDR*>(lp)->idFrom) {
 				case LST_FILES:
 					switch (reinterpret_cast<NMHDR*>(lp)->code) {
-						case NM_DBLCLK:       return onListEditMp3();
+						case NM_DBLCLK:       return onMenuFileEdit();
 						case LVN_ITEMCHANGED: return onListItemChanged();
 						case LVN_DELETEITEM:  return onListDeleteItem(lp);
 						case HDN_ITEMCLICK:   return onListHeaderClick(lp);
 						case LVN_KEYDOWN: {
 							switch (reinterpret_cast<NMLVKEYDOWN*>(lp)->wVKey) {
-								case VK_DELETE: return onListDelKey();
-								case VK_RETURN: return onListEditMp3();
+								case VK_RETURN: return onMenuFileEdit();
+								case VK_DELETE: return onMenuFileRemove();
 								default:        return FALSE;
 							}
 						}
@@ -97,8 +99,8 @@ INT_PTR DlgMain::onInitMenuPopup(WPARAM wp)
 {
 	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
 	if (popupMenu.idByPos(0) == MNU_FILE_OPEN) {
-
-		
+		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_REMOVE},
+			lib::ListView{this, LST_FILES}.items.countSelected() > 0);
 	}
 	return TRUE;
 }
@@ -114,6 +116,22 @@ INT_PTR DlgMain::onMenuFileOpen()
 	return TRUE;
 }
 
+INT_PTR DlgMain::onMenuFileEdit()
+{
+	auto selItems = lib::ListView {this, LST_FILES}.items.selected();
+	if (selItems.empty()) return TRUE; // Enter key will hit here even without selected items
+
+
+
+	return TRUE;
+}
+
+INT_PTR DlgMain::onMenuFileRemove()
+{
+	lib::ListView{this, LST_FILES}.items.removeSelected();
+	return TRUE;
+}
+
 INT_PTR DlgMain::onMenuFileAbout()
 {
 	lib::VersionInfo vi;
@@ -125,22 +143,9 @@ INT_PTR DlgMain::onMenuFileAbout()
 	return TRUE;
 }
 
-INT_PTR DlgMain::onListEditMp3()
-{
-	
-
-	return TRUE;
-}
-
 INT_PTR DlgMain::onListItemChanged()
 {
 	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
-	return TRUE;
-}
-
-INT_PTR DlgMain::onListDelKey()
-{
-	lib::ListView{this, LST_FILES}.items.removeSelected();
 	return TRUE;
 }
 

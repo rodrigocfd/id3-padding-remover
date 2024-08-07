@@ -18,10 +18,10 @@ private:
 	INT_PTR onSize(WPARAM wp, LPARAM lp);
 	INT_PTR onInitMenuPopup(WPARAM wp);
 	INT_PTR onMenuFileOpen();
+	INT_PTR onMenuFileEdit();
+	INT_PTR onMenuFileRemove();
 	INT_PTR onMenuFileAbout();
-	INT_PTR onListEditMp3();
 	INT_PTR onListItemChanged();
-	INT_PTR onListDelKey();
 	INT_PTR onListDeleteItem(LPARAM lp);
 	INT_PTR onListHeaderClick(LPARAM lp);
 
