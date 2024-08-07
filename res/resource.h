@@ -3,9 +3,10 @@
 // Used by id3-fit.rc
 //
 #define DLG_MAIN                        101
-#define ICO_FOULBACHELOR                102
-#define MNU_FILE                        103
-#define ACC_MAIN                        104
+#define DLG_EDIT                        102
+#define ICO_FOULBACHELOR                103
+#define MNU_FILE                        104
+#define ACC_MAIN                        105
 #define LST_FILES                       1001
 #define MNU_FILE_OPEN                   40001
 #define MNU_FILE_EDIT                   40002
@@ -16,7 +17,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40005
 #define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           101

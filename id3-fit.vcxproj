@@ -185,6 +185,7 @@
     <ClInclude Include="..\windlg\windlg\VersionInfo.h" />
     <ClInclude Include="..\windlg\windlg\Window.h" />
     <ClInclude Include="res\resource.h" />
+    <ClInclude Include="src\DlgEdit.h" />
     <ClInclude Include="src\DlgMain.h" />
     <ClInclude Include="src\id3v2\Frame.h" />
     <ClInclude Include="src\id3v2\util.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="..\windlg\windlg\TimeCount.cpp" />
     <ClCompile Include="..\windlg\windlg\VersionInfo.cpp" />
     <ClCompile Include="..\windlg\windlg\Window.cpp" />
+    <ClCompile Include="src\DlgEdit_events.cpp" />
     <ClCompile Include="src\DlgMain_events.cpp" />
     <ClCompile Include="src\DlgMain_funcs.cpp" />
     <ClCompile Include="src\id3v2\Frame.cpp" />

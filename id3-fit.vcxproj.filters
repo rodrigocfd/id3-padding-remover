@@ -105,6 +105,9 @@
     <ClInclude Include="src\id3v2\Tag.h">
       <Filter>ID3v2</Filter>
     </ClInclude>
+    <ClInclude Include="src\DlgEdit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\DlgMain_events.cpp">
@@ -183,6 +186,9 @@
       <Filter>ID3v2</Filter>
     </ClCompile>
     <ClCompile Include="src\DlgMain_funcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgEdit_events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
