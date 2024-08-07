@@ -56,11 +56,21 @@ void DlgMain::_addOneMp3ToList(wstring_view mp3) const
 		dlg.msgBox(L"Tag parsing error", {}, msg, TDCBF_OK_BUTTON, TD_ERROR_ICON);
 		return;
 	}
-
 	item.setData(pTag);
+	_renderMp3ListItem(item);
+}
+
+void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
+{
+	auto pTag = item.data<const id3::Tag*>();
+
 	item.setText(std::to_wstring(pTag->padding), 1);
 	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value())
 		item.setText(L"\u2713", 2); // checkmark
+	if (auto artist = pTag->frameByName4(L"TPE1"); artist.has_value())
+		item.setText(std::get_if<id3::Frame::Text>(&artist.value()->data)->text, 3);
+
+	
 }
 
 void DlgMain::_updateNumFiles(UINT numFiles) const
@@ -71,7 +81,8 @@ void DlgMain::_updateNumFiles(UINT numFiles) const
 
 void DlgMain::_sortList() const
 {
-	lib::ListView{this, LST_FILES}.items.sort([this](lib::ListView::Item a, lib::ListView::Item b) -> int {
+	using lib::ListView;
+	ListView{this, LST_FILES}.items.sort([this](ListView::Item a, ListView::Item b) -> int {
 		int cmp = 0;
 		if (_sort.col == 1) { // by padding
 			auto pTagA = a.data<const id3::Tag*>();
@@ -82,5 +93,4 @@ void DlgMain::_sortList() const
 		}
 		return _sort.asc ? cmp : -cmp;
 	});
-
 }

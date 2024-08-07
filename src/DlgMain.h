@@ -24,6 +24,7 @@ private:
 
 	void _addMp3sToList(const std::vector<std::wstring>& mp3s) const;
 	void _addOneMp3ToList(std::wstring_view mp3) const;
+	void _renderMp3ListItem(lib::ListView::Item item) const;
 	void _updateNumFiles(UINT numFiles) const;
 	void _sortList() const;
 

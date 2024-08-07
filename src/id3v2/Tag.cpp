@@ -12,7 +12,7 @@ Tag::Tag(wstring_view mp3)
 	_parseBin(f.asSpan());
 }
 
-optional<Frame*> Tag::frameByName4(std::wstring_view name4)
+optional<const Frame*> Tag::frameByName4(std::wstring_view name4) const
 {
 	for (auto&& frame : frames) {
 		if (lib::str::eqI(frame.name4, name4))

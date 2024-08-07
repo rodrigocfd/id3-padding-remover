@@ -21,7 +21,8 @@ struct Tag final {
 	explicit Tag(std::span<BYTE> src) { _parseBin(src); }
 	explicit Tag(std::wstring_view mp3);
 
-	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4);
+	[[nodiscard]] std::optional<const Frame*> frameByName4(std::wstring_view name4) const;
+	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4) { return frameByName4(name4); }
 
 private:
 	struct HeaderInfo final {
