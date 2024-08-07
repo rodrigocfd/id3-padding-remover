@@ -15,8 +15,9 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 	lib::ListView::ProcessMessages(this, LST_FILES, uMsg, wp, lp, MNU_FILE);
 
 	switch (uMsg) {
-		case WM_INITDIALOG: return onInitDialog();
-		case WM_SIZE:       return onSize(wp, lp);
+		case WM_INITDIALOG:    return onInitDialog();
+		case WM_SIZE:          return onSize(wp, lp);
+		case WM_INITMENUPOPUP: return onInitMenuPopup(wp);
 		case WM_COMMAND:
 			switch (LOWORD(wp)) {
 				case MNU_FILE_OPEN:  return onMenuFileOpen();
@@ -27,10 +28,18 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 			switch (reinterpret_cast<NMHDR*>(lp)->idFrom) {
 				case LST_FILES:
 					switch (reinterpret_cast<NMHDR*>(lp)->code) {
+						case NM_DBLCLK:       return onListEditMp3();
 						case LVN_ITEMCHANGED: return onListItemChanged();
 						case LVN_DELETEITEM:  return onListDeleteItem(lp);
 						case HDN_ITEMCLICK:   return onListHeaderClick(lp);
-						default:              return FALSE;
+						case LVN_KEYDOWN: {
+							switch (reinterpret_cast<NMLVKEYDOWN*>(lp)->wVKey) {
+								case VK_DELETE: return onListDelKey();
+								case VK_RETURN: return onListEditMp3();
+								default:        return FALSE;
+							}
+						}
+						default: return FALSE;
 					}
 				default: return FALSE;
 			}
@@ -84,6 +93,16 @@ INT_PTR DlgMain::onSize(WPARAM wp, LPARAM lp)
 	return TRUE;
 }
 
+INT_PTR DlgMain::onInitMenuPopup(WPARAM wp)
+{
+	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
+	if (popupMenu.idByPos(0) == MNU_FILE_OPEN) {
+
+		
+	}
+	return TRUE;
+}
+
 INT_PTR DlgMain::onMenuFileOpen()
 {
 	if (optional<vector<wstring>> files = dlg.showOpenFiles({
@@ -106,9 +125,22 @@ INT_PTR DlgMain::onMenuFileAbout()
 	return TRUE;
 }
 
+INT_PTR DlgMain::onListEditMp3()
+{
+	
+
+	return TRUE;
+}
+
 INT_PTR DlgMain::onListItemChanged()
 {
 	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
+	return TRUE;
+}
+
+INT_PTR DlgMain::onListDelKey()
+{
+	lib::ListView{this, LST_FILES}.items.removeSelected();
 	return TRUE;
 }
 
