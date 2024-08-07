@@ -54,7 +54,10 @@ INT_PTR DlgMain::onInitDialog()
 	lv.columns.add(L"File", lib::dpi::x(320));
 	lv.columns.add(L"Pad", lib::dpi::x(50)).setJustification(HDF_RIGHT);
 	lv.columns.add(L"Pic", lib::dpi::x(30)).setJustification(HDF_CENTER);
+	lv.columns.add(L"RG", lib::dpi::x(30)).setJustification(HDF_CENTER);
 	lv.columns.add(L"Artist", lib::dpi::x(100));
+	lv.columns.add(L"Year", lib::dpi::x(40)).setJustification(HDF_CENTER);
+	lv.columns.add(L"Album", lib::dpi::x(100));
 
 
 

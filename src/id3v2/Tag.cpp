@@ -21,6 +21,30 @@ optional<const Frame*> Tag::frameByName4(std::wstring_view name4) const
 	return std::nullopt;
 }
 
+LPCWSTR Tag::replayGainStatus() const
+{
+	bool hasTrack = false;
+	bool hasAlbum = false;
+
+	for (auto&& frame : frames) {
+		if (hasTrack && hasAlbum) break;
+
+		if (lib::str::eqI(frame.name4, L"TXXX")) {
+			if (auto pData = std::get_if<Frame::UserText>(&frame.data); pData) {
+				if (lib::str::startsWithI(pData->descr, L"replaygain_track_"))
+					hasTrack = true;
+				else if (lib::str::startsWithI(pData->descr, L"replaygain_album_"))
+					hasAlbum = true;
+			}
+		}
+	}
+	
+	if (hasTrack && hasAlbum) return L"TA";
+	else if (hasTrack) return L"T";
+	else if (hasAlbum) return L"A";
+	else return L"";
+}
+
 void Tag::_parseBin(span<BYTE> src)
 {
 	HeaderInfo headerNfo = _ParseHeader(src);

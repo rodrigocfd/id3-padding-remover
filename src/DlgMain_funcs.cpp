@@ -64,11 +64,19 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 {
 	auto pTag = item.data<const id3::Tag*>();
 
+	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
+		if (auto frame = pTag->frameByName4(name4); frame.has_value())
+			item.setText(std::get_if<id3::Frame::Text>(&frame.value()->data)->text, col);
+	};
+
 	item.setText(std::to_wstring(pTag->padding), 1);
 	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value())
 		item.setText(L"\u2713", 2); // checkmark
-	if (auto artist = pTag->frameByName4(L"TPE1"); artist.has_value())
-		item.setText(std::get_if<id3::Frame::Text>(&artist.value()->data)->text, 3);
+	item.setText(pTag->replayGainStatus(), 3);
+	renderSimple(L"TPE1", 4);
+	renderSimple(L"TYER", 5);
+	renderSimple(L"TALB", 6);
+
 
 	
 }
