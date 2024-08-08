@@ -7,6 +7,7 @@ using namespace lib;
 using namespace id3;
 
 Tag::Tag(wstring_view mp3)
+	: path{mp3}
 {
 	lib::FileMapped f{mp3, lib::FileMapped::Access::ExistingReadOnly};
 	_parseBin(f.asSpan());

@@ -54,6 +54,17 @@ Frame::Frame(span<BYTE> src)
 	data = _ParseData(name4, src);
 }
 
+vector<BYTE> Frame::serialize() const
+{
+	auto buf = vec::newReserved<BYTE>(10);
+	for (size_t i = 0; i < 4; ++i) buf.push_back(static_cast<BYTE>(name4[i])); // no terminating null
+	buf.insert(buf.end(), 4, 0x00); // data size placeholder
+	vec::append(buf, flags[0], flags[1]);
+	auto szData = static_cast<UINT>(_serializeAppendData(buf));
+	util::serializeInPlaceUintBe(szData, buf.begin() + 4); // fill data size
+	return buf;
+}
+
 Frame::Data Frame::_ParseData(WCHAR name4[4], span<BYTE> src)
 {
 	if (str::eq(name4, L"COMM")) {
@@ -118,8 +129,8 @@ Frame::Picture Frame::_ParseApic(span<BYTE> src)
 	vector<span<BYTE>> mimeParts = vec::split(src, 0x00, {2});
 
 	picture.mime = str::newReserved(mimeParts[0].size());
-	for (size_t i = 0; i < mimeParts[0].size(); ++i)
-		picture.mime += static_cast<WCHAR>(mimeParts[0][i]);
+	for (BYTE by : mimeParts[0])
+		picture.mime += static_cast<WCHAR>(by);
 
 	src = mimeParts[1];
 	picture.type = static_cast<Picture::Type>(src[0]);
@@ -141,4 +152,42 @@ Frame::Picture Frame::_ParseApic(span<BYTE> src)
 
 	picture.bin = {src.begin(), src.end()};
 	return picture;
+}
+
+size_t Frame::_serializeAppendData(vector<BYTE>& dest) const
+{
+	return std::visit(util::VisitorOverload{
+		[&dest](const Text& t) {
+			auto serializedStrs = util::serializeStrs({t.text});
+			dest.push_back(serializedStrs.enc);
+			vec::append(dest, serializedStrs.data);
+			return 1 + serializedStrs.data.size();
+		},
+		[&dest](const UserText& ut) {
+			auto serializedStrs = util::serializeStrs({ut.descr, ut.text});
+			dest.push_back(serializedStrs.enc);
+			vec::append(dest, serializedStrs.data);
+			return 1 + serializedStrs.data.size();
+		},
+		[&dest](const Binary& b) {
+			vec::append(dest, b.bin);
+			return b.bin.size();
+		},
+		[&dest](const Comment& c) {
+			auto serializedStrs = util::serializeStrs({c.descr, c.text});
+			dest.push_back(serializedStrs.enc);
+			for (size_t i = 0; i < 3; ++i) dest.push_back(static_cast<BYTE>(c.lang3[i]));
+			vec::append(dest, serializedStrs.data);
+			return 1 + 3 + serializedStrs.data.size();
+		},
+		[&dest](const Picture& p) {
+			auto serializedStrs = util::serializeStrs({p.descr, p.descr});
+			dest.push_back(serializedStrs.enc);
+			for (WCHAR ch : p.mime) dest.push_back(static_cast<BYTE>(ch));
+			dest.push_back(0x00);
+			dest.push_back(static_cast<BYTE>(p.type));
+			vec::append(dest, serializedStrs.data);
+			return 1 + p.mime.length() + 1 + 1 + serializedStrs.data.size();
+		},
+	}, data);
 }

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <windlg/lib.h>
 #include "util.h"
-using std::optional, std::span, std::vector, std::wstring, std::wstring_view;
+using std::initializer_list, std::optional, std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
@@ -81,12 +81,12 @@ vector<wstring> util::parseUnicode(span<BYTE> src)
 	return texts;
 }
 
-util::SerializedStrs util::serializeStrs(std::vector<std::wstring>& strs)
+util::SerializedStrs util::serializeStrs(initializer_list<wstring_view> strs)
 {
 	bool isUnicode = false;
 	size_t estimatedLenBytes = 0;
 
-	for (const wstring& str : strs) {
+	for (wstring_view str : strs) {
 		estimatedLenBytes += str.length() + 1; // all strings will be null-terminated
 		if (!isUnicode) { // we still don't know if it will be Unicode
 			bool hasUnicodeCh = std::any_of(str.begin(), str.end(), [](const WCHAR& ch) -> bool { return ch > 0xff; });
@@ -101,7 +101,7 @@ util::SerializedStrs util::serializeStrs(std::vector<std::wstring>& strs)
 	}
 
 	auto buf = vec::newReserved<BYTE>(estimatedLenBytes);
-	for (const wstring& str : strs) {
+	for (wstring_view str : strs) {
 		if (isUnicode) {
 			// Insert BOM bytes for each string.
 			// Strings will be encoded as little-endian.
@@ -135,6 +135,14 @@ UINT util::uintFromBeBytes(span<BYTE> src)
 		throw std::invalid_argument("UINT must be converted from 4 bytes");
 	}
 	return MAKELONG(MAKEWORD(src[3], src[2]), MAKEWORD(src[1], src[0]));
+}
+
+void util::serializeInPlaceUintBe(UINT n, vector<BYTE>::iterator dest)
+{
+	 *dest = HIBYTE(HIWORD(n));
+	 *(dest + 1) = LOBYTE(HIWORD(n));
+	 *(dest + 2) = HIBYTE(LOWORD(n));
+	 *(dest + 3) = LOBYTE(LOWORD(n));
 }
 
 optional<size_t> util::positionOf2(span<BYTE> src, BYTE elem1, BYTE elem2)

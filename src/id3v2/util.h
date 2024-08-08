@@ -7,6 +7,11 @@
 
 namespace id3::util {
 
+template<class... Ts>
+struct VisitorOverload : Ts... {
+	using Ts::operator()...;
+};
+
 [[nodiscard]] std::vector<std::wstring> parseStr(std::span<BYTE> src);
 [[nodiscard]] std::vector<std::wstring> parseIso88591(std::span<BYTE> src);
 [[nodiscard]] std::vector<std::wstring> parseUnicode(std::span<BYTE> src);
@@ -16,9 +21,10 @@ struct SerializedStrs final {
 	BYTE enc = 0;
 	std::vector<BYTE> data;
 };
-[[nodiscard]] SerializedStrs serializeStrs(std::vector<std::wstring>& strs);
+[[nodiscard]] SerializedStrs serializeStrs(std::initializer_list<std::wstring_view> strs);
 
 [[nodiscard]] UINT uintFromBeBytes(std::span<BYTE> src);
+void serializeInPlaceUintBe(UINT n, std::vector<BYTE>::iterator dest);
 [[nodiscard]] std::optional<size_t> positionOf2(std::span<BYTE> src, BYTE elem1, BYTE elem2);
 
 namespace syncSafe {

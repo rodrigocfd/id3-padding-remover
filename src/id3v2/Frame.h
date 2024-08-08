@@ -2,6 +2,7 @@
 #include <array>
 #include <span>
 #include <variant>
+#include <vector>
 #include <Windows.h>
 
 namespace id3 {
@@ -68,10 +69,13 @@ struct Frame final {
 
 	explicit Frame(std::span<BYTE> src);
 
+	[[nodiscard]] std::vector<BYTE> serialize() const;
+
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);
 	[[nodiscard]] static Comment _ParseComm(std::span<BYTE> src);
 	[[nodiscard]] static Picture _ParseApic(std::span<BYTE> src);
+	[[nodiscard]] size_t _serializeAppendData(std::vector<BYTE>& dest) const;
 };
 
 }

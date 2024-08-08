@@ -8,6 +8,7 @@
 namespace id3 {
 
 struct Tag final {
+	std::wstring path;
 	UINT mp3Offset = 0;
 	UINT padding = 0;
 	std::vector<Frame> frames;
@@ -18,7 +19,6 @@ struct Tag final {
 	Tag& operator=(const Tag&) = delete;
 	constexpr Tag& operator=(Tag&&) = default;
 
-	explicit Tag(std::span<BYTE> src) { _parseBin(src); }
 	explicit Tag(std::wstring_view mp3);
 
 	[[nodiscard]] std::optional<const Frame*> frameByName4(std::wstring_view name4) const;
