@@ -99,12 +99,13 @@ void DlgMain::_sortList() const
 	using lib::ListView;
 	ListView{this, LST_FILES}.items.sort([this](ListView::Item a, ListView::Item b) -> int {
 		int cmp = 0;
-		if (_sort.col == 1) { // by padding
+		if (_sort.col == 0 || _sort.col == 1) {
 			auto pTagA = a.data<const id3::Tag*>();
 			auto pTagB = b.data<const id3::Tag*>();
-			cmp = pTagA->padding - pTagB->padding;
+			if (_sort.col == 0) cmp = lib::str::cmpI(pTagA->path, pTagB->path); // by path
+				else cmp = pTagA->padding - pTagB->padding; // by padding size
 		} else { // by text
-			cmp = lstrcmpiW(a.text(_sort.col).c_str(), b.text(_sort.col).c_str());
+			cmp = lib::str::cmpI(a.text(_sort.col), b.text(_sort.col));
 		}
 		return _sort.asc ? cmp : -cmp;
 	});
