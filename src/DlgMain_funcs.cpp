@@ -6,14 +6,14 @@ using std::optional, std::vector, std::wstring, std::wstring_view;
 void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 {
 	vector<wstring> invalids;
-	for (auto&& mp3 : mp3s) {
+	for (const wstring& mp3 : mp3s) {
 		if (!lib::path::hasExtension(mp3, L"mp3") && !lib::path::isDir(mp3))
 			invalids.emplace_back(mp3);
 	}
 	if (!invalids.empty()) {
-		auto buf = lib::str::newReserved(22 * invalids.size()); // arbitrary
+		wstring buf = lib::str::newReserved(22 * invalids.size()); // arbitrary
 		buf = L"Non-MP3 file(s):";
-		for (const auto& mp3 : invalids) {
+		for (const wstring& mp3 : invalids) {
 			buf.append(L"\n");
 			buf.append(mp3);
 		}
@@ -21,9 +21,9 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 		return; // do not continue; no files will be added
 	}
 
-	for (auto&& mp3 : mp3s) {
+	for (const wstring& mp3 : mp3s) {
 		if (lib::path::isDir(mp3)) {
-			for (auto&& f : lib::path::dirList(mp3 + L"\\*.mp3")) // search only 1 level deep
+			for (const wstring& f : lib::path::dirList(mp3 + L"\\*.mp3")) // search only 1 level deep
 				_addOneMp3ToList(f);
 		} else {
 			_addOneMp3ToList(mp3);
@@ -66,7 +66,7 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	auto pTag = item.data<const id3::Tag*>();
 
 	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
-		if (auto frame = pTag->frameByName4(name4); frame.has_value())
+		if (optional<const id3::Frame*> frame = pTag->frameByName4(name4); frame.has_value())
 			item.setText(std::get_if<id3::Frame::Text>(&frame.value()->data)->text, col);
 	};
 

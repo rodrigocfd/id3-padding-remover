@@ -20,7 +20,7 @@ vector<wstring> util::parseStr(span<BYTE> src)
 
 vector<wstring> util::parseIso88591(span<BYTE> src)
 {
-	auto idxLastNonZero = vec::positionRevIf(src, [](const BYTE& by) -> bool { return by != 0x00; });
+	optional<size_t> idxLastNonZero = vec::positionRevIf(src, [](const BYTE& by) -> bool { return by != 0x00; });
 	if (idxLastNonZero.has_value())
 		src = src.subspan(0, idxLastNonZero.value() + 1); // right-trim zeros to avoid an extra empty string
 	if (src.empty())
@@ -29,12 +29,12 @@ vector<wstring> util::parseIso88591(span<BYTE> src)
 	vector<span<BYTE>> blocks = vec::split(src, 0x00);
 	vector<wstring> texts = vec::newReserved<wstring>(blocks.size());
 
-	for (auto&& block : blocks) {
+	for (span<BYTE> block : blocks) {
 		if (block.empty()) {
 			texts.emplace_back(); // empty strings are also added
 		} else {
-			auto buf = str::newReserved(block.size());
-			for (auto&& by : block)
+			wstring buf = str::newReserved(block.size());
+			for (BYTE by : block)
 				buf += static_cast<WCHAR>(by);
 			texts.emplace_back(std::move(buf));
 		}
@@ -52,7 +52,7 @@ vector<wstring> util::parseUnicode(span<BYTE> src)
 
 	span<WORD> wsrc{reinterpret_cast<WORD*>(src.data()), src.size() / 2};
 
-	auto idxLastNonZero = vec::positionRevIf(wsrc, [](const WORD& ch) -> bool { return ch != 0x0000; });
+	optional<size_t> idxLastNonZero = vec::positionRevIf(wsrc, [](const WORD& ch) -> bool { return ch != 0x0000; });
 	if (idxLastNonZero.has_value())
 		wsrc = wsrc.subspan(0, idxLastNonZero.value() + 1); // right-trim zeros to avoid an extra empty string
 	if (wsrc.empty())
@@ -61,7 +61,7 @@ vector<wstring> util::parseUnicode(span<BYTE> src)
 	vector<span<WORD>> blocks = vec::split(wsrc, 0x0000);
 	vector<wstring> texts = vec::newReserved<wstring>(blocks.size());
 
-	for (auto&& block : blocks) {
+	for (span<WORD> block : blocks) {
 		bool isLE = true; // little-endian by default
 		if (block[0] == BOM_LE || block[0] == BOM_BE) { // we have a BOM
 			if (block[0] == BOM_LE)
@@ -72,8 +72,8 @@ vector<wstring> util::parseUnicode(span<BYTE> src)
 		if (block.empty()) {
 			texts.emplace_back(); // empty strings are also added
 		} else {
-			auto buf = str::newReserved(block.size());
-			for (auto&& ch : block)
+			wstring buf = str::newReserved(block.size());
+			for (WORD ch : block)
 				buf += (isLE ? MAKEWORD(HIWORD(ch), LOWORD(ch)) : ch);
 			texts.emplace_back(std::move(buf));
 		}
@@ -86,7 +86,7 @@ util::SerializedStrs util::serializeStrs(std::vector<std::wstring>& strs)
 	bool isUnicode = false;
 	size_t estimatedLenBytes = 0;
 
-	for (const auto& str : strs) {
+	for (const wstring& str : strs) {
 		estimatedLenBytes += str.length() + 1; // all strings will be null-terminated
 		if (!isUnicode) { // we still don't know if it will be Unicode
 			bool hasUnicodeCh = std::any_of(str.begin(), str.end(), [](const WCHAR& ch) -> bool { return ch > 0xff; });
@@ -101,7 +101,7 @@ util::SerializedStrs util::serializeStrs(std::vector<std::wstring>& strs)
 	}
 
 	auto buf = vec::newReserved<BYTE>(estimatedLenBytes);
-	for (const auto& str : strs) {
+	for (const wstring& str : strs) {
 		if (isUnicode) {
 			// Insert BOM bytes for each string.
 			// Strings will be encoded as little-endian.

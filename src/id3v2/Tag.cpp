@@ -12,9 +12,9 @@ Tag::Tag(wstring_view mp3)
 	_parseBin(f.asSpan());
 }
 
-optional<const Frame*> Tag::frameByName4(std::wstring_view name4) const
+optional<const Frame*> Tag::frameByName4(wstring_view name4) const
 {
-	for (auto&& frame : frames) {
+	for (const Frame& frame : frames) {
 		if (lib::str::eqI(frame.name4, name4))
 			return &frame;
 	}
@@ -26,7 +26,7 @@ LPCWSTR Tag::replayGainStatus() const
 	bool hasTrack = false;
 	bool hasAlbum = false;
 
-	for (auto&& frame : frames) {
+	for (const Frame& frame : frames) {
 		if (hasTrack && hasAlbum) break;
 
 		if (lib::str::eqI(frame.name4, L"TXXX")) {
@@ -62,7 +62,7 @@ Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
 	HeaderInfo nfo{};
 
 	// Retrieve MP3 offset.
-	auto maybeMp3Offset = util::positionOf2(src, 0xff, 0xfb); // https://stackoverflow.com/a/7302482/6923555
+	optional<size_t> maybeMp3Offset = util::positionOf2(src, 0xff, 0xfb); // https://stackoverflow.com/a/7302482/6923555
 	if (!maybeMp3Offset.has_value()) [[unlikely]] {
 		throw std::runtime_error("No MP3 signature found");
 	}
