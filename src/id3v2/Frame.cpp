@@ -69,6 +69,28 @@ size_t Frame::serialize(vector<BYTE>& dest) const
 	return sz + 10; // count 10-byte frame header
 }
 
+wstring Frame::toString() const
+{
+	return std::visit(util::Overload{
+		[](const Text& t) {
+			return t.text;
+		},
+		[](const UserText& ut) {
+			return ut.descr + L" " + ut.text;
+		},
+		[](const Binary& b) {
+			return str::fmtBytes(b.bin.size());
+		},
+		[](const Comment& c) {
+			return c.descr.empty() ? c.text : (c.descr + L" " + c.text);
+		},
+		[](const Picture& p) {
+			return str::fmt(L"%s %s, %s",
+				Picture::TypeToString(p.type), p.mime, str::fmtBytes(p.bin.size()));
+		},
+	}, data);
+}
+
 Frame::Data Frame::_ParseData(WCHAR name4[4], span<BYTE> src)
 {
 	if (str::eq(name4, L"COMM")) {

@@ -70,6 +70,7 @@ struct Frame final {
 	explicit Frame(std::span<BYTE> src);
 
 	size_t serialize(std::vector<BYTE>& dest) const;
+	[[nodiscard]] std::wstring toString() const;
 
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);

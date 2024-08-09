@@ -1,4 +1,5 @@
 #include "DlgMain.h"
+#include "DlgEdit.h"
 #include "id3v2/Tag.h"
 #include "../res/resource.h"
 using std::array, std::optional, std::vector, std::wstring, std::wstring_view;
@@ -119,10 +120,20 @@ INT_PTR DlgMain::onMenuFileOpen()
 
 INT_PTR DlgMain::onMenuFileEdit()
 {
-	auto selItems = lib::ListView {this, LST_FILES}.items.selected();
-	if (selItems.empty()) return TRUE; // Enter key will hit here even without selected items
+	lib::ListView lv{this, LST_FILES};
+	auto selItems = lv.items.selected();
+	if (selItems.empty())
+		return TRUE; // Enter key will hit here even without selected items
 
+	auto pTags = lib::vec::transform(selItems, [](const lib::ListView::Item& item) {
+		return item.data<id3::Tag*>();
+	});
 
+	DlgEdit dlgEdit{pTags};
+	dlgEdit.showModal(this, DLG_EDIT);
+
+	for (auto&& item : selItems)
+		_renderMp3ListItem(item); // re-render all selected items
 
 	return TRUE;
 }
