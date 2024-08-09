@@ -57,7 +57,7 @@ Frame::Frame(span<BYTE> src)
 size_t Frame::serialize(vector<BYTE>& dest) const
 {
 	dest.reserve(dest.size() + 10);
-	for (size_t i = 0; i < 4; ++i) dest.push_back(static_cast<BYTE>(name4[i])); // no terminating null
+	util::serializeChars(name4, dest); // no terminating null
 
 	size_t offsetSz = dest.size();
 	dest.insert(dest.end(), 4, 0x00); // data size placeholder
@@ -180,14 +180,14 @@ size_t Frame::_serializeData(vector<BYTE>& dest) const
 		[&dest](const Comment& c) {
 			auto serializedStrs = util::serializeStrs({c.descr, c.text});
 			dest.push_back(serializedStrs.enc);
-			for (size_t i = 0; i < 3; ++i) dest.push_back(static_cast<BYTE>(c.lang3[i]));
+			util::serializeChars(c.lang3, dest);
 			vec::append(dest, serializedStrs.data);
 			return 1 + 3 + serializedStrs.data.size();
 		},
 		[&dest](const Picture& p) {
 			auto serializedStrs = util::serializeStrs({p.descr});
 			dest.push_back(serializedStrs.enc);
-			for (WCHAR ch : p.mime) dest.push_back(static_cast<BYTE>(ch));
+			util::serializeChars(p.mime, dest);
 			dest.push_back(0x00);
 			dest.push_back(static_cast<BYTE>(p.type));
 			vec::append(dest, serializedStrs.data);

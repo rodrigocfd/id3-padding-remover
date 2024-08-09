@@ -129,6 +129,13 @@ util::SerializedStrs util::serializeStrs(initializer_list<wstring_view> strs)
 	};
 }
 
+void util::serializeChars(wstring_view chars, vector<BYTE>& dest)
+{
+	dest.reserve(dest.size() + chars.size());
+	for (WCHAR ch : chars)
+		dest.push_back(static_cast<BYTE>(ch));
+}
+
 UINT util::uintFromBeBytes(span<BYTE> src)
 {
 	if (src.size() != 4) [[unlikely]] {

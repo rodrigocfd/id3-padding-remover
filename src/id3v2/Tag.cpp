@@ -150,7 +150,7 @@ vector<BYTE> Tag::_serialize() const
 	size_t apicSize = _apicSize().value_or(0);
 
 	auto buf = vec::newReserved<BYTE>(10 + 10 * frames.size() + apicSize); // arbitrary
-	vec::append(buf, 'I', 'D', '3'); // magic bytes
+	util::serializeChars(L"ID3", buf); // magic bytes
 	vec::append(buf, 0x03, 0x00); // tag version
 	vec::append(buf, 0x00); // flags
 

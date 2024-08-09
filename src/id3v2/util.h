@@ -23,6 +23,7 @@ struct SerializedStrs final {
 	std::vector<BYTE> data;
 };
 [[nodiscard]] SerializedStrs serializeStrs(std::initializer_list<std::wstring_view> strs);
+void serializeChars(std::wstring_view chars, std::vector<BYTE>& dest);
 
 [[nodiscard]] UINT uintFromBeBytes(std::span<BYTE> src);
 void serializeInPlaceUintBe(UINT n, std::vector<BYTE>::iterator dest);
