@@ -57,7 +57,7 @@ struct Frame final {
 	using Data = std::variant<Text, UserText, Binary, Comment, Picture>;
 
 	WCHAR name4[5] = {L'\0'};
-	UINT declaredSize = 0;
+	UINT declaredSize = 0; // used only at parsing
 	std::array<BYTE, 2> flags;
 	Data data;
 
@@ -69,13 +69,13 @@ struct Frame final {
 
 	explicit Frame(std::span<BYTE> src);
 
-	[[nodiscard]] std::vector<BYTE> serialize() const;
+	size_t serialize(std::vector<BYTE>& dest) const;
 
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);
 	[[nodiscard]] static Comment _ParseComm(std::span<BYTE> src);
 	[[nodiscard]] static Picture _ParseApic(std::span<BYTE> src);
-	[[nodiscard]] size_t _serializeAppendData(std::vector<BYTE>& dest) const;
+	size_t _serializeData(std::vector<BYTE>& dest) const;
 };
 
 }

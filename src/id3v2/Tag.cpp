@@ -46,6 +46,23 @@ LPCWSTR Tag::replayGainStatus() const
 	else return L"";
 }
 
+void Tag::saveToFile() const
+{
+	if (path.empty())
+		throw std::runtime_error("Tag has no path");
+
+	lib::File fout{path, lib::File::Access::ExistingRW};
+	vector<BYTE> currentContents = fout.readAll();
+	auto currentTag = Tag{currentContents};
+
+	fout.setSize(0);
+	if (!frames.empty()) {
+		vector<BYTE> tagBlob = _serialize();
+		fout.write(tagBlob);
+	}
+	fout.write({currentContents.begin() + currentTag.mp3Offset, currentContents.end()}); // MP3 data
+}
+
 void Tag::_parseBin(span<BYTE> src)
 {
 	HeaderInfo headerNfo = _ParseHeader(src);
@@ -117,4 +134,22 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 		nfo.frames.emplace_back(std::move(frame));
 	}
 	return nfo;
+}
+
+vector<BYTE> Tag::_serialize() const
+{
+	auto buf = vec::newReserved<BYTE>(10);
+	vec::append(buf, 'I', 'D', '3'); // magic bytes
+	vec::append(buf, 0x03, 0x00); // tag version
+	vec::append(buf, 0x00); // flags
+
+	size_t offsetSz = buf.size();
+	buf.insert(buf.end(), 4, 0x00); // data size placeholder
+
+	size_t szFrames = 0; // won't count 10-byte tag header
+	for (const Frame& frame : frames)
+		szFrames += frame.serialize(buf);
+
+	util::serializeInPlaceUintBe(util::syncSafe::encode(static_cast<UINT>(szFrames)), buf.begin() + offsetSz);
+	return buf;
 }

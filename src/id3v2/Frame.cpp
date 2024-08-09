@@ -54,15 +54,19 @@ Frame::Frame(span<BYTE> src)
 	data = _ParseData(name4, src);
 }
 
-vector<BYTE> Frame::serialize() const
+size_t Frame::serialize(vector<BYTE>& dest) const
 {
-	auto buf = vec::newReserved<BYTE>(10);
-	for (size_t i = 0; i < 4; ++i) buf.push_back(static_cast<BYTE>(name4[i])); // no terminating null
-	buf.insert(buf.end(), 4, 0x00); // data size placeholder
-	vec::append(buf, flags[0], flags[1]);
-	auto szData = static_cast<UINT>(_serializeAppendData(buf));
-	util::serializeInPlaceUintBe(szData, buf.begin() + 4); // fill data size
-	return buf;
+	dest.reserve(dest.size() + 10);
+	for (size_t i = 0; i < 4; ++i) dest.push_back(static_cast<BYTE>(name4[i])); // no terminating null
+
+	size_t offsetSz = dest.size();
+	dest.insert(dest.end(), 4, 0x00); // data size placeholder
+
+	vec::append(dest, flags);
+
+	size_t sz = _serializeData(dest); // won't count 10-byte frame header
+	util::serializeInPlaceUintBe(static_cast<UINT>(sz), dest.begin() + offsetSz);
+	return sz + 10; // count 10-byte frame header
 }
 
 Frame::Data Frame::_ParseData(WCHAR name4[4], span<BYTE> src)
@@ -154,9 +158,9 @@ Frame::Picture Frame::_ParseApic(span<BYTE> src)
 	return picture;
 }
 
-size_t Frame::_serializeAppendData(vector<BYTE>& dest) const
+size_t Frame::_serializeData(vector<BYTE>& dest) const
 {
-	return std::visit(util::VisitorOverload{
+	return std::visit(util::Overload{
 		[&dest](const Text& t) {
 			auto serializedStrs = util::serializeStrs({t.text});
 			dest.push_back(serializedStrs.enc);
@@ -181,13 +185,14 @@ size_t Frame::_serializeAppendData(vector<BYTE>& dest) const
 			return 1 + 3 + serializedStrs.data.size();
 		},
 		[&dest](const Picture& p) {
-			auto serializedStrs = util::serializeStrs({p.descr, p.descr});
+			auto serializedStrs = util::serializeStrs({p.descr});
 			dest.push_back(serializedStrs.enc);
 			for (WCHAR ch : p.mime) dest.push_back(static_cast<BYTE>(ch));
 			dest.push_back(0x00);
 			dest.push_back(static_cast<BYTE>(p.type));
 			vec::append(dest, serializedStrs.data);
-			return 1 + p.mime.length() + 1 + 1 + serializedStrs.data.size();
+			vec::append(dest, p.bin);
+			return 1 + p.mime.length() + 1 + 1 + serializedStrs.data.size() + p.bin.size();
 		},
 	}, data);
 }

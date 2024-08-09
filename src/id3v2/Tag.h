@@ -20,10 +20,12 @@ struct Tag final {
 	constexpr Tag& operator=(Tag&&) = default;
 
 	explicit Tag(std::wstring_view mp3);
+	explicit Tag(std::span<BYTE> src) { _parseBin(src); }
 
 	[[nodiscard]] std::optional<const Frame*> frameByName4(std::wstring_view name4) const;
 	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4) { return frameByName4(name4); }
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
+	void saveToFile() const;
 
 private:
 	struct HeaderInfo final {
@@ -38,6 +40,7 @@ private:
 	void _parseBin(std::span<BYTE> src);
 	[[nodiscard]] static HeaderInfo _ParseHeader(std::span<BYTE> src);
 	[[nodiscard]] static FramesInfo _ParseFrames(std::span<BYTE> src);
+	[[nodiscard]] std::vector<BYTE> _serialize() const;
 };
 
 }

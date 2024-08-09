@@ -7,8 +7,9 @@
 
 namespace id3::util {
 
+// Overload for std::variant's std::visit().
 template<class... Ts>
-struct VisitorOverload : Ts... {
+struct Overload : Ts... {
 	using Ts::operator()...;
 };
 
