@@ -23,6 +23,7 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 			switch (LOWORD(wp)) {
 				case MNU_FILE_OPEN:   return onMenuFileOpen();
 				case MNU_FILE_EDIT:   return onMenuFileEdit();
+				case MNU_FILE_RESAVE: return onMenuFileReSave();
 				case MNU_FILE_REMOVE: return onMenuFileRemove();
 				case MNU_FILE_ABOUT:  return onMenuFileAbout();
 				default:              return FALSE;
@@ -101,7 +102,7 @@ INT_PTR DlgMain::onInitMenuPopup(WPARAM wp)
 	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
 	if (popupMenu.idByPos(0) == MNU_FILE_OPEN) {
 		popupMenu.setDefaultItemByCmd(MNU_FILE_EDIT);
-		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_REMOVE},
+		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_RESAVE, MNU_FILE_REMOVE},
 			lib::ListView{this, LST_FILES}.items.countSelected() > 0);
 	}
 	return TRUE;
@@ -135,6 +136,31 @@ INT_PTR DlgMain::onMenuFileEdit()
 	for (auto&& item : selItems)
 		_renderMp3ListItem(item); // re-render all selected items
 
+	return TRUE;
+}
+
+INT_PTR DlgMain::onMenuFileReSave()
+{
+	size_t numSaved = 0;
+	lib::TimeCount t0;
+	t0.start();
+
+	for (auto&& item : lib::ListView{this, LST_FILES}.items.selected()) {
+		try {
+			auto pTag = item.data<id3::Tag*>();
+			pTag->saveToFile();
+			++numSaved;
+		} catch (std::exception& e) {
+			dlg.msgBox(L"Saving error", {},
+				lib::str::fmt(L"Tag re-saving failed:\n%s\n\n%s", item.text(), lib::str::toWide(e.what())),
+				TDCBF_OK_BUTTON, TD_ERROR_ICON);
+		}
+	}
+
+	auto t1 = t0.now();
+	dlg.msgBox(L"Tag(s) re-saved", {},
+		lib::str::fmt(L"%d tag(s) re-saved in %02d:%03d.", numSaved, t1.sec, t1.ms),
+		TDCBF_OK_BUTTON, TD_INFORMATION_ICON);
 	return TRUE;
 }
 
