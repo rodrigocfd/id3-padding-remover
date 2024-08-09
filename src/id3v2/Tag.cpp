@@ -53,14 +53,14 @@ void Tag::saveToFile() const
 
 	lib::File fout{path, lib::File::Access::ExistingRW};
 	vector<BYTE> currentContents = fout.readAll();
-	auto currentTag = Tag{currentContents};
+	HeaderInfo headerNfo = _ParseHeader(currentContents);
 
 	fout.setSize(0);
 	if (!frames.empty()) {
 		vector<BYTE> tagBlob = _serialize();
 		fout.write(tagBlob);
 	}
-	fout.write({currentContents.begin() + currentTag.mp3Offset, currentContents.end()}); // MP3 data
+	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
 }
 
 void Tag::_parseBin(span<BYTE> src)
@@ -136,9 +136,20 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 	return nfo;
 }
 
+optional<size_t> Tag::_apicSize() const
+{
+	if (optional<const Frame*> frame = frameByName4(L"APIC"); frame.has_value()) {
+		auto pic = std::get_if<Frame::Picture>(&frame.value()->data);
+		return pic->bin.size();
+	}
+	return std::nullopt;
+}
+
 vector<BYTE> Tag::_serialize() const
 {
-	auto buf = vec::newReserved<BYTE>(10);
+	size_t apicSize = _apicSize().value_or(0);
+
+	auto buf = vec::newReserved<BYTE>(10 + 10 * frames.size() + apicSize); // arbitrary
 	vec::append(buf, 'I', 'D', '3'); // magic bytes
 	vec::append(buf, 0x03, 0x00); // tag version
 	vec::append(buf, 0x00); // flags
