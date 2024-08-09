@@ -99,6 +99,7 @@ INT_PTR DlgMain::onInitMenuPopup(WPARAM wp)
 {
 	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
 	if (popupMenu.idByPos(0) == MNU_FILE_OPEN) {
+		popupMenu.setDefaultItemByCmd(MNU_FILE_EDIT);
 		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_REMOVE},
 			lib::ListView{this, LST_FILES}.items.countSelected() > 0);
 	}
