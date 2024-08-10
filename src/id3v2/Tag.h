@@ -25,6 +25,7 @@ struct Tag final {
 	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4) { return frameByName4(name4); }
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
 	void saveToFile() const;
+	void sendApicToLast();
 
 private:
 	struct HeaderInfo final {

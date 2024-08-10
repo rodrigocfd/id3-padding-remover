@@ -150,8 +150,8 @@ INT_PTR DlgMain::onMenuFileReSave()
 			auto pTag = item.data<id3::Tag*>();
 			pTag->saveToFile();
 			++numSaved;
-		} catch (std::exception& e) {
-			dlg.msgBox(L"Saving error", {},
+		} catch (const std::exception& e) {
+			dlg.msgBox(L"Re-saving error", {},
 				lib::str::fmt(L"Tag re-saving failed:\n%s\n\n%s", item.text(), lib::str::toWide(e.what())),
 				TDCBF_OK_BUTTON, TD_ERROR_ICON);
 		}

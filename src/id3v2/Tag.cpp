@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <stdexcept>
 #include <windlg/lib.h>
 #include "Tag.h"
@@ -61,6 +62,13 @@ void Tag::saveToFile() const
 		fout.write(tagBlob);
 	}
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
+}
+
+void Tag::sendApicToLast()
+{
+	auto apicIdx = vec::positionIf(frames, [](const Frame& frame) { return str::eqI(frame.name4, L"APIC"); });
+	if (apicIdx.has_value() && apicIdx.value() != frames.size() - 1)
+		std::iter_swap(frames.begin() + apicIdx.value(), frames.end() - 1);
 }
 
 void Tag::_parseBin(span<BYTE> src)

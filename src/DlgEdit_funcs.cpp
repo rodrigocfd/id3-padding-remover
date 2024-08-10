@@ -13,6 +13,7 @@ void DlgEdit::_writeTitlebarCounts() const
 void DlgEdit::_writeFields() const
 {
 
+
 }
 
 void DlgEdit::_renderFrames() const
@@ -21,7 +22,7 @@ void DlgEdit::_renderFrames() const
 
 	if (_pTags.size() == 1) {
 		for (const id3::Frame& frame : _pTags[0]->frames) {
-			auto strFrame = frame.toString();
+			auto strFrame = frame.toText();
 			lv.items.add(frame.name4, {strFrame});
 		}
 	} else { // multiple files

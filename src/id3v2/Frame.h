@@ -47,7 +47,7 @@ struct Frame final {
 			BandLogo = 0x13,
 			PublisherLogo = 0x14,
 		};
-		[[nodiscard]] static LPCWSTR TypeToString(Type t);
+		[[nodiscard]] static LPCWSTR TypeToText(Type t);
 
 		std::wstring mime;
 		Type type;
@@ -70,7 +70,7 @@ struct Frame final {
 	explicit Frame(std::span<BYTE> src);
 
 	size_t serialize(std::vector<BYTE>& dest) const;
-	[[nodiscard]] std::wstring toString() const;
+	[[nodiscard]] std::wstring toText() const;
 
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);

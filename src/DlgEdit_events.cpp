@@ -40,6 +40,17 @@ INT_PTR DlgEdit::onBtnUncheck()
 
 INT_PTR DlgEdit::onBtnOk()
 {
+	for (auto&& pTag : _pTags) {
+		pTag->sendApicToLast();
+
+		//try {
+		//	pTag->saveToFile();
+		//} catch (const std::exception& e) {
+		//	dlg.msgBox(L"Saving error", {},
+		//		lib::str::fmt(L"Tag saving failed:\n%s\n\n%s", pTag->path, lib::str::toWide(e.what())),
+		//		TDCBF_OK_BUTTON, TD_ERROR_ICON);
+		//}
+	}
 
 	return TRUE;
 }

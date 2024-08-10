@@ -6,7 +6,7 @@ using std::span, std::vector, std::wstring;
 using namespace lib;
 using namespace id3;
 
-LPCWSTR Frame::Picture::TypeToString(Type t)
+LPCWSTR Frame::Picture::TypeToText(Type t)
 {
 	using enum Type;
 	switch (t) {
@@ -69,7 +69,7 @@ size_t Frame::serialize(vector<BYTE>& dest) const
 	return sz + 10; // count 10-byte frame header
 }
 
-wstring Frame::toString() const
+wstring Frame::toText() const
 {
 	return std::visit(util::Overload{
 		[](const Text& t) {
@@ -86,7 +86,7 @@ wstring Frame::toString() const
 		},
 		[](const Picture& p) {
 			return str::fmt(L"%s %s, %s",
-				Picture::TypeToString(p.type), p.mime, str::fmtBytes(p.bin.size()));
+				Picture::TypeToText(p.type), p.mime, str::fmtBytes(p.bin.size()));
 		},
 	}, data);
 }
