@@ -1,16 +1,21 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
+using std::span;
 
 INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 {
 	switch (uMsg) {
 		case WM_INITDIALOG: return onInitDialog();
 		case WM_COMMAND:
-			switch LOWORD(wp) {
-				case BTN_UNCHECK: return onBtnUncheck();
-				case IDOK:        return onBtnOk();
-				case IDCANCEL:    PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
-				default:          return FALSE;
+			if (lib::vec::any(span{_Chks}, LOWORD(wp))) { // one of the checkboxes
+				return onChk(wp);
+			} else {
+				switch LOWORD(wp) {
+					case BTN_UNCHECK: return onBtnUncheck();
+					case IDOK:        return onBtnOk();
+					case IDCANCEL:    PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
+					default:          return FALSE;
+				}
 			}
 		case WM_CLOSE: EndDialog(hWnd(), 0); return TRUE;
 		default:       return FALSE;
@@ -32,6 +37,19 @@ INT_PTR DlgEdit::onInitDialog()
 	return TRUE;
 }
 
+INT_PTR DlgEdit::onChk(WPARAM wp)
+{
+	WORD chkId = LOWORD(wp);
+	WORD txtId = chkId + 1;
+	if (lib::CheckRadio{this, chkId}.isChecked()) {
+		dlg.enable({txtId}, TRUE);
+		lib::NativeControl{this, txtId}.focus();
+	} else {
+		dlg.enable({txtId}, FALSE);
+	}
+	return TRUE;
+}
+
 INT_PTR DlgEdit::onBtnUncheck()
 {
 
@@ -41,13 +59,13 @@ INT_PTR DlgEdit::onBtnUncheck()
 INT_PTR DlgEdit::onBtnOk()
 {
 	for (auto&& pTag : _pTags) {
-		try {
-			pTag->saveToFile();
-		} catch (const std::exception& e) {
-			dlg.msgBox(L"Saving error", {},
-				lib::str::fmt(L"Tag saving failed:\n%s\n\n%s", pTag->path, lib::str::toWide(e.what())),
-				TDCBF_OK_BUTTON, TD_ERROR_ICON);
-		}
+		//try {
+		//	pTag->saveToFile();
+		//} catch (const std::exception& e) {
+		//	dlg.msgBox(L"Saving error", {},
+		//		lib::str::fmt(L"Tag saving failed:\n%s\n\n%s", pTag->path, lib::str::toWide(e.what())),
+		//		TDCBF_OK_BUTTON, TD_ERROR_ICON);
+		//}
 	}
 
 	return TRUE;

@@ -134,7 +134,7 @@ INT_PTR DlgMain::onMenuFileEdit()
 	dlgEdit.showModal(this, DLG_EDIT);
 
 	for (auto&& item : selItems)
-		_renderMp3ListItem(item); // re-render all selected items
+		_renderMp3ListItem(item);
 
 	return TRUE;
 }

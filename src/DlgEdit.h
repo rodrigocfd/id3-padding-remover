@@ -15,6 +15,7 @@ public:
 private:
 	INT_PTR dlgProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
 	INT_PTR onInitDialog();
+	INT_PTR onChk(WPARAM wp);
 	INT_PTR onBtnUncheck();
 	INT_PTR onBtnOk();
 
@@ -23,4 +24,6 @@ private:
 	void _renderFrames() const;
 
 	const std::vector<id3::Tag*> _pTags;
+
+	static WORD _Chks[15];
 };
