@@ -1,7 +1,7 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
 
-void DlgEdit::_writeTitlebarCounts() const
+void DlgEdit::_renderTitlebarCounts() const
 {
 	if (_pTags.size() > 1) {
 		setText(lib::str::fmt(L"%s - %d files", text(), _pTags.size()));
@@ -10,7 +10,7 @@ void DlgEdit::_writeTitlebarCounts() const
 	}
 }
 
-void DlgEdit::_writeFields() const
+void DlgEdit::_renderTextboxes() const
 {
 
 

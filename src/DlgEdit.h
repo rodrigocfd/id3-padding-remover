@@ -18,8 +18,8 @@ private:
 	INT_PTR onBtnUncheck();
 	INT_PTR onBtnOk();
 
-	void _writeTitlebarCounts() const;
-	void _writeFields() const;
+	void _renderTitlebarCounts() const;
+	void _renderTextboxes() const;
 	void _renderFrames() const;
 
 	const std::vector<id3::Tag*> _pTags;
