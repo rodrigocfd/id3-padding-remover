@@ -7,7 +7,7 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 	switch (uMsg) {
 		case WM_INITDIALOG: return onInitDialog();
 		case WM_COMMAND:
-			if (lib::vec::any(span{_Chks}, LOWORD(wp))) { // one of the checkboxes
+			if (lib::vec::anyIf(span{_Fields}, [wp](auto&& f) { return f.chkId == LOWORD(wp); })) { // one of the checkboxes
 				return onChk(wp);
 			} else {
 				switch LOWORD(wp) {
@@ -41,7 +41,7 @@ INT_PTR DlgEdit::onChk(WPARAM wp)
 {
 	WORD chkId = LOWORD(wp);
 	WORD txtId = chkId + 1;
-	if (lib::CheckRadio{this, chkId}.isChecked()) {
+	if (lib::CheckRadio{this, chkId}.isChecked()) { // when checked, enable textbox and focus it
 		dlg.enable({txtId}, TRUE);
 		lib::NativeControl{this, txtId}.focus();
 	} else {

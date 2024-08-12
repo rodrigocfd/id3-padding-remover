@@ -25,5 +25,9 @@ private:
 
 	const std::vector<id3::Tag*> _pTags;
 
-	static WORD _Chks[15];
+	struct FieldInfo final {
+		WORD chkId = 0;
+		LPCWSTR name4 = nullptr;
+	};
+	static FieldInfo _Fields[15];
 };

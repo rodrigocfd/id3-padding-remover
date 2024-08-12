@@ -1,22 +1,22 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
 
-WORD DlgEdit::_Chks[] = {
-	CHK_ARTIST,
-	CHK_TITLE,
-	CHK_SUBTITLE,
-	CHK_ALBUM,
-	CHK_TRACK,
-	CHK_YEAR,
-	CHK_GENRE,
-	CHK_PERFORMER,
-	CHK_PUBLISHER,
-	CHK_OARTIST,
-	CHK_OALBUM,
-	CHK_OYEAR,
-	CHK_COMPOSER,
-	CHK_LYRICIST,
-	CHK_COMMENT,
+DlgEdit::FieldInfo DlgEdit::_Fields[] = {
+	{CHK_ARTIST, L"TPE1"},
+	{CHK_TITLE, L"TIT2"},
+	{CHK_SUBTITLE, L"TIT3"},
+	{CHK_ALBUM, L"TALB"},
+	{CHK_TRACK, L"TRCK"},
+	{CHK_YEAR, L"TYER"},
+	{CHK_GENRE, L"TCON"},
+	{CHK_PERFORMER, L"TPE3"},
+	{CHK_PUBLISHER, L"TPUB"},
+	{CHK_OARTIST, L"TOPE"},
+	{CHK_OALBUM, L"TOAL"},
+	{CHK_OYEAR, L"TORY"},
+	{CHK_COMPOSER, L"TCOM"},
+	{CHK_LYRICIST, L"TEXT"},
+	{CHK_COMMENT, L"COMM"},
 };
 
 void DlgEdit::_renderTitlebarCounts() const
@@ -30,20 +30,28 @@ void DlgEdit::_renderTitlebarCounts() const
 
 void DlgEdit::_renderTextboxes() const
 {
-	auto maybeFrame0 = _pTags[0]->frameByName4(L"TALB");
+	for (auto&& field : _Fields) {
+		auto maybeFrame0 = _pTags[0]->frameByName4(field.name4); // assumes at least 1 tag was passed to DlgEdit
 
-	bool isSame = lib::vec::allIf(_pTags, [&maybeFrame0](const id3::Tag* pTag) -> bool {
-		auto maybeFrameN = pTag->frameByName4(L"TALB");
-		if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
-			auto f0 = maybeFrame0.value();
-			auto fN = maybeFrameN.value();
-			return *maybeFrame0.value() == *maybeFrameN.value();
-		} else {
-			return maybeFrame0 == maybeFrameN;
+		bool isSameValue = lib::vec::allIf(_pTags, [&field, &maybeFrame0](const id3::Tag* pTag) -> bool {
+			auto maybeFrameN = pTag->frameByName4(field.name4);
+			if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
+				return *maybeFrame0.value() == *maybeFrameN.value();
+			} else {
+				return maybeFrame0 == maybeFrameN;
+			}
+		});
+
+		if (isSameValue) {
+			for (auto&& pTag : _pTags) {
+				if (pTag->frameByName4(field.name4).has_value()) { // 1st tag which has this frame
+					lib::CheckRadio{this, field.chkId}.checkAndTrigger();
+					lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.setText(
+						pTag->frameByName4(field.name4).value()->toText());
+				}
+			}
 		}
-	});
-
-
+	}
 }
 
 void DlgEdit::_renderFrames() const
