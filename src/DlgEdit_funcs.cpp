@@ -1,24 +1,6 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
 
-DlgEdit::FieldInfo DlgEdit::_Fields[] = {
-	{CHK_ARTIST, L"TPE1"},
-	{CHK_TITLE, L"TIT2"},
-	{CHK_SUBTITLE, L"TIT3"},
-	{CHK_ALBUM, L"TALB"},
-	{CHK_TRACK, L"TRCK"},
-	{CHK_YEAR, L"TYER"},
-	{CHK_GENRE, L"TCON"},
-	{CHK_PERFORMER, L"TPE3"},
-	{CHK_PUBLISHER, L"TPUB"},
-	{CHK_OARTIST, L"TOPE"},
-	{CHK_OALBUM, L"TOAL"},
-	{CHK_OYEAR, L"TORY"},
-	{CHK_COMPOSER, L"TCOM"},
-	{CHK_LYRICIST, L"TEXT"},
-	{CHK_COMMENT, L"COMM"},
-};
-
 void DlgEdit::_renderTitlebarCounts() const
 {
 	if (_pTags.size() > 1) {
@@ -54,7 +36,7 @@ void DlgEdit::_renderTextboxes() const
 	}
 }
 
-void DlgEdit::_renderFrames() const
+void DlgEdit::_renderFramesList() const
 {
 	lib::ListView lv{this, LST_FRAMES};
 

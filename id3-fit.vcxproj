@@ -213,6 +213,7 @@
     <ClCompile Include="..\windlg\windlg\TimeCount.cpp" />
     <ClCompile Include="..\windlg\windlg\VersionInfo.cpp" />
     <ClCompile Include="..\windlg\windlg\Window.cpp" />
+    <ClCompile Include="src\DlgEdit_consts.cpp" />
     <ClCompile Include="src\DlgEdit_events.cpp" />
     <ClCompile Include="src\DlgEdit_funcs.cpp" />
     <ClCompile Include="src\DlgMain_events.cpp" />

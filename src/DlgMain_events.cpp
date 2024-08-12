@@ -142,8 +142,7 @@ INT_PTR DlgMain::onMenuFileEdit()
 INT_PTR DlgMain::onMenuFileReSave()
 {
 	size_t numSaved = 0;
-	lib::TimeCount t0;
-	t0.start();
+	auto t0 = lib::TimeCount::Immediately();
 
 	for (auto&& item : lib::ListView{this, LST_FILES}.items.selected()) {
 		try {
@@ -159,7 +158,7 @@ INT_PTR DlgMain::onMenuFileReSave()
 
 	auto t1 = t0.now();
 	dlg.msgBox(L"Tag(s) re-saved", {},
-		lib::str::fmt(L"%d tag(s) re-saved in %02d:%03d.", numSaved, t1.sec, t1.ms),
+		lib::str::fmt(L"%d tag(s) re-saved in %02d.%03d.", numSaved, t1.sec, t1.ms),
 		TDCBF_OK_BUTTON, TD_INFORMATION_ICON);
 	return TRUE;
 }

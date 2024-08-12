@@ -21,7 +21,7 @@ private:
 
 	void _renderTitlebarCounts() const;
 	void _renderTextboxes() const;
-	void _renderFrames() const;
+	void _renderFramesList() const;
 
 	const std::vector<id3::Tag*> _pTags;
 
@@ -30,4 +30,6 @@ private:
 		LPCWSTR name4 = nullptr;
 	};
 	static FieldInfo _Fields[15];
+
+	static LPCWSTR _Genres[51];
 };

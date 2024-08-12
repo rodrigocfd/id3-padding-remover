@@ -5,6 +5,8 @@ using std::optional, std::vector, std::wstring, std::wstring_view;
 
 void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 {
+	lib::ListView lv{this, LST_FILES};
+
 	vector<wstring> invalids;
 	for (const wstring& mp3 : mp3s) {
 		if (!lib::path::hasExtension(mp3, L"mp3") && !lib::path::isDir(mp3))
@@ -29,8 +31,8 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 			_addOneMp3ToList(mp3);
 		}
 	}
-	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
-	lib::ListView{this, LST_FILES}.columns[0].setWidthToFill();
+	_updateNumFiles(lv.items.count());
+	lv.columns[0].setWidthToFill();
 	_sortList();
 }
 

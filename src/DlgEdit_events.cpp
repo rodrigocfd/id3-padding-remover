@@ -24,6 +24,10 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 
 INT_PTR DlgEdit::onInitDialog()
 {
+	lib::ComboBox cmbGenre{this, CMB_GENRE};
+	for (auto&& genre : _Genres)
+		cmbGenre.add({genre});
+
 	lib::ListView lv{this, LST_FRAMES};
 	lv.setFullRowSelect()
 		.setGridLines()
@@ -31,7 +35,7 @@ INT_PTR DlgEdit::onInitDialog()
 
 	_renderTitlebarCounts();
 	_renderTextboxes();
-	_renderFrames();
+	_renderFramesList();
 	lv.columns[1].setWidthToFill();
 
 	return TRUE;
