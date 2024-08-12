@@ -52,6 +52,8 @@ INT_PTR DlgEdit::onChk(WPARAM wp)
 
 INT_PTR DlgEdit::onBtnUncheck()
 {
+	for (auto&& field : _Fields)
+		lib::CheckRadio{this, field.chkId}.checkAndTrigger(false);
 
 	return TRUE;
 }
