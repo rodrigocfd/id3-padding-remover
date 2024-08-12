@@ -23,6 +23,12 @@ optional<const Frame*> Tag::frameByName4(wstring_view name4) const
 	return std::nullopt;
 }
 
+optional<Frame*> Tag::frameByName4(wstring_view name4)
+{
+	auto pFrame = const_cast<const Tag*>(this)->frameByName4(name4);
+	return pFrame.has_value() ? optional{const_cast<Frame*>(pFrame.value())} : std::nullopt;
+}
+
 LPCWSTR Tag::replayGainStatus() const
 {
 	bool hasTrack = false;

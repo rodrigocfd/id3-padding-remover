@@ -194,9 +194,6 @@
     <ClCompile Include="src\DlgEdit_funcs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\DlgEdit_ids.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc">

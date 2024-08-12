@@ -10,18 +10,22 @@ namespace id3 {
 struct Frame final {
 	struct Text final {
 		std::wstring text;
+		constexpr bool operator==(const Text&) const = default;
 	};
 	struct UserText final {
 		std::wstring descr;
 		std::wstring text;
+		constexpr bool operator==(const UserText&) const = default;
 	};
 	struct Binary final {
 		std::vector<BYTE> bin;
+		constexpr bool operator==(const Binary&) const = default;
 	};
 	struct Comment final {
 		WCHAR lang3[4] = {L'\0'};
 		std::wstring descr;
 		std::wstring text;
+		bool operator==(const Comment&) const;
 	};
 	struct Picture final {
 		enum class Type: BYTE {
@@ -53,6 +57,7 @@ struct Frame final {
 		Type type;
 		std::wstring descr;
 		std::vector<BYTE> bin;
+		constexpr bool operator==(const Picture&) const = default;
 	};
 	using Data = std::variant<Text, UserText, Binary, Comment, Picture>;
 
@@ -69,6 +74,7 @@ struct Frame final {
 
 	explicit Frame(std::span<BYTE> src);
 
+	bool operator==(const Frame&) const;
 	size_t serialize(std::vector<BYTE>& dest) const;
 	[[nodiscard]] std::wstring toText() const;
 

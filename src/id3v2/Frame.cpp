@@ -6,6 +6,13 @@ using std::span, std::vector, std::wstring;
 using namespace lib;
 using namespace id3;
 
+bool Frame::Comment::operator==(const Comment& other) const
+{
+	return str::eqI(lang3, other.lang3)
+		&& descr == other.descr
+		&& text == other.text;
+}
+
 LPCWSTR Frame::Picture::TypeToText(Type t)
 {
 	using enum Type;
@@ -52,6 +59,13 @@ Frame::Frame(span<BYTE> src)
 
 	// Parse the frame contents.
 	data = _ParseData(name4, src);
+}
+
+bool Frame::operator==(const Frame& other) const
+{
+	return str::eqI(name4, other.name4) // note: declaredSize is not compared
+		&& flags == other.flags
+		&& data == other.data;
 }
 
 size_t Frame::serialize(vector<BYTE>& dest) const

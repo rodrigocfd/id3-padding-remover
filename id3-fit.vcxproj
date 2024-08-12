@@ -215,7 +215,6 @@
     <ClCompile Include="..\windlg\windlg\Window.cpp" />
     <ClCompile Include="src\DlgEdit_events.cpp" />
     <ClCompile Include="src\DlgEdit_funcs.cpp" />
-    <ClCompile Include="src\DlgEdit_ids.cpp" />
     <ClCompile Include="src\DlgMain_events.cpp" />
     <ClCompile Include="src\DlgMain_funcs.cpp" />
     <ClCompile Include="src\id3v2\Frame.cpp" />

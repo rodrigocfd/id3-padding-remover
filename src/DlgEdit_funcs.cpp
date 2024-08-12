@@ -1,6 +1,24 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
 
+WORD DlgEdit::_Chks[] = {
+	CHK_ARTIST,
+	CHK_TITLE,
+	CHK_SUBTITLE,
+	CHK_ALBUM,
+	CHK_TRACK,
+	CHK_YEAR,
+	CHK_GENRE,
+	CHK_PERFORMER,
+	CHK_PUBLISHER,
+	CHK_OARTIST,
+	CHK_OALBUM,
+	CHK_OYEAR,
+	CHK_COMPOSER,
+	CHK_LYRICIST,
+	CHK_COMMENT,
+};
+
 void DlgEdit::_renderTitlebarCounts() const
 {
 	if (_pTags.size() > 1) {
@@ -12,6 +30,18 @@ void DlgEdit::_renderTitlebarCounts() const
 
 void DlgEdit::_renderTextboxes() const
 {
+	auto maybeFrame0 = _pTags[0]->frameByName4(L"TALB");
+
+	bool isSame = lib::vec::allIf(_pTags, [&maybeFrame0](const id3::Tag* pTag) -> bool {
+		auto maybeFrameN = pTag->frameByName4(L"TALB");
+		if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
+			auto f0 = maybeFrame0.value();
+			auto fN = maybeFrameN.value();
+			return *maybeFrame0.value() == *maybeFrameN.value();
+		} else {
+			return maybeFrame0 == maybeFrameN;
+		}
+	});
 
 
 }
