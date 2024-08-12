@@ -1,7 +1,8 @@
 #include "DlgEdit.h"
 #include "../res/resource.h"
+using std::initializer_list, std::wstring_view;
 
-DlgEdit::FieldInfo DlgEdit::_Fields[] = {
+initializer_list<DlgEdit::FieldInfo> DlgEdit::_Fields = {
 	{CHK_ARTIST, L"TPE1"},
 	{CHK_TITLE, L"TIT2"},
 	{CHK_SUBTITLE, L"TIT3"},
@@ -19,7 +20,7 @@ DlgEdit::FieldInfo DlgEdit::_Fields[] = {
 	{CHK_COMMENT, L"COMM"},
 };
 
-LPCWSTR DlgEdit::_Genres[] = {
+initializer_list<wstring_view> DlgEdit::_Genres = {
 	L"Alternative rock",
 	L"Axé",
 	L"Black metal",

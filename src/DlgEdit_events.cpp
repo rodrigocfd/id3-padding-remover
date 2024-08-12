@@ -24,9 +24,7 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 
 INT_PTR DlgEdit::onInitDialog()
 {
-	lib::ComboBox cmbGenre{this, CMB_GENRE};
-	for (auto&& genre : _Genres)
-		cmbGenre.add({genre});
+	lib::ComboBox{this, CMB_GENRE}.add(_Genres);
 
 	lib::ListView lv{this, LST_FRAMES};
 	lv.setFullRowSelect()

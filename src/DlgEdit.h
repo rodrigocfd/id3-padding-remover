@@ -27,9 +27,9 @@ private:
 
 	struct FieldInfo final {
 		WORD chkId = 0;
-		LPCWSTR name4 = nullptr;
+		std::wstring_view name4;
 	};
-	static FieldInfo _Fields[15];
+	static std::initializer_list<FieldInfo> _Fields;
 
-	static LPCWSTR _Genres[51];
+	static std::initializer_list<std::wstring_view> _Genres;
 };
