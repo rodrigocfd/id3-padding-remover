@@ -7,7 +7,7 @@ class DlgEdit final : public lib::DialogModal {
 public:
 	virtual ~DlgEdit() { }
 
-	constexpr explicit DlgEdit(const std::vector<id3::Tag*> pTags) : _pTags{pTags} { }
+	constexpr explicit DlgEdit(const std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{pTags} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
@@ -24,7 +24,7 @@ private:
 	void _renderTextboxes() const;
 	void _renderFramesList() const;
 
-	const std::vector<id3::Tag*> _pTags;
+	const std::vector<id3::Tag*>& _pTags;
 	WndPic _wndPic;
 
 	struct FieldInfo final {

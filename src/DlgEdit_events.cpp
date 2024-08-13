@@ -25,6 +25,7 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 INT_PTR DlgEdit::onInitDialog()
 {
 	lib::ComboBox{this, CMB_GENRE}.add(_Genres);
+
 	_wndPic.create(this, {
 		.x = lib::dpi::x(422),
 		.y = lib::dpi::y(42),
