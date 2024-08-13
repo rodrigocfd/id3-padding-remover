@@ -80,6 +80,9 @@ struct Frame final {
 	void forceText(std::wstring_view text);
 	size_t serialize(std::vector<BYTE>& dest) const;
 
+	template<typename T> [[nodiscard]] constexpr const T* dataAs() const { return std::get_if<T>(&data); }
+	template<typename T> [[nodiscard]] constexpr T* dataAs() { return std::get_if<T>(&data); }
+
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);
 	[[nodiscard]] static Comment _ParseComm(std::span<BYTE> src);

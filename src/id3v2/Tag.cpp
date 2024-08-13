@@ -38,7 +38,7 @@ LPCWSTR Tag::replayGainStatus() const
 		if (hasTrack && hasAlbum) break;
 
 		if (lib::str::eqI(frame.name4, L"TXXX")) {
-			if (auto pData = std::get_if<Frame::UserText>(&frame.data); pData) {
+			if (auto pData = frame.dataAs<Frame::UserText>()) {
 				if (lib::str::startsWithI(pData->descr, L"replaygain_track_"))
 					hasTrack = true;
 				else if (lib::str::startsWithI(pData->descr, L"replaygain_album_"))
@@ -68,6 +68,23 @@ void Tag::saveToFile() const
 		fout.write(tagBlob);
 	}
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
+}
+
+bool Tag::FrameHasSameValueAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
+{
+	if (tags.empty())
+		return false;
+
+	auto maybeFrame0 = tags[0]->frameByName4(name4);
+
+	return lib::vec::allIf(tags, [name4, &maybeFrame0](const Tag* pTag) -> bool {
+		auto maybeFrameN = pTag->frameByName4(name4);
+		if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
+			return *maybeFrame0.value() == *maybeFrameN.value();
+		} else {
+			return maybeFrame0 == maybeFrameN;
+		}
+	});
 }
 
 void Tag::_parseBin(span<BYTE> src)
@@ -148,8 +165,8 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 optional<size_t> Tag::_apicSize() const
 {
 	if (optional<const Frame*> frame = frameByName4(L"APIC"); frame.has_value()) {
-		auto pic = std::get_if<Frame::Picture>(&frame.value()->data);
-		return pic->bin.size();
+		auto pFramePic = frame.value()->dataAs<Frame::Picture>();
+		return pFramePic->bin.size();
 	}
 	return std::nullopt;
 }

@@ -13,18 +13,7 @@ void DlgEdit::_renderTitlebarCounts() const
 void DlgEdit::_renderTextboxes() const
 {
 	for (auto&& field : _Fields) {
-		auto maybeFrame0 = _pTags[0]->frameByName4(field.name4); // assumes at least 1 tag was passed to DlgEdit
-
-		bool isSameValue = lib::vec::allIf(_pTags, [&field, &maybeFrame0](const id3::Tag* pTag) -> bool {
-			auto maybeFrameN = pTag->frameByName4(field.name4);
-			if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
-				return *maybeFrame0.value() == *maybeFrameN.value();
-			} else {
-				return maybeFrame0 == maybeFrameN;
-			}
-		});
-
-		if (isSameValue) {
+		if (id3::Tag::FrameHasSameValueAcrossAllTags(_pTags, field.name4)) {
 			for (auto&& pTag : _pTags) {
 				if (pTag->frameByName4(field.name4).has_value()) { // 1st tag which has this frame
 					lib::CheckRadio{this, field.chkId}.checkAndTrigger();

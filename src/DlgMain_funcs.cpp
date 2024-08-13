@@ -69,7 +69,8 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 
 	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
 		if (optional<const id3::Frame*> frame = pTag->frameByName4(name4); frame.has_value()) {
-			item.setText(std::get_if<id3::Frame::Text>(&frame.value()->data)->text, col);
+			auto pFrameText = frame.value()->dataAs<id3::Frame::Text>();
+			item.setText(pFrameText->text, col);
 		} else {
 			item.setText(L"", col); // removed frames need to have their text erased
 		}
@@ -93,7 +94,8 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	renderSimple(L"TEXT", 12);
 	renderSimple(L"TOPE", 13);
 	if (auto comm = pTag->frameByName4(L"COMM"); comm.has_value()) {
-		item.setText(std::get_if<id3::Frame::Comment>(&comm.value()->data)->text, 14);
+		auto pFrameComm = comm.value()->dataAs<id3::Frame::Comment>();
+		item.setText(pFrameComm->text, 14);
 	} else {
 		item.setText(L"", 14);
 	}
