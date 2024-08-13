@@ -1,5 +1,6 @@
 #pragma once
 #include <windlg/lib.h>
+#include "WndPic.h"
 #include "id3v2/Tag.h"
 
 class DlgEdit final : public lib::DialogModal {
@@ -24,12 +25,12 @@ private:
 	void _renderFramesList() const;
 
 	const std::vector<id3::Tag*> _pTags;
+	WndPic _wndPic;
 
 	struct FieldInfo final {
 		WORD chkId = 0;
 		std::wstring_view name4;
 	};
 	static std::initializer_list<FieldInfo> _Fields;
-
 	static std::initializer_list<std::wstring_view> _Genres;
 };

@@ -25,6 +25,13 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 INT_PTR DlgEdit::onInitDialog()
 {
 	lib::ComboBox{this, CMB_GENRE}.add(_Genres);
+	_wndPic.create(this, {
+		.x = lib::dpi::x(422),
+		.y = lib::dpi::y(42),
+		.cx = lib::dpi::cx(200),
+		.cy = lib::dpi::cy(200),
+		.style = WS_CHILD | WS_GROUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+	});
 
 	lib::ListView lv{this, LST_FRAMES};
 	lv.setFullRowSelect()

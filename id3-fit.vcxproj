@@ -190,6 +190,7 @@
     <ClInclude Include="src\id3v2\Frame.h" />
     <ClInclude Include="src\id3v2\util.h" />
     <ClInclude Include="src\id3v2\Tag.h" />
+    <ClInclude Include="src\WndPic.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\windlg\windlg\CheckRadio.cpp" />
@@ -221,6 +222,7 @@
     <ClCompile Include="src\id3v2\Frame.cpp" />
     <ClCompile Include="src\id3v2\util.cpp" />
     <ClCompile Include="src\id3v2\Tag.cpp" />
+    <ClCompile Include="src\WndPic_events.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc" />
