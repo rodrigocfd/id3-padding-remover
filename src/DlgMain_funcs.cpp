@@ -7,15 +7,15 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 {
 	lib::ListView lv{this, LST_FILES};
 
-	vector<wstring> invalids;
+	vector<wstring> nonMp3s; // keep track of files that aren't MP3
 	for (const wstring& mp3 : mp3s) {
 		if (!lib::path::hasExtension(mp3, L"mp3") && !lib::path::isDir(mp3))
-			invalids.emplace_back(mp3);
+			nonMp3s.emplace_back(mp3);
 	}
-	if (!invalids.empty()) {
-		wstring buf = lib::str::newReserved(22 * invalids.size()); // arbitrary
+	if (!nonMp3s.empty()) {
+		wstring buf = lib::str::newReserved(22 * nonMp3s.size()); // arbitrary
 		buf = L"Non-MP3 file(s):";
-		for (const wstring& mp3 : invalids) {
+		for (const wstring& mp3 : nonMp3s) {
 			buf.append(L"\n");
 			buf.append(mp3);
 		}
@@ -23,7 +23,7 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 		return; // do not continue; no files will be added
 	}
 
-	for (const wstring& mp3 : mp3s) {
+	for (const wstring& mp3 : mp3s) { // all files are MP3, let's add them
 		if (lib::path::isDir(mp3)) {
 			for (const wstring& f : lib::path::dirList(mp3 + L"\\*.mp3")) // search only 1 level deep
 				_addOneMp3ToList(f);
@@ -68,13 +68,19 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	auto pTag = item.data<const id3::Tag*>();
 
 	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
-		if (optional<const id3::Frame*> frame = pTag->frameByName4(name4); frame.has_value())
+		if (optional<const id3::Frame*> frame = pTag->frameByName4(name4); frame.has_value()) {
 			item.setText(std::get_if<id3::Frame::Text>(&frame.value()->data)->text, col);
+		} else {
+			item.setText(L"", col); // removed frames need to have their text erased
+		}
 	};
 
 	item.setText(std::to_wstring(pTag->padding), 1);
-	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value())
+	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value()) {
 		item.setText(L"\u2713", 2); // checkmark
+	} else {
+		item.setText(L"", 2);
+	}
 	item.setText(pTag->replayGainStatus(), 3);
 	renderSimple(L"TPE1", 4);
 	renderSimple(L"TYER", 5);
@@ -86,8 +92,11 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	renderSimple(L"TCOM", 11);
 	renderSimple(L"TEXT", 12);
 	renderSimple(L"TOPE", 13);
-	if (auto comm = pTag->frameByName4(L"COMM"); comm.has_value())
+	if (auto comm = pTag->frameByName4(L"COMM"); comm.has_value()) {
 		item.setText(std::get_if<id3::Frame::Comment>(&comm.value()->data)->text, 14);
+	} else {
+		item.setText(L"", 14);
+	}
 }
 
 void DlgMain::_updateNumFiles(UINT numFiles) const
@@ -104,9 +113,12 @@ void DlgMain::_sortList() const
 		if (_sort.col == 0 || _sort.col == 1) {
 			auto pTagA = a.data<const id3::Tag*>();
 			auto pTagB = b.data<const id3::Tag*>();
-			if (_sort.col == 0) cmp = lib::str::cmpI(pTagA->path, pTagB->path); // by path
-				else cmp = pTagA->padding - pTagB->padding; // by padding size
-		} else { // by text
+			if (_sort.col == 0) { // by path
+				cmp = lib::str::cmpI(pTagA->path, pTagB->path);
+			} else { // by padding size
+				cmp = pTagA->padding - pTagB->padding;
+			}
+		} else { // by column text
 			cmp = lib::str::cmpI(a.text(_sort.col), b.text(_sort.col));
 		}
 		return _sort.asc ? cmp : -cmp;

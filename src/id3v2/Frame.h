@@ -73,10 +73,12 @@ struct Frame final {
 	constexpr Frame& operator=(Frame&&) = default;
 
 	explicit Frame(std::span<BYTE> src);
+	Frame(std::wstring_view name4, std::wstring_view textContent);
 
 	bool operator==(const Frame&) const;
+	[[nodiscard]] std::wstring asText() const;
+	void forceText(std::wstring_view text);
 	size_t serialize(std::vector<BYTE>& dest) const;
-	[[nodiscard]] std::wstring toText() const;
 
 private:
 	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);

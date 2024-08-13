@@ -2,7 +2,7 @@
 #include <windlg/lib.h>
 #include "Frame.h"
 #include "util.h"
-using std::span, std::vector, std::wstring;
+using std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
@@ -61,6 +61,21 @@ Frame::Frame(span<BYTE> src)
 	data = _ParseData(name4, src);
 }
 
+Frame::Frame(wstring_view name4, wstring_view textContent)
+{
+	lstrcpyW(this->name4, name4.data());
+	if (str::eqI(name4, L"COMM")) { // comment frame
+		auto comm = Comment{};
+		lstrcpyW(comm.lang3, L"eng");
+		comm.text = textContent;
+		data = std::move(comm);
+	} else {
+		auto txt = Text{}; // assume simple text frame
+		txt.text = textContent;
+		data = std::move(txt);
+	}
+}
+
 bool Frame::operator==(const Frame& other) const
 {
 	return str::eqI(name4, other.name4) // note: declaredSize is not compared
@@ -68,22 +83,7 @@ bool Frame::operator==(const Frame& other) const
 		&& data == other.data;
 }
 
-size_t Frame::serialize(vector<BYTE>& dest) const
-{
-	dest.reserve(dest.size() + 10);
-	util::serializeChars(name4, dest); // no terminating null
-
-	size_t offsetSz = dest.size();
-	dest.insert(dest.end(), 4, 0x00); // data size placeholder
-
-	vec::append(dest, flags);
-
-	size_t sz = _serializeData(dest); // won't count 10-byte frame header
-	util::serializeInPlaceUintBe(static_cast<UINT>(sz), dest.begin() + offsetSz);
-	return sz + 10; // count 10-byte frame header
-}
-
-wstring Frame::toText() const
+wstring Frame::asText() const
 {
 	return std::visit(util::Overload{
 		[](const Text& t) {
@@ -103,6 +103,45 @@ wstring Frame::toText() const
 				Picture::TypeToText(p.type), p.mime, str::fmtBytes(p.bin.size()));
 		},
 	}, data);
+}
+
+void Frame::forceText(wstring_view text)
+{
+	std::visit(util::Overload{
+		[&text](Text& t) {
+		t.text = text;
+	},
+		[&text](UserText& ut) {
+		ut.descr = L"";
+		ut.text = text;
+	},
+		[](Binary& b) {
+		throw std::invalid_argument("Can't assign text to binary frame");
+	},
+		[&text](Comment& c) {
+		lstrcpyW(c.lang3, L"eng");
+		c.descr = L"";
+		c.text = text;
+	},
+		[](Picture& p) {
+		throw std::invalid_argument("Can't assign text to picture frame");
+	},
+		}, data);
+}
+
+size_t Frame::serialize(vector<BYTE>& dest) const
+{
+	dest.reserve(dest.size() + 10);
+	util::serializeChars(name4, dest); // no terminating null
+
+	size_t offsetSz = dest.size();
+	dest.insert(dest.end(), 4, 0x00); // data size placeholder
+
+	vec::append(dest, flags);
+
+	size_t sz = _serializeData(dest); // won't count 10-byte frame header
+	util::serializeInPlaceUintBe(static_cast<UINT>(sz), dest.begin() + offsetSz);
+	return sz + 10; // count 10-byte frame header
 }
 
 Frame::Data Frame::_ParseData(WCHAR name4[4], span<BYTE> src)

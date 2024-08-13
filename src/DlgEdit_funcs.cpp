@@ -29,7 +29,7 @@ void DlgEdit::_renderTextboxes() const
 				if (pTag->frameByName4(field.name4).has_value()) { // 1st tag which has this frame
 					lib::CheckRadio{this, field.chkId}.checkAndTrigger();
 					lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.setText(
-						pTag->frameByName4(field.name4).value()->toText());
+						pTag->frameByName4(field.name4).value()->asText());
 				}
 			}
 		}
@@ -42,7 +42,7 @@ void DlgEdit::_renderFramesList() const
 
 	if (_pTags.size() == 1) {
 		for (const id3::Frame& frame : _pTags[0]->frames) {
-			auto strFrame = frame.toText();
+			auto strFrame = frame.asText();
 			lv.items.add(frame.name4, {strFrame});
 		}
 	} else { // multiple files

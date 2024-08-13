@@ -111,10 +111,12 @@ Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
 	}
 
 	nfo.declaredSize = util::syncSafe::decode(util::uintFromBeBytes(src.subspan(6, 4)));
+#ifdef _DEBUG
 	if (nfo.declaredSize > nfo.mp3Offset) {
 		auto msg = str::fmt(L"--- Declared size: %d > offset: %d\n", nfo.declaredSize, nfo.mp3Offset);
 		OutputDebugStringW(msg.c_str());
 	}
+#endif
 
 	return nfo;
 }
