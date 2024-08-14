@@ -27,10 +27,10 @@ INT_PTR DlgEdit::onInitDialog()
 	lib::ComboBox{this, CMB_GENRE}.add(_Genres);
 
 	_wndPic.create(this, {
-		.x = lib::dpi::x(418),
+		.x = lib::dpi::x(414),
 		.y = lib::dpi::y(42),
-		.cx = lib::dpi::cx(200),
-		.cy = lib::dpi::cy(200),
+		.cx = lib::dpi::cx(210),
+		.cy = lib::dpi::cy(210),
 		.style = WS_CHILD | WS_GROUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
 	});
 
