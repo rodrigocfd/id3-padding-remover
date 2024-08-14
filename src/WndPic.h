@@ -16,6 +16,7 @@ public:
 private:
 	LRESULT wndProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
 	LRESULT onCreate();
+	LRESULT onPaint();
 	LRESULT onDestroy();
 
 	const std::vector<id3::Tag*>& _pTags;

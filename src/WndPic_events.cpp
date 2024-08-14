@@ -7,6 +7,7 @@ LRESULT WndPic::wndProc(UINT uMsg, WPARAM wp, LPARAM lp)
 {
 	switch (uMsg) {
 		case WM_CREATE:  return onCreate();
+		case WM_PAINT:   return onPaint();
 		case WM_DESTROY: return onDestroy();
 		default:         return DefWindowProcW(hWnd(), uMsg, wp, lp);
 	}
@@ -21,6 +22,24 @@ LRESULT WndPic::onCreate()
 			OleLoadPicture(stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())),
 			"OleLoadPicture");
 	}
+	return 0;
+}
+
+LRESULT WndPic::onPaint()
+{
+	PAINTSTRUCT ps{};
+	HDC hdc = BeginPaint(hWnd(), &ps);
+
+	if (_pic.ptr()) {
+		OLE_XSIZE_HIMETRIC hmx = 0;
+		OLE_YSIZE_HIMETRIC hmy = 0;
+		_pic->get_Width(&hmx);
+		_pic->get_Height(&hmy);
+
+		_pic->Render(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, 0, hmy, hmx, -hmy, nullptr);
+	}
+
+	EndPaint(hWnd(), &ps);
 	return 0;
 }
 
