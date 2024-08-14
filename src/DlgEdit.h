@@ -23,6 +23,7 @@ private:
 	void _renderTitlebarCounts() const;
 	void _renderTextboxes() const;
 	void _renderFramesList() const;
+	void _updateTagsWithTexts() const;
 
 	const std::vector<id3::Tag*>& _pTags;
 	WndPic _wndPic;

@@ -34,3 +34,28 @@ void DlgEdit::_renderFramesList() const
 		lv.items.add(L"", {msg});
 	}
 }
+
+void DlgEdit::_updateTagsWithTexts() const
+{
+	for (auto&& field : _Fields) {
+		if (!lib::CheckRadio{this, field.chkId}.isChecked())
+			continue;
+
+		auto text = lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.text();
+		lib::str::trim(text);
+
+		for (auto&& pTag : _pTags) {
+			if (auto pFrame = pTag->frameByName4(field.name4); pFrame.has_value()) { // the frame already exists in this tag
+				if (text.empty()) { // empty text will remove the frame
+					lib::vec::removeIf(pTag->frames,
+						[&field](const id3::Frame& f) { return lib::str::eqI(f.name4, field.name4); }); // will fail with TXXX frames
+				} else {
+					pFrame.value()->forceText(text);
+				}
+			} else { // the frame doesn't exist in this tag yet
+				if (!text.empty())
+					pTag->frames.emplace_back(field.name4, text);
+			}
+		}
+	}
+}

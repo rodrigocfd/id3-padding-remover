@@ -70,37 +70,33 @@ INT_PTR DlgEdit::onBtnUncheck()
 
 INT_PTR DlgEdit::onBtnOk()
 {
-	for (auto&& field : _Fields) {
-		if (!lib::CheckRadio{this, field.chkId}.isChecked())
-			continue;
-		
-		auto text = lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.text();
-		lib::str::trim(text);
+	_updateTagsWithTexts();
 
-		for (auto&& pTag : _pTags) {
-			if (auto pFrame = pTag->frameByName4(field.name4); pFrame.has_value()) { // the frame already exists in this tag
-				if (text.empty()) { // empty text will remove the frame
-					lib::vec::removeIf(pTag->frames,
-						[&field](const id3::Frame& f) { return lib::str::eqI(f.name4, field.name4); }); // will fail with TXXX frames
-				} else {
-					pFrame.value()->forceText(text);
-				}
-			} else { // the frame doesn't exist in this tag yet
-				if (!text.empty())
-					pTag->frames.emplace_back(field.name4, text);
-			}
+	size_t numSaved = 0;
+	auto t0 = lib::TimeCount::Immediately();
+
+	for (auto&& pTag : _pTags) {
+		try {
+			pTag->saveToFile();
+			++numSaved;
+		} catch (const std::exception& e) {
+			dlg.msgBox(L"Saving error", {},
+				lib::str::fmt(L"Tag saving failed:\n%s\n\n%s", pTag->path, lib::str::toWide(e.what())),
+				TDCBF_OK_BUTTON, TD_ERROR_ICON);
 		}
 	}
 
-	for (auto&& pTag : _pTags) {
-		//try {
-		//	pTag->saveToFile();
-		//} catch (const std::exception& e) {
-		//	dlg.msgBox(L"Saving error", {},
-		//		lib::str::fmt(L"Tag saving failed:\n%s\n\n%s", pTag->path, lib::str::toWide(e.what())),
-		//		TDCBF_OK_BUTTON, TD_ERROR_ICON);
-		//}
+	auto t1 = t0.now();
+
+	for (auto&& field : _Fields) { // disable all controls just for visual feedback purposes
+		EnableWindow(GetDlgItem(hWnd(), field.chkId), FALSE);
+		EnableWindow(GetDlgItem(hWnd(), field.chkId + 1), FALSE);
 	}
+	dlg.enable({BTN_UNCHECK, IDOK, IDCANCEL, LST_FRAMES}, false);
+
+	dlg.msgBox(L"Tag(s) saved", {},
+		lib::str::fmt(L"%d tag(s) saved in %02d.%03d.", numSaved, t1.sec, t1.ms),
+		TDCBF_OK_BUTTON, TD_INFORMATION_ICON);
 
 	EndDialog(hWnd(), 0);
 	return TRUE;
