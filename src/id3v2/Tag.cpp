@@ -70,21 +70,28 @@ void Tag::saveToFile() const
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
 }
 
-bool Tag::FrameHasSameValueAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
+optional<Frame*> Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
 {
-	if (tags.empty())
-		return false;
+	if (tags.empty()) {
+		return std::nullopt;
+	} else if (tags.size() == 1) {
+		return tags[0]->frameByName4(name4);
+	} else {
+		auto maybeFrame0 = tags[0]->frameByName4(name4);
+		if (!maybeFrame0.has_value())
+			return std::nullopt;
 
-	auto maybeFrame0 = tags[0]->frameByName4(name4);
+		bool isSame = lib::vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, &maybeFrame0](const Tag* pTag) -> bool {
+			auto maybeFrameN = pTag->frameByName4(name4);
+			if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
+				return *maybeFrame0.value() == *maybeFrameN.value();
+			} else {
+				return maybeFrame0 == maybeFrameN;
+			}
+		});
 
-	return lib::vec::allIf(tags, [name4, &maybeFrame0](const Tag* pTag) -> bool {
-		auto maybeFrameN = pTag->frameByName4(name4);
-		if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
-			return *maybeFrame0.value() == *maybeFrameN.value();
-		} else {
-			return maybeFrame0 == maybeFrameN;
-		}
-	});
+		return isSame ? maybeFrame0 : std::nullopt;
+	}
 }
 
 void Tag::_parseBin(span<BYTE> src)

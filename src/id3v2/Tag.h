@@ -27,7 +27,7 @@ struct Tag final {
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
 	void saveToFile() const;
 
-	[[nodiscard]] static bool FrameHasSameValueAcrossAllTags(const std::vector<Tag*>& tags, std::wstring_view name4);
+	[[nodiscard]] static std::optional<Frame*> SameFrameAcrossAllTags(const std::vector<Tag*>& tags, std::wstring_view name4);
 
 private:
 	struct HeaderInfo final {

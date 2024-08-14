@@ -13,14 +13,9 @@ void DlgEdit::_renderTitlebarCounts() const
 void DlgEdit::_renderTextboxes() const
 {
 	for (auto&& field : _Fields) {
-		if (id3::Tag::FrameHasSameValueAcrossAllTags(_pTags, field.name4)) {
-			for (auto&& pTag : _pTags) {
-				if (pTag->frameByName4(field.name4).has_value()) { // 1st tag which has this frame
-					lib::CheckRadio{this, field.chkId}.checkAndTrigger();
-					lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.setText(
-						pTag->frameByName4(field.name4).value()->asText());
-				}
-			}
+		if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, field.name4); pFrame.has_value()) {
+			lib::CheckRadio{this, field.chkId}.checkAndTrigger();
+			lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.setText(pFrame.value()->asText());
 		}
 	}
 }

@@ -73,8 +73,10 @@ INT_PTR DlgEdit::onBtnOk()
 	for (auto&& field : _Fields) {
 		if (!lib::CheckRadio{this, field.chkId}.isChecked())
 			continue;
-
+		
 		auto text = lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.text();
+		lib::str::trim(text);
+
 		for (auto&& pTag : _pTags) {
 			if (auto pFrame = pTag->frameByName4(field.name4); pFrame.has_value()) { // the frame already exists in this tag
 				if (text.empty()) { // empty text will remove the frame
