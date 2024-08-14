@@ -36,7 +36,8 @@ LRESULT WndPic::onPaint()
 		_pic->get_Width(&hmx);
 		_pic->get_Height(&hmy);
 
-		_pic->Render(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, 0, hmy, hmx, -hmy, nullptr);
+		RECT dummy{};
+		_pic->Render(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, 0, hmy, hmx, -hmy, &dummy);
 	}
 
 	EndPaint(hWnd(), &ps);
