@@ -13,7 +13,7 @@ public:
 	DlgEdit& operator=(const DlgEdit&) = delete;
 	DlgEdit& operator=(DlgEdit&&) = delete;
 
-	bool clickedOk = false;
+	[[nodiscard]] constexpr bool clickedOk() const { return _clickedOk; }
 
 private:
 	INT_PTR dlgProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
@@ -29,6 +29,7 @@ private:
 
 	const std::vector<id3::Tag*>& _pTags;
 	WndPic _wndPic;
+	bool _clickedOk = false;
 
 	struct FieldInfo final {
 		WORD chkId = 0;

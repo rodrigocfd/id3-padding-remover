@@ -133,7 +133,7 @@ INT_PTR DlgMain::onMenuFileEdit()
 	DlgEdit dlgEdit{pTags};
 	dlgEdit.showModal(this, DLG_EDIT);
 
-	if (dlgEdit.clickedOk) {
+	if (dlgEdit.clickedOk()) {
 		for (auto&& item : selItems)
 			_renderMp3ListItem(item); // tags potentially changed, re-render them in the list
 		_saveSelected(); // DlgEdit won't save the files, just change the tags; we save them here

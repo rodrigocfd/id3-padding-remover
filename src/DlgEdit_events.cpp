@@ -71,7 +71,7 @@ INT_PTR DlgEdit::onBtnUncheck()
 INT_PTR DlgEdit::onBtnOk()
 {
 	_updateTagsWithTexts(); // the file saving itself is made by DlgMain
-	clickedOk = true;
+	_clickedOk = true;
 	EndDialog(hWnd(), 0);
 	return TRUE;
 }
