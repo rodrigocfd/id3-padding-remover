@@ -13,6 +13,8 @@ public:
 	DlgEdit& operator=(const DlgEdit&) = delete;
 	DlgEdit& operator=(DlgEdit&&) = delete;
 
+	bool clickedOk = false;
+
 private:
 	INT_PTR dlgProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
 	INT_PTR onInitDialog();

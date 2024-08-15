@@ -126,3 +126,38 @@ void DlgMain::_sortList() const
 		return _sort.asc ? cmp : -cmp;
 	});
 }
+
+void DlgMain::_saveSelected() const
+{
+	struct Fail final {
+		wstring file;
+		std::string reason;
+	};
+
+	auto selItems = lib::ListView{this, LST_FILES}.items.selected();
+	auto faileds = lib::vec::newReserved<Fail>(selItems.size());
+	size_t numSaved = 0;
+	auto t0 = lib::TimeCount::Immediately();
+
+	for (auto&& item : selItems) {
+		auto pTag = item.data<id3::Tag*>();
+		try {
+			pTag->saveToFile();
+			++numSaved;
+		} catch (const std::exception& e) {
+			faileds.push_back({.file = pTag->path, .reason = e.what()});
+		}
+	}
+
+	auto t1 = t0.now();
+
+	auto mainMsg = lib::str::fmt(L"%d tag(s) saved in %02d.%03d.", numSaved, t1.sec, t1.ms);
+	if (faileds.empty()) {
+		dlg.msgBox(L"Tag(s) saved", {}, mainMsg, TDCBF_OK_BUTTON, TD_INFORMATION_ICON);
+	} else {
+		mainMsg += L"\n\n" + std::to_wstring(faileds.size()) + L" file(s) failed:";
+		for (auto&& failed : faileds)
+			mainMsg += L"\n\n" + failed.file + L"\n" + lib::str::toWide(failed.reason);
+		dlg.msgBox(L"Tag(s) saved with errors", {}, mainMsg, TDCBF_OK_BUTTON, TD_ERROR_ICON);
+	}
+}

@@ -133,33 +133,17 @@ INT_PTR DlgMain::onMenuFileEdit()
 	DlgEdit dlgEdit{pTags};
 	dlgEdit.showModal(this, DLG_EDIT);
 
-	for (auto&& item : selItems)
-		_renderMp3ListItem(item);
-
+	if (dlgEdit.clickedOk) {
+		for (auto&& item : selItems)
+			_renderMp3ListItem(item); // tags potentially changed, re-render them in the list
+		_saveSelected(); // DlgEdit won't save the files, just change the tags; we save them here
+	}
 	return TRUE;
 }
 
 INT_PTR DlgMain::onMenuFileReSave()
 {
-	size_t numSaved = 0;
-	auto t0 = lib::TimeCount::Immediately();
-
-	for (auto&& item : lib::ListView{this, LST_FILES}.items.selected()) {
-		try {
-			auto pTag = item.data<id3::Tag*>();
-			pTag->saveToFile();
-			++numSaved;
-		} catch (const std::exception& e) {
-			dlg.msgBox(L"Re-saving error", {},
-				lib::str::fmt(L"Tag re-saving failed:\n%s\n\n%s", item.text(), lib::str::toWide(e.what())),
-				TDCBF_OK_BUTTON, TD_ERROR_ICON);
-		}
-	}
-
-	auto t1 = t0.now();
-	dlg.msgBox(L"Tag(s) re-saved", {},
-		lib::str::fmt(L"%d tag(s) re-saved in %02d.%03d.", numSaved, t1.sec, t1.ms),
-		TDCBF_OK_BUTTON, TD_INFORMATION_ICON);
+	_saveSelected();
 	return TRUE;
 }
 

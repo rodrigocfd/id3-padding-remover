@@ -31,6 +31,7 @@ private:
 	void _renderMp3ListItem(lib::ListView::Item item) const;
 	void _updateNumFiles(UINT numFiles) const;
 	void _sortList() const;
+	void _saveSelected() const;
 
 	lib::ImgList _imgList;
 	struct { int col; bool asc; } _sort = {.col = 0, .asc = true};
