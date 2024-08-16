@@ -7,15 +7,26 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 	switch (uMsg) {
 		case WM_INITDIALOG: return onInitDialog();
 		case WM_COMMAND:
-			if (lib::vec::anyIf(span{_Fields}, [wp](auto&& f) { return f.chkId == LOWORD(wp); })) { // one of the checkboxes
-				return onChk(wp);
-			} else {
-				switch LOWORD(wp) {
-					case BTN_UNCHECK: return onBtnUncheck();
-					case IDOK:        return onBtnOk();
-					case IDCANCEL:    PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
-					default:          return FALSE;
-				}
+			switch LOWORD(wp) {
+				case CHK_ARTIST:
+				case CHK_TITLE:
+				case CHK_SUBTITLE:
+				case CHK_ALBUM:
+				case CHK_TRACK:
+				case CHK_YEAR:
+				case CHK_GENRE:
+				case CHK_PERFORMER:
+				case CHK_PUBLISHER:
+				case CHK_OARTIST:
+				case CHK_OALBUM:
+				case CHK_OYEAR:
+				case CHK_COMPOSER:
+				case CHK_LYRICIST:
+				case CHK_COMMENT: return onChk(wp);
+				case BTN_UNCHECK: return onBtnUncheck();
+				case IDOK:        return onBtnOk();
+				case IDCANCEL:    PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
+				default:          return FALSE;
 			}
 		case WM_CLOSE: EndDialog(hWnd(), 0); return TRUE;
 		default:       return FALSE;
