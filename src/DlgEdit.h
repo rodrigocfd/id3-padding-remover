@@ -18,7 +18,9 @@ public:
 private:
 	INT_PTR dlgProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
 	INT_PTR onInitDialog();
+	INT_PTR onInitMenuPopup(WPARAM wp);
 	INT_PTR onChk(WPARAM wp);
+	INT_PTR onMnuFrameMove(bool isUp);
 	INT_PTR onBtnUncheck();
 	INT_PTR onBtnOk();
 

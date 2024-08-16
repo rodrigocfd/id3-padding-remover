@@ -5,8 +5,9 @@
 #define DLG_MAIN                        101
 #define DLG_EDIT                        102
 #define ICO_FOULBACHELOR                103
-#define MNU_FILE                        104
-#define ACC_MAIN                        105
+#define ACC_MAIN                        104
+#define MNU_FILE                        105
+#define MNU_FRAME                       106
 #define LST_FILES                       1001
 #define CHK_ARTIST                      1002
 #define TXT_ARTIST                      1003
@@ -45,13 +46,15 @@
 #define MNU_FILE_REMOVE                 40003
 #define MNU_FILE_ABOUT                  40004
 #define MNU_FILE_RESAVE                 40005
+#define MNU_FRAME_MOVEUP                40006
+#define MNU_FRAME_MOVEDOWN              40007
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        106
-#define _APS_NEXT_COMMAND_VALUE         40006
+#define _APS_NEXT_RESOURCE_VALUE        107
+#define _APS_NEXT_COMMAND_VALUE         40008
 #define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

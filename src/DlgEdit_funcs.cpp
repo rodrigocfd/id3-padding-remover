@@ -23,6 +23,7 @@ void DlgEdit::_renderTextboxes() const
 void DlgEdit::_renderFramesList() const
 {
 	lib::ListView lv{this, LST_FRAMES};
+	lv.items.removeAll();
 
 	if (_pTags.size() == 1) {
 		for (const id3::Frame& frame : _pTags[0]->frames) {
