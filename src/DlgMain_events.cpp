@@ -56,7 +56,7 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 INT_PTR DlgMain::onInitDialog()
 {
 	dlg.registerDragDrop()
-		.layout(lib::Dialog::Act::Resize, lib::Dialog::Act::Resize, {LST_FILES});
+		.layout(lib::Dialog::Horz::Resize, lib::Dialog::Vert::Resize, {LST_FILES});
 
 	_imgList.create({16, 16})
 		.addShell({L"mp3"});
