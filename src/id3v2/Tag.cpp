@@ -11,7 +11,16 @@ Tag::Tag(wstring_view mp3)
 	: path{mp3}
 {
 	lib::FileMapped f{mp3, lib::FileMapped::Access::ExistingReadOnly};
-	_parseBin(f.asSpan());
+	span<BYTE> src = f.asSpan();
+	
+	HeaderInfo headerNfo = _ParseHeader(src);
+	if (!headerNfo.declaredSize && !headerNfo.mp3Offset)
+		return; // MP3 has no ID3v2 tag
+
+	FramesInfo framesNfo = _ParseFrames(src.subspan(10, headerNfo.mp3Offset - 10));
+	mp3Offset = headerNfo.mp3Offset;
+	padding = framesNfo.padding;
+	frames = std::move(framesNfo.frames);
 }
 
 optional<const Frame*> Tag::frameByName4(wstring_view name4) const
@@ -25,7 +34,7 @@ optional<const Frame*> Tag::frameByName4(wstring_view name4) const
 
 optional<Frame*> Tag::frameByName4(wstring_view name4)
 {
-	auto pFrame = const_cast<const Tag*>(this)->frameByName4(name4);
+	auto pFrame = const_cast<const Tag*>(this)->frameByName4(name4); // https://stackoverflow.com/a/856839/6923555
 	return pFrame.has_value() ? optional{const_cast<Frame*>(pFrame.value())} : std::nullopt;
 }
 
@@ -92,18 +101,6 @@ optional<Frame*> Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_v
 
 		return isSame ? maybeFrame0 : std::nullopt;
 	}
-}
-
-void Tag::_parseBin(span<BYTE> src)
-{
-	HeaderInfo headerNfo = _ParseHeader(src);
-	if (!headerNfo.declaredSize && !headerNfo.mp3Offset)
-		return; // MP3 has no ID3v2 tag
-
-	FramesInfo framesNfo = _ParseFrames(src.subspan(10, headerNfo.mp3Offset - 10));
-	mp3Offset = headerNfo.mp3Offset;
-	padding = framesNfo.padding;
-	frames = std::move(framesNfo.frames);
 }
 
 Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)

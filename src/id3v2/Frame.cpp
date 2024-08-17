@@ -109,24 +109,24 @@ void Frame::forceText(wstring_view text)
 {
 	std::visit(util::Overload{
 		[&text](Text& t) {
-		t.text = text;
-	},
+			t.text = text;
+		},
 		[&text](UserText& ut) {
-		ut.descr = L"";
-		ut.text = text;
-	},
+			ut.descr = L"";
+			ut.text = text;
+		},
 		[](Binary& b) {
-		throw std::invalid_argument("Can't assign text to binary frame");
-	},
+			throw std::invalid_argument("Can't assign text to binary frame");
+		},
 		[&text](Comment& c) {
-		lstrcpyW(c.lang3, L"eng");
-		c.descr = L"";
-		c.text = text;
-	},
+			lstrcpyW(c.lang3, L"eng");
+			c.descr = L"";
+			c.text = text;
+		},
 		[](Picture& p) {
-		throw std::invalid_argument("Can't assign text to picture frame");
-	},
-		}, data);
+			throw std::invalid_argument("Can't assign text to picture frame");
+		},
+	}, data);
 }
 
 size_t Frame::serialize(vector<BYTE>& dest) const

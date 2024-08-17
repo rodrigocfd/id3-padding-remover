@@ -39,7 +39,6 @@ private:
 		UINT padding = 0;
 	};
 
-	void _parseBin(std::span<BYTE> src);
 	[[nodiscard]] static HeaderInfo _ParseHeader(std::span<BYTE> src);
 	[[nodiscard]] static FramesInfo _ParseFrames(std::span<BYTE> src);
 	[[nodiscard]] std::optional<size_t> _apicSize() const;
