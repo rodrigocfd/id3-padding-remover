@@ -1,3 +1,4 @@
+#include <system_error>
 #include "WndPic.h"
 #include <Shlwapi.h>
 #include <olectl.h>
@@ -18,9 +19,11 @@ LRESULT WndPic::onCreate()
 	if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, L"APIC"); pFrame.has_value()) {
 		auto pFramePic = pFrame.value()->dataAs<id3::Frame::Picture>();
 		auto stream = lib::ComPtr{SHCreateMemStream(pFramePic->bin.data(), static_cast<UINT>(pFramePic->bin.size()))};
-		lib::checkHr(
-			OleLoadPicture(stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())),
-			"OleLoadPicture");
+		if (HRESULT hr = OleLoadPicture(
+				stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] {
+			auto err = std::system_category().message(hr);
+			MessageBoxA(GetParent(hWnd()), err.c_str(), "Picture error", MB_ICONERROR);
+		}
 	}
 	return 0;
 }
