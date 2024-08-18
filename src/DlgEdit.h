@@ -8,7 +8,8 @@ class DlgEdit final : public lib::DialogModal {
 public:
 	virtual ~DlgEdit() { }
 
-	constexpr explicit DlgEdit(const std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{pTags, _pic} { }
+	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags)
+		: _pTags{pTags}, _wndPic{pTags, _pic} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
@@ -31,7 +32,7 @@ private:
 	void _renderFramesList() const;
 	void _updateTagsWithTexts() const;
 
-	const std::vector<id3::Tag*>& _pTags;
+	std::vector<id3::Tag*>& _pTags;
 	lib::ComPtr<IPicture> _pic;
 	WndPic _wndPic;
 	bool _clickedOk = false;

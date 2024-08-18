@@ -82,10 +82,10 @@ INT_PTR DlgEdit::onChk(WPARAM wp)
 	WORD chkId = LOWORD(wp);
 	WORD txtId = chkId + 1;
 	if (lib::CheckRadio{this, chkId}.isChecked()) { // when checked, enable textbox and focus it
-		dlg.enable({txtId}, TRUE);
+		dlg.enable({txtId});
 		lib::NativeControl{this, txtId}.focus();
 	} else {
-		dlg.enable({txtId}, FALSE);
+		dlg.enable({txtId}, false);
 	}
 	return TRUE;
 }
