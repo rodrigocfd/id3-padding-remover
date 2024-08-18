@@ -1,5 +1,6 @@
 #pragma once
 #include <windlg/lib.h>
+#include <ocidl.h>
 #include "WndPic.h"
 #include "id3v2/Tag.h"
 
@@ -7,7 +8,7 @@ class DlgEdit final : public lib::DialogModal {
 public:
 	virtual ~DlgEdit() { }
 
-	constexpr explicit DlgEdit(const std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{pTags} { }
+	constexpr explicit DlgEdit(const std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{pTags, _pic} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
@@ -26,10 +27,12 @@ private:
 
 	void _renderTitlebarCounts() const;
 	void _renderTextboxes() const;
+	void _loadPicture();
 	void _renderFramesList() const;
 	void _updateTagsWithTexts() const;
 
 	const std::vector<id3::Tag*>& _pTags;
+	lib::ComPtr<IPicture> _pic;
 	WndPic _wndPic;
 	bool _clickedOk = false;
 

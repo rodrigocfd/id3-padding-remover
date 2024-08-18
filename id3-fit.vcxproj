@@ -223,7 +223,6 @@
     <ClCompile Include="src\id3v2\util.cpp" />
     <ClCompile Include="src\id3v2\Tag.cpp" />
     <ClCompile Include="src\WndPic_events.cpp" />
-    <ClCompile Include="src\WndPic_funcs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc" />

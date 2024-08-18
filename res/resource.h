@@ -39,8 +39,9 @@
 #define TXT_LYRICIST                    1029
 #define CHK_COMMENT                     1030
 #define TXT_COMMENT                     1031
-#define BTN_UNCHECK                     1032
-#define LST_FRAMES                      1033
+#define LBL_PICSIZE                     1032
+#define BTN_UNCHECK                     1033
+#define LST_FRAMES                      1034
 #define MNU_FILE_OPEN                   40001
 #define MNU_FILE_EDIT                   40002
 #define MNU_FILE_REMOVE                 40003
@@ -55,7 +56,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40008
-#define _APS_NEXT_CONTROL_VALUE         1034
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

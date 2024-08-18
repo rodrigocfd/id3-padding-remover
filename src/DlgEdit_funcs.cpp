@@ -1,5 +1,9 @@
+#include <system_error>
 #include "DlgEdit.h"
+#include <Shlwapi.h>
+#include <olectl.h>
 #include "../res/resource.h"
+#pragma comment(lib, "Shlwapi.lib")
 
 void DlgEdit::_renderTitlebarCounts() const
 {
@@ -17,6 +21,31 @@ void DlgEdit::_renderTextboxes() const
 			lib::CheckRadio{this, field.chkId}.checkAndTrigger();
 			lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.setText(pFrame.value()->asText());
 		}
+	}
+}
+
+void DlgEdit::_loadPicture()
+{
+	if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, L"APIC"); pFrame.has_value()) {
+		auto pFramePic = pFrame.value()->dataAs<id3::Frame::Picture>();
+		lib::ComPtr<IStream> stream = lib::ComPtr{
+			SHCreateMemStream(pFramePic->bin.data(), static_cast<UINT>(pFramePic->bin.size())) };
+		if (HRESULT hr = OleLoadPicture(
+				stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] {
+			lib::NativeControl{this, LBL_PICSIZE}.setText(L"");
+			auto err = std::system_category().message(hr);
+			dlg.msgBox(L"Picture loading error", {}, lib::str::toWide(err), TDCBF_OK_BUTTON, TD_ERROR_ICON);
+		} else {
+			OLE_XSIZE_HIMETRIC hmx = 0;
+			OLE_YSIZE_HIMETRIC hmy = 0;
+			_pic->get_Width(&hmx);
+			_pic->get_Height(&hmy);
+			auto reso = lib::str::fmt(L"%d x %d pixels",
+				lib::dpi::himetricToPixelX(hmx, {}, hWnd()), lib::dpi::himetricToPixelY(hmy, {}, hWnd()));
+			lib::NativeControl{this, LBL_PICSIZE}.setText(reso);
+		}
+	} else {
+		lib::NativeControl{this, LBL_PICSIZE}.setText(L"");
 	}
 }
 

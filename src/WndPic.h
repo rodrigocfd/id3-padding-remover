@@ -7,7 +7,8 @@ class WndPic : public lib::CustomControl {
 public:
 	virtual ~WndPic() { }
 
-	constexpr explicit WndPic(const std::vector<id3::Tag*>& pTags) : _pTags{pTags} { }
+	constexpr explicit WndPic(const std::vector<id3::Tag*>& pTags, const lib::ComPtr<IPicture>& pic)
+		: _pTags{pTags}, _pic{pic} { }
 	WndPic(const WndPic&) = delete;
 	WndPic(WndPic&&) = delete;
 	WndPic& operator=(const WndPic&) = delete;
@@ -15,13 +16,8 @@ public:
 
 private:
 	LRESULT wndProc(UINT uMsg, WPARAM wp, LPARAM lp) override;
-	LRESULT onCreate();
 	LRESULT onPaint();
-	LRESULT onDestroy();
-
-	void _loadPic(std::span<BYTE> src);
-	void _renderPic(const PAINTSTRUCT& ps) const;
 
 	const std::vector<id3::Tag*>& _pTags;
-	lib::ComPtr<IPicture> _pic;
+	const lib::ComPtr<IPicture>& _pic;
 };

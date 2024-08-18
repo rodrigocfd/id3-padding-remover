@@ -58,6 +58,7 @@ INT_PTR DlgEdit::onInitDialog()
 
 	_renderTitlebarCounts();
 	_renderTextboxes();
+	_loadPicture();
 	_renderFramesList();
 	lv.columns[1].setWidthToFill();
 
