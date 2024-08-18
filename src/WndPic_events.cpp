@@ -1,8 +1,4 @@
-#include <system_error>
 #include "WndPic.h"
-#include <Shlwapi.h>
-#include <olectl.h>
-#pragma comment(lib, "Shlwapi.lib")
 
 LRESULT WndPic::wndProc(UINT uMsg, WPARAM wp, LPARAM lp)
 {
@@ -18,12 +14,7 @@ LRESULT WndPic::onCreate()
 {
 	if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, L"APIC"); pFrame.has_value()) {
 		auto pFramePic = pFrame.value()->dataAs<id3::Frame::Picture>();
-		auto stream = lib::ComPtr{SHCreateMemStream(pFramePic->bin.data(), static_cast<UINT>(pFramePic->bin.size()))};
-		if (HRESULT hr = OleLoadPicture(
-				stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] {
-			auto err = std::system_category().message(hr);
-			MessageBoxA(GetParent(hWnd()), err.c_str(), "Picture error", MB_ICONERROR);
-		}
+		_loadPic(pFramePic->bin);
 	}
 	return 0;
 }
@@ -32,17 +23,7 @@ LRESULT WndPic::onPaint()
 {
 	PAINTSTRUCT ps{};
 	HDC hdc = BeginPaint(hWnd(), &ps);
-
-	if (_pic.ptr()) {
-		OLE_XSIZE_HIMETRIC hmx = 0;
-		OLE_YSIZE_HIMETRIC hmy = 0;
-		_pic->get_Width(&hmx);
-		_pic->get_Height(&hmy);
-
-		RECT dummy{};
-		_pic->Render(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, 0, hmy, hmx, -hmy, &dummy);
-	}
-
+	_renderPic(ps);
 	EndPaint(hWnd(), &ps);
 	return 0;
 }

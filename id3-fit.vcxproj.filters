@@ -203,6 +203,9 @@
     <ClCompile Include="src\WndPic_events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\WndPic_funcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\id3-fit.rc">

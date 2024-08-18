@@ -19,6 +19,9 @@ private:
 	LRESULT onPaint();
 	LRESULT onDestroy();
 
+	void _loadPic(std::span<BYTE> src);
+	void _renderPic(const PAINTSTRUCT& ps) const;
+
 	const std::vector<id3::Tag*>& _pTags;
 	lib::ComPtr<IPicture> _pic;
 };
