@@ -9,7 +9,7 @@ public:
 	virtual ~DlgEdit() { }
 
 	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags)
-		: _pTags{pTags}, _wndPic{pTags, _pic} { }
+		: _pTags{pTags}, _wndPic{_pic} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
