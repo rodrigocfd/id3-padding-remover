@@ -56,10 +56,10 @@ INT_PTR DlgEdit::onInitDialog()
 		.setGridLines()
 		.columns.add({{L"Frame", 56}, {L"Value", 100}});
 
-	_renderTitlebarCounts();
-	_renderTextboxes();
-	_loadPicture();
-	_renderFramesList();
+	renderTitlebarCounts();
+	renderTextboxes();
+	loadPicture();
+	renderFramesList();
 	lv.columns[1].setWidthToFill();
 
 	return TRUE;
@@ -102,7 +102,7 @@ INT_PTR DlgEdit::onMnuFrameMove(bool isUp)
 			_pTags[0]->frames.begin() + item.index() + adjust);
 	}
 
-	_renderFramesList();
+	renderFramesList();
 	for (auto&& item : selItems)
 		lv.items[item.index() + adjust].select(); // re-select the moved items
 	if (focused.has_value())
@@ -121,7 +121,7 @@ INT_PTR DlgEdit::onBtnUncheck()
 
 INT_PTR DlgEdit::onBtnOk()
 {
-	_updateTagsWithTexts(); // the file saving itself is made by DlgMain
+	updateTagsWithTexts(); // the file saving itself is made by DlgMain
 	_clickedOk = true;
 	EndDialog(hWnd(), 0);
 	return TRUE;

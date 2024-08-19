@@ -3,7 +3,7 @@
 #include "../res/resource.h"
 using std::optional, std::vector, std::wstring, std::wstring_view;
 
-void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
+void DlgMain::addMp3sToList(const vector<wstring>& mp3s) const
 {
 	lib::ListView lv{this, LST_FILES};
 
@@ -26,17 +26,17 @@ void DlgMain::_addMp3sToList(const vector<wstring>& mp3s) const
 	for (const wstring& mp3 : mp3s) { // all files are MP3, let's add them
 		if (lib::path::isDir(mp3)) {
 			for (const wstring& f : lib::path::dirList(mp3 + L"\\*.mp3")) // search only 1 level deep
-				_addOneMp3ToList(f);
+				addOneMp3ToList(f);
 		} else {
-			_addOneMp3ToList(mp3);
+			addOneMp3ToList(mp3);
 		}
 	}
-	_updateNumFiles(lv.items.count());
+	updateNumFiles(lv.items.count());
 	lv.columns[0].setWidthToFill();
-	_sortList();
+	sortList();
 }
 
-void DlgMain::_addOneMp3ToList(wstring_view mp3) const
+void DlgMain::addOneMp3ToList(wstring_view mp3) const
 {
 	lib::ListView lv{this, LST_FILES};
 	int idxItem = -1;
@@ -60,10 +60,10 @@ void DlgMain::_addOneMp3ToList(wstring_view mp3) const
 		return;
 	}
 	item.setData(pTag);
-	_renderMp3ListItem(item);
+	renderMp3ListItem(item);
 }
 
-void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
+void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 {
 	auto pTag = item.data<const id3::Tag*>();
 
@@ -101,13 +101,13 @@ void DlgMain::_renderMp3ListItem(lib::ListView::Item item) const
 	}
 }
 
-void DlgMain::_updateNumFiles(UINT numFiles) const
+void DlgMain::updateNumFiles(UINT numFiles) const
 {
 	setText(lib::str::fmt(L"ID3 Fit (%d/%d)",
 		lib::ListView{this, LST_FILES}.items.countSelected(), numFiles));
 }
 
-void DlgMain::_sortList() const
+void DlgMain::sortList() const
 {
 	using lib::ListView;
 	ListView{this, LST_FILES}.items.sort([this](ListView::Item a, ListView::Item b) -> int {
@@ -127,7 +127,7 @@ void DlgMain::_sortList() const
 	});
 }
 
-void DlgMain::_saveSelected() const
+void DlgMain::saveSelected() const
 {
 	struct Fail final {
 		wstring file;

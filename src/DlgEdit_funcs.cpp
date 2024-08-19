@@ -5,7 +5,7 @@
 #include "../res/resource.h"
 #pragma comment(lib, "Shlwapi.lib")
 
-void DlgEdit::_renderTitlebarCounts() const
+void DlgEdit::renderTitlebarCounts() const
 {
 	if (_pTags.size() > 1) {
 		setText(lib::str::fmt(L"%s - %d files", text(), _pTags.size()));
@@ -14,7 +14,7 @@ void DlgEdit::_renderTitlebarCounts() const
 	}
 }
 
-void DlgEdit::_renderTextboxes() const
+void DlgEdit::renderTextboxes() const
 {
 	for (auto&& field : _Fields) {
 		if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, field.name4); pFrame.has_value()) {
@@ -24,7 +24,7 @@ void DlgEdit::_renderTextboxes() const
 	}
 }
 
-void DlgEdit::_loadPicture()
+void DlgEdit::loadPicture()
 {
 	if (auto pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, L"APIC"); pFrame.has_value()) {
 		auto pFramePic = pFrame.value()->dataAs<id3::Frame::Picture>();
@@ -49,7 +49,7 @@ void DlgEdit::_loadPicture()
 	}
 }
 
-void DlgEdit::_renderFramesList() const
+void DlgEdit::renderFramesList() const
 {
 	lib::ListView lv{this, LST_FRAMES};
 	lv.items.removeAll();
@@ -65,7 +65,7 @@ void DlgEdit::_renderFramesList() const
 	}
 }
 
-void DlgEdit::_updateTagsWithTexts() const
+void DlgEdit::updateTagsWithTexts() const
 {
 	for (auto&& field : _Fields) {
 		if (!lib::CheckRadio{this, field.chkId}.isChecked())

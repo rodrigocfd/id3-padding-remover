@@ -8,8 +8,7 @@ class DlgEdit final : public lib::DialogModal {
 public:
 	virtual ~DlgEdit() { }
 
-	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags)
-		: _pTags{pTags}, _wndPic{_pic} { }
+	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{_pic} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
@@ -26,11 +25,11 @@ private:
 	INT_PTR onBtnUncheck();
 	INT_PTR onBtnOk();
 
-	void _renderTitlebarCounts() const;
-	void _renderTextboxes() const;
-	void _loadPicture();
-	void _renderFramesList() const;
-	void _updateTagsWithTexts() const;
+	void renderTitlebarCounts() const;
+	void renderTextboxes() const;
+	void loadPicture();
+	void renderFramesList() const;
+	void updateTagsWithTexts() const;
 
 	std::vector<id3::Tag*>& _pTags;
 	lib::ComPtr<IPicture> _pic;

@@ -7,8 +7,7 @@ class WndPic : public lib::CustomControl {
 public:
 	virtual ~WndPic() { }
 
-	constexpr explicit WndPic(const lib::ComPtr<IPicture>& pic)
-		: _pic{pic} { }
+	constexpr explicit WndPic(const lib::ComPtr<IPicture>& pic) : _pic{pic} { }
 	WndPic(const WndPic&) = delete;
 	WndPic(WndPic&&) = delete;
 	WndPic& operator=(const WndPic&) = delete;

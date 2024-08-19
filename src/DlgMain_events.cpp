@@ -86,7 +86,7 @@ INT_PTR DlgMain::onInitDialog()
 
 void DlgMain::onDropTarget(const vector<wstring>& files)
 {
-	_addMp3sToList(files);
+	addMp3sToList(files);
 }
 
 INT_PTR DlgMain::onSize(WPARAM wp, LPARAM lp)
@@ -114,7 +114,7 @@ INT_PTR DlgMain::onMenuFileOpen()
 		{L"MP3 audio files", L"*.mp3"},
 		{L"All files", L"*.*"},
 	}); files.has_value()) {
-		_addMp3sToList(files.value());
+		addMp3sToList(files.value());
 	}
 	return TRUE;
 }
@@ -135,15 +135,15 @@ INT_PTR DlgMain::onMenuFileEdit()
 
 	if (dlgEdit.clickedOk()) {
 		for (auto&& item : selItems)
-			_renderMp3ListItem(item); // tags potentially changed, re-render them in the list
-		_saveSelected(); // DlgEdit won't save the files, just change the tags; we save them here
+			renderMp3ListItem(item); // tags potentially changed, re-render them in the list
+		saveSelected(); // DlgEdit won't save the files, just change the tags; we save them here
 	}
 	return TRUE;
 }
 
 INT_PTR DlgMain::onMenuFileReSave()
 {
-	_saveSelected();
+	saveSelected();
 	return TRUE;
 }
 
@@ -166,7 +166,7 @@ INT_PTR DlgMain::onMenuFileAbout()
 
 INT_PTR DlgMain::onListItemChanged()
 {
-	_updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
+	updateNumFiles(lib::ListView{this, LST_FILES}.items.count());
 	return TRUE;
 }
 
@@ -176,7 +176,7 @@ INT_PTR DlgMain::onListDeleteItem(LPARAM lp)
 	auto pNmlv = reinterpret_cast<NMLISTVIEW*>(lp);
 	auto pTag = lv.items[pNmlv->iItem].data<id3::Tag*>();
 	delete pTag;
-	_updateNumFiles(lv.items.count() - 1); // notification is sent before the item is removed
+	updateNumFiles(lv.items.count() - 1); // notification is sent before the item is removed
 	return TRUE;
 }
 
@@ -190,6 +190,6 @@ INT_PTR DlgMain::onListHeaderClick(LPARAM lp)
 	lv.columns[pNmh->iItem].setSortArrow(willSortAsc ? HDF_SORTUP : HDF_SORTDOWN); // draw arrow
 	_sort = {.col = pNmh->iItem, .asc = willSortAsc}; // update state
 
-	_sortList();
+	sortList();
 	return TRUE;
 }
