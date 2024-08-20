@@ -6,13 +6,6 @@ using std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
-bool Frame::Comment::operator==(const Comment& other) const
-{
-	return str::eqI(lang3, other.lang3)
-		&& descr == other.descr
-		&& text == other.text;
-}
-
 LPCWSTR Frame::Picture::TypeToText(Type t)
 {
 	using enum Type;
@@ -63,16 +56,17 @@ Frame::Frame(span<BYTE> src)
 
 Frame::Frame(wstring_view name4, wstring_view textContent)
 {
-	lstrcpyW(this->name4, name4.data());
+	this->name4 = name4;
+
 	if (str::eqI(name4, L"COMM")) { // comment frame
-		auto comm = Comment{};
-		lstrcpyW(comm.lang3, L"eng");
-		comm.text = textContent;
-		data = std::move(comm);
+		data = Comment{
+			.lang3 = L"eng",
+			.text = textContent.data(),
+		};
 	} else {
-		auto txt = Text{}; // assume simple text frame
-		txt.text = textContent;
-		data = std::move(txt);
+		data = Text{ // assume simple text frame
+			.text = textContent.data(),
+		};
 	}
 }
 
@@ -119,7 +113,7 @@ void Frame::forceText(wstring_view text)
 			throw std::invalid_argument("Can't assign text to binary frame");
 		},
 		[&text](Comment& c) {
-			lstrcpyW(c.lang3, L"eng");
+			c.lang3 = L"eng";
 			c.descr = L"";
 			c.text = text;
 		},
@@ -144,7 +138,7 @@ size_t Frame::serialize(vector<BYTE>& dest) const
 	return sz + 10; // count 10-byte frame header
 }
 
-Frame::Data Frame::_ParseData(WCHAR name4[4], span<BYTE> src)
+Frame::Data Frame::_ParseData(wstring_view name4, span<BYTE> src)
 {
 	if (str::eq(name4, L"COMM")) {
 		return _ParseComm(src);

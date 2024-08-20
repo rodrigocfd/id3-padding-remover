@@ -1,9 +1,6 @@
 #pragma once
-#include <array>
-#include <span>
 #include <variant>
-#include <vector>
-#include <Windows.h>
+#include <windlg/lib.h>
 
 namespace id3 {
 
@@ -22,10 +19,10 @@ struct Frame final {
 		constexpr bool operator==(const Binary&) const = default;
 	};
 	struct Comment final {
-		WCHAR lang3[4] = {L'\0'};
+		std::wstring lang3 = lib::str::newResized(3);
 		std::wstring descr;
 		std::wstring text;
-		bool operator==(const Comment&) const;
+		constexpr bool operator==(const Comment&) const = default;
 	};
 	struct Picture final {
 		enum class Type: BYTE {
@@ -61,9 +58,9 @@ struct Frame final {
 	};
 	using Data = std::variant<Text, UserText, Binary, Comment, Picture>;
 
-	WCHAR name4[5] = {L'\0'};
+	std::wstring name4 = lib::str::newResized(4);
 	UINT declaredSize = 0; // used only at parsing
-	std::array<BYTE, 2> flags;
+	std::array<BYTE, 2> flags = {0x00, 0x00};
 	Data data;
 
 	Frame() = delete;
@@ -84,7 +81,7 @@ struct Frame final {
 	template<typename T> [[nodiscard]] constexpr T* dataAs() { return std::get_if<T>(&data); }
 
 private:
-	[[nodiscard]] static Data _ParseData(WCHAR name4[4], std::span<BYTE> src);
+	[[nodiscard]] static Data _ParseData(std::wstring_view name4, std::span<BYTE> src);
 	[[nodiscard]] static Comment _ParseComm(std::span<BYTE> src);
 	[[nodiscard]] static Picture _ParseApic(std::span<BYTE> src);
 	size_t _serializeData(std::vector<BYTE>& dest) const;
