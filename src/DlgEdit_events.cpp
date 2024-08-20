@@ -56,6 +56,9 @@ INT_PTR DlgEdit::onInitDialog()
 		.setGridLines()
 		.columns.add({{L"Frame", 56}, {L"Value", 100}});
 
+	if (_pTags.size() == 1)
+		_reorderedFrames = _pTags[0]->frames; // copy all frames into the back-buffer
+
 	renderTitlebarCounts();
 	renderTextboxes();
 	loadPicture();
@@ -95,18 +98,24 @@ INT_PTR DlgEdit::onMnuFrameMove(bool isUp)
 	lib::ListView lv{this, LST_FRAMES};
 	auto selItems = lv.items.selected();
 	auto focused = lv.items.focused();
-	int adjust = isUp ? -1 : 1;
-
-	for (auto&& item : selItems) {
-		std::iter_swap(_pTags[0]->frames.begin() + item.index(), // frames are shown only with 1 tag 
-			_pTags[0]->frames.begin() + item.index() + adjust);
+	
+	if (isUp) {
+		for (auto&& item : selItems) {
+			std::iter_swap(_reorderedFrames.begin() + item.index() - 1,
+				_reorderedFrames.begin() + item.index());
+		}
+	} else {
+		for (auto it = selItems.rbegin(); it != selItems.rend(); ++it) {
+			std::iter_swap(_reorderedFrames.begin() + it->index(),
+				_reorderedFrames.begin() + it->index() + 1);
+		}
 	}
 
 	renderFramesList();
 	for (auto&& item : selItems)
-		lv.items[item.index() + adjust].select(); // re-select the moved items
+		lv.items[item.index() + (isUp ? -1 : 1)].select(); // re-select the moved items
 	if (focused.has_value())
-		lv.items[focused.value().index() + adjust].focus();
+		lv.items[focused.value().index() + (isUp ? -1 : 1)].focus();
 
 	return TRUE;
 }
@@ -121,6 +130,9 @@ INT_PTR DlgEdit::onBtnUncheck()
 
 INT_PTR DlgEdit::onBtnOk()
 {
+	if (_pTags.size() == 1)
+		_pTags[0]->frames = std::move(_reorderedFrames);
+
 	updateTagsWithTexts(); // the file saving itself is made by DlgMain
 	_clickedOk = true;
 	EndDialog(hWnd(), 0);

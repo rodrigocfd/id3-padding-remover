@@ -55,7 +55,7 @@ void DlgEdit::renderFramesList() const
 	lv.items.removeAll();
 
 	if (_pTags.size() == 1) {
-		for (const id3::Frame& frame : _pTags[0]->frames) {
+		for (auto&& frame : _reorderedFrames) {
 			auto strFrame = frame.asText();
 			lv.items.add(frame.name4, {strFrame});
 		}

@@ -32,6 +32,7 @@ private:
 	void updateTagsWithTexts() const;
 
 	std::vector<id3::Tag*>& _pTags;
+	std::vector<id3::Frame> _reorderedFrames; // filled if only 1 tag is loaded
 	lib::ComPtr<IPicture> _pic;
 	WndPic _wndPic;
 	bool _clickedOk = false;

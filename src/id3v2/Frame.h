@@ -64,9 +64,9 @@ struct Frame final {
 	Data data;
 
 	Frame() = delete;
-	Frame(const Frame&) = delete;
+	constexpr Frame(const Frame&) = default;
 	constexpr Frame(Frame&&) = default;
-	Frame& operator=(const Frame&) = delete;
+	constexpr Frame& operator=(const Frame&) = default;
 	constexpr Frame& operator=(Frame&&) = default;
 
 	explicit Frame(std::span<BYTE> src);
