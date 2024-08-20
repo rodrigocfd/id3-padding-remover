@@ -22,7 +22,7 @@ struct Frame final {
 		std::wstring lang3 = lib::str::newResized(3);
 		std::wstring descr;
 		std::wstring text;
-		constexpr bool operator==(const Comment&) const = default;
+		bool operator==(const Comment& other) const;
 	};
 	struct Picture final {
 		enum class Type: BYTE {

@@ -6,6 +6,13 @@ using std::span, std::vector, std::wstring, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
+bool Frame::Comment::operator==(const Comment& other) const
+{
+	return str::eqI(lang3, other.lang3)
+		&& descr == other.descr
+		&& text == other.text;
+}
+
 LPCWSTR Frame::Picture::TypeToText(Type t)
 {
 	using enum Type;
