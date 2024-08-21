@@ -77,8 +77,7 @@ void DlgEdit::updateTagsWithTexts() const
 		for (auto&& pTag : _pTags) {
 			if (auto pFrame = pTag->frameByName4(field.name4); pFrame.has_value()) { // the frame already exists in this tag
 				if (text.empty()) { // empty text will remove the frame
-					lib::vec::removeIf(pTag->frames,
-						[&field](const id3::Frame& f) { return lib::str::eqI(f.name4, field.name4); }); // will fail with TXXX frames
+					pTag->removeFrameByName4(field.name4); // note: with TXXX, will remove all TXXX
 				} else {
 					pFrame.value()->forceText(text);
 				}

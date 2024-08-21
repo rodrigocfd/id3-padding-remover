@@ -24,6 +24,7 @@ struct Tag final {
 	bool operator==(const Tag&) const = default;
 	[[nodiscard]] std::optional<const Frame*> frameByName4(std::wstring_view name4) const;
 	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4);
+	void removeFrameByName4(std::wstring_view name4);
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
 	void saveToFile() const;
 

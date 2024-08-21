@@ -38,6 +38,13 @@ optional<Frame*> Tag::frameByName4(wstring_view name4)
 	return pFrame.has_value() ? optional{const_cast<Frame*>(pFrame.value())} : std::nullopt;
 }
 
+void Tag::removeFrameByName4(wstring_view name4)
+{
+	lib::vec::removeIf(frames, [name4](const id3::Frame& f) {
+		return lib::str::eqI(f.name4, name4);
+	});
+}
+
 LPCWSTR Tag::replayGainStatus() const
 {
 	bool hasTrack = false;
