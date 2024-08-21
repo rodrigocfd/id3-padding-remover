@@ -100,7 +100,7 @@ wstring Frame::asText() const
 			return c.descr.empty() ? c.text : (c.descr + L" " + c.text);
 		},
 		[](const Picture& p) {
-			return str::fmt(L"%s %s, %s",
+			return str::fmt(L"%s %s %s",
 				Picture::TypeToText(p.type), p.mime, str::fmtBytes(p.bin.size()));
 		},
 	}, data);

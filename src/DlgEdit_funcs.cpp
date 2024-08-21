@@ -32,9 +32,9 @@ void DlgEdit::loadPicture()
 			SHCreateMemStream(pFramePic->bin.data(), static_cast<UINT>(pFramePic->bin.size())) };
 		if (HRESULT hr = OleLoadPicture(
 				stream.ptr(), 0, FALSE, IID_IPicture, reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] {
-			lib::NativeControl{this, LBL_PICSIZE}.setText(L"");
 			auto err = std::system_category().message(hr);
 			dlg.msgBox(L"Picture loading error", {}, lib::str::toWide(err), TDCBF_OK_BUTTON, TD_ERROR_ICON);
+			lib::NativeControl{this, LBL_PICSIZE}.setText(L"Image failed to load");
 		} else {
 			OLE_XSIZE_HIMETRIC hmx = 0;
 			OLE_YSIZE_HIMETRIC hmy = 0;
