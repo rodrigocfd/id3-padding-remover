@@ -134,6 +134,10 @@ INT_PTR DlgEdit::onBtnOk()
 		_pTags[0]->frames = std::move(_reorderedFrames);
 
 	updateTagsWithTexts(); // the file saving itself is made by DlgMain
+	
+	for (auto&& pTag : _pTags)
+		pTag->mp3Offset = 0; // when saved, padding is zeroed
+
 	_clickedOk = true;
 	EndDialog(hWnd(), 0);
 	return TRUE;
