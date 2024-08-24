@@ -29,6 +29,7 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 				case CHK_COMMENT:        return onChk(wp);
 				case MNU_FRAME_MOVEUP:   return onMnuFrameMove(true);
 				case MNU_FRAME_MOVEDOWN: return onMnuFrameMove(false);
+				case MNU_FRAME_DELETE:   return onMnuFrameDelete();
 				case BTN_UNCHECK:        return onBtnUncheck();
 				case IDOK:               return onBtnOk();
 				case IDCANCEL:           PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
@@ -73,9 +74,11 @@ INT_PTR DlgEdit::onInitMenuPopup(WPARAM wp)
 	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
 	if (popupMenu.idByPos(0) == MNU_FRAME_MOVEUP) {
 		lib::ListView lv{this, LST_FRAMES};
-		UINT numSel = lv.items.countSelected();
-		popupMenu.enableItemsByCmd({MNU_FRAME_MOVEUP}, numSel > 0 && !lv.items[0].isSelected());
-		popupMenu.enableItemsByCmd({MNU_FRAME_MOVEDOWN}, numSel > 0 && !lv.items[lv.items.count() - 1].isSelected());
+		bool hasSel = lv.items.countSelected() > 0;
+		bool oneTag = _pTags.size() == 1;
+		popupMenu.enableItemsByCmd({MNU_FRAME_MOVEUP}, oneTag && hasSel && !lv.items[0].isSelected());
+		popupMenu.enableItemsByCmd({MNU_FRAME_MOVEDOWN}, oneTag && hasSel && !lv.items[lv.items.count() - 1].isSelected());
+		popupMenu.enableItemsByCmd({MNU_FRAME_DELETE}, oneTag && hasSel);
 	}
 	return TRUE;
 }
@@ -117,6 +120,35 @@ INT_PTR DlgEdit::onMnuFrameMove(bool isUp)
 	if (focused.has_value())
 		lv.items[focused.value().index() + (isUp ? -1 : 1)].focus();
 
+	return TRUE;
+}
+
+INT_PTR DlgEdit::onMnuFrameDelete()
+{
+	lib::ListView lv{this, LST_FRAMES};
+	auto selItems = lv.items.selected();
+	int resp = IDCANCEL;
+
+	if (selItems.size() == 1) {
+		resp = dlg.msgBox(L"Delete frame", {},
+			lib::str::fmt(L"Delete the frame %s?", _reorderedFrames[selItems[0].index()].name4),
+			TDCBF_OK_BUTTON | TDCBF_CANCEL_BUTTON, TD_WARNING_ICON);
+	} else {
+		resp = dlg.msgBox(L"Delete frames", {}, lib::str::fmt(L"Delete %d frames?", selItems.size()),
+			TDCBF_OK_BUTTON | TDCBF_CANCEL_BUTTON, TD_WARNING_ICON);
+	}
+	
+	if (resp == IDOK) {
+		for (auto it = selItems.rbegin(); it != selItems.rend(); ++it)
+			lib::vec::remove(_reorderedFrames, it->index());
+
+		renderTitlebarCounts();
+		renderTextboxes();
+		loadPicture();
+		renderFramesList();
+		lv.columns[1].setWidthToFill();
+		InvalidateRect(_wndPic.hWnd(), nullptr, TRUE);
+	}
 	return TRUE;
 }
 
