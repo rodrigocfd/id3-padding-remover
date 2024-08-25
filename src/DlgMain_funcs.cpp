@@ -101,6 +101,24 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 	}
 }
 
+void DlgMain::deletePicRg(const vector<lib::ListView::Item>& items, bool delRg)
+{
+	for (auto&& item : items) {
+		auto pTag = item.data<id3::Tag*>();
+		lib::vec::removeIf(pTag->frames, [](const id3::Frame& f) {
+			if (lib::str::eqI(L"APIC", f.name4)) {
+				return true;
+			} else if (lib::str::eqI(L"TXXX", f.name4)) {
+				if (auto pData = f.dataAs<id3::Frame::UserText>(); pData) {
+					return lib::str::startsWithI(pData->descr, L"replaygain_track_")
+						|| lib::str::startsWithI(pData->descr, L"replaygain_album_");
+				}
+			}
+			return false;
+		});
+	}
+}
+
 void DlgMain::updateNumFiles(UINT numFiles) const
 {
 	setText(lib::str::fmt(L"ID3 Fit (%d/%d)",

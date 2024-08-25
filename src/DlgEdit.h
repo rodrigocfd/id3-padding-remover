@@ -21,8 +21,8 @@ private:
 	INT_PTR onInitDialog();
 	INT_PTR onInitMenuPopup(WPARAM wp);
 	INT_PTR onChk(WPARAM wp);
-	INT_PTR onMnuFrameMove(bool isUp);
-	INT_PTR onMnuFrameDelete();
+	INT_PTR onMenuFrameMove(bool isUp);
+	INT_PTR onMenuFrameDelete();
 	INT_PTR onBtnUncheck();
 	INT_PTR onBtnOk();
 

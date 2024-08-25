@@ -54,7 +54,7 @@ LPCWSTR Tag::replayGainStatus() const
 		if (hasTrack && hasAlbum) break;
 
 		if (lib::str::eqI(frame.name4, L"TXXX")) {
-			if (auto pData = frame.dataAs<Frame::UserText>()) {
+			if (auto pData = frame.dataAs<Frame::UserText>(); pData) {
 				if (lib::str::startsWithI(pData->descr, L"replaygain_track_"))
 					hasTrack = true;
 				else if (lib::str::startsWithI(pData->descr, L"replaygain_album_"))

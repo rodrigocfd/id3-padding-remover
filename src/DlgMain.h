@@ -21,6 +21,7 @@ private:
 	INT_PTR onMenuFileEdit();
 	INT_PTR onMenuFileReSave();
 	INT_PTR onMenuFileRemove();
+	INT_PTR onMenuFileDelPicRg(bool delRg);
 	INT_PTR onMenuFileAbout();
 	INT_PTR onListItemChanged();
 	INT_PTR onListDeleteItem(LPARAM lp);
@@ -29,6 +30,7 @@ private:
 	void addMp3sToList(const std::vector<std::wstring>& mp3s) const;
 	void addOneMp3ToList(std::wstring_view mp3) const;
 	void renderMp3ListItem(lib::ListView::Item item) const;
+	void deletePicRg(const std::vector<lib::ListView::Item>& items, bool delRg);
 	void updateNumFiles(UINT numFiles) const;
 	void sortList() const;
 	void saveSelected() const;

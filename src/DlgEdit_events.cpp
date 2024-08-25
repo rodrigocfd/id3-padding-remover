@@ -27,9 +27,9 @@ INT_PTR DlgEdit::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 				case CHK_COMPOSER:
 				case CHK_LYRICIST:
 				case CHK_COMMENT:        return onChk(wp);
-				case MNU_FRAME_MOVEUP:   return onMnuFrameMove(true);
-				case MNU_FRAME_MOVEDOWN: return onMnuFrameMove(false);
-				case MNU_FRAME_DELETE:   return onMnuFrameDelete();
+				case MNU_FRAME_MOVEUP:   return onMenuFrameMove(true);
+				case MNU_FRAME_MOVEDOWN: return onMenuFrameMove(false);
+				case MNU_FRAME_DELETE:   return onMenuFrameDelete();
 				case BTN_UNCHECK:        return onBtnUncheck();
 				case IDOK:               return onBtnOk();
 				case IDCANCEL:           PostMessageW(hWnd(), WM_CLOSE, 0, 0); return TRUE;
@@ -96,7 +96,7 @@ INT_PTR DlgEdit::onChk(WPARAM wp)
 	return TRUE;
 }
 
-INT_PTR DlgEdit::onMnuFrameMove(bool isUp)
+INT_PTR DlgEdit::onMenuFrameMove(bool isUp)
 {
 	lib::ListView lv{this, LST_FRAMES};
 	auto selItems = lv.items.selected();
@@ -123,7 +123,7 @@ INT_PTR DlgEdit::onMnuFrameMove(bool isUp)
 	return TRUE;
 }
 
-INT_PTR DlgEdit::onMnuFrameDelete()
+INT_PTR DlgEdit::onMenuFrameDelete()
 {
 	lib::ListView lv{this, LST_FRAMES};
 	auto selItems = lv.items.selected();

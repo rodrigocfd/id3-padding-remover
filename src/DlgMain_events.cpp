@@ -21,12 +21,14 @@ INT_PTR DlgMain::dlgProc(UINT uMsg, WPARAM wp, LPARAM lp)
 		case WM_INITMENUPOPUP: return onInitMenuPopup(wp);
 		case WM_COMMAND:
 			switch (LOWORD(wp)) {
-				case MNU_FILE_OPEN:   return onMenuFileOpen();
-				case MNU_FILE_EDIT:   return onMenuFileEdit();
-				case MNU_FILE_RESAVE: return onMenuFileReSave();
-				case MNU_FILE_REMOVE: return onMenuFileRemove();
-				case MNU_FILE_ABOUT:  return onMenuFileAbout();
-				default:              return FALSE;
+				case MNU_FILE_OPEN:     return onMenuFileOpen();
+				case MNU_FILE_EDIT:     return onMenuFileEdit();
+				case MNU_FILE_RESAVE:   return onMenuFileReSave();
+				case MNU_FILE_REMOVE:   return onMenuFileRemove();
+				case MNU_FILE_DELPIC:   return onMenuFileDelPicRg(false);
+				case MNU_FILE_DELPICRG: return onMenuFileDelPicRg(true);
+				case MNU_FILE_ABOUT:    return onMenuFileAbout();
+				default:                return FALSE;
 			}
 		case WM_NOTIFY:
 			switch (reinterpret_cast<NMHDR*>(lp)->idFrom) {
@@ -102,7 +104,7 @@ INT_PTR DlgMain::onInitMenuPopup(WPARAM wp)
 	lib::Menu popupMenu{reinterpret_cast<HMENU>(wp)};
 	if (popupMenu.idByPos(0) == MNU_FILE_OPEN) {
 		popupMenu.setDefaultItemByCmd(MNU_FILE_EDIT);
-		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_RESAVE, MNU_FILE_REMOVE},
+		popupMenu.enableItemsByCmd({MNU_FILE_EDIT, MNU_FILE_RESAVE, MNU_FILE_REMOVE, MNU_FILE_DELPIC, MNU_FILE_DELPICRG},
 			lib::ListView{this, LST_FILES}.items.countSelected() > 0);
 	}
 	return TRUE;
@@ -150,6 +152,22 @@ INT_PTR DlgMain::onMenuFileReSave()
 INT_PTR DlgMain::onMenuFileRemove()
 {
 	lib::ListView{this, LST_FILES}.items.removeSelected();
+	return TRUE;
+}
+
+INT_PTR DlgMain::onMenuFileDelPicRg(bool delRg)
+{
+	auto selItems = lib::ListView{this, LST_FILES}.items.selected();
+
+	auto msg = delRg ? lib::str::fmt(L"Delete picture and ReplayGain frames from %d file(s)?", selItems.size())
+		: lib::str::fmt(L"Delete picture frames from %d file(s)?", selItems.size());
+
+	if (dlg.msgBox(L"Delete frames", {}, msg, TDCBF_OK_BUTTON | TDCBF_CANCEL_BUTTON, TD_WARNING_ICON) == IDOK) {
+		deletePicRg(selItems, delRg);
+		for (auto&& item : selItems)
+			renderMp3ListItem(item);
+		saveSelected();
+	}
 	return TRUE;
 }
 
