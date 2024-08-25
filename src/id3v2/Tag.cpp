@@ -23,19 +23,18 @@ Tag::Tag(wstring_view mp3)
 	frames = std::move(framesNfo.frames);
 }
 
-optional<const Frame*> Tag::frameByName4(wstring_view name4) const
+const Frame* Tag::frameByName4(wstring_view name4) const
 {
 	for (const Frame& frame : frames) {
 		if (lib::str::eqI(frame.name4, name4))
 			return &frame;
 	}
-	return std::nullopt;
+	return nullptr; // no such frame
 }
 
-optional<Frame*> Tag::frameByName4(wstring_view name4)
+Frame* Tag::frameByName4(wstring_view name4)
 {
-	auto pFrame = const_cast<const Tag*>(this)->frameByName4(name4); // https://stackoverflow.com/a/856839/6923555
-	return pFrame.has_value() ? optional{const_cast<Frame*>(pFrame.value())} : std::nullopt;
+	return const_cast<Frame*>( const_cast<const Tag*>(this)->frameByName4(name4) ); // https://stackoverflow.com/a/856839/6923555
 }
 
 void Tag::removeFrameByName4(wstring_view name4)
@@ -86,27 +85,27 @@ void Tag::saveToFile() const
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
 }
 
-optional<Frame*> Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
+Frame* Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
 {
 	if (tags.empty()) {
-		return std::nullopt;
+		return nullptr;
 	} else if (tags.size() == 1) {
 		return tags[0]->frameByName4(name4);
 	} else {
-		auto maybeFrame0 = tags[0]->frameByName4(name4);
-		if (!maybeFrame0.has_value())
-			return std::nullopt;
+		Frame* pFrame0 = tags[0]->frameByName4(name4);
+		if (!pFrame0)
+			return nullptr;
 
-		bool isSame = lib::vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, &maybeFrame0](const Tag* pTag) -> bool {
-			auto maybeFrameN = pTag->frameByName4(name4);
-			if (maybeFrame0.has_value() && maybeFrameN.has_value()) {
-				return *maybeFrame0.value() == *maybeFrameN.value();
+		bool isSame = lib::vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, pFrame0](const Tag* pTag) -> bool {
+			const Frame* pFrameN = pTag->frameByName4(name4);
+			if (pFrame0 && pFrameN) {
+				return *pFrame0 == *pFrameN; // compare actual objects
 			} else {
-				return maybeFrame0 == maybeFrameN;
+				return pFrame0 == pFrameN; // simply compare pointers
 			}
 		});
 
-		return isSame ? maybeFrame0 : std::nullopt;
+		return isSame ? pFrame0 : nullptr;
 	}
 }
 
@@ -175,9 +174,9 @@ Tag::FramesInfo Tag::_ParseFrames(span<BYTE> src)
 
 optional<size_t> Tag::_apicSize() const
 {
-	if (optional<const Frame*> frame = frameByName4(L"APIC"); frame.has_value()) {
-		auto pFramePic = frame.value()->dataAs<Frame::Picture>();
-		return pFramePic->bin.size();
+	if (auto pFrame = frameByName4(L"APIC"); pFrame) {
+		auto pData = pFrame->dataAs<Frame::Picture>();
+		return {pData->bin.size()};
 	}
 	return std::nullopt;
 }

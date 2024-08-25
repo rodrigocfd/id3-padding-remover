@@ -1,7 +1,7 @@
 #include "DlgMain.h"
 #include "id3v2/Tag.h"
 #include "../res/resource.h"
-using std::optional, std::vector, std::wstring, std::wstring_view;
+using std::vector, std::wstring, std::wstring_view;
 
 void DlgMain::addMp3sToList(const vector<wstring>& mp3s) const
 {
@@ -68,16 +68,16 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 	auto pTag = item.data<const id3::Tag*>();
 
 	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
-		if (optional<const id3::Frame*> frame = pTag->frameByName4(name4); frame.has_value()) {
-			auto pFrameText = frame.value()->dataAs<id3::Frame::Text>();
-			item.setText(pFrameText->text, col);
+		if (auto pFrame = pTag->frameByName4(name4); pFrame) {
+			auto pData = pFrame->dataAs<id3::Frame::Text>();
+			item.setText(pData->text, col);
 		} else {
 			item.setText(L"", col); // removed frames need to have their text erased
 		}
 	};
 
 	item.setText(std::to_wstring(pTag->padding), 1);
-	if (auto pic = pTag->frameByName4(L"APIC"); pic.has_value()) {
+	if (auto pFrame = pTag->frameByName4(L"APIC"); pFrame) {
 		item.setText(L"\u2713", 2); // checkmark
 	} else {
 		item.setText(L"", 2);
@@ -93,9 +93,9 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 	renderSimple(L"TCOM", 11);
 	renderSimple(L"TEXT", 12);
 	renderSimple(L"TOPE", 13);
-	if (auto comm = pTag->frameByName4(L"COMM"); comm.has_value()) {
-		auto pFrameComm = comm.value()->dataAs<id3::Frame::Comment>();
-		item.setText(pFrameComm->text, 14);
+	if (auto pFrame = pTag->frameByName4(L"COMM"); pFrame) {
+		auto pData = pFrame->dataAs<id3::Frame::Comment>();
+		item.setText(pData->text, 14);
 	} else {
 		item.setText(L"", 14);
 	}

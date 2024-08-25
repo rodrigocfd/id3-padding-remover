@@ -22,13 +22,13 @@ struct Tag final {
 	explicit Tag(std::wstring_view mp3);
 	
 	bool operator==(const Tag&) const = default;
-	[[nodiscard]] std::optional<const Frame*> frameByName4(std::wstring_view name4) const;
-	[[nodiscard]] std::optional<Frame*> frameByName4(std::wstring_view name4);
+	[[nodiscard]] const Frame* frameByName4(std::wstring_view name4) const;
+	[[nodiscard]] Frame* frameByName4(std::wstring_view name4);
 	void removeFrameByName4(std::wstring_view name4);
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
 	void saveToFile() const;
 
-	[[nodiscard]] static std::optional<Frame*> SameFrameAcrossAllTags(const std::vector<Tag*>& tags, std::wstring_view name4);
+	[[nodiscard]] static Frame* SameFrameAcrossAllTags(const std::vector<Tag*>& tags, std::wstring_view name4);
 
 private:
 	struct HeaderInfo final {
