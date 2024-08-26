@@ -152,16 +152,6 @@ void util::serializeInPlaceUintBe(UINT n, vector<BYTE>::iterator dest)
 	 *(dest + 3) = LOBYTE(LOWORD(n));
 }
 
-optional<size_t> util::positionOf2(span<BYTE> src, BYTE elem1, BYTE elem2)
-{
-	for (size_t i = 0; i < src.size() - 1; ++i) {
-		if (src[i] == elem1 && src[i + 1] == elem2)
-			return {i};
-	}
-	return std::nullopt;
-}
-
-
 
 UINT util::syncSafe::encode(UINT num)
 {

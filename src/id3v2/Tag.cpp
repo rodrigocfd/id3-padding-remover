@@ -10,7 +10,7 @@ using namespace id3;
 Tag::Tag(wstring_view mp3)
 	: path{mp3}
 {
-	lib::FileMapped f{mp3, lib::FileMapped::Access::ExistingReadOnly};
+	FileMapped f{mp3, FileMapped::Access::ExistingReadOnly};
 	span<BYTE> src = f.asSpan();
 	
 	HeaderInfo headerNfo = _ParseHeader(src);
@@ -26,7 +26,7 @@ Tag::Tag(wstring_view mp3)
 const Frame* Tag::frameByName4(wstring_view name4) const
 {
 	for (const Frame& frame : frames) {
-		if (lib::str::eqI(frame.name4, name4))
+		if (str::eqI(frame.name4, name4))
 			return &frame;
 	}
 	return nullptr; // no such frame
@@ -39,8 +39,8 @@ Frame* Tag::frameByName4(wstring_view name4)
 
 void Tag::removeFrameByName4(wstring_view name4)
 {
-	lib::vec::removeIf(frames, [name4](const id3::Frame& f) {
-		return lib::str::eqI(f.name4, name4);
+	vec::removeIf(frames, [name4](const id3::Frame& f) {
+		return str::eqI(f.name4, name4);
 	});
 }
 
@@ -52,11 +52,11 @@ LPCWSTR Tag::replayGainStatus() const
 	for (const Frame& frame : frames) {
 		if (hasTrack && hasAlbum) break;
 
-		if (lib::str::eqI(frame.name4, L"TXXX")) {
+		if (str::eqI(frame.name4, L"TXXX")) {
 			if (auto pData = frame.dataAs<Frame::UserText>(); pData) {
-				if (lib::str::startsWithI(pData->descr, L"replaygain_track_"))
+				if (str::startsWithI(pData->descr, L"replaygain_track_"))
 					hasTrack = true;
-				else if (lib::str::startsWithI(pData->descr, L"replaygain_album_"))
+				else if (str::startsWithI(pData->descr, L"replaygain_album_"))
 					hasAlbum = true;
 			}
 		}
@@ -73,7 +73,7 @@ void Tag::saveToFile() const
 	if (path.empty())
 		throw std::runtime_error("Tag has no path");
 
-	lib::File fout{path, lib::File::Access::ExistingRW};
+	File fout{path, File::Access::ExistingRW};
 	vector<BYTE> currentContents = fout.readAll();
 	HeaderInfo headerNfo = _ParseHeader(currentContents);
 
@@ -96,7 +96,7 @@ Frame* Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
 		if (!pFrame0)
 			return nullptr;
 
-		bool isSame = lib::vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, pFrame0](const Tag* pTag) -> bool {
+		bool isSame = vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, pFrame0](const Tag* pTag) -> bool {
 			const Frame* pFrameN = pTag->frameByName4(name4);
 			if (pFrame0 && pFrameN) {
 				return *pFrame0 == *pFrameN; // compare actual objects
@@ -114,7 +114,7 @@ Tag::HeaderInfo Tag::_ParseHeader(span<BYTE> src)
 	HeaderInfo nfo{};
 
 	// Retrieve MP3 offset.
-	optional<size_t> maybeMp3Offset = util::positionOf2(src, 0xff, 0xfb); // https://stackoverflow.com/a/7302482/6923555
+	optional<size_t> maybeMp3Offset = vec::positionSeq(src, {0xff, 0xfb}); // https://stackoverflow.com/a/7302482/6923555
 	if (!maybeMp3Offset.has_value()) [[unlikely]] {
 		throw std::runtime_error("No MP3 signature found");
 	}

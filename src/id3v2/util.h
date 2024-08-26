@@ -27,7 +27,6 @@ void serializeChars(std::wstring_view chars, std::vector<BYTE>& dest);
 
 [[nodiscard]] UINT uintFromBeBytes(std::span<BYTE> src);
 void serializeInPlaceUintBe(UINT n, std::vector<BYTE>::iterator dest);
-[[nodiscard]] std::optional<size_t> positionOf2(std::span<BYTE> src, BYTE elem1, BYTE elem2);
 
 namespace syncSafe {
 	[[nodiscard]] UINT encode(UINT num);

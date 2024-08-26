@@ -223,7 +223,7 @@ Frame::Picture Frame::_ParseApic(span<BYTE> src)
 			picture.descr = std::move(texts[0]);
 		src = descrParts[1];
 	} else { // Unicode
-		size_t idxZero = util::positionOf2(src, 0x00, 0x01).value();
+		size_t idxZero = vec::positionSeq(src, {0x00, 0x01}).value();
 		vector<wstring> texts = util::parseUnicode(src.subspan(0, idxZero));
 		if (!texts.empty()) // description may be absent
 			picture.descr = std::move(texts[0]);
