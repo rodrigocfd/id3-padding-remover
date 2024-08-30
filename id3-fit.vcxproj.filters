@@ -24,37 +24,25 @@
     <ClInclude Include="src\DlgMain.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\CheckRadio.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="res\resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\Com.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="src\id3v2\util.h">
+      <Filter>ID3v2</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\ComboBox.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="src\id3v2\Frame.h">
+      <Filter>ID3v2</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\CustomControl.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="src\id3v2\Tag.h">
+      <Filter>ID3v2</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\Dialog.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="src\DlgEdit.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\DialogMain.h">
-      <Filter>WinDlg</Filter>
+    <ClInclude Include="src\WndPic.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\windlg\windlg\DialogModal.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\dpi.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\File.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\ImgList.h">
-      <Filter>WinDlg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\windlg\windlg\ini.h">
+    <ClInclude Include="..\windlg\windlg\Ini.h">
       <Filter>WinDlg</Filter>
     </ClInclude>
     <ClInclude Include="..\windlg\windlg\lib.h">
@@ -93,27 +81,63 @@
     <ClInclude Include="..\windlg\windlg\Window.h">
       <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="res\resource.h">
-      <Filter>Resource Files</Filter>
+    <ClInclude Include="..\windlg\windlg\CheckRadio.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="src\id3v2\util.h">
-      <Filter>ID3v2</Filter>
+    <ClInclude Include="..\windlg\windlg\Com.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="src\id3v2\Frame.h">
-      <Filter>ID3v2</Filter>
+    <ClInclude Include="..\windlg\windlg\ComboBox.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="src\id3v2\Tag.h">
-      <Filter>ID3v2</Filter>
+    <ClInclude Include="..\windlg\windlg\CustomControl.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="src\DlgEdit.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\windlg\windlg\Dialog.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
-    <ClInclude Include="src\WndPic.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\windlg\windlg\DialogMain.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\DialogModal.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\dpi.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\File.h">
+      <Filter>WinDlg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\windlg\windlg\ImgList.h">
+      <Filter>WinDlg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\DlgMain_events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\util.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\Frame.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\id3v2\Tag.cpp">
+      <Filter>ID3v2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgMain_funcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgEdit_events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgEdit_funcs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DlgEdit_consts.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WndPic_events.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\windlg\windlg\CheckRadio.cpp">
@@ -146,7 +170,7 @@
     <ClCompile Include="..\windlg\windlg\ImgList.cpp">
       <Filter>WinDlg</Filter>
     </ClCompile>
-    <ClCompile Include="..\windlg\windlg\ini.cpp">
+    <ClCompile Include="..\windlg\windlg\Ini.cpp">
       <Filter>WinDlg</Filter>
     </ClCompile>
     <ClCompile Include="..\windlg\windlg\ListView.cpp">
@@ -178,30 +202,6 @@
     </ClCompile>
     <ClCompile Include="..\windlg\windlg\Window.cpp">
       <Filter>WinDlg</Filter>
-    </ClCompile>
-    <ClCompile Include="src\id3v2\util.cpp">
-      <Filter>ID3v2</Filter>
-    </ClCompile>
-    <ClCompile Include="src\id3v2\Frame.cpp">
-      <Filter>ID3v2</Filter>
-    </ClCompile>
-    <ClCompile Include="src\id3v2\Tag.cpp">
-      <Filter>ID3v2</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DlgMain_funcs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DlgEdit_events.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DlgEdit_funcs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DlgEdit_consts.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WndPic_events.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
