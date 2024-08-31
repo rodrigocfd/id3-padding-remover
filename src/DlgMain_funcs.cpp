@@ -68,7 +68,7 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 	auto pTag = item.data<const id3::Tag*>();
 
 	auto renderSimple = [item, pTag](wstring_view name4, UINT col) {
-		if (auto pFrame = pTag->frameByName4(name4); pFrame) {
+		if (auto pFrame = pTag->frameByName4(name4); pFrame) { // this frame exists
 			auto pData = pFrame->dataAs<id3::Frame::Text>();
 			item.setText(pData->text, col);
 		} else {
@@ -76,7 +76,9 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 		}
 	};
 
-	item.setText(std::to_wstring(pTag->padding), 1);
+	item.setText(pTag->frames.empty() ? // MP3 without tag will display "N/A"
+		L"N/A" : std::to_wstring(pTag->padding), 1);
+
 	if (auto pFrame = pTag->frameByName4(L"APIC"); pFrame) {
 		item.setText(L"\u2713", 2); // checkmark
 	} else {
