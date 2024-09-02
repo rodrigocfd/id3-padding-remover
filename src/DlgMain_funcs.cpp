@@ -79,11 +79,7 @@ void DlgMain::renderMp3ListItem(lib::ListView::Item item) const
 	item.setText(pTag->frames.empty() ? // MP3 without tag will display "N/A"
 		L"N/A" : std::to_wstring(pTag->padding), 1);
 
-	if (auto pFrame = pTag->frameByName4(L"APIC"); pFrame) {
-		item.setText(L"\u2713", 2); // checkmark
-	} else {
-		item.setText(L"", 2);
-	}
+	item.setText(pTag->frameByName4(L"APIC") != nullptr ? L"\u2713" : L"", 2); // checkmark
 	item.setText(pTag->replayGainStatus(), 3);
 	renderSimple(L"TPE1", 4);
 	renderSimple(L"TYER", 5);
