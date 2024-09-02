@@ -8,7 +8,7 @@ class DlgEdit final : public lib::DialogModal {
 public:
 	virtual ~DlgEdit() { }
 
-	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags) : _pTags{pTags}, _wndPic{_pic} { }
+	constexpr explicit DlgEdit(std::vector<id3::Tag*>& pTags) : _pTags{pTags} { }
 	DlgEdit(const DlgEdit&) = delete;
 	DlgEdit(DlgEdit&&) = delete;
 	DlgEdit& operator=(const DlgEdit&) = delete;
@@ -35,7 +35,7 @@ private:
 	std::vector<id3::Tag*>& _pTags;
 	std::vector<id3::Frame> _reorderedFrames; // filled if only 1 tag is loaded
 	lib::ComPtr<IPicture> _pic;
-	WndPic _wndPic;
+	WndPic _wndPic{_pic};
 	bool _clickedOk = false;
 
 	struct FieldInfo final {
