@@ -44,8 +44,8 @@
 #define LST_FRAMES                      1034
 #define MNU_FILE_OPEN                   40001
 #define MNU_FILE_EDIT                   40002
-#define MNU_FILE_RESAVE                 40003
-#define MNU_FILE_REMOVE                 40004
+#define MNU_FILE_REMOVE                 40003
+#define MNU_FILE_RESAVE                 40004
 #define MNU_FILE_DELPIC                 40005
 #define MNU_FILE_DELPICRG               40006
 #define MNU_FILE_ABOUT                  40007

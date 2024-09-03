@@ -143,15 +143,15 @@ INT_PTR DlgMain::onMenuFileEdit()
 	return TRUE;
 }
 
-INT_PTR DlgMain::onMenuFileReSave()
-{
-	saveSelected();
-	return TRUE;
-}
-
 INT_PTR DlgMain::onMenuFileRemove()
 {
 	lib::ListView{this, LST_FILES}.items.removeSelected();
+	return TRUE;
+}
+
+INT_PTR DlgMain::onMenuFileReSave()
+{
+	saveSelected();
 	return TRUE;
 }
 

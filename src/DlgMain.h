@@ -19,8 +19,8 @@ private:
 	INT_PTR onInitMenuPopup(WPARAM wp);
 	INT_PTR onMenuFileOpen();
 	INT_PTR onMenuFileEdit();
-	INT_PTR onMenuFileReSave();
 	INT_PTR onMenuFileRemove();
+	INT_PTR onMenuFileReSave();
 	INT_PTR onMenuFileDelPicRg(bool delRg);
 	INT_PTR onMenuFileAbout();
 	INT_PTR onListItemChanged();
