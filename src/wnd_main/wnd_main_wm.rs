@@ -11,7 +11,7 @@ impl WndMain {
 		});
 
 		let self2 = self.clone();
-		self.wnd.on().wm_drop_files(move |mut p| {
+		self.wnd.on().wm_drop_files(move |p| {
 			let dropped_files = p.hdrop.DragQueryFile()?
 				.collect::<w::SysResult<Vec<_>>>()?;
 			let mut valid_files = Vec::<String>::with_capacity(dropped_files.len());
