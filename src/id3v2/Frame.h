@@ -69,7 +69,10 @@ struct Frame final {
 	constexpr Frame& operator=(const Frame&) = default;
 	constexpr Frame& operator=(Frame&&) = default;
 
+	// Parses a frame from a binary blob.
 	explicit Frame(std::span<BYTE> src);
+
+	// Creates a new frame given a text content.
 	Frame(std::wstring_view name4, std::wstring_view textContent);
 
 	bool operator==(const Frame&) const;

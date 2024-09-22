@@ -7,10 +7,10 @@ using std::optional, std::span, std::vector, std::wstring_view;
 using namespace lib;
 using namespace id3;
 
-Tag::Tag(wstring_view mp3)
-	: path{mp3}
+Tag::Tag(wstring_view mp3Path)
+	: path{mp3Path}
 {
-	FileMapped f{mp3, FileMapped::Access::ExistingReadOnly};
+	FileMapped f{mp3Path, FileMapped::Access::ExistingReadOnly};
 	span<BYTE> src = f.asSpan();
 	
 	HeaderInfo headerNfo = _ParseHeader(src);
@@ -85,18 +85,18 @@ void Tag::saveToFile() const
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
 }
 
-Frame* Tag::SameFrameAcrossAllTags(const vector<Tag*>& tags, wstring_view name4)
+Frame* Tag::SameFrameAcrossAllTags(wstring_view name4, const vector<Tag*>& tagsToCheck)
 {
-	if (tags.empty()) {
+	if (tagsToCheck.empty()) {
 		return nullptr;
-	} else if (tags.size() == 1) {
-		return tags[0]->frameByName4(name4);
+	} else if (tagsToCheck.size() == 1) {
+		return tagsToCheck[0]->frameByName4(name4);
 	} else {
-		Frame* pFrame0 = tags[0]->frameByName4(name4);
+		Frame* pFrame0 = tagsToCheck[0]->frameByName4(name4);
 		if (!pFrame0)
 			return nullptr;
 
-		bool isSame = vec::allIf(span{tags.begin() + 1, tags.end()}, [name4, pFrame0](const Tag* pTag) -> bool {
+		bool isSame = vec::allIf(span{tagsToCheck.begin() + 1, tagsToCheck.end()}, [name4, pFrame0](const Tag* pTag) -> bool {
 			const Frame* pFrameN = pTag->frameByName4(name4);
 			if (pFrame0 && pFrameN) {
 				return *pFrame0 == *pFrameN; // compare actual objects

@@ -22,7 +22,7 @@ void DlgEdit::renderTextboxes() const
 			pFrame = lib::vec::findIf(_reorderedFrames,
 				[&field](const id3::Frame& f) { return lib::str::eqI(field.name4, f.name4); });
 		} else {
-			pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, field.name4);
+			pFrame = id3::Tag::SameFrameAcrossAllTags(field.name4, _pTags);
 		}
 
 		lib::CheckRadio{this, field.chkId}.checkAndTrigger(pFrame != nullptr);
@@ -38,7 +38,7 @@ void DlgEdit::loadPicture()
 		pFrame = lib::vec::findIf(_reorderedFrames,
 			[](const id3::Frame& f) { return lib::str::eqI(f.name4, L"APIC"); });
 	} else {
-		pFrame = id3::Tag::SameFrameAcrossAllTags(_pTags, L"APIC");
+		pFrame = id3::Tag::SameFrameAcrossAllTags(L"APIC", _pTags);
 	}
 
 	lib::NativeControl lblPic{this, LBL_PICSIZE};
@@ -48,7 +48,7 @@ void DlgEdit::loadPicture()
 			SHCreateMemStream(pData->bin.data(), static_cast<UINT>(pData->bin.size())) };
 		if (HRESULT hr = OleLoadPicture(
 				stream.ptr(), 0, FALSE, IID_IPicture,
-				reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] {
+				reinterpret_cast<void**>(_pic.pptr())); FAILED(hr)) [[unlikely]] { // image failed to load
 			auto err = std::system_category().message(hr);
 			dlg.msgBox(L"Picture loading error", {}, lib::str::toWide(err), TDCBF_OK_BUTTON, TD_ERROR_ICON);
 			lblPic.setText(L"Image failed to load");
@@ -73,12 +73,12 @@ void DlgEdit::renderFramesList() const
 	lv.items.removeAll();
 	dlg.enable({LST_FRAMES}, _pTags.size() == 1);
 
-	if (_pTags.size() == 1) {
+	if (_pTags.size() == 1) { // 1 file loaded, show its frame contents
 		for (auto&& frame : _reorderedFrames) {
 			auto strFrame = frame.asText();
 			lv.items.add(frame.name4, {strFrame});
 		}
-	} else {
+	} else { // multiple files loaded
 		auto msg = lib::str::fmt(L"%d files...", _pTags.size());
 		lv.items.add(L"", {msg});
 	}
@@ -88,7 +88,7 @@ void DlgEdit::updateTagsWithTexts() const
 {
 	for (auto&& field : _Fields) {
 		if (!lib::CheckRadio{this, field.chkId}.isChecked())
-			continue;
+			continue; // skip unchecked fields
 
 		auto text = lib::NativeControl{this, static_cast<WORD>(field.chkId + 1)}.text();
 		lib::str::trim(text);

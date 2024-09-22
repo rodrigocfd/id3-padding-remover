@@ -19,7 +19,8 @@ struct Tag final {
 	Tag& operator=(const Tag&) = delete;
 	constexpr Tag& operator=(Tag&&) = default;
 
-	explicit Tag(std::wstring_view mp3);
+	// Parses a tag from an MP3 file.
+	explicit Tag(std::wstring_view mp3Path);
 	
 	bool operator==(const Tag&) const = default;
 	[[nodiscard]] const Frame* frameByName4(std::wstring_view name4) const;
@@ -28,7 +29,7 @@ struct Tag final {
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
 	void saveToFile() const;
 
-	[[nodiscard]] static Frame* SameFrameAcrossAllTags(const std::vector<Tag*>& tags, std::wstring_view name4);
+	[[nodiscard]] static Frame* SameFrameAcrossAllTags(std::wstring_view name4, const std::vector<Tag*>& tagsToCheck);
 
 private:
 	struct HeaderInfo final {
