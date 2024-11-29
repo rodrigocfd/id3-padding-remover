@@ -27,7 +27,7 @@ struct Tag final {
 	[[nodiscard]] Frame* frameByName4(std::wstring_view name4);
 	void removeFrameByName4(std::wstring_view name4);
 	[[nodiscard]] LPCWSTR replayGainStatus() const;
-	void saveToFile() const;
+	void saveToFile();
 
 	[[nodiscard]] static Frame* SameFrameAcrossAllTags(std::wstring_view name4, const std::vector<Tag*>& tagsToCheck);
 

@@ -135,11 +135,9 @@ INT_PTR DlgMain::onMenuFileEdit()
 	DlgEdit dlgEdit{pTags};
 	dlgEdit.showModal(this, DLG_EDIT);
 
-	if (dlgEdit.clickedOk()) {
-		for (auto&& item : selItems)
-			renderMp3ListItem(item); // tags potentially changed, re-render them in the list
+	if (dlgEdit.clickedOk())
 		saveSelected(); // DlgEdit won't save the files, just change the tags; we save them here
-	}
+
 	return TRUE;
 }
 
@@ -164,10 +162,9 @@ INT_PTR DlgMain::onMenuFileDelPicRg(bool delRg)
 
 	if (dlg.msgBox(L"Delete frames", {}, msg, TDCBF_OK_BUTTON | TDCBF_CANCEL_BUTTON, TD_WARNING_ICON) == IDOK) {
 		deletePicRg(selItems, delRg);
-		for (auto&& item : selItems)
-			renderMp3ListItem(item);
 		saveSelected();
 	}
+
 	return TRUE;
 }
 
@@ -206,7 +203,7 @@ INT_PTR DlgMain::onListHeaderClick(LPARAM lp)
 	bool willSortAsc = !(arrowFlag & HDF_SORTUP);
 
 	lv.columns[pNmh->iItem].setSortArrow(willSortAsc ? HDF_SORTUP : HDF_SORTDOWN); // draw arrow
-	_sort = {.col = pNmh->iItem, .asc = willSortAsc}; // update state
+	_sort = {.col = pNmh->iItem, .asc = willSortAsc}; // update sort state
 
 	sortList();
 	return TRUE;

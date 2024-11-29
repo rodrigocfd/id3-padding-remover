@@ -163,7 +163,9 @@ void DlgMain::saveSelected() const
 		} catch (const std::exception& e) {
 			faileds.push_back({.file = pTag->path, .reason = e.what()});
 		}
+		renderMp3ListItem(item); // update info
 	}
+	sortList(); // potential change, so re-sort
 
 	auto t1 = t0.now();
 

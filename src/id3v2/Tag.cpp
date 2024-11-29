@@ -68,7 +68,7 @@ LPCWSTR Tag::replayGainStatus() const
 	else return L"";
 }
 
-void Tag::saveToFile() const
+void Tag::saveToFile()
 {
 	if (path.empty())
 		throw std::runtime_error("Tag has no path");
@@ -83,6 +83,8 @@ void Tag::saveToFile() const
 		fout.write(tagBlob);
 	}
 	fout.write({currentContents.begin() + headerNfo.mp3Offset, currentContents.end()}); // MP3 data
+
+	padding = 0; // we save no padding
 }
 
 Frame* Tag::SameFrameAcrossAllTags(wstring_view name4, const vector<Tag*>& tagsToCheck)
