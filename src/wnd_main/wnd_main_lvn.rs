@@ -7,7 +7,7 @@ impl WndMain {
 	pub(super) fn list_events(&self) {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_menu_popup(move |p| {
-			if self2.lst_files.context_menu().unwrap() == &p.hmenu {
+			if self2.lst_files.context_menu().unwrap() == p.hmenu {
 				[ids::MNU_MAIN_EDIT, ids::MNU_MAIN_REMOVE,
 					ids::MNU_MAIN_STRIP_RG, ids::MNU_MAIN_STRIP_RG_ART]
 					.into_iter().try_for_each(|id|

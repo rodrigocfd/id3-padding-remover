@@ -21,7 +21,7 @@ impl WndMain {
 					let tag = id3v2::Tag::read_from_file(mp3_path)?; // load the tag from the MP3 file
 					let item = match self.lst_files.items().find(mp3_path) {
 						Some(item) => { // MP3 already present in the list?
-							let rc_tag = item.data().unwrap();
+							let rc_tag = item.data();
 							*rc_tag.borrow_mut() = tag; // replace the tag currently saved in the item
 							item
 						},
@@ -42,7 +42,7 @@ impl WndMain {
 	}
 
 	pub(super) fn render_tag(item: gui::spec::ListViewItem<'_, id3v2::Tag>) -> w::AnyResult<()> {
-		let rc_tag = item.data().unwrap(); // retrieve tag saved in the listview item
+		let rc_tag = item.data(); // retrieve tag saved in the listview item
 		let tag = rc_tag.try_borrow()?;
 		item.set_text(1, &tag.padding().to_string());
 		item.set_text(2, if tag.frame("APIC").is_some() { "✓" } else { "" });
@@ -66,7 +66,7 @@ impl WndMain {
 
 		let rc_sel_tags = self.lst_files.items()
 			.iter_selected()
-			.map(|sel_item| sel_item.data().unwrap())
+			.map(|sel_item| sel_item.data())
 			.collect::<Vec<_>>();
 
 		let wnd_edit = WndEdit::new(&self.wnd, rc_sel_tags)?;
@@ -77,7 +77,7 @@ impl WndMain {
 				.try_for_each(|sel_item| {
 					Self::render_tag(sel_item)?; // update the list with the new values
 
-					let rc_tag = sel_item.data().unwrap(); // retrieve tag saved in the listview item
+					let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
 					rc_tag.try_borrow()?.save_to_file(&sel_item.text(0))?; // save to MP3 file
 
 					w::AnyResult::Ok(())
@@ -107,7 +107,7 @@ impl WndMain {
 				.iter_selected()
 				.try_for_each(|sel_item| {
 					{
-						let rc_tag = sel_item.data().unwrap(); // retrieve tag saved in the listview item
+						let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
 						let mut tag = rc_tag.try_borrow_mut()?;
 						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
 						if strip_art {
