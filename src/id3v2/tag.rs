@@ -171,7 +171,7 @@ impl Tag {
 	}
 
 	#[must_use]
-	pub fn frames_mut(&mut self) -> &mut Vec<Frame> {
+	pub const fn frames_mut(&mut self) -> &mut Vec<Frame> {
 		&mut self.frames
 	}
 

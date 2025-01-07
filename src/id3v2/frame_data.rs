@@ -14,13 +14,13 @@ pub enum FrameData {
 
 impl std::fmt::Display for FrameData {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		use FrameData as F;
+		use FrameData::*;
 		write!(f, "{}", match self {
-			F::Text(t) => t.text.clone(),
-			F::UserText(ut) => format!("{} {}", ut.descr, ut.text),
-			F::Binary(b) => format_bytes(b.data.len()),
-			F::Comment(c) => c.text.clone(),
-			F::Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
+			Text(t) => t.text.clone(),
+			UserText(ut) => format!("{} {}", ut.descr, ut.text),
+			Binary(b) => format_bytes(b.data.len()),
+			Comment(c) => c.text.clone(),
+			Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
 		})
 	}
 }
@@ -29,29 +29,29 @@ impl Eq for FrameData {}
 
 impl PartialEq for FrameData {
 	fn eq(&self, other: &Self) -> bool {
-		use FrameData as F;
+		use FrameData::*;
 		match self {
-			F::Text(t) => match other {
-				F::Text(t2) => t.text == t2.text,
+			Text(t) => match other {
+				Text(t2) => t.text == t2.text,
 				_ => false,
 			},
-			F::UserText(ut) => match other {
-				F::UserText(ut2) => ut.descr == ut2.descr
+			UserText(ut) => match other {
+				UserText(ut2) => ut.descr == ut2.descr
 					&& ut.text == ut2.text,
 				_ => false,
 			},
-			F::Binary(b) => match other {
-				F::Binary(b2) => b.data.iter().zip(b2.data.iter()).all(|(a, b)| a == b),
+			Binary(b) => match other {
+				Binary(b2) => b.data.iter().zip(b2.data.iter()).all(|(a, b)| a == b),
 				_ => false,
 			},
-			F::Comment(c) => match other {
-				F::Comment(c2) => c.lang3 == c2.lang3
+			Comment(c) => match other {
+				Comment(c2) => c.lang3 == c2.lang3
 					&& c.descr == c2.descr
 					&& c.text == c2.text,
 				_ => false,
 			},
-			F::Picture(p) => match other {
-				F::Picture(p2) => p.mime == p2.mime
+			Picture(p) => match other {
+				Picture(p2) => p.mime == p2.mime
 					&& p.pic_type == p2.pic_type
 					&& p.descr == p2.descr
 					&& p.data.iter().zip(p2.data.iter()).all(|(a, b)| a == b),
@@ -171,28 +171,29 @@ impl FrameData {
 	/// Serializes the data into bytes.
 	#[must_use]
 	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
+		use FrameData::*;
 		match self {
-			FrameData::Text(t) => {
+			Text(t) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&t.text]);
 				std::iter::once(enc_byte)
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
-			FrameData::UserText(ut) => {
+			UserText(ut) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&ut.descr, &ut.text]);
 				std::iter::once(enc_byte)
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
-			FrameData::Binary(b) => b.data.clone(),
-			FrameData::Comment(c) => {
+			Binary(b) => b.data.clone(),
+			Comment(c) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&c.descr, &c.text]);
 				std::iter::once(enc_byte)
 					.chain(c.lang3.chars().map(|ch| ch as u8))
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
-			FrameData::Picture(p) => {
+			Picture(p) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&p.descr]);
 				std::iter::once(enc_byte)
 					.chain(p.mime.chars().map(|ch| ch as u8))
@@ -207,18 +208,19 @@ impl FrameData {
 
 	/// Tries to set the value as a string, returning an error if not possible.
 	pub(in crate::id3v2) fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
+		use FrameData::*;
 		Ok(match self {
-			FrameData::Text(t) => {
+			Text(t) => {
 				t.text = val.to_owned();
 			},
-			FrameData::UserText(ut) => {
+			UserText(ut) => {
 				ut.text = val.to_owned();
 			},
-			FrameData::Binary(_) => return Err("Binary data cannot be set as string.".into()),
-			FrameData::Comment(c) => {
+			Binary(_) => return Err("Binary data cannot be set as string.".into()),
+			Comment(c) => {
 				c.text = val.to_owned();
 			},
-			FrameData::Picture(_) => return Err("Picture data cannot be set as string.".into()),
+			Picture(_) => return Err("Picture data cannot be set as string.".into()),
 		})
 	}
 }

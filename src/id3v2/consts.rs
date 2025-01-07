@@ -28,29 +28,29 @@ pub enum PicType {
 
 impl std::fmt::Display for PicType {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		use PicType as P;
+		use PicType::*;
 		write!(f, "{}", match self {
-			P::Other => "Other",
-			P::FileIconPng32 => "32x32 pixels 'file icon' (PNG only)",
-			P::FileIconOther => "Other file icon",
-			P::CoverFront => "Cover (front)",
-			P::CoverBack => "Cover (back)",
-			P::Leaflet => "Leaflet page",
-			P::CdLabelSide => "Media (e.g. label side of CD)",
-			P::LeadArtist => "Lead artist/lead performer/soloist",
-			P::Artist => "Artist/performer",
-			P::Conductor => "Conductor",
-			P::Band => "Band/Orchestra",
-			P::Composer => "Composer",
-			P::Lyricist => "Lyricist/text writer",
-			P::RecLocation => "Recording Location",
-			P::DuringRecording => "During recording",
-			P::DuringPerformance => "During performance",
-			P::MovieCapture => "Movie/video screen capture",
-			P::BrightColouredFish => "A bright coloured fish",
-			P::Illustration => "Illustration",
-			P::BandLogo => "Band/artist logotype",
-			P::PublisherLogo => "Publisher/Studio logotype",
+			Other => "Other",
+			FileIconPng32 => "32x32 pixels 'file icon' (PNG only)",
+			FileIconOther => "Other file icon",
+			CoverFront => "Cover (front)",
+			CoverBack => "Cover (back)",
+			Leaflet => "Leaflet page",
+			CdLabelSide => "Media (e.g. label side of CD)",
+			LeadArtist => "Lead artist/lead performer/soloist",
+			Artist => "Artist/performer",
+			Conductor => "Conductor",
+			Band => "Band/Orchestra",
+			Composer => "Composer",
+			Lyricist => "Lyricist/text writer",
+			RecLocation => "Recording Location",
+			DuringRecording => "During recording",
+			DuringPerformance => "During performance",
+			MovieCapture => "Movie/video screen capture",
+			BrightColouredFish => "A bright coloured fish",
+			Illustration => "Illustration",
+			BandLogo => "Band/artist logotype",
+			PublisherLogo => "Publisher/Studio logotype",
 		})
 	}
 }
