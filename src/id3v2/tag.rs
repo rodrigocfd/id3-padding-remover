@@ -145,13 +145,12 @@ impl Tag {
 		let current_contents = fout.read_all()?; // read the whole MP3 into a buffer
 		let current_tag = Self::parse(&current_contents)?; // parse tag currently saved in the MP3 file
 
-		fout.set_size(0)?; // truncate file
 		if self.frames.is_empty() {
-			fout.write(
+			fout.erase_and_write(
 				&current_contents[current_tag.mp3_offset as _..], // no tag will be written
 			)?;
 		} else {
-			fout.write(
+			fout.erase_and_write(
 				&self.serialize().into_iter()
 					.chain(current_contents[current_tag.mp3_offset as _..].iter().map(|b| *b))
 					.collect::<Vec<_>>(),
