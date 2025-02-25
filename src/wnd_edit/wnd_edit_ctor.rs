@@ -119,7 +119,7 @@ impl WndEdit {
 							})?;
 
 						if frame_equal_in_all_mp3s {
-							field_pack.txt.set_text(&first_frame.data().to_string());
+							field_pack.txt.set_text(&first_frame.body().to_string());
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
 						} else {
 							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
@@ -149,7 +149,7 @@ impl WndEdit {
 			sel_tag.frames()
 				.iter()
 				.for_each(|frame| {
-					self.lst_frames.items().add(&[frame.name4(), &frame.data().to_string()], None, ());
+					self.lst_frames.items().add(&[frame.name4(), &frame.body().to_string()], None, ());
 				});
 		}
 

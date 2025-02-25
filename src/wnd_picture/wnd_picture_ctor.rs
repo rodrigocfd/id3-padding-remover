@@ -57,7 +57,7 @@ impl WndPicture {
 					})?;
 
 				if apic_equal_in_all_mp3s {
-					let id3v2::FrameData::Picture(apic_data) = first_apic.data() else { panic!("APIC fail.") };
+					let id3v2::Body::Picture(apic_data) = first_apic.body() else { panic!("APIC fail.") };
 					let stream = w::SHCreateMemStream(&apic_data.data)?;
 					let ipic = w::OleLoadPicture(&stream, None, true)?;
 					Ok(Some(ipic))

@@ -4,7 +4,7 @@ use super::consts::PicType;
 use super::str_engine;
 
 /// Polymorphic data of a frame.
-pub enum FrameData {
+pub enum Body {
 	Text(Text),
 	UserText(UserText),
 	Binary(Binary),
@@ -12,9 +12,31 @@ pub enum FrameData {
 	Picture(Picture),
 }
 
-impl std::fmt::Display for FrameData {
+pub struct Text {
+	pub text: String,
+}
+pub struct UserText {
+	pub descr: String,
+	pub text: String,
+}
+pub struct Binary {
+	pub data: Vec<u8>,
+}
+pub struct Comment {
+	pub lang3: String,
+	pub descr: String,
+	pub text: String,
+}
+pub struct Picture {
+	pub mime: String,
+	pub pic_type: PicType,
+	pub descr: String,
+	pub data: Vec<u8>,
+}
+
+impl std::fmt::Display for Body {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		use FrameData::*;
+		use Body::*;
 		write!(f, "{}", match self {
 			Text(t) => t.text.clone(),
 			UserText(ut) => format!("{} {}", ut.descr, ut.text),
@@ -25,11 +47,11 @@ impl std::fmt::Display for FrameData {
 	}
 }
 
-impl Eq for FrameData {}
+impl Eq for Body {}
 
-impl PartialEq for FrameData {
+impl PartialEq for Body {
 	fn eq(&self, other: &Self) -> bool {
-		use FrameData::*;
+		use Body::*;
 		match self {
 			Text(t) => match other {
 				Text(t2) => t.text == t2.text,
@@ -61,8 +83,8 @@ impl PartialEq for FrameData {
 	}
 }
 
-impl FrameData {
-	/// Creates a data from a string. If not possible, returns an error.
+impl Body {
+	/// Creates a bodyfrom a string. If not possible, returns an error.
 	#[must_use]
 	pub(in crate::id3v2) fn new_from_string(name4: &str, val: &str) -> w::AnyResult<Self> {
 		if name4 == "TXXX" {
@@ -171,7 +193,7 @@ impl FrameData {
 	/// Serializes the data into bytes.
 	#[must_use]
 	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
-		use FrameData::*;
+		use Body::*;
 		match self {
 			Text(t) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&t.text]);
@@ -208,7 +230,7 @@ impl FrameData {
 
 	/// Tries to set the value as a string, returning an error if not possible.
 	pub(in crate::id3v2) fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
-		use FrameData::*;
+		use Body::*;
 		Ok(match self {
 			Text(t) => {
 				t.text = val.to_owned();
@@ -223,32 +245,6 @@ impl FrameData {
 			Picture(_) => return Err("Picture data cannot be set as string.".into()),
 		})
 	}
-}
-
-pub struct Text {
-	pub text: String,
-}
-
-pub struct UserText {
-	pub descr: String,
-	pub text: String,
-}
-
-pub struct Binary {
-	pub data: Vec<u8>,
-}
-
-pub struct Comment {
-	pub lang3: String,
-	pub descr: String,
-	pub text: String,
-}
-
-pub struct Picture {
-	pub mime: String,
-	pub pic_type: PicType,
-	pub descr: String,
-	pub data: Vec<u8>,
 }
 
 /// More than 1,000 bytes will be converted to KB.

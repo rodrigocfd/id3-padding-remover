@@ -51,7 +51,7 @@ impl WndMain {
 		LIST_COLS.iter()
 			.skip(4)
 			.map(|(_, _, field)| match tag.frame(*field) {
-				Some(frame) => frame.data().to_string(),
+				Some(frame) => frame.body().to_string(),
 				None => "".to_owned(),
 			})
 			.enumerate()

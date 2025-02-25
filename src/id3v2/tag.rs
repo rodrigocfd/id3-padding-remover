@@ -1,6 +1,6 @@
 use winsafe::{self as w};
 
-use super::frame_data::FrameData;
+use super::body::Body;
 use super::frame::Frame;
 use super::str_engine;
 use super::synch_safe;
@@ -152,7 +152,10 @@ impl Tag {
 		} else {
 			fout.erase_and_write(
 				&self.serialize().into_iter()
-					.chain(current_contents[current_tag.mp3_offset as _..].iter().map(|b| *b))
+					.chain(
+						current_contents[current_tag.mp3_offset as _..].iter()
+							.map(|b| *b),
+					)
 					.collect::<Vec<_>>(),
 			)?;
 		}
@@ -187,7 +190,7 @@ impl Tag {
 		self.frames.iter()
 			.find(|frame| {
 				if frame.name4() == "TXXX" {
-					if let FrameData::UserText(ut) = frame.data() {
+					if let Body::UserText(ut) = frame.body() {
 						if ut.descr.starts_with("replaygain") {
 							return true;
 						}
