@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"label": "cargo:build",
+			"command": "build",
+			"args": [
+				"--bin=id3-fit",
+				"--package=id3-fit",
+			],
+		},
+	],
+}
