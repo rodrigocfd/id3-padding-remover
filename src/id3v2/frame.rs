@@ -34,16 +34,20 @@ impl Frame {
 
 		// Parse the 10-byte frame header.
 		let name4 = str_engine::from_ascii(&src[0..4]);
-		let original_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte frame header
+		let mut declared_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte frame header
 		let flags = (src[8], src[9]);
 
-		// Skip frame header, truncate to frame size.
-		src = &src[10..original_size as usize];
+		if declared_size > src.len() as _ {
+			declared_size = src.len() as _; // if serialized with error, be complacent
+		}
+
+		// Skip frame header, truncate to declared frame size.
+		src = &src[10..declared_size as _];
 
 		// Parse the frame contents.
 		let body = Body::parse(&name4, src)?;
 
-		Ok((Self { name4, flags, body }, original_size))
+		Ok((Self { name4, flags, body }, declared_size))
 	}
 
 	#[must_use]

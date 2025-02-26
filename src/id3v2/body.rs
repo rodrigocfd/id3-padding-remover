@@ -84,19 +84,17 @@ impl PartialEq for Body {
 }
 
 impl Body {
-	/// Creates a bodyfrom a string. If not possible, returns an error.
+	/// Creates a body from a string. If not possible, returns an error.
 	#[must_use]
 	pub(in crate::id3v2) fn new_from_string(name4: &str, val: &str) -> w::AnyResult<Self> {
-		if name4 == "TXXX" {
-			Err("Cannot create a single-text TXXX frame.".into())
-		} else if name4.starts_with('T') {
-			Ok(Self::Text(Text {
+		if name4 == "COMM" {
+			Ok(Self::Comment(Comment {
+				lang3: "eng".to_owned(),
+				descr: "".to_owned(), // assume blank description
 				text: val.to_owned(),
 			}))
-		} else if name4 == "COMM" {
-			Ok(Self::Comment(Comment {
-				lang3: "".to_owned(),
-				descr: "".to_owned(),
+		} else if name4.starts_with('T') {
+			Ok(Self::Text(Text { // simplest case
 				text: val.to_owned(),
 			}))
 		} else {
@@ -179,12 +177,12 @@ impl Body {
 			}
 			src = descr_parts.nth(0).unwrap();
 		} else { // Unicode
-			let idx_zero = src.windows(2).position(|bb| bb == &[0x00, 0x01]).unwrap();
+			let idx_zero = src.windows(2).position(|bb| bb == &[0x00, 0x00]).unwrap();
 			let mut texts = str_engine::parse_unicode(&src[..idx_zero])?;
 			if texts.len() > 0 { // description may be absent
 				descr = texts.remove(0);
 			}
-			src = &src[idx_zero + 1..];
+			src = &src[idx_zero + 2..];
 		}
 
 		Ok(Self::Picture(Picture { mime, pic_type, descr, data: src.to_vec() }))

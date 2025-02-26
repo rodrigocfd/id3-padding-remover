@@ -73,8 +73,8 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..src.len() - 1];
 	}
 
-	// Copying to buffer because slice::from_raw_parts() was crashing due to
-	// possible pointer misalignment in some files.
+	// Copying to buffer because slice::from_raw_parts() was crashing due to a
+	// weird misalignment in some cases.
 	let src16_buf = src.chunks(2)
 		.map(|by| w::MAKEWORD(by[0], by[1]))
 		.collect::<Vec<_>>();

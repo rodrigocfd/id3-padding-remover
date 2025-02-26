@@ -8,10 +8,10 @@
 			"type": "cppvsdbg",
 			"program": "${workspaceRoot}/target/debug/${workspaceFolderBasename}",
 			"request": "launch",
-			"name": "Debug executable 'id3-fit'",
+			"name": "Debug executable",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "cargo:build",
 		},
-	]
+	],
 }
