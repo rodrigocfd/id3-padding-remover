@@ -32,24 +32,25 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_OPEN, move || {
-			let fileo = w::CoCreateInstance::<w::IFileOpenDialog>(
+			let fod = w::CoCreateInstance::<w::IFileOpenDialog>(
 				&co::CLSID::FileOpenDialog, None, co::CLSCTX::INPROC_SERVER)?;
 
-			fileo.SetOptions(
-				fileo.GetOptions()?
+			fod.SetOptions(
+				fod.GetOptions()?
 					| co::FOS::FORCEFILESYSTEM
 					| co::FOS::FILEMUSTEXIST
 					| co::FOS::ALLOWMULTISELECT,
 			)?;
 
-			fileo.SetFileTypes(&[
+			fod.SetFileTypes(&[
 				("MP3 audio files", "*.mp3"),
+				("All files", "*.*"),
 			])?;
-			fileo.SetFileTypeIndex(1)?;
+			fod.SetFileTypeIndex(1)?;
 
-			if fileo.Show(self2.wnd.hwnd())? {
+			if fod.Show(self2.wnd.hwnd())? {
 				self2.add_files_to_list(
-					&fileo.GetResults()?
+					&fod.GetResults()?
 						.iter()?
 						.map(|shi| shi?.GetDisplayName(co::SIGDN::FILESYSPATH))
 						.collect::<w::HrResult<Vec<_>>>()?,

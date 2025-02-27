@@ -5,9 +5,9 @@ use try_iterator::prelude::*;
 use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::{id3v2, ids, wnd_picture::WndPicture};
-use super::{FieldPack, GENRES, WndEdit};
+use super::{CheckInput, GENRES, WndEdit};
 
-impl FieldPack {
+impl CheckInput {
 	fn new_edit(name4: &str, parent: &impl GuiParent, chk_id: u16) -> Self {
 		Self {
 			name4: name4.to_owned(),
@@ -33,26 +33,26 @@ impl WndEdit {
 		let wnd = gui::WindowModal::new_dlg(parent, ids::DLG_EDIT);
 		let btn_ok = gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), NN);
 		let btn_cancel = gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), NN);
-		let field_packs = Rc::new(RefCell::new(vec![
-			FieldPack::new_edit("TPE1", &wnd, ids::CHK_ARTIST),
-			FieldPack::new_edit("TIT2", &wnd, ids::CHK_TITLE),
-			FieldPack::new_edit("TIT3", &wnd, ids::CHK_SUBTITLE),
-			FieldPack::new_edit("TALB", &wnd, ids::CHK_ALBUM),
-			FieldPack::new_edit("TRCK", &wnd, ids::CHK_TRACK),
-			FieldPack::new_edit("TYER", &wnd, ids::CHK_YEAR),
-			FieldPack {
+		let inputs = Rc::new(RefCell::new(vec![
+			CheckInput::new_edit("TPE1", &wnd, ids::CHK_ARTIST),
+			CheckInput::new_edit("TIT2", &wnd, ids::CHK_TITLE),
+			CheckInput::new_edit("TIT3", &wnd, ids::CHK_SUBTITLE),
+			CheckInput::new_edit("TALB", &wnd, ids::CHK_ALBUM),
+			CheckInput::new_edit("TRCK", &wnd, ids::CHK_TRACK),
+			CheckInput::new_edit("TYER", &wnd, ids::CHK_YEAR),
+			CheckInput {
 				name4: "TCON".to_owned(),
 				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, NN),
 				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, NN)),
 			},
-			FieldPack::new_edit("TPE3", &wnd, ids::CHK_PERFORMER),
-			FieldPack::new_edit("TPUB", &wnd, ids::CHK_PUBLISHER),
-			FieldPack::new_edit("TOPE", &wnd, ids::CHK_ORIG_ARTIST),
-			FieldPack::new_edit("TOAL", &wnd, ids::CHK_ORIG_ALBUM),
-			FieldPack::new_edit("TORY", &wnd, ids::CHK_ORIG_YEAR),
-			FieldPack::new_edit("TCOM", &wnd, ids::CHK_COMPOSER),
-			FieldPack::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
-			FieldPack::new_edit("COMM", &wnd, ids::CHK_COMMENT),
+			CheckInput::new_edit("TPE3", &wnd, ids::CHK_PERFORMER),
+			CheckInput::new_edit("TPUB", &wnd, ids::CHK_PUBLISHER),
+			CheckInput::new_edit("TOPE", &wnd, ids::CHK_ORIG_ARTIST),
+			CheckInput::new_edit("TOAL", &wnd, ids::CHK_ORIG_ALBUM),
+			CheckInput::new_edit("TORY", &wnd, ids::CHK_ORIG_YEAR),
+			CheckInput::new_edit("TCOM", &wnd, ids::CHK_COMPOSER),
+			CheckInput::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
+			CheckInput::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
 		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), (250, 22), (120, 120), NN)?;
 		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, NN);
@@ -61,7 +61,7 @@ impl WndEdit {
 
 		let new_self = Self {
 			wnd,
-			btn_ok, btn_cancel, field_packs, wnd_pic,
+			btn_ok, btn_cancel, inputs, wnd_pic,
 			btn_uncheck, lst_frames, sel_tags, modal_return,
 		};
 		new_self.wm_events();
@@ -86,11 +86,11 @@ impl WndEdit {
 	}
 
 	fn fill_chks_and_txts(&self) -> w::AnyResult<()> {
-		self.field_packs.try_borrow()?
+		self.inputs.try_borrow()?
 			.iter()
-			.try_for_each(|field_pack| {
-				if field_pack.name4 == "TCON" { // feed the genres to the combo
-					field_pack.txt.as_any()
+			.try_for_each(|input| {
+				if input.name4 == "TCON" { // feed the genres to the combo
+					input.txt.as_any()
 						.downcast_ref::<gui::ComboBox>()
 						.expect("ComboBox downcast failed.")
 						.items()
@@ -99,19 +99,19 @@ impl WndEdit {
 
 				let maybe_idx_first_mp3 = self.sel_tags.iter() // index of first MP3 which has the field
 					.try_position(|tag| {
-						let has = tag.try_borrow()?.frame(&field_pack.name4).is_some();
+						let has = tag.try_borrow()?.frame(&input.name4).is_some();
 						w::AnyResult::Ok(has)
 					})?;
 
 				match maybe_idx_first_mp3 {
 					Some(idx_first) => { // at least 1 MP3 has this field
 						let first_tag = self.sel_tags[idx_first].try_borrow()?;
-						let first_frame = first_tag.frame(&field_pack.name4).unwrap();
+						let first_frame = first_tag.frame(&input.name4).unwrap();
 
 						let frame_equal_in_all_mp3s = self.sel_tags.iter()
 							.skip(idx_first + 1)
 							.try_all(|tag| {
-								let is_equal_to_1st = match tag.try_borrow()?.frame(&field_pack.name4) {
+								let is_equal_to_1st = match tag.try_borrow()?.frame(&input.name4) {
 									None => false, // this MP3 doesn't have this field
 									Some(frame) => frame == first_frame,
 								};
@@ -119,14 +119,14 @@ impl WndEdit {
 							})?;
 
 						if frame_equal_in_all_mp3s {
-							field_pack.txt.set_text(&first_frame.body().to_string());
-							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Checked);
+							input.txt.set_text(&first_frame.body().to_string());
+							input.chk.set_check_state_and_trigger(gui::CheckState::Checked);
 						} else {
-							field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+							input.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
 						}
 					},
 					None => { // no MP3 has this field
-						field_pack.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
+						input.chk.set_check_state_and_trigger(gui::CheckState::Unchecked);
 					},
 				}
 

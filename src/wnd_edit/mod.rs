@@ -14,7 +14,7 @@ pub struct WndEdit {
 	wnd:          gui::WindowModal,
 	btn_ok:       gui::Button,
 	btn_cancel:   gui::Button,
-	field_packs:  Rc<RefCell<Vec<FieldPack>>>,
+	inputs:       Rc<RefCell<Vec<CheckInput>>>,
 	wnd_pic:      WndPicture,
 	btn_uncheck:  gui::Button,
 	lst_frames:   gui::ListView,
@@ -28,7 +28,7 @@ impl ChildFocus for gui::Edit {}
 
 /// Known tag field identifier, checkbox and textbox.
 #[derive(Clone)]
-struct FieldPack {
+struct CheckInput {
 	name4: String,
 	chk:   gui::CheckBox,
 	txt:   Arc<dyn ChildFocus>,
