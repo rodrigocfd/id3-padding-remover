@@ -1,27 +1,35 @@
+//go:build windows
+
 package main
 
 import (
-	"fmt"
 	"id3fit/dlgmain"
 	"runtime"
-	"runtime/debug"
-	"time"
 
-	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/ole"
 )
 
 func main() {
-	debug.SetGCPercent(50)
 	runtime.LockOSThread()
 
-	defer func() {
-		if r := recover(); r != nil {
-			ui.TaskDlg.Error(nil, "Panic", win.StrOptNone(),
-				fmt.Sprintf("PANIC @ %v\n\n%v\n\n%s",
-					time.Now(), r, string(debug.Stack())))
-		}
-	}()
+	// go dbgMem()
 
-	dlgmain.NewDlgMain().Run()
+	ole.OleInitialize()
+	defer ole.OleUninitialize()
+
+	d := dlgmain.New()
+	d.Run()
 }
+
+// func dbgMem() {
+// 	lastFreed := uint64(0)
+// 	var stats runtime.MemStats
+// 	for {
+// 		runtime.ReadMemStats(&stats)
+// 		fmt.Printf("GC cycles: %d; Alloc: %s, Next GC: %s; Frees: %d (+%d)\n",
+// 			stats.NumGC, win.Str.FmtBytes(stats.HeapAlloc),
+// 			win.Str.FmtBytes(stats.NextGC), stats.Frees, stats.Frees-lastFreed)
+// 		lastFreed = stats.Frees
+// 		time.Sleep(time.Second * 2)
+// 	}
+// }

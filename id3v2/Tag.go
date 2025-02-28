@@ -1,3 +1,5 @@
+//go:build windows
+
 package id3v2
 
 import (
@@ -5,84 +7,77 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"id3fit/id3v2/util"
+	"id3fit/slices2"
+	"slices"
+	"strings"
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
+	"github.com/rodrigocfd/windigo/win/heap"
 )
 
-// Metadata of a single MP3 file.
+// Each MP3 file has a single ID3v2 tag.
 type Tag struct {
-	declaredSize int
-	mp3Offset    int
-	padding      int
-	frames       []*Frame
+	path      string
+	mp3Offset uint
+	padding   uint
+	frames    []*Frame
 }
 
-func (me *Tag) DeclaredSize() int { return me.declaredSize }
-func (me *Tag) Mp3Offset() int    { return me.mp3Offset }
-func (me *Tag) Padding() int      { return me.padding }
-func (me *Tag) Frames() []*Frame  { return me.frames }
-func (me *Tag) IsEmpty() bool     { return len(me.frames) == 0 }
+func (me *Tag) Path() string     { return me.path }
+func (me *Tag) Mp3Offset() uint  { return me.mp3Offset }
+func (me *Tag) Padding() uint    { return me.padding }
+func (me *Tag) Frames() []*Frame { return me.frames }
 
-// Constructor; creates a new tag with no frames.
-// If saved, will actually remove the tag from file.
-func NewTagEmpty() *Tag {
-	return &Tag{}
-}
+// Constructor.
+//
+// ⚠️ You must defer Tag.Free().
+func LoadTag(mp3Path string) (*Tag, error) {
+	me := Tag{
+		path: mp3Path,
+	}
 
-// Constructor; parses the tag from an MP3 file.
-func NewTagParseFromFile(mp3Path string) (*Tag, error) {
-	fin, err := win.FileMappedOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
+	f, err := win.FileMapOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
 	if err != nil {
 		return nil, err
 	}
-	defer fin.Close()
+	defer f.Close()
 
-	return NewTagParseFromBinary(fin.HotSlice())
-}
-
-// Constructor; parses the tag from a binary blob.
-func NewTagParseFromBinary(src []byte) (*Tag, error) {
-	declaredSize, mp3Offset, err := _TagParseHeader(src)
+	mp3Offset, _, err := parseTagHeader(f.HotSlice()) // ignore declared size, we'll use MP3 offset
 	if err != nil {
 		return nil, err
 	}
-
-	if declaredSize == 0 && mp3Offset == 0 {
-		return NewTagEmpty(), nil // file has no tag
+	if mp3Offset == 0 {
+		return &me, nil // MP3 has no ID3v2 tag
 	}
+	me.mp3Offset = mp3Offset
 
-	frames, padding, err := _TagParseFrames(src[10:declaredSize])
-	if err != nil {
+	if err := me.parseFrames(f.HotSlice()[10:mp3Offset]); err != nil {
 		return nil, err
 	}
 
-	return &Tag{
-		declaredSize: declaredSize,
-		mp3Offset:    mp3Offset,
-		padding:      padding,
-		frames:       frames,
-	}, nil
+	return &me, nil
 }
 
-func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
-	// Find MP3 offset.
-	mp3Offset, has := util.FindMp3Signature(src)
-	if !has {
+func parseTagHeader(src []byte) (mp3Offset, declaredSize uint, err error) {
+	// Retrieve MP3 offset.
+	idxMp3Offset := bytes.Index(src, []byte{0xff, 0xfb}) // https://stackoverflow.com/a/7302482/6923555
+	if idxMp3Offset == -1 {
 		return 0, 0, errors.New("no MP3 signature found")
+	} else if idxMp3Offset == 0 {
+		return 0, 0, nil // no tag present
 	}
+
+	src = src[0:idxMp3Offset]
 
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, mp3Offset, nil // MP3 file has no tag
+		return 0, 0, nil // MP3 file has no tag
 	}
 
 	// Validate tag version 2.3.0.
 	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
-		return 0, 0, fmt.Errorf(
-			"tag version 2.%d.%d is not supported, only 2.3.0",
-			src[3], src[4])
+		return 0, 0, fmt.Errorf("tag version 2.%d.%d is not supported, only 2.3.0", src[3], src[4])
 	}
 
 	// Validate unsupported flags.
@@ -93,223 +88,195 @@ func _TagParseHeader(src []byte) (declaredSize, mp3Offset int, e error) {
 	}
 
 	// Read declared tag size.
-	declaredSize = int(util.SynchSafeDecode(
+	nDeclaredSize := synchSafeDecode(
 		binary.BigEndian.Uint32(src[6:10]),
-	) + 10) // also count 10-byte tag header
+	) + 10 // also count 10-byte tag header
 
-	if declaredSize > mp3Offset {
-		return 0, 0, fmt.Errorf(
-			"declared size is greater than MP3 offset: %d vs %d",
-			declaredSize, mp3Offset)
-	}
-
-	return declaredSize, mp3Offset, nil
+	return uint(idxMp3Offset), uint(nDeclaredSize), nil
 }
 
-func _TagParseFrames(src []byte) (frames []*Frame, padding int, e error) {
-	frames = make([]*Frame, 0, 10) // arbitrary
-
+func (me *Tag) parseFrames(src []byte) error {
 	for {
 		if len(src) == 0 { // end of tag, no padding found
-			break
-		} else if util.IsSliceZeroed(src) { // we entered a padding region after all frames
-			padding = len(src)
-			break
+			return nil
+		} else if len(src) < 10 { // we cant' have a frame with less than 10 bytes, which is the header size
+			me.padding = uint(len(src))
+			return nil
+		} else if slices2.AllEqual(src[:4], 0x00) {
+			// The first 4 bytes should contain the 4-char frame name.
+			// If they're all zero, it means we entered a padding region after all frames.
+			me.padding = uint(len(src))
+			return nil
 		}
 
-		newFrame, err := _NewFrameParse(src)
+		pFrame, err := parseFrame(src)
 		if err != nil {
-			return nil, 0, err
-		}
-		if newFrame.OriginalSize() > len(src) { // means the size was serialized with error
-			return nil, 0, fmt.Errorf(
-				"frame size is greater than available size: %d vs %d",
-				newFrame.OriginalSize(), len(src))
+			return err
 		}
 
-		frames = append(frames, newFrame) // add the frame to our collection
-		src = src[newFrame.OriginalSize():]
-	}
+		if pFrame.DeclaredSize() > uint(len(src)) { // means the size was serialized with error
+			return fmt.Errorf("declared frame size greater than available size: %d vs %d",
+				pFrame.DeclaredSize(), len(src))
+		}
 
-	return frames, padding, nil
+		src = src[pFrame.DeclaredSize():]
+		me.frames = append(me.frames, pFrame)
+	}
 }
 
-// Serializes the tag into a []byte.
-func (t *Tag) Serialize() []byte {
-	t._apicAsLastFrame()
-	serializedFrames := make([]byte, 0, len(t.frames)*30) // arbitrary
-	for _, frame := range t.frames {
-		serializedFrames = append(serializedFrames, frame.Serialize()...)
-	}
-
-	finalBlob := make([]byte, 0, 10+len(serializedFrames))
-	finalBlob = append(finalBlob, []byte("ID3")...)      // magic bytes
-	finalBlob = append(finalBlob, []byte{0x03, 0x00}...) // tag version 2.3.0
-	finalBlob = append(finalBlob, 0x00)                  // flags
-
-	synchSafeDataSize := util.SynchSafeEncode(uint32(len(serializedFrames))) // won't count 10-byte header
-	finalBlob = util.Append32(finalBlob, binary.BigEndian, synchSafeDataSize)
-
-	finalBlob = append(finalBlob, serializedFrames...)
-	return finalBlob
+// Appends a new frame with a simple text as its contents.
+func (me *Tag) AddFrameWithText(name4, text string) {
+	me.frames = append(me.frames, newFrameWithText(name4, text))
 }
 
-func (t *Tag) _apicAsLastFrame() {
-	idx, _, has := t.FrameByName4("APIC")
-	if !has { // no APIC frame?
-		return
-	}
-
-	numFrames := len(t.frames)
-	if idx == numFrames-1 { // already last frame?
-		return
-	}
-
-	t.SwapFrames(idx, numFrames-1)
-}
-
-// Saves or removes a tag in an MP3 file.
-func (t *Tag) SerializeToFile(mp3Path string) error {
-	newTagBlob := []byte{} // if tag is empty, this will actually remove any existing tag
-	if !t.IsEmpty() {
-		newTagBlob = t.Serialize()
-	}
-
-	fout, err := win.FileOpen(mp3Path, co.FILE_OPEN_RW_EXISTING)
-	if err != nil {
-		return fmt.Errorf("opening file to serialize: %w", err)
-	}
-	defer fout.Close()
-
-	currentContents, err := fout.ReadAll() // read the whole MP3 file into a []byte
-	if err != nil {
-		return fmt.Errorf("reading contents before serializing: %w", err)
-	}
-
-	currentTag, err := NewTagParseFromBinary(currentContents) // parse tag currently saved in the MP3 file
-	if err != nil {
-		return fmt.Errorf("reading current tag: %w", err)
-	}
-
-	if err := fout.Resize(0); err != nil { // truncate MP3 file
-		return fmt.Errorf("truncating file before serializing: %w", err)
-	}
-
-	if len(newTagBlob) > 0 { // is the tag non-empty?
-		if _, err := fout.Write(newTagBlob); err != nil { // write new tag to MP3 file
-			return fmt.Errorf("writing new tag: %w", err)
+// Returns the tag with the given name, or nil of none.
+func (me *Tag) FrameByName4(name4 string) *Frame {
+	for _, pFrame := range me.frames {
+		if pFrame.Name4() == name4 {
+			return pFrame
 		}
 	}
-
-	if _, err := fout.Write(currentContents[currentTag.Mp3Offset():]); err != nil { // write MP3 itself
-		return fmt.Errorf("writing MP3 own data: %w", err)
-	}
-
 	return nil
 }
 
-// Replaces the struct slice with another one, which will have only the chosen
-// frames.
-func (t *Tag) DeleteFrames(fun func(i int, f *Frame) (willDelete bool)) {
-	newFrames := make([]*Frame, 0, len(t.frames))
-	for idx, frame := range t.frames {
-		willDelete := fun(idx, frame)
-		if !willDelete { // the new slice will contain the non-deleted tags
-			newFrames = append(newFrames, frame)
-		}
-	}
-	t.frames = newFrames // throw the old one away
+// Returns false if the tag has no frames.
+func (me *Tag) IsEmpty() bool {
+	return len(me.frames) == 0
 }
 
-// Swaps to frames within the slice.
-func (t *Tag) SwapFrames(indexA, indexB int) {
-	tmp := t.frames[indexA]
-	t.frames[indexA] = t.frames[indexB]
-	t.frames[indexB] = tmp
+// Removes the frames to which the predicate returns true.
+func (me *Tag) RemoveFrameIf(fun func(pFrame *Frame) bool) {
+	me.frames = slices.DeleteFunc(me.frames, func(pFrame *Frame) bool {
+		return fun(pFrame)
+	})
 }
 
-// Retrieves the index and the frame according to its name.
-func (t *Tag) FrameByName4(name4 string) (idx int, f *Frame, exists bool) {
-	for i, frame := range t.frames {
-		if frame.Name4() == name4 {
-			return i, frame, true
-		}
-	}
-	return -1, nil, false
+// Replaces the frame slice, discarding the old one.
+func (me *Tag) ReplaceFrames(newSlice []*Frame) {
+	me.frames = newSlice
 }
 
-// Retrieves the text of the given frame.
-func (t *Tag) TextByFrameId(frameId FRAMETXT) (string, bool) {
-	if _, frame, has := t.FrameByName4(string(frameId)); has {
-		switch data := frame.data.(type) {
-		case *FrameDataText:
-			return data.Text, true
-		case *FrameDataComment:
-			return data.Text, true // for comments, we return Text, not Descr field
-		default:
-			panic(fmt.Sprintf("Cannot retrieve text from frame %s.", frameId))
-		}
-	} else { // frame not found
-		return "", false
-	}
-}
+// Returns a string resume of the ReplayGain tags, or an empty string if none.
+func (me *Tag) ReplayGainStatus() string {
+	hasTrack, hasAlbum := false, false
 
-// Sets the text of the given frame, which will be created if not existing.
-func (t *Tag) SetTextByFrameId(frameId FRAMETXT, text string) {
-	if _, frame, has := t.FrameByName4(string(frameId)); has { // frame already exists
-		switch data := frame.data.(type) {
-		case *FrameDataText:
-			if text == "" { // empty text will delete the frame
-				t.DeleteFrames(func(_ int, f *Frame) bool {
-					return f.Name4() == string(frameId)
-				})
-			} else {
-				data.Text = text
-			}
-		case *FrameDataComment:
-			if text == "" { // empty text will delete the frame
-				t.DeleteFrames(func(_ int, f *Frame) bool {
-					return f.Name4() == string(frameId)
-				})
-			} else {
-				data.Text = text
-			}
-		default: // not simple text or comment: something went wrong
-			panic(fmt.Sprintf("Cannot set text on frame %s.", frameId))
+	for _, pFrame := range me.frames {
+		if hasTrack && hasAlbum {
+			break
 		}
 
-	} else { // frame does not exist yet
-		newFrame := _NewFrameEmpty(string(frameId)) // may contain any FrameData type
-		if frameId == FRAMETXT_COMMENT {
-			newFrame.data = &FrameDataComment{
-				Lang3: "eng",
-				Text:  text,
-			}
-		} else {
-			newFrame.data = &FrameDataText{
-				Text: text,
-			}
-		}
-		t.frames = append(t.frames, newFrame)
-	}
-}
-
-// Tells whether the field has the same value across all tags.
-//
-// If so, returns the value itself.
-func TagSameValueAcrossAll(tags []*Tag, frameId FRAMETXT) (string, bool) {
-	if firstTagText, ok := tags[0].TextByFrameId(frameId); ok { // try to retrieve frame text from 1st tag
-		for i := 1; i < len(tags); i++ { // run on each subsequent tag
-			if otherTagText, hasFrame := tags[i].TextByFrameId(frameId); hasFrame {
-				if otherTagText != firstTagText {
-					return "", false // frame exists in subsequent tag, but text is different from 1st tag
+		if pFrame.Name4() == "TXXX" {
+			if pBody, ok := pFrame.Body().(*BodyUserText); ok {
+				descr := strings.ToLower(pBody.Descr)
+				if strings.HasPrefix(descr, "replaygain_track_") {
+					hasTrack = true
+				} else if strings.HasPrefix(descr, "replaygain_album_") {
+					hasAlbum = true
 				}
-			} else {
-				return "", false // frame absent in subsequent tag
 			}
 		}
-		return firstTagText, true
-	} else {
-		return "", false // frame absent in first tag
 	}
+
+	if hasTrack && hasAlbum {
+		return "TA"
+	} else if hasTrack {
+		return "T"
+	} else if hasAlbum {
+		return "A"
+	} else {
+		return ""
+	}
+}
+
+// Saves the tag to the file whose path is saved in the tag object.
+func (me *Tag) SaveToFile() error {
+	if me.path == "" {
+		return errors.New("Tag has no path")
+	}
+
+	fout, err := win.FileOpen(me.path, co.FILE_OPEN_RW_EXISTING)
+	if err != nil {
+		return err
+	}
+	defer fout.Close()
+
+	currentContents, err := fout.ReadAllAsVec()
+	if err != nil {
+		return err
+	}
+	defer currentContents.Free()
+
+	mp3Offset, _, err := parseTagHeader(currentContents.HotSlice())
+	if err != nil {
+		return err
+	}
+
+	if err := fout.Resize(0); err != nil { // truncate file
+		return err
+	}
+
+	if len(me.frames) > 0 {
+		tagBlob := me.Serialize()
+		defer tagBlob.Free()
+		if _, err := fout.Write(tagBlob.HotSlice()); err != nil {
+			return err
+		}
+	}
+
+	fout.Write(currentContents.HotSlice()[mp3Offset:]) // MP3 data
+	me.padding = 0
+	return nil
+}
+
+// Serializes the tag into raw bytes.
+func (me *Tag) Serialize() heap.Vec[byte] {
+	apicSz := uint(0)
+	if pApic := me.FrameByName4("APIC"); pApic != nil {
+		pApicBody, _ := pApic.Body().(*BodyPicture)
+		apicSz = uint(len(pApicBody.Bin))
+	}
+
+	buf := heap.NewVecReserved[byte](10 + 10*uint(len(me.frames)) + apicSz) // arbitrary
+
+	buf.Append([]byte("ID3")...) // magic bytes
+	buf.Append(0x03, 0x00)       // tag version
+	buf.Append(0x00)             // flags
+
+	buf.AppendN(4, 0x00) // placeholder for body size
+
+	framesSz := uint(0) // won't count 10-byte tag header
+	for _, pFrame := range me.frames {
+		framesSz += pFrame.Serialize(&buf)
+	}
+
+	binary.BigEndian.PutUint32(buf.HotSlice()[6:], synchSafeEncode(uint32(framesSz)))
+	return buf
+}
+
+// If the frame is the same across all tags, returns it; otherwise returns nil.
+func SameFrameAcrossAllTags(name4 string, tags []*Tag) *Frame {
+	if len(tags) == 0 {
+		return nil
+	} else if len(tags) == 1 {
+		return tags[0].FrameByName4(name4)
+	}
+
+	pFrame0 := tags[0].FrameByName4(name4)
+	if pFrame0 == nil {
+		return nil
+	}
+
+	allSame := slices2.AllEqualFunc(tags[1:], func(pTag *Tag) bool {
+		pFrame := pTag.FrameByName4(name4)
+		if pFrame == nil {
+			return false
+		} else {
+			return pFrame.Body().AsText() == pFrame0.Body().AsText()
+		}
+	})
+
+	if allSame {
+		return pFrame0
+	}
+	return nil
 }

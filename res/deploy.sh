@@ -6,6 +6,6 @@ cd ..
 go build -ldflags "-s -w -H=windowsgui"
 
 echo "Deploying to apps folder..."
-mv ./id3fit.exe /d/Stuff/apps/_audio\ tools/.
+mv ./id3fit.exe /d/Stuff/apps/_audio\ tools/id3-fit.exe
 
 echo "Done."

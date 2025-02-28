@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build syso",
+			"command": "D:\\Stuff\\Core\\_go\\syso\\windres.exe",
+			"args": [
+				"-i",
+				"res\\id3-fit.res",
+				"id3-fit.syso",
+			],
+		},
+	],
+}

@@ -1,6 +1,8 @@
-package util
+//go:build windows
 
-func SynchSafeDecode(n uint32) uint32 {
+package id3v2
+
+func synchSafeDecode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7f00_0000)
 	for mask != 0 {
 		out >>= 1
@@ -10,7 +12,7 @@ func SynchSafeDecode(n uint32) uint32 {
 	return out
 }
 
-func SynchSafeEncode(n uint32) uint32 {
+func synchSafeEncode(n uint32) uint32 {
 	out, mask := uint32(0), uint32(0x7f)
 	for (mask ^ 0x7fff_ffff) != 0 {
 		out = n & ^mask

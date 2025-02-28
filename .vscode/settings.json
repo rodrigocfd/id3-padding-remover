@@ -1,0 +1,11 @@
+{
+	"go.useLanguageServer": true, // https://stackoverflow.com/a/77875329/6923555
+	"go.vetFlags": [
+		"-unsafeptr=false"
+	],
+	"gopls": {
+		"analyses": {
+			"unsafeptr": false,
+		},
+	},
+}

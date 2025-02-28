@@ -1,172 +1,240 @@
+//go:build windows
+
 package dlgmain
 
 import (
-	"errors"
 	"fmt"
+	"id3fit/dlgedit"
 	"id3fit/id3v2"
-	"runtime"
-	"strconv"
+	"slices"
+	"strings"
 
+	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
-func (me *DlgMain) updateMemoryStatus() {
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
+func (me *DlgMain) withWaitCursor(fun func()) {
+	me.wnd.Hwnd().SetWindowText("Loading...")
+	me.wnd.Hwnd().EnableWindow(false)
+	hCursorWait, _ := win.HINSTANCE(0).LoadCursor(win.CursorResIdc(co.IDC_WAIT))
+	hCursorOrig, _ := hCursorWait.SetCursor()
 
-	me.statusBar.Parts().SetAllTexts(
-		fmt.Sprintf("Objects mem: %s", win.Str.FmtBytes(memStats.HeapAlloc)),
-		fmt.Sprintf("Reserved sys: %s", win.Str.FmtBytes(memStats.HeapSys)),
-		fmt.Sprintf("Idle spans: %s", win.Str.FmtBytes(memStats.HeapIdle)),
-		fmt.Sprintf("GC cycles: %d", memStats.NumGC),
-		fmt.Sprintf("Next GC: %s", win.Str.FmtBytes(memStats.NextGC)),
-	)
+	fun()
+
+	hCursorOrig.SetCursor()
+	me.wnd.Hwnd().EnableWindow(true)
+	me.updateTitlebarCount()
 }
 
-func (me *DlgMain) updateTitlebarCount(total int) {
-	// Total is not computed here because LVN_DELETEITEM notification is sent
-	// before the item is actually deleted, so the count would be wrong.
-	if total == 0 {
-		me.wnd.Hwnd().SetWindowText(APP_TITLE)
+func (me *DlgMain) addMp3sToList(incomingPaths []string) {
+	allPaths := make([]string, 0, len(incomingPaths)) // grab all files within all subfolders
+	for _, incomingPath := range incomingPaths {
+		if win.Path.IsFolder(incomingPath) {
+			allPaths = append(allPaths,
+				slices.Collect(win.Path.IterFilesDeep(incomingPath))...)
+		} else {
+			allPaths = append(allPaths, incomingPath)
+		}
+	}
+
+	nonMp3Count := 0 // count how many non-MP3 we have
+	for _, path := range allPaths {
+		if !win.Path.HasExtension(path, "mp3") {
+			nonMp3Count++
+		}
+	}
+	if nonMp3Count == len(allPaths) { // zero MP3s found?
+		me.wnd.Hwnd().MessageBox(
+			fmt.Sprintf("No MP3 found amongst %d files.", len(allPaths)),
+			"No MP3 files", co.MB_ICONERROR)
+		return // nothing do to
+	}
+
+	tags := make([]*id3v2.Tag, 0, len(allPaths)) // cache all the tags
+	for _, path := range allPaths {
+		if win.Path.HasExtension(path, "mp3") { // ignore non-MP3 files
+			tag, err := id3v2.LoadTag(path)
+			if err != nil {
+				me.wnd.Hwnd().MessageBox(
+					fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
+					"Error", co.MB_ICONERROR)
+				return // on error, no tag is loaded
+			}
+			tags = append(tags, tag)
+		}
+	}
+
+	for _, tag := range tags {
+		var item ui.ListViewItem
+		if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok {
+			item = existingItem // current tag object will be replaced
+		} else {
+			item = me.lstFiles.Items.Add(tag.Path()) // insert new item
+		}
+		me.tags[item.Uid()] = tag // store tag in cache
+		me.renderMp3InList(item)
+	}
+	me.sortList()
+	me.lstFiles.Cols.Get(0).SetWidthToFill()
+}
+
+func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
+	tag := me.tags[item.Uid()] // retrieve tag from cache
+
+	if tag.IsEmpty() {
+		item.SetText(1, "N/A") // MP3 without tag
 	} else {
-		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%s (%d/%d)",
-			APP_TITLE, me.lstMp3s.Items().SelectedCount(), total))
+		item.SetText(1, fmt.Sprintf("%d", tag.Padding()))
+	}
+
+	if tag.FrameByName4("APIC") != nil {
+		item.SetText(2, "\u2713") // checkmark
+	} else {
+		item.SetText(2, "")
+	}
+
+	item.SetText(3, tag.ReplayGainStatus())
+
+	me.renderMp3TextColumn(item, 4, tag, "TPE1")
+	me.renderMp3TextColumn(item, 5, tag, "TYER")
+	me.renderMp3TextColumn(item, 6, tag, "TALB")
+	me.renderMp3TextColumn(item, 7, tag, "TRCK")
+	me.renderMp3TextColumn(item, 8, tag, "TIT2")
+	me.renderMp3TextColumn(item, 9, tag, "TCON")
+	me.renderMp3TextColumn(item, 10, tag, "TPE3")
+	me.renderMp3TextColumn(item, 11, tag, "TCOM")
+	me.renderMp3TextColumn(item, 12, tag, "TEXT")
+	me.renderMp3TextColumn(item, 13, tag, "TOPE")
+
+	if frame := tag.FrameByName4("COMM"); frame != nil {
+		body, _ := frame.Body().(*id3v2.BodyComment)
+		item.SetText(14, body.Text)
+	} else {
+		item.SetText(14, "") // clear
 	}
 }
 
-func (me *DlgMain) addMp3sToList(mp3s []string) {
-	me.lstMp3s.SetRedraw(false)
-
-	for _, mp3 := range mp3s {
-		tag := me.cachedTags[mp3]
-
-		var padding string
-		if tag.IsEmpty() {
-			padding = "N/A"
-		} else {
-			padding = strconv.Itoa(tag.Padding())
-		}
-
-		if item, found := me.lstMp3s.Items().Find(mp3); !found { // file not added yet?
-			me.lstMp3s.Items().AddWithIcon(0, mp3, padding)
-		} else {
-			item.SetText(1, padding) // file already in list; update padding
-		}
+func (me *DlgMain) renderMp3TextColumn(item ui.ListViewItem, colIndex int, tag *id3v2.Tag, name4 string) {
+	if frame := tag.FrameByName4(name4); frame != nil {
+		body, _ := frame.Body().(*id3v2.BodyText)
+		item.SetText(colIndex, body.Text)
+	} else {
+		item.SetText(colIndex, "") // clear
 	}
-
-	me.lstMp3s.SetRedraw(true)
-	me.lstMp3s.Columns().Get(0).SetWidthToFill()
-	me.displayFramesOfSelectedFiles()
 }
 
-func (me *DlgMain) displayFramesOfSelectedFiles() {
-	me.lstFrames.SetRedraw(false)
-	me.lstFrames.Items().DeleteAll() // clear all tag displays
-
-	selMp3s := me.lstMp3s.Columns().Get(0).SelectedTexts()
-
-	if len(selMp3s) > 1 { // multiple files selected, no frames are shown
-		me.lstFrames.Items().
-			Add("", fmt.Sprintf("%d selected...", len(selMp3s)))
-
-	} else if len(selMp3s) == 1 { // only 1 file selected, we display its frames
-		cachedTag := me.cachedTags[selMp3s[0]]
-
-		// Read each frame of the tag, and display it on the list.
-		// Since operations can be made directly on the list items, the order of
-		// the items in the list must match the order of the frames slice.
-		for _, frame := range cachedTag.Frames() {
-			newItem := me.lstFrames.Items().
-				Add(frame.Name4()) // first column displays frame name
-
-			switch data := frame.Data().(type) {
-			case *id3v2.FrameDataText:
-				newItem.SetText(1, data.Text)
-			case *id3v2.FrameDataUserText:
-				newItem.SetText(1, fmt.Sprintf("%s / %s", data.Descr, data.Text))
-			case *id3v2.FrameDataBinary:
-				binLen := uint64(len(data.Data))
-				newItem.SetText(1,
-					fmt.Sprintf("%s: (%.2f%%)",
-						win.Str.FmtBytes(binLen), // frame size
-						float64(binLen)*100/ // percent of whole tag size
-							float64(cachedTag.Mp3Offset())),
-				)
-			case *id3v2.FrameDataComment:
-				newItem.SetText(1,
-					fmt.Sprintf("[%s] %s", data.Lang3, data.Text))
-			case *id3v2.FrameDataPicture:
-				binLen := uint64(len(data.Data))
-				newItem.SetText(1,
-					fmt.Sprintf("%s - %s (%.2f%%)",
-						data.Type.String(),
-						win.Str.FmtBytes(binLen), // frame size
-						float64(binLen)*100/ // percent of whole tag size
-							float64(cachedTag.Mp3Offset())),
-				)
-			}
-		}
-
-	}
-
-	me.lstFrames.SetRedraw(true)
-	me.lstFrames.Columns().Get(1).SetWidthToFill()
-	me.lstFrames.Hwnd().EnableWindow(len(selMp3s) > 0) // if no files selected, disable lstValues
-
-	selTags := make([]*id3v2.Tag, 0, len(selMp3s)) // filter the tags of currently selected files
-	for _, selMp3 := range selMp3s {
-		selTags = append(selTags, me.cachedTags[selMp3])
-	}
-	me.dlgFields.Feed(selTags)
+func (me *DlgMain) updateTitlebarCount() {
+	nFiles := me.lstFiles.Items.Count()
+	nSel := me.lstFiles.Items.SelectedCount()
+	me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)", nSel, nFiles))
 }
 
-func (me *DlgMain) renameSelectedFiles(withTrackPrefix bool) (renamedCount int, e error) {
-	for _, selItem := range me.lstMp3s.Items().SelectedItems() {
-		selMp3 := selItem.Text(0)
-		theTag := me.cachedTags[selMp3] // tag of the MP3 we're going to rename
-
-		var trackNumStr string
-		if withTrackPrefix {
-			if trackNumFromFrame, has := theTag.TextByFrameId(id3v2.FRAMETXT_TRACK); !has {
-				return 0, errors.New("track frame absent")
-			} else {
-				trackNumStr = trackNumFromFrame
-			}
+func (me *DlgMain) sortList() {
+	me.lstFiles.Items.Sort(func(itemA, itemB ui.ListViewItem) int {
+		cmp := 0
+		if me.sortCol == 1 { // by padding size
+			tagA := me.tags[itemA.Uid()]
+			tagB := me.tags[itemB.Uid()]
+			cmp = int(tagA.Padding()) - int(tagB.Padding())
+		} else { // by column text
+			cmp = win.Str.CmpI(itemA.Text(me.sortCol), itemB.Text(me.sortCol))
 		}
 
-		artist, has := theTag.TextByFrameId(id3v2.FRAMETXT_ARTIST)
-		if !has {
-			return 0, errors.New("artist frame absent")
-		}
-
-		title, has := theTag.TextByFrameId(id3v2.FRAMETXT_TITLE)
-		if !has {
-			return 0, errors.New("title frame absent")
-		}
-
-		var newPath string
-		if withTrackPrefix {
-			if trackNumInt, err := strconv.Atoi(trackNumStr); err != nil {
-				return 0, fmt.Errorf("invalid track value: %s", trackNumStr)
-			} else {
-				newPath = fmt.Sprintf("%s\\%02d %s - %s.mp3",
-					win.Path.GetPath(selMp3), trackNumInt, artist, title)
-			}
+		if me.sortAsc {
+			return cmp
 		} else {
-			newPath = fmt.Sprintf("%s\\%s - %s.mp3",
-				win.Path.GetPath(selMp3), artist, title)
+			return -cmp
 		}
+	})
+}
 
-		if newPath != selMp3 { // file name actually changed?
-			if err := win.MoveFile(selMp3, newPath); err != nil {
-				return 0, fmt.Errorf("failed to rename:\n%s\nto\n%s", selMp3, newPath)
-			}
-
-			delete(me.cachedTags, selMp3)   // remove cached tag
-			me.cachedTags[newPath] = theTag // re-insert tag under new name
-			selItem.SetText(0, newPath)     // rename list view item
-			renamedCount++
-		}
+func (me *DlgMain) removePicRg(delRg bool) {
+	nFiles := me.lstFiles.Items.SelectedCount()
+	msg := fmt.Sprintf("Remove picture frame from %d file(s)?", nFiles)
+	if delRg {
+		msg = fmt.Sprintf("Remove picture and ReplayGain frames from %d file(s)?", nFiles)
 	}
-	return renamedCount, nil
+
+	ret, _ := win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
+		HwndParent:  me.wnd.Hwnd(),
+		WindowTitle: "Remove frames",
+		Content:     msg,
+		HMainIcon:   win.TdcIconTdi(co.TDICON_WARNING),
+		Flags:       co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
+		Buttons: []win.TASKDIALOG_BUTTON{
+			{Id: co.ID_OK, Text: "&Remove"},
+			{Id: co.ID_CANCEL, Text: "&Cancel"},
+		},
+	})
+	if ret != co.ID_OK {
+		return
+	}
+
+	for item := range me.lstFiles.Items.IterSelected() {
+		tag := me.tags[item.Uid()]
+		tag.RemoveFrameIf(func(frame *id3v2.Frame) bool {
+			if frame.Name4() == "APIC" {
+				return true
+			}
+			if delRg && frame.Name4() == "TXXX" {
+				if body, ok := frame.Body().(*id3v2.BodyUserText); ok {
+					if strings.HasPrefix(body.Descr, "replaygain_track_") ||
+						strings.HasPrefix(body.Descr, "replaygain_album_") {
+						return true
+					}
+				}
+			}
+			return false
+		})
+	}
+}
+
+func (me *DlgMain) editSelected() co.ID {
+	if me.lstFiles.Items.SelectedCount() == 0 {
+		return co.ID_CANCEL // Enter key will hit here even without selected items
+	}
+
+	selTags := make([]*id3v2.Tag, 0, me.lstFiles.Items.SelectedCount())
+	for item := range me.lstFiles.Items.IterSelected() {
+		selTags = append(selTags, me.tags[item.Uid()])
+	}
+	wndEdit := dlgedit.New(me.wnd, selTags)
+	return wndEdit.ShowModal()
+}
+
+func (me *DlgMain) saveSelected() {
+	type Fail struct {
+		file string
+		err  error
+	}
+	failed := make([]Fail, 0)
+
+	for item := range me.lstFiles.Items.IterSelected() {
+		tag := me.tags[item.Uid()]
+		if err := tag.SaveToFile(); err != nil {
+			failed = append(failed, Fail{file: tag.Path(), err: err})
+		}
+		me.renderMp3InList(item)
+	}
+	me.sortList()
+
+	if len(failed) > 0 {
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(failed)))
+		for _, fail := range failed {
+			sb.WriteString("\n\n")
+			sb.WriteString(fail.file)
+			sb.WriteString("\n")
+			sb.WriteString(fail.err.Error())
+		}
+		win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
+			HwndParent:    me.wnd.Hwnd(),
+			WindowTitle:   "Error saving file(s)",
+			Content:       sb.String(),
+			HMainIcon:     win.TdcIconTdi(co.TDICON_ERROR),
+			CommonButtons: co.TDCBF_OK,
+			Flags:         co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
+		})
+	}
 }

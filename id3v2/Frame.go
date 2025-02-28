@@ -1,98 +1,109 @@
+//go:build windows
+
 package id3v2
 
 import (
 	"encoding/binary"
 	"fmt"
-	"id3fit/id3v2/util"
-	"strings"
+
+	"github.com/rodrigocfd/windigo/win/heap"
 )
 
-// A unit of data within a tag.
 type Frame struct {
-	name4        string    // Uniquely identifies the frame type.
-	originalSize int       // Includes 10-byte frame header.
-	flags        [2]byte   // Almost always zero.
-	data         FrameData // Polymorphic data.
+	name4        string
+	declaredSize uint // Used only at parsing.
+	flags        [2]byte
+	body         Body // Polymorphic.
 }
 
-func (f *Frame) Name4() string     { return f.name4 }
-func (f *Frame) OriginalSize() int { return f.originalSize }
-func (f *Frame) Flags() [2]byte    { return f.flags }
-func (f *Frame) Data() FrameData   { return f.data }
+func (me *Frame) Name4() string      { return me.name4 }
+func (me *Frame) DeclaredSize() uint { return me.declaredSize }
+func (me *Frame) Body() Body         { return me.body }
 
 // Constructor.
-func _NewFrameEmpty(name4 string) *Frame {
-	return &Frame{
+func newFrameWithText(name4, text string) *Frame {
+	me := &Frame{
 		name4: name4,
 	}
+
+	if name4 == "COMM" {
+		me.body = &BodyComment{
+			Lang3: "eng",
+			Text:  text,
+		}
+	} else {
+		me.body = &BodyText{ // assume simple text frame
+			Text: text,
+		}
+	}
+	return me
 }
 
 // Constructor.
-func _NewFrameParse(src []byte) (*Frame, error) {
+func parseFrame(src []byte) (*Frame, error) {
 	// Parse the 10-byte frame header.
-	f := &Frame{
+	me := &Frame{
 		name4:        string(src[0:4]),
-		originalSize: int(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header
+		declaredSize: uint(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header
 		flags:        [2]byte{src[8], src[9]},
 	}
+	if me.declaredSize > uint(len(src)) {
+		me.declaredSize = uint(len(src)) // if serialized with error, be complacent
+	}
 
-	src = src[10:f.originalSize] // skip frame header, truncate to frame size
+	src = src[10:me.declaredSize] // skip frame header, truncate to declared frame size
 
-	// Parse the frame contents.
-	if f.name4 == "COMM" {
-		data, err := _NewFrameDataComment(src)
+	if err := me.parseBody(src); err != nil {
+		return nil, err
+	}
+	return me, nil
+}
+
+func (me *Frame) parseBody(src []byte) error {
+	if me.name4 == "COMM" {
+		comm, err := parseBodyComment(src)
 		if err != nil {
-			return nil, fmt.Errorf("parsing COMM: %w", err)
+			return err
 		}
-		f.data = data
-
-	} else if f.name4 == "APIC" {
-		data, err := _NewFrameDataPicture(src)
+		me.body = comm
+	} else if me.name4 == "APIC" {
+		apic, err := parseBodyPicture(src)
 		if err != nil {
-			return nil, fmt.Errorf("parsing APIC: %w", err)
+			return err
 		}
-		f.data = data
-
-	} else if f.name4[0] == 'T' {
-		texts, err := util.ParseAnyStrings(src)
+		me.body = apic
+	} else if me.name4[0] == 'T' {
+		texts, err := parseStrings(src)
 		if err != nil {
-			return nil, err
+			return fmt.Errorf("frame %s with bad strings: %w", me.name4, err)
 		}
 
 		switch len(texts) {
 		case 0:
-			return nil, fmt.Errorf("frame %s contains no texts", f.name4)
+			return fmt.Errorf("frame %s contains no texts", me.name4)
 		case 1:
-			f.data = &FrameDataText{Text: texts[0]}
+			me.body = &BodyText{Text: texts[0]}
 		case 2:
-			f.data = &FrameDataUserText{Descr: texts[0], Text: texts[1]}
+			me.body = &BodyUserText{Descr: texts[0], Text: texts[1]}
 		default:
-			return nil, fmt.Errorf("frame %s contains %d texts", f.name4, len(texts))
+			return fmt.Errorf("frame %s contains %d texts", me.name4, len(texts))
 		}
-
-	} else { // anything else is treated as raw binary
-		f.data = _NewFrameDataBinary(src)
+	} else { // everything else is treated as raw binary
+		me.body = parseBodyBinary(src)
 	}
-
-	return f, nil
+	return nil
 }
 
-func (f *Frame) Serialize() []byte {
-	serializedData := f.data.Serialize()
+// Serializes the frame into bytes.
+func (me *Frame) Serialize(pDest *heap.Vec[byte]) uint {
+	pDest.Reserve(pDest.Len() + 10) // header size
+	pDest.Append([]byte(me.name4)...)
 
-	buf := make([]byte, 0, 10+len(serializedData))
-	buf = append(buf, []byte(f.name4)...)
-	buf = util.Append32(buf, binary.BigEndian, uint32(len(serializedData))) // won't count 10-byte header
-	buf = append(buf, f.flags[:]...)
-	buf = append(buf, serializedData...)
-	return buf
-}
+	bodySizeOffset := pDest.Len()
+	pDest.AppendN(4, 0x00) // placeholder for body size
+	pDest.Append(me.flags[:]...)
 
-func (f *Frame) IsReplayGain() bool {
-	if f.name4 == "TXXX" {
-		if frameUserTxt, ok := f.data.(*FrameDataUserText); ok {
-			return strings.HasPrefix(frameUserTxt.Descr, "replaygain_")
-		}
-	}
-	return false
+	szBody := me.body.Serialize(pDest) // won't count 10-byte frame header
+	binary.BigEndian.PutUint32(pDest.HotSlice()[bodySizeOffset:], uint32(szBody))
+	return 10 + szBody // count 10-byte frame header
 }
