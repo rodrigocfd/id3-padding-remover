@@ -50,7 +50,7 @@ func parseIso88591Strings(src []byte) []string {
 	blocks := slices.Collect(slices2.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
 
-	wideStrBuf := heap.WideStr20.New() // buffer to convert bytes to Go strings
+	wideStrBuf := heap.NewWideStr[heap.Stack20]() // buffer to convert bytes to Go strings
 	defer wideStrBuf.Free()
 
 	for _, block := range blocks {
@@ -90,7 +90,7 @@ func parseUnicodeStrings(src []byte) []string {
 	blocks := slices.Collect(slices2.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
 
-	wideStrBuf := heap.WideStr20.New() // buffer to convert bytes to Go strings
+	wideStrBuf := heap.NewWideStr[heap.Stack20]() // buffer to convert bytes to Go strings
 	defer wideStrBuf.Free()
 
 	for _, block := range blocks {
@@ -140,7 +140,7 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 
 	buf := make([]byte, 0, estimatedLenBytes) // to be returned
 
-	str16 := heap.WideStr20.New() // to serialize each Go string
+	str16 := heap.NewWideStr[heap.Stack20]() // to serialize each Go string
 	defer str16.Free()
 
 	for _, str := range strs {

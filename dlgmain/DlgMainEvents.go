@@ -93,13 +93,7 @@ func (me *DlgMain) events() {
 
 		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
 			arr, _ := fod.GetResults(&rel)
-			nFiles, _ := arr.GetCount()
-			paths := make([]string, 0, nFiles)
-
-			for item := range arr.Iter(&rel) {
-				path, _ := item.GetDisplayName(co.SIGDN_FILESYSPATH)
-				paths = append(paths, path)
-			}
+			paths, _ := slices2.CollectErr(arr.IterDisplayNames(co.SIGDN_FILESYSPATH))
 
 			me.withWaitCursor(func() {
 				me.addMp3sToList(paths)
