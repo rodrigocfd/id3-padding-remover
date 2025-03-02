@@ -19,6 +19,10 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
+		hImg, _ := win.ImageListCreate(16, 16, co.ILC_COLOR32, 1, 1)
+		hImg.AddIconFromShell("mp3")
+		me.lstFiles.SetImageList(co.LVSIL_SMALL, hImg) // owned, no co.LVS_SHAREIMAGELISTS
+
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
 
 		me.lstFiles.Cols.Add("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)

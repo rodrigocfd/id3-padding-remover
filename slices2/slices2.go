@@ -44,7 +44,8 @@ func CollectErr[T any](seq iter.Seq2[T, error]) ([]T, error) {
 // # Example
 //
 //	nums := []uint{400, 500, 600, 700}
-//	idx := LastIndexFunc(nums, func(n uint) bool {
+//
+//	idx := slices2.LastIndexFunc(nums, func(n uint) bool {
 //		return n == 600
 //	})
 func LastIndexFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) int {
@@ -57,9 +58,17 @@ func LastIndexFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) int {
 }
 
 // Returns a new slice by mapping each element according to the callback.
+//
+// # Example
+//
+//	nums := []uint{400, 500, 600, 700}
+//
+//	strs := slices2.Map(nums, func(index int, num uint) string {
+//		return fmt.Sprintf("Num %d", num)
+//	})
 func Map[S ~[]T, T, U any](src S, fun func(index int, elem T) U) []U {
 	mapped := make([]U, 0, len(src))
-	for i := 0; i < len(src); i++ {
+	for i := range len(src) {
 		mapped = append(mapped, fun(i, src[i]))
 	}
 	return mapped
