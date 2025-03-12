@@ -1,13 +1,47 @@
-use winsafe::{self as w, prelude::*, co};
+use winsafe::{self as w, prelude::*, co, gui};
 
 use crate::ids;
-use super::WndMain;
+use super::{DlgMain, LIST_COLS};
 
-impl WndMain {
-	pub(super) fn wm_events(&self) {
+impl DlgMain {
+	pub(super) fn events(&self) {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_dialog(move |_| {
-			self2.on_init_dialog()
+			self2.update_num_files(self2.lst_files.items().count())?;
+
+			self2.lst_files.set_image_list(co::LVSIL::SMALL, {
+				let il = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
+				il.add_icons_from_shell(&["mp3"])?;
+				il
+			});
+			self2.lst_files.context_menu().unwrap().SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
+			self2.lst_files.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
+			LIST_COLS.iter()
+				.try_for_each(|(title, cx, _)| {
+					self2.lst_files.cols().add(*title, gui::dpi_x(*cx))?;
+					w::SysResult::Ok(())
+				})?;
+
+			[1, 5, 8].iter() // padding, track #, year
+				.for_each(|i| {
+					self2.lst_files.header()
+						.unwrap()
+						.items()
+						.get(*i)
+						.set_justify(gui::HeaderJustify::Right);
+				});
+			[2, 3].iter() // art, RG
+				.for_each(|i| {
+					self2.lst_files
+						.header()
+						.unwrap()
+						.items()
+						.get(*i)
+						.set_justify(gui::HeaderJustify::Center);
+				});
+
+			self2.sort_list(0, true)?; // sort by path initially
+			Ok(true)
 		});
 
 		let self2 = self.clone();
@@ -67,7 +101,7 @@ impl WndMain {
 
 		let self2 = self.clone();
 		self.wnd.on().wm_command_accel_menu(ids::MNU_MAIN_REMOVE, move || {
-			self2.lst_files.items().delete_selected();
+			self2.lst_files.items().delete_selected()?;
 			Ok(())
 		});
 
@@ -106,6 +140,56 @@ impl WndMain {
 				)),
 				..Default::default()
 			})?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.wnd.on().wm_init_menu_popup(move |p| {
+			if self2.lst_files.context_menu().unwrap() == p.hmenu {
+				[ids::MNU_MAIN_EDIT, ids::MNU_MAIN_REMOVE,
+					ids::MNU_MAIN_STRIP_RG, ids::MNU_MAIN_STRIP_RG_ART]
+					.into_iter().try_for_each(|id|
+						p.hmenu.EnableMenuItem(
+							w::IdPos::Id(id),
+							self2.lst_files.items().selected_count() > 0, // at least 1 file selected?
+						).map(|_| ())
+					)?;
+			}
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.lst_files.on().lvn_item_changed(move |_| {
+			self2.update_num_files(self2.lst_files.items().count())?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.lst_files.on().lvn_key_down(move |p| {
+			if p.wVKey == co::VK::DELETE { // on DEL key, remove selected files from the list
+				self2.lst_files.items().delete_selected()?;
+			} else if p.wVKey == co::VK::RETURN { // on Enter key, edit the selected tags
+				self2.edit_selected()?;
+			}
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.lst_files.on().nm_dbl_clk(move |_| {
+			self2.edit_selected()?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.lst_files.on().lvn_delete_item(move |_| {
+			// Notification is sent before the list is updated.
+			self2.update_num_files(self2.lst_files.items().count() - 1)?;
+			Ok(())
+		});
+
+		let self2 = self.clone();
+		self.lst_files.header().unwrap().on().hdn_item_click(move |p| {
+			self2.sort_list(p.iItem as u32, false)?;
 			Ok(())
 		});
 	}

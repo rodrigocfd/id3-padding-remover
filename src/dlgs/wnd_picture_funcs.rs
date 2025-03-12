@@ -1,40 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use try_iterator::prelude::*;
-use winsafe::{self as w, prelude::*, co, gui};
+use winsafe::{self as w};
 
 use crate::id3v2;
 use super::WndPicture;
 
 impl WndPicture {
-	/// Creates a new `WndPicture` object.
-	#[must_use]
-	pub fn new(
-		parent: &impl GuiParent,
-		sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>,
-		position: (i32, i32),
-		size: (u32, u32),
-		resize_behavior: (gui::Horz, gui::Vert),
-	) -> w::AnyResult<Self>
-	{
-		use co::{WS, WS_EX};
-
-		let wnd = gui::WindowControl::new(parent, gui::WindowControlOpts {
-			position,
-			size,
-			style: WS::CHILD | WS::VISIBLE | WS::CLIPCHILDREN | WS::CLIPSIBLINGS | WS::DISABLED,
-			ex_style: WS_EX::LEFT | WS_EX::CLIENTEDGE,
-			resize_behavior,
-			..gui::WindowControlOpts::default()
-		});
-		let ipic = Self::load_picture(sel_tags)?;
-
-		let new_self = Self { wnd, ipic };
-		new_self.events();
-		Ok(new_self)
-	}
-
-	fn load_picture(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Option<w::IPicture>> {
+	pub(super) fn load_picture(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Option<w::IPicture>> {
 		let maybe_idx_first_mp3 = sel_tags.iter() // index of first MP3 which has APIC
 			.try_position(|tag| {
 				let has = tag.try_borrow()?.frame("APIC").is_some();

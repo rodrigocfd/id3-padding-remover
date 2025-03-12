@@ -1,12 +1,13 @@
 use winsafe::{self as w, prelude::*, co, gui};
 
-use crate::{id3v2, wnd_edit::WndEdit};
-use super::{LIST_COLS, WndMain};
+use crate::id3v2;
+use super::{DlgEdit, DlgMain, LIST_COLS};
 
-impl WndMain {
-	pub(super) fn update_num_files(&self, tot_files: u32) {
+impl DlgMain {
+	pub(super) fn update_num_files(&self, tot_files: u32) -> w::SysResult<()> {
 		let num_selec = self.lst_files.items().selected_count();
-		self.wnd.set_text(&format!("ID3 Fit ({}/{})", num_selec, tot_files));
+		self.wnd.hwnd().SetWindowText(&format!("ID3 Fit ({}/{})", num_selec, tot_files))?;
+		Ok(())
 	}
 
 	pub(super) fn add_files_to_list(&self, files: &[impl AsRef<str>]) -> w::AnyResult<()> {
@@ -21,12 +22,12 @@ impl WndMain {
 					let tag = id3v2::Tag::read_from_file(mp3_path)?; // load the tag from the MP3 file
 					let item = match self.lst_files.items().find(mp3_path) {
 						Some(item) => { // MP3 already present in the list?
-							let rc_tag = item.data();
+							let rc_tag = item.data()?;
 							*rc_tag.borrow_mut() = tag; // replace the tag currently saved in the item
 							item
 						},
 						None => { // MP3 not in the list yet?
-							let new_item = self.lst_files.items().add(&[mp3_path], Some(0), tag); // save tag in the item
+							let new_item = self.lst_files.items().add(&[mp3_path], Some(0), tag)?; // save tag in the item
 							new_item
 						},
 					};
@@ -35,18 +36,18 @@ impl WndMain {
 				}
 			})?;
 
-		self.sort_list(0, true); // force re-sort by path
+		self.sort_list(0, true)?; // force re-sort by path
 		self.lst_files.set_redraw(true);
-		self.update_num_files(self.lst_files.items().count());
+		self.update_num_files(self.lst_files.items().count())?;
 		Ok(())
 	}
 
-	pub(super) fn render_tag(item: gui::spec::ListViewItem<'_, id3v2::Tag>) -> w::AnyResult<()> {
-		let rc_tag = item.data(); // retrieve tag saved in the listview item
+	pub(super) fn render_tag(item: gui::ListViewItem<'_, id3v2::Tag>) -> w::AnyResult<()> {
+		let rc_tag = item.data()?; // retrieve tag saved in the listview item
 		let tag = rc_tag.try_borrow()?;
-		item.set_text(1, &tag.padding().to_string());
-		item.set_text(2, if tag.frame("APIC").is_some() { "✓" } else { "" });
-		item.set_text(3, if tag.has_replay_gain() { "✓" } else { "" });
+		item.set_text(1, &tag.padding().to_string())?;
+		item.set_text(2, if tag.frame("APIC").is_some() { "✓" } else { "" })?;
+		item.set_text(3, if tag.has_replay_gain() { "✓" } else { "" })?;
 
 		LIST_COLS.iter()
 			.skip(4)
@@ -55,7 +56,11 @@ impl WndMain {
 				None => "".to_owned(),
 			})
 			.enumerate()
-			.for_each(|(idx, field_val)| item.set_text((idx as u32) + 4, &field_val));
+			.try_for_each(|(idx, field_val)| {
+				item.set_text((idx as u32) + 4, &field_val)?;
+				w::SysResult::Ok(())
+			})?;
+
 		Ok(())
 	}
 
@@ -67,17 +72,17 @@ impl WndMain {
 		let rc_sel_tags = self.lst_files.items()
 			.iter_selected()
 			.map(|sel_item| sel_item.data())
-			.collect::<Vec<_>>();
+			.collect::<w::SysResult<Vec<_>>>()?;
 
-		let wnd_edit = WndEdit::new(&self.wnd, rc_sel_tags)?;
-		if wnd_edit.show()? {
+		let dlg_edit = DlgEdit::new(rc_sel_tags)?;
+		if dlg_edit.show(&self.wnd)? {
 			self.lst_files.set_redraw(false);
 			self.lst_files.items()
 				.iter_selected()
 				.try_for_each(|sel_item| {
 					Self::render_tag(sel_item)?; // update the list with the new values
 
-					let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
+					let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
 					rc_tag.try_borrow()?.save_to_file(&sel_item.text(0))?; // save to MP3 file
 
 					w::AnyResult::Ok(())
@@ -107,7 +112,7 @@ impl WndMain {
 				.iter_selected()
 				.try_for_each(|sel_item| {
 					{
-						let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
+						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
 						let mut tag = rc_tag.try_borrow_mut()?;
 						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
 						if strip_art {
@@ -122,23 +127,27 @@ impl WndMain {
 		Ok(())
 	}
 
-	pub(super) fn sort_list(&self, new_col: u32, force_asc: bool) {
+	pub(super) fn sort_list(&self, new_col: u32, force_asc: bool) -> w::AnyResult<()> {
 		let (cur_col, reversed) = self.cur_sort_col.get();
-		self.lst_files_h.items().get(cur_col).set_arrow(gui::HeaderArrow::None);
+		let cols = self.lst_files.header().unwrap().items();
+
+		cols.get(cur_col).set_arrow(gui::HeaderArrow::None);
 
 		if force_asc || new_col != cur_col {
-			self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)));
-			self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Asc);
+			self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)))?;
+			cols.get(new_col).set_arrow(gui::HeaderArrow::Asc);
 			self.cur_sort_col.set((new_col, false));
 		} else {
 			if !reversed {
-				self.lst_files.items().sort(|a, b| b.text(new_col).cmp(&a.text(new_col)));
-				self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Desc);
+				self.lst_files.items().sort(|a, b| b.text(new_col).cmp(&a.text(new_col)))?;
+				cols.get(new_col).set_arrow(gui::HeaderArrow::Desc);
 			} else {
-				self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)));
-				self.lst_files_h.items().get(new_col).set_arrow(gui::HeaderArrow::Asc);
+				self.lst_files.items().sort(|a, b| a.text(new_col).cmp(&b.text(new_col)))?;
+				cols.get(new_col).set_arrow(gui::HeaderArrow::Asc);
 			}
 			self.cur_sort_col.set((new_col, !reversed));
 		}
+
+		Ok(())
 	}
 }
