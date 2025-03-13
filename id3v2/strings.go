@@ -39,10 +39,7 @@ func parseStrings(src []byte) ([]string, error) {
 
 // Parses one or more null-separated ISO-8859-1 strings.
 func parseIso88591Strings(src []byte) []string {
-	idxLastNonZero := slices2.LastIndexFunc(src, func(b byte) bool { return b != 0x00 })
-	if idxLastNonZero != -1 {
-		src = src[0 : idxLastNonZero+1] // right-trim zeros to avoid an extra empty string
-	}
+	src = slices2.TrimRight(src, 0x00) // right-trim zeros to avoid an extra empty string
 	if len(src) == 0 {
 		return []string{} // no strings
 	}
@@ -76,11 +73,7 @@ func parseUnicodeStrings(src []byte) []string {
 	}
 
 	wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
-
-	idxLastNonZero := slices2.LastIndexFunc(wsrc, func(w uint16) bool { return w != 0x0000 })
-	if idxLastNonZero != -1 {
-		wsrc = wsrc[0 : idxLastNonZero+1] // right-trim zeros to avoid an extra empty string
-	}
+	wsrc = slices2.TrimRight(wsrc, 0x0000) // right-trim zeros to avoid an extra empty string
 	if len(wsrc) == 0 {
 		return []string{} // no strings
 	}

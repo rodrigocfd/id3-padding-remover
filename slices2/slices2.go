@@ -91,3 +91,25 @@ func Split[S ~[]T, T comparable](src S, separator T) iter.Seq[[]T] {
 		}
 	}
 }
+
+// Returns a subslice without the first elements whose contiguously match the
+// given element.
+func TrimLeft[S ~[]T, T comparable](src S, elem T) S {
+	for i := range len(src) {
+		if src[i] != elem {
+			return src[i:]
+		}
+	}
+	return []T{}
+}
+
+// Returns a subslice without the last elements whose contiguously match the
+// given element.
+func TrimRight[S ~[]T, T comparable](src S, elem T) S {
+	for i := len(src) - 1; i >= 0; i-- {
+		if src[i] != elem {
+			return src[:i+1]
+		}
+	}
+	return []T{}
+}
