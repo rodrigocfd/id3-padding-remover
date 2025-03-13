@@ -72,7 +72,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 		} else {
 			item = me.lstFiles.Items.AddWithIcon(0, tag.Path()) // insert new item
 		}
-		me.tags[item.Uid()] = tag // store tag in cache
+		item.SetData(tag) // store tag in item
 		me.renderMp3InList(item)
 	}
 	me.sortList()
@@ -80,8 +80,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 }
 
 func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
-	tag := me.tags[item.Uid()] // retrieve tag from cache
-
+	tag := item.Data().(*id3v2.Tag) // retrieve tag stored in item
 	if tag.IsEmpty() {
 		item.SetText(1, "N/A") // MP3 without tag
 	} else {
@@ -134,8 +133,8 @@ func (me *DlgMain) sortList() {
 	me.lstFiles.Items.Sort(func(itemA, itemB ui.ListViewItem) int {
 		cmp := 0
 		if me.sortCol == 1 { // by padding size
-			tagA := me.tags[itemA.Uid()]
-			tagB := me.tags[itemB.Uid()]
+			tagA := itemA.Data().(*id3v2.Tag)
+			tagB := itemB.Data().(*id3v2.Tag)
 			cmp = int(tagA.Padding()) - int(tagB.Padding())
 		} else { // by column text
 			cmp = win.Str.CmpI(itemA.Text(me.sortCol), itemB.Text(me.sortCol))
@@ -172,7 +171,7 @@ func (me *DlgMain) removePicRg(delRg bool) {
 	}
 
 	for item := range me.lstFiles.Items.IterSelected() {
-		tag := me.tags[item.Uid()]
+		tag := item.Data().(*id3v2.Tag)
 		tag.RemoveFrameIf(func(frame *id3v2.Frame) bool {
 			if frame.Name4() == "APIC" {
 				return true
@@ -197,7 +196,7 @@ func (me *DlgMain) editSelected() co.ID {
 
 	selTags := make([]*id3v2.Tag, 0, me.lstFiles.Items.SelectedCount())
 	for item := range me.lstFiles.Items.IterSelected() {
-		selTags = append(selTags, me.tags[item.Uid()])
+		selTags = append(selTags, item.Data().(*id3v2.Tag))
 	}
 	wndEdit := dlgedit.New(me.wnd, selTags)
 	return wndEdit.ShowModal()
@@ -211,7 +210,7 @@ func (me *DlgMain) saveSelected() {
 	failed := make([]Fail, 0)
 
 	for item := range me.lstFiles.Items.IterSelected() {
-		tag := me.tags[item.Uid()]
+		tag := item.Data().(*id3v2.Tag)
 		if err := tag.SaveToFile(); err != nil {
 			failed = append(failed, Fail{file: tag.Path(), err: err})
 		}

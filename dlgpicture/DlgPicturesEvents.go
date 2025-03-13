@@ -3,6 +3,7 @@
 package dlgpicture
 
 import (
+	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
 )
 
@@ -27,6 +28,10 @@ func (me *DlgPicture) events() {
 				win.SIZE{Cx: int32(cxhm), Cy: int32(-cyhm)},
 			)
 		}
+	})
+
+	me.wnd.On().WmRButtonUp(func(p wm.Mouse) {
+		println("oi")
 	})
 
 }

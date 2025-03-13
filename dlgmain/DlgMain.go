@@ -3,7 +3,6 @@
 package dlgmain
 
 import (
-	"id3fit/id3v2"
 	"id3fit/ids"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -13,7 +12,6 @@ import (
 type DlgMain struct {
 	wnd      *ui.Main
 	lstFiles *ui.ListView
-	tags     map[int]*id3v2.Tag // Indexed by list view item's UID.
 	sortCol  int
 	sortAsc  bool
 }
@@ -28,11 +26,10 @@ func New() *DlgMain {
 			AllowDragDrop(true),
 	)
 	lstFiles := ui.NewListViewDlg(wnd, ids.LST_FILES, ids.MNU_FILE, ui.LAY_RESIZE_RESIZE)
-	tags := make(map[int]*id3v2.Tag)
 	sortCol := 0
 	sortAsc := true
 
-	me := &DlgMain{wnd, lstFiles, tags, sortCol, sortAsc}
+	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc}
 	me.events()
 	return me
 }

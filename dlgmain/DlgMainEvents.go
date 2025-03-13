@@ -185,11 +185,6 @@ func (me *DlgMain) events() {
 		})
 	})
 
-	me.lstFiles.On().LvnDeleteItem(func(p *win.NMLISTVIEW) {
-		delItem := me.lstFiles.Items.Get(int(p.IItem))
-		delete(me.tags, delItem.Uid()) // remove tag from cache
-	})
-
 	me.lstFiles.On().NmDblClk(func(_ *win.NMITEMACTIVATE) {
 		if me.editSelected() == co.ID_OK {
 			me.withWaitCursor(func() {
