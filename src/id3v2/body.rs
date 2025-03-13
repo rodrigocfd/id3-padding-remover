@@ -37,13 +37,17 @@ pub struct Picture {
 impl std::fmt::Display for Body {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 		use Body::*;
-		write!(f, "{}", match self {
-			Text(t) => t.text.clone(),
-			UserText(ut) => format!("{} {}", ut.descr, ut.text),
-			Binary(b) => format_bytes(b.data.len()),
-			Comment(c) => c.text.clone(),
-			Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
-		})
+		write!(
+			f,
+			"{}",
+			match self {
+				Text(t) => t.text.clone(),
+				UserText(ut) => format!("{} {}", ut.descr, ut.text),
+				Binary(b) => format_bytes(b.data.len()),
+				Comment(c) => c.text.clone(),
+				Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
+			}
+		)
 	}
 }
 
@@ -58,8 +62,7 @@ impl PartialEq for Body {
 				_ => false,
 			},
 			UserText(ut) => match other {
-				UserText(ut2) => ut.descr == ut2.descr
-					&& ut.text == ut2.text,
+				UserText(ut2) => ut.descr == ut2.descr && ut.text == ut2.text,
 				_ => false,
 			},
 			Binary(b) => match other {
@@ -67,16 +70,16 @@ impl PartialEq for Body {
 				_ => false,
 			},
 			Comment(c) => match other {
-				Comment(c2) => c.lang3 == c2.lang3
-					&& c.descr == c2.descr
-					&& c.text == c2.text,
+				Comment(c2) => c.lang3 == c2.lang3 && c.descr == c2.descr && c.text == c2.text,
 				_ => false,
 			},
 			Picture(p) => match other {
-				Picture(p2) => p.mime == p2.mime
-					&& p.pic_type == p2.pic_type
-					&& p.descr == p2.descr
-					&& p.data.iter().zip(p2.data.iter()).all(|(a, b)| a == b),
+				Picture(p2) => {
+					p.mime == p2.mime
+						&& p.pic_type == p2.pic_type
+						&& p.descr == p2.descr
+						&& p.data.iter().zip(p2.data.iter()).all(|(a, b)| a == b)
+				},
 				_ => false,
 			},
 		}
@@ -94,8 +97,9 @@ impl Body {
 				text: val.to_owned(),
 			}))
 		} else if name4.starts_with('T') {
-			Ok(Self::Text(Text { // simplest case
-				text: val.to_owned(),
+			Ok(Self::Text(Text {
+
+				text: val.to_owned(),// simplest case
 			}))
 		} else {
 			Err(format!("Cannot create a single-text {name4} frame.").into())
@@ -114,10 +118,14 @@ impl Body {
 			match texts.len() {
 				0 => Err(format!("Frame {} contains no texts.", name4).into()),
 				1 => Ok(Self::Text(Text { text: texts[0].clone() })),
-				2 => Ok(Self::UserText(UserText { descr: texts[0].clone(), text: texts[1].clone() })),
+				2 => Ok(Self::UserText(UserText {
+					descr: texts[0].clone(),
+					text: texts[1].clone(),
+				})),
 				_ => Err(format!("Frame {} contains {} texts.", name4, texts.len()).into()),
 			}
-		} else { // anything else is treated as raw binary
+		} else {
+			// Anything else is treated as raw binary.
 			Ok(Self::Binary(Binary { data: src.to_vec() }))
 		}
 	}
@@ -169,23 +177,30 @@ impl Body {
 		src = &src[1..]; // skip picture type
 
 		let mut descr = String::default();
-		if enc_byte == 0x00 { // ISO-8859-1
+		if enc_byte == 0x00 {
+			// ISO-8859-1
 			let mut descr_parts = src.splitn(2, |b| *b == 0x00);
 			let mut texts = str_engine::parse_iso_88591(descr_parts.nth(0).unwrap())?;
-			if texts.len() > 0 { // description may be absent
-				descr = texts.remove(0);
+			if texts.len() > 0 {
+				descr = texts.remove(0); // description may be absent
 			}
 			src = descr_parts.nth(0).unwrap();
-		} else { // Unicode
+		} else {
+			// Unicode
 			let idx_zero = src.windows(2).position(|bb| bb == &[0x00, 0x00]).unwrap();
 			let mut texts = str_engine::parse_unicode(&src[..idx_zero])?;
-			if texts.len() > 0 { // description may be absent
-				descr = texts.remove(0);
+			if texts.len() > 0 {
+				descr = texts.remove(0); // description may be absent
 			}
 			src = &src[idx_zero + 2..];
 		}
 
-		Ok(Self::Picture(Picture { mime, pic_type, descr, data: src.to_vec() }))
+		Ok(Self::Picture(Picture {
+			mime,
+			pic_type,
+			descr,
+			data: src.to_vec(),
+		}))
 	}
 
 	/// Serializes the data into bytes.
@@ -247,9 +262,5 @@ impl Body {
 
 /// More than 1,000 bytes will be converted to KB.
 fn format_bytes(b: usize) -> String {
-	if b > 1000 {
-		format!("{:.1} KB", (b as f64) / 1000.0)
-	} else {
-		format!("{} bytes", b)
-	}
+	if b > 1000 { format!("{:.1} KB", (b as f64) / 1000.0) } else { format!("{} bytes", b) }
 }

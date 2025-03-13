@@ -15,10 +15,13 @@ pub struct Tag {
 
 impl std::fmt::Display for Tag {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		write!(f, "Off: {}, pad: {}\n{}",
+		write!(
+			f,
+			"Off: {}, pad: {}\n{}",
 			self.mp3_offset,
 			self.padding,
-			self.frames.iter()
+			self.frames
+				.iter()
 				.map(|f| f.to_string())
 				.collect::<Vec<_>>()
 				.join("\n"),
@@ -50,7 +53,8 @@ impl Tag {
 	#[must_use]
 	fn parse_header(src: &[u8]) -> w::AnyResult<(u32, u32)> {
 		// Find MP3 offset.
-		let mp3_offset = match src.windows(2)
+		let mp3_offset = match src
+			.windows(2)
 			.position(|bb| bb == &[0xff, 0xfb]) // https://stackoverflow.com/a/7302482/6923555
 			.map(|idx| idx as u32)
 		{
@@ -64,11 +68,13 @@ impl Tag {
 		}
 
 		// Validate tag version 2.3.0.
-		if &src[3..5] != &[3, 0] { // the first "2" is not stored in the tag
+		// The first "2" is not stored in the tag.
+		if &src[3..5] != &[3, 0] {
 			return Err(format!(
 				"Tag version 2.{}.{} is not supported, only 2.3.0.",
 				src[3], src[4],
-			).into());
+			)
+			.into());
 		}
 
 		// Validate unsupported flags.
@@ -79,14 +85,14 @@ impl Tag {
 		}
 
 		// Read declared tag size.
-		let declared_size = synch_safe::decode(
-			u32::from_be_bytes(src[6..10].try_into()?)) + 10; // also count 10-byte tag header
+		let declared_size = synch_safe::decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10; // also count 10-byte tag header
 
 		if declared_size > mp3_offset {
 			return Err(format!(
 				"Declared size is greater than MP3 offset: {} vs {}.",
 				declared_size, mp3_offset,
-			).into());
+			)
+			.into());
 		}
 
 		Ok((declared_size, mp3_offset))
@@ -100,19 +106,22 @@ impl Tag {
 		let mut padding = 0;
 
 		loop {
-			if src.is_empty() { // end of tag, no padding found
-				break;
-			} else if src.iter().all(|b| *b == 0x00) { // we entered a padding region after all frames
-				padding = src.len() as _;
+			if src.is_empty() {
+				break; // end of tag, no padding found
+			} else if src.iter().all(|b| *b == 0x00) {
+				padding = src.len() as _; // we entered a padding region after all frames
 				break;
 			}
 
 			let (new_frame, original_size) = Frame::parse(src)?;
-			if original_size > src.len() as _ { // means the size was serialized with error
+			if original_size > src.len() as _ {
+				// Means the size was serialized with error.
 				return Err(format!(
 					"Frame size is greater than available size: {} vs {}.",
-					original_size, src.len(),
-				).into());
+					original_size,
+					src.len(),
+				)
+				.into());
 			}
 
 			src = &src[original_size as _..];
@@ -125,12 +134,15 @@ impl Tag {
 	/// Serializes the tag into a `Vec<u8>`.
 	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
-		let serialized_frames = self.frames.iter()
+		let serialized_frames = self
+			.frames
+			.iter()
 			.flat_map(|frame| frame.serialize())
 			.collect::<Vec<_>>();
 		let synch_safe_data_size = synch_safe::encode(serialized_frames.len() as _); // won't count 10-byte header
 
-		str_engine::to_ascii("ID3").into_iter() // magic bytes
+		str_engine::to_ascii("ID3")
+			.into_iter() // magic bytes
 			.chain([0x03, 0x00].into_iter()) // tag version 2.3.0
 			.chain([0x00].into_iter()) // flags
 			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
@@ -151,9 +163,12 @@ impl Tag {
 			)?;
 		} else {
 			fout.erase_and_write(
-				&self.serialize().into_iter()
+				&self
+					.serialize()
+					.into_iter()
 					.chain(
-						current_contents[current_tag.mp3_offset as _..].iter()
+						current_contents[current_tag.mp3_offset as _..]
+							.iter()
 							.map(|b| *b),
 					)
 					.collect::<Vec<_>>(),
@@ -180,14 +195,14 @@ impl Tag {
 
 	#[must_use]
 	pub fn frame(&self, name4: &str) -> Option<&Frame> {
-		self.frames.iter()
-			.find(|frame| frame.name4() == name4)
+		self.frames.iter().find(|frame| frame.name4() == name4)
 	}
 
 	/// Any ReplayGain frame present?
 	#[must_use]
 	pub fn has_replay_gain(&self) -> bool {
-		self.frames.iter()
+		self.frames
+			.iter()
 			.find(|frame| {
 				if frame.name4() == "TXXX" {
 					if let Body::UserText(ut) = frame.body() {
@@ -208,7 +223,8 @@ impl Tag {
 			if let Some(idx) = self.frames.iter().position(|frame| frame.name4() == name4) {
 				self.frames.remove(idx); // empty string will remove frame
 			}
-		} else { // text is not empty
+		} else {
+			// Text is not empty.
 			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
 				Some(frame) => frame.set_string(text)?, // field exists, update
 				None => self.frames.push(Frame::new_from_string(name4, text)?), // create simple text frame

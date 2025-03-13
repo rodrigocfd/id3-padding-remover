@@ -53,7 +53,8 @@ impl Frame {
 	#[must_use]
 	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
 		let serialized_body = self.body.serialize();
-		str_engine::to_ascii(&self.name4).into_iter()
+		str_engine::to_ascii(&self.name4)
+			.into_iter()
 			.chain((serialized_body.len() as u32).to_be_bytes()) // won't count 10-byte header
 			.chain([self.flags.0, self.flags.1].into_iter())
 			.chain(serialized_body.into_iter())

@@ -1,21 +1,21 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
-use winsafe::{self as w, prelude::*, co, gui};
+use winsafe::{self as w, co, gui, prelude::*};
 
-use crate::{id3v2, ids};
 use super::{Input, WndPicture};
+use crate::{id3v2, ids};
 
 #[derive(Clone)]
 pub struct DlgEdit {
-	pub(super) wnd:          gui::WindowModal,
-	pub(super) btn_ok:       gui::Button,
-	pub(super) btn_cancel:   gui::Button,
-	pub(super) inputs:       Rc<RefCell<Vec<Input>>>,
-	pub(super) wnd_pic:      WndPicture,
-	pub(super) btn_uncheck:  gui::Button,
-	pub(super) lst_frames:   gui::ListView,
-	pub(super) sel_tags:     Vec<Rc<RefCell<id3v2::Tag>>>,
+	pub(super) wnd: gui::WindowModal,
+	pub(super) btn_ok: gui::Button,
+	pub(super) btn_cancel: gui::Button,
+	pub(super) inputs: Rc<RefCell<Vec<Input>>>,
+	pub(super) wnd_pic: WndPicture,
+	pub(super) btn_uncheck: gui::Button,
+	pub(super) lst_frames: gui::ListView,
+	pub(super) sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>,
 	pub(super) modal_return: Rc<Cell<bool>>,
 }
 
@@ -48,22 +48,28 @@ impl DlgEdit {
 			Input::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
 			Input::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
-		let wnd_pic = WndPicture::new(&wnd, sel_tags.clone(), gui::dpi(250, 22), gui::dpi(120, 120), none2)?;
+		let wnd_pic =
+			WndPicture::new(&wnd, sel_tags.clone(), gui::dpi(250, 22), gui::dpi(120, 120), none2)?;
 		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, none2);
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, none2, None);
 		let modal_return = Rc::new(Cell::new(false));
 
 		let new_self = Self {
 			wnd,
-			btn_ok, btn_cancel, inputs, wnd_pic,
-			btn_uncheck, lst_frames, sel_tags, modal_return,
+			btn_ok,
+			btn_cancel,
+			inputs,
+			wnd_pic,
+			btn_uncheck,
+			lst_frames,
+			sel_tags,
+			modal_return,
 		};
 		new_self.wm_events();
 		Ok(new_self)
 	}
 
 	pub fn show(&self, parent: &impl GuiParent) -> w::AnyResult<bool> {
-		self.wnd.show_modal(parent)
-			.map(|_| self.modal_return.get())
+		self.wnd.show_modal(parent).map(|_| self.modal_return.get())
 	}
 }

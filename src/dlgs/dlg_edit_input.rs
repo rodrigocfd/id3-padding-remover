@@ -1,12 +1,12 @@
 use std::sync::Arc;
-use winsafe::{prelude::*, gui};
+use winsafe::{gui, prelude::*};
 
 /// Known tag field identifier, checkbox and textbox.
 #[derive(Clone)]
 pub struct Input {
 	pub(super) name4: String,
-	pub(super) chk:   gui::CheckBox,
-	pub(super) txt:   Arc<dyn GuiControl>,
+	pub(super) chk: gui::CheckBox,
+	pub(super) txt: Arc<dyn GuiControl>,
 }
 
 impl Input {
