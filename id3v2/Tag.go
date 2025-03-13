@@ -30,8 +30,6 @@ func (me *Tag) Padding() uint    { return me.padding }
 func (me *Tag) Frames() []*Frame { return me.frames }
 
 // Constructor.
-//
-// ⚠️ You must defer Tag.Free().
 func LoadTag(mp3Path string) (*Tag, error) {
 	me := Tag{
 		path: mp3Path,
