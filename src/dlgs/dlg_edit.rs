@@ -49,7 +49,7 @@ impl DlgEdit {
 			Input::new_edit("COMM", &wnd, ids::CHK_COMMENT),
 		]));
 		let wnd_pic =
-			WndPicture::new(&wnd, sel_tags.clone(), gui::dpi(250, 22), gui::dpi(120, 120), none2)?;
+			WndPicture::new(&wnd, sel_tags.clone(), gui::dpi(440, 50), gui::dpi(200, 200), none2)?;
 		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, none2);
 		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, none2, None);
 		let modal_return = Rc::new(Cell::new(false));
