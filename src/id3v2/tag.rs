@@ -8,8 +8,8 @@ use super::synch_safe;
 /// Metadata of a single MP3 file.
 #[derive(Default)]
 pub struct Tag {
-	mp3_offset: u32,
-	padding: u32,
+	mp3_offset: usize,
+	padding: usize,
 	frames: Vec<Frame>,
 }
 
@@ -40,30 +40,33 @@ impl Tag {
 	/// Parses the tag from a binary blob.
 	#[must_use]
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (declared_size, mp3_offset) = Self::parse_header(src)?;
-		if declared_size == 0 && mp3_offset == 0 {
-			Ok(Self::default()) // file has no tag
+		let (_, mp3_offset) = Self::parse_header(src)?; // discard declared size
+		if mp3_offset == 0 {
+			Ok(Self::default()) // MP3 file has no tag
 		} else {
-			let (frames, padding) = Self::parse_frames(&src[10..declared_size as _])?;
+			let (frames, padding) = Self::parse_frames(&src[10..mp3_offset])?;
 			Ok(Self { mp3_offset, padding, frames })
 		}
 	}
 
 	/// Returns declared size and MP3 offset.
 	#[must_use]
-	fn parse_header(src: &[u8]) -> w::AnyResult<(u32, u32)> {
+	fn parse_header(mut src: &[u8]) -> w::AnyResult<(u32, usize)> {
 		// Find MP3 offset.
 		let mp3_offset = match src
 			.windows(2)
 			.position(|bb| bb == &[0xff, 0xfb]) // https://stackoverflow.com/a/7302482/6923555
-			.map(|idx| idx as u32)
 		{
-			Some(idx) => idx,
+			Some(idx) => match idx {
+				0 => return Ok((0, 0)), // MP3 file has no tag
+				idx => idx,
+			},
 			None => return Err(format!("No MP3 signature found.").into()),
 		};
+		src = &src[0..mp3_offset]; // limit our range
 
 		// Check ID3 magic bytes.
-		if &src[..3] != &['I' as u8, 'D' as u8, '3' as u8] {
+		if &src[..3] != &str_engine::to_ascii("ID3") {
 			return Ok((0, mp3_offset)); // MP3 file has no tag
 		}
 
@@ -84,47 +87,44 @@ impl Tag {
 			return Err("Tag extended header not supported.".into());
 		}
 
-		// Read declared tag size.
-		let declared_size = synch_safe::decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10; // also count 10-byte tag header
-
-		if declared_size > mp3_offset {
-			return Err(format!(
-				"Declared size is greater than MP3 offset: {} vs {}.",
-				declared_size, mp3_offset,
-			)
-			.into());
-		}
+		// Read declared tag size; also count 10-byte tag header.
+		let declared_size = synch_safe::decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10;
 
 		Ok((declared_size, mp3_offset))
 	}
 
 	/// Returns the frames and the padding.
 	#[must_use]
-	fn parse_frames(src: &[u8]) -> w::AnyResult<(Vec<Frame>, u32)> {
-		let mut src = src;
+	fn parse_frames(mut src: &[u8]) -> w::AnyResult<(Vec<Frame>, usize)> {
 		let mut frames = Vec::with_capacity(10); // arbitrary
-		let mut padding = 0;
+		let mut padding = 0usize;
 
 		loop {
 			if src.is_empty() {
 				break; // end of tag, no padding found
-			} else if src.iter().all(|b| *b == 0x00) {
-				padding = src.len() as _; // we entered a padding region after all frames
+			} else if src.len() < 10 {
+				// We cant' have a frame with less than 10 bytes, which is the header size.
+				padding = src.len();
+				break;
+			} else if src[0..4].iter().all(|b| *b == 0x00) {
+				// The first 4 bytes should contain the 4-char frame name.
+				// If they're all zero, it means we entered a padding region after all frames.
+				padding = src.len();
 				break;
 			}
 
-			let (new_frame, original_size) = Frame::parse(src)?;
-			if original_size > src.len() as _ {
+			let (new_frame, declared_size) = Frame::parse(src)?;
+			if declared_size > src.len() {
 				// Means the size was serialized with error.
 				return Err(format!(
 					"Frame size is greater than available size: {} vs {}.",
-					original_size,
+					declared_size,
 					src.len(),
 				)
 				.into());
 			}
 
-			src = &src[original_size as _..];
+			src = &src[declared_size..];
 			frames.push(new_frame); // add the frame to our collection
 		}
 
@@ -146,7 +146,7 @@ impl Tag {
 			.chain([0x03, 0x00].into_iter()) // tag version 2.3.0
 			.chain([0x00].into_iter()) // flags
 			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
-			.chain(serialized_frames.into_iter())
+			.chain(serialized_frames.into_iter()) // then all the serialized frames
 			.collect()
 	}
 
@@ -155,31 +155,26 @@ impl Tag {
 	pub fn save_to_file(&self, mp3_path: &str) -> w::AnyResult<()> {
 		let fout = w::File::open(mp3_path, w::FileAccess::ExistingRW)?;
 		let current_contents = fout.read_all()?; // read the whole MP3 into a buffer
-		let current_tag = Self::parse(&current_contents)?; // parse tag currently saved in the MP3 file
+		let (_, mp3_offset) = Self::parse_header(&current_contents)?;
 
 		if self.frames.is_empty() {
 			fout.erase_and_write(
-				&current_contents[current_tag.mp3_offset as _..], // no tag will be written
+				&current_contents[mp3_offset..], // no tag will be written
 			)?;
 		} else {
 			fout.erase_and_write(
 				&self
 					.serialize()
 					.into_iter()
-					.chain(
-						current_contents[current_tag.mp3_offset as _..]
-							.iter()
-							.map(|b| *b),
-					)
+					.chain(current_contents[mp3_offset..].iter().map(|b| *b)) // MP3 data
 					.collect::<Vec<_>>(),
 			)?;
 		}
-
 		Ok(())
 	}
 
 	#[must_use]
-	pub const fn padding(&self) -> u32 {
+	pub const fn padding(&self) -> usize {
 		self.padding
 	}
 

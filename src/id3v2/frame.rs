@@ -29,20 +29,18 @@ impl Frame {
 
 	/// Also returns declared size, including 10-byte frame header.
 	#[must_use]
-	pub(in crate::id3v2) fn parse(src: &[u8]) -> w::AnyResult<(Self, u32)> {
-		let mut src = src;
-
+	pub(in crate::id3v2) fn parse(mut src: &[u8]) -> w::AnyResult<(Self, usize)> {
 		// Parse the 10-byte frame header.
 		let name4 = str_engine::from_ascii(&src[0..4]);
-		let mut declared_size = u32::from_be_bytes(src[4..8].try_into()?) + 10; // also count 10-byte frame header
+		let mut declared_size = u32::from_be_bytes(src[4..8].try_into()?) as usize + 10; // also count 10-byte frame header
 		let flags = (src[8], src[9]);
 
-		if declared_size > src.len() as _ {
-			declared_size = src.len() as _; // if serialized with error, be complacent
+		if declared_size > src.len() {
+			declared_size = src.len(); // if serialized with error, be complacent
 		}
 
 		// Skip frame header, truncate to declared frame size.
-		src = &src[10..declared_size as _];
+		src = &src[10..declared_size];
 
 		// Parse the frame contents.
 		let body = Body::parse(&name4, src)?;

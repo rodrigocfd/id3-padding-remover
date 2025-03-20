@@ -15,7 +15,7 @@ pub fn from_ascii(src: &[u8]) -> String {
 	.to_string()
 }
 
-/// Converts a string to simple non-null-terminated ASCII bytes.
+/// Converts a string into simple non-null-terminated ASCII bytes.
 #[must_use]
 pub fn to_ascii(s: &str) -> Vec<u8> {
 	s.chars().map(|ch| ch as u8).collect()
@@ -39,7 +39,7 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src.is_empty() {
-		return Ok(Vec::default());
+		return Ok(Vec::default()); // no strings
 	}
 
 	let mut buf16 = Vec::<u16>::default();
@@ -51,9 +51,8 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 			} else {
 				buf16.clear();
 				buf16.extend(
-					part.iter()
-						.map(|ch| *ch as u16) // simple expansion from u8 to u16, for each char
-						.chain(std::iter::once(0x0000)), // terminating null
+					part.iter() // no need for a terminating null
+						.map(|ch| *ch as u16), // simple expansion from u8 to u16, for each char
 				);
 				Ok(w::WString::from_wchars_slice(&buf16).to_string_checked()?)
 			}
@@ -73,7 +72,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..src.len() - 1];
 	}
 
-	// Copying to buffer because slice::from_raw_parts() was crashing due to a
+	// Copy to buffer because slice::from_raw_parts() was crashing due to a
 	// weird misalignment in some cases.
 	let src16_buf = src
 		.chunks(2)
@@ -85,7 +84,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src16 = &src16[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src16.is_empty() {
-		return Ok(Vec::default());
+		return Ok(Vec::default()); // no strings
 	}
 
 	let mut buf16 = Vec::<u16>::default();
@@ -105,9 +104,8 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 			} else {
 				buf16.clear();
 				buf16.extend(
-					part.iter()
-						.map(|ch| if is_little_endian { *ch } else { ch.swap_bytes() })
-						.chain(std::iter::once(0x0000)), // terminating null
+					part.iter() // no need for a terminating null
+						.map(|ch| if is_little_endian { *ch } else { ch.swap_bytes() }),
 				);
 				Ok(w::WString::from_wchars_slice(&buf16).to_string_checked()?)
 			}
@@ -137,34 +135,34 @@ pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
 	}
 
 	if is_unicode {
-		// chars will be serialized as u16
+		// Chars will be serialized as u16.
 		estimated_len_bytes *= 2;
 		estimated_len_bytes += 2 * strs.len(); // BOM bytes for each string
 	}
 
-	let mut buf = Vec::<u8>::with_capacity(estimated_len_bytes);
+	let mut ret_buf = Vec::<u8>::with_capacity(estimated_len_bytes);
 	for one_str in strs.iter().map(|s| s.as_ref()) {
 		if is_unicode {
 			// Insert BOM bytes for each string.
 			// Strings will be encoded as little-endian.
-			buf.extend(&BOM_LE.to_le_bytes());
+			ret_buf.extend(&BOM_LE.to_le_bytes());
 		}
 
 		for ch in one_str.chars() {
 			// Write each char of the string.
 			if is_unicode {
-				buf.extend(&(ch as u16).to_le_bytes());
+				ret_buf.extend(&(ch as u16).to_le_bytes()); // simple conversion to wide
 			} else {
-				buf.push(ch as _);
+				ret_buf.push(ch as _); // simple narrowing to u8
 			}
 		}
 
 		if is_unicode {
-			buf.extend(&[0x00, 0x00]); // append terminating null
+			ret_buf.extend(&[0x00, 0x00]); // append terminating null
 		} else {
-			buf.push(0x00);
+			ret_buf.push(0x00);
 		}
 	}
 
-	(if is_unicode { 0x01 } else { 0x00 }, buf)
+	(if is_unicode { 0x01 } else { 0x00 }, ret_buf)
 }

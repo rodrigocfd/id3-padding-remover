@@ -32,7 +32,7 @@ impl DlgMain {
 							item
 						},
 						None => {
-							// MP3 not in the list yet?
+							// MP3 not yet in the list?
 							let new_item = self.lst_files.items().add(&[mp3_path], Some(0), tag)?; // save tag in the item
 							new_item
 						},

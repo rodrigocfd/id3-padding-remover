@@ -5,22 +5,16 @@ use super::str_engine;
 
 /// Polymorphic data of a frame.
 pub enum Body {
-	Text(Text),
+	Text(String),
 	UserText(UserText),
-	Binary(Binary),
+	Binary(Vec<u8>),
 	Comment(Comment),
 	Picture(Picture),
 }
 
-pub struct Text {
-	pub text: String,
-}
 pub struct UserText {
 	pub descr: String,
 	pub text: String,
-}
-pub struct Binary {
-	pub data: Vec<u8>,
 }
 pub struct Comment {
 	pub lang3: String,
@@ -41,9 +35,9 @@ impl std::fmt::Display for Body {
 			f,
 			"{}",
 			match self {
-				Text(t) => t.text.clone(),
+				Text(s) => s.clone(),
 				UserText(ut) => format!("{} {}", ut.descr, ut.text),
-				Binary(b) => format_bytes(b.data.len()),
+				Binary(data) => format_bytes(data.len()),
 				Comment(c) => c.text.clone(),
 				Picture(p) => format!("{} {}, {}", p.pic_type, p.mime, format_bytes(p.data.len())),
 			}
@@ -57,16 +51,16 @@ impl PartialEq for Body {
 	fn eq(&self, other: &Self) -> bool {
 		use Body::*;
 		match self {
-			Text(t) => match other {
-				Text(t2) => t.text == t2.text,
+			Text(s) => match other {
+				Text(s2) => s == s2,
 				_ => false,
 			},
 			UserText(ut) => match other {
 				UserText(ut2) => ut.descr == ut2.descr && ut.text == ut2.text,
 				_ => false,
 			},
-			Binary(b) => match other {
-				Binary(b2) => b.data.iter().zip(b2.data.iter()).all(|(a, b)| a == b),
+			Binary(data) => match other {
+				Binary(data2) => data.iter().zip(data2.iter()).all(|(a, b)| a == b),
 				_ => false,
 			},
 			Comment(c) => match other {
@@ -97,10 +91,7 @@ impl Body {
 				text: val.to_owned(),
 			}))
 		} else if name4.starts_with('T') {
-			Ok(Self::Text(Text {
-
-				text: val.to_owned(),// simplest case
-			}))
+			Ok(Self::Text(val.to_owned())) // simplest case
 		} else {
 			Err(format!("Cannot create a single-text {name4} frame.").into())
 		}
@@ -117,7 +108,7 @@ impl Body {
 			let texts = str_engine::parse_any(src)?;
 			match texts.len() {
 				0 => Err(format!("Frame {} contains no texts.", name4).into()),
-				1 => Ok(Self::Text(Text { text: texts[0].clone() })),
+				1 => Ok(Self::Text(texts[0].clone())),
 				2 => Ok(Self::UserText(UserText {
 					descr: texts[0].clone(),
 					text: texts[1].clone(),
@@ -126,7 +117,7 @@ impl Body {
 			}
 		} else {
 			// Anything else is treated as raw binary.
-			Ok(Self::Binary(Binary { data: src.to_vec() }))
+			Ok(Self::Binary(src.to_vec()))
 		}
 	}
 
@@ -178,7 +169,7 @@ impl Body {
 
 		let mut descr = String::default();
 		if enc_byte == 0x00 {
-			// ISO-8859-1
+			// Texts are ISO-8859-1.
 			let mut descr_parts = src.splitn(2, |b| *b == 0x00);
 			let mut texts = str_engine::parse_iso_88591(descr_parts.nth(0).unwrap())?;
 			if texts.len() > 0 {
@@ -186,7 +177,7 @@ impl Body {
 			}
 			src = descr_parts.nth(0).unwrap();
 		} else {
-			// Unicode
+			// Texts are Unicode.
 			let idx_zero = src.windows(2).position(|bb| bb == &[0x00, 0x00]).unwrap();
 			let mut texts = str_engine::parse_unicode(&src[..idx_zero])?;
 			if texts.len() > 0 {
@@ -208,8 +199,8 @@ impl Body {
 	pub(in crate::id3v2) fn serialize(&self) -> Vec<u8> {
 		use Body::*;
 		match self {
-			Text(t) => {
-				let (enc_byte, serialized) = str_engine::serialize(&[&t.text]);
+			Text(s) => {
+				let (enc_byte, serialized) = str_engine::serialize(&[&s]);
 				std::iter::once(enc_byte)
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
@@ -220,7 +211,7 @@ impl Body {
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
-			Binary(b) => b.data.clone(),
+			Binary(data) => data.clone(),
 			Comment(c) => {
 				let (enc_byte, serialized) = str_engine::serialize(&[&c.descr, &c.text]);
 				std::iter::once(enc_byte)
@@ -245,8 +236,8 @@ impl Body {
 	pub(in crate::id3v2) fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
 		use Body::*;
 		Ok(match self {
-			Text(t) => {
-				t.text = val.to_owned();
+			Text(s) => {
+				*s = val.to_owned();
 			},
 			UserText(ut) => {
 				ut.text = val.to_owned();
