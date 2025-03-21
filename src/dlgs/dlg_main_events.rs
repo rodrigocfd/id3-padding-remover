@@ -142,7 +142,6 @@ impl DlgMain {
 			.wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
 				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
 				let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
-				let (lang0, cp0) = hversion.langs_and_cps()?[0];
 				let version_parts = hversion.version_info()?.dwFileVersion();
 
 				w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
@@ -160,7 +159,7 @@ impl DlgMain {
 						version_parts[0],
 						version_parts[1],
 						version_parts[2],
-						hversion.str_val(lang0, cp0, "LegalCopyright")?,
+						hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
 					)),
 					..Default::default()
 				})?;
