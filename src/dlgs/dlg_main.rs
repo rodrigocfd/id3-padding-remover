@@ -23,7 +23,7 @@ impl DlgMain {
 			(H::Resize, V::Resize),
 			Some(ids::MNU_MAIN),
 		);
-		let cur_sort_col = Rc::new(Cell::new((0xffff_ffff, false)));
+		let cur_sort_col = Rc::new(Cell::new((u32::MAX, false)));
 
 		let new_self = Self { wnd, lst_files, cur_sort_col };
 		new_self.events();

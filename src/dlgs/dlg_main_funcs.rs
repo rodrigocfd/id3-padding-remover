@@ -147,29 +147,61 @@ impl DlgMain {
 		let (cur_col, reversed) = self.cur_sort_col.get();
 		let cols = self.lst_files.header().unwrap().items();
 
-		cols.get(cur_col).set_arrow(gui::HeaderArrow::None);
+		cols.get(cur_col).set_arrow(gui::HeaderArrow::None); // remove arrow from current col
 
 		if force_asc || new_col != cur_col {
-			self.lst_files
-				.items()
-				.sort(|a, b| a.text(new_col).cmp(&b.text(new_col)))?;
-			cols.get(new_col).set_arrow(gui::HeaderArrow::Asc);
-			self.cur_sort_col.set((new_col, false));
-		} else {
-			if !reversed {
-				self.lst_files
-					.items()
-					.sort(|a, b| b.text(new_col).cmp(&a.text(new_col)))?;
-				cols.get(new_col).set_arrow(gui::HeaderArrow::Desc);
+			if [1, 5, 8].contains(&new_col) {
+				self.sort_numeric_col(new_col, true)?; // padding, track no. or year
 			} else {
 				self.lst_files
 					.items()
 					.sort(|a, b| a.text(new_col).cmp(&b.text(new_col)))?;
+			}
+			cols.get(new_col).set_arrow(gui::HeaderArrow::Asc);
+			self.cur_sort_col.set((new_col, false));
+		} else {
+			if !reversed {
+				if [1, 5, 8].contains(&new_col) {
+					self.sort_numeric_col(new_col, false)?; // padding, track no. or year
+				} else {
+					self.lst_files
+						.items()
+						.sort(|a, b| b.text(new_col).cmp(&a.text(new_col)))?;
+				}
+				cols.get(new_col).set_arrow(gui::HeaderArrow::Desc);
+			} else {
+				if [1, 5, 8].contains(&new_col) {
+					self.sort_numeric_col(new_col, true)?; // padding, track no. or year
+				} else {
+					self.lst_files
+						.items()
+						.sort(|a, b| a.text(new_col).cmp(&b.text(new_col)))?; // reverse
+				}
 				cols.get(new_col).set_arrow(gui::HeaderArrow::Asc);
 			}
 			self.cur_sort_col.set((new_col, !reversed));
 		}
 
 		Ok(())
+	}
+
+	fn sort_numeric_col(&self, num_col: u32, asc: bool) -> w::SysResult<()> {
+		self.lst_files.items().sort(|a, b| {
+			let text1 = a.text(num_col);
+			let text2 = b.text(num_col);
+
+			if let Ok(num1) = text1.parse::<u32>() {
+				if let Ok(num2) = text2.parse::<u32>() {
+					if asc {
+						return num1.cmp(&num2);
+					} else {
+						return num2.cmp(&num1);
+					}
+				}
+			}
+
+			// One of the texts is not numeric, simply compare strings.
+			if asc { text1.cmp(&text2) } else { text2.cmp(&text1) }
+		})
 	}
 }

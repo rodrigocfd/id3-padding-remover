@@ -218,13 +218,10 @@ impl DlgMain {
 		});
 
 		let self2 = self.clone();
-		self.lst_files
-			.header()
-			.unwrap()
-			.on()
-			.hdn_item_click(move |p| {
-				self2.sort_list(p.iItem as u32, false)?;
-				Ok(())
-			});
+		let header = self.lst_files.header().unwrap();
+		header.on().hdn_item_click(move |p| {
+			self2.sort_list(p.iItem as u32, false)?;
+			Ok(())
+		});
 	}
 }
