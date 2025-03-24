@@ -112,3 +112,9 @@ impl TryFrom<u8> for PicType {
 		}
 	}
 }
+
+impl From<PicType> for u8 {
+	fn from(t: PicType) -> Self {
+		t as _
+	}
+}

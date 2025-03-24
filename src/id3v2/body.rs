@@ -224,7 +224,7 @@ impl Body {
 				std::iter::once(enc.into())
 					.chain(p.mime.chars().map(|ch| ch as u8))
 					.chain(std::iter::once(0x00))
-					.chain(std::iter::once(p.pic_type as u8))
+					.chain(std::iter::once(p.pic_type.into()))
 					.chain(serialized.iter().map(|b| *b))
 					.chain(p.data.iter().map(|b| *b))
 					.collect()
