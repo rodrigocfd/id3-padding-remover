@@ -6,6 +6,19 @@ pub enum Enc {
 	Unicode = 0x01,
 }
 
+impl std::fmt::Display for Enc {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		write!(
+			f,
+			"{}",
+			match self {
+				Enc::Iso88591 => "ISO-8859-1",
+				Enc::Unicode => "Unicode",
+			}
+		)
+	}
+}
+
 impl TryFrom<u8> for Enc {
 	type Error = String;
 
