@@ -88,11 +88,14 @@ impl std::fmt::Display for PicType {
 	}
 }
 
-impl From<u8> for PicType {
-	fn from(n: u8) -> Self {
-		if n > 0x14 {
-			panic!("Invalid PicType value: {}.", n);
+impl TryFrom<u8> for PicType {
+	type Error = String;
+
+	fn try_from(n: u8) -> Result<Self, Self::Error> {
+		if n <= 0x14 {
+			Ok(unsafe { std::mem::transmute(n) })
+		} else {
+			Err(format!("Invalid pic type byte: {n}."))
 		}
-		unsafe { std::mem::transmute(n) }
 	}
 }
