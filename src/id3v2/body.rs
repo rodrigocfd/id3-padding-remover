@@ -86,8 +86,8 @@ impl Body {
 	pub(in crate::id3v2) fn new_from_string(name4: &str, val: &str) -> w::AnyResult<Self> {
 		if name4 == "COMM" {
 			Ok(Self::Comment(Comment {
-				lang3: "eng".to_owned(),
-				descr: "".to_owned(), // assume blank description
+				lang3: "eng".to_owned(), // default lang
+				descr: "".to_owned(),    // assume blank description
 				text: val.to_owned(),
 			}))
 		} else if name4.starts_with('T') {
@@ -200,28 +200,28 @@ impl Body {
 		use Body::*;
 		match self {
 			Text(s) => {
-				let (enc_byte, serialized) = str_engine::serialize(&[&s]);
-				std::iter::once(enc_byte)
+				let (enc, serialized) = str_engine::serialize(&[&s]);
+				std::iter::once(enc.into())
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
 			UserText(ut) => {
-				let (enc_byte, serialized) = str_engine::serialize(&[&ut.descr, &ut.text]);
-				std::iter::once(enc_byte)
+				let (enc, serialized) = str_engine::serialize(&[&ut.descr, &ut.text]);
+				std::iter::once(enc.into())
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
 			Binary(data) => data.clone(),
 			Comment(c) => {
-				let (enc_byte, serialized) = str_engine::serialize(&[&c.descr, &c.text]);
-				std::iter::once(enc_byte)
+				let (enc, serialized) = str_engine::serialize(&[&c.descr, &c.text]);
+				std::iter::once(enc.into())
 					.chain(c.lang3.chars().map(|ch| ch as u8))
 					.chain(serialized.iter().map(|b| *b))
 					.collect()
 			},
 			Picture(p) => {
-				let (enc_byte, serialized) = str_engine::serialize(&[&p.descr]);
-				std::iter::once(enc_byte)
+				let (enc, serialized) = str_engine::serialize(&[&p.descr]);
+				std::iter::once(enc.into())
 					.chain(p.mime.chars().map(|ch| ch as u8))
 					.chain(std::iter::once(0x00))
 					.chain(std::iter::once(p.pic_type as u8))

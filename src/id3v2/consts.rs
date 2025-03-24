@@ -1,3 +1,32 @@
+/// Encoding byte.
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum Enc {
+	Iso88591 = 0x00,
+	Unicode = 0x01,
+}
+
+impl TryFrom<u8> for Enc {
+	type Error = String;
+
+	fn try_from(n: u8) -> Result<Self, Self::Error> {
+		match n {
+			0 => Ok(Self::Iso88591),
+			1 => Ok(Self::Unicode),
+			n => Err(format!("Invalid encoding byte: {n}.")),
+		}
+	}
+}
+
+impl From<Enc> for u8 {
+	fn from(enc: Enc) -> Self {
+		match enc {
+			Enc::Iso88591 => 0x00,
+			Enc::Unicode => 0x01,
+		}
+	}
+}
+
 /// APIC picture types.
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]

@@ -1,5 +1,7 @@
 use winsafe::{self as w};
 
+use super::consts::Enc;
+
 const BOM_LE: u16 = 0xfeff;
 const BOM_BE: u16 = 0xfffe;
 
@@ -24,10 +26,9 @@ pub fn to_ascii(s: &str) -> Vec<u8> {
 /// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
 #[must_use]
 pub fn parse_any(src: &[u8]) -> w::AnyResult<Vec<String>> {
-	match src[0] {
-		0x00 => parse_iso_88591(&src[1..]),
-		0x01 => parse_unicode(&src[1..]),
-		_ => Err(format!("Unrecognized encoding: {}.", src[0]).into()),
+	match Enc::try_from(src[0])? {
+		Enc::Iso88591 => parse_iso_88591(&src[1..]),
+		Enc::Unicode => parse_unicode(&src[1..]),
 	}
 }
 
@@ -118,23 +119,23 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 /// Serializes the strings as null-terminated, returning the encoding byte and
 /// the serialized bytes.
 #[must_use]
-pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
-	let mut is_unicode = false;
+pub fn serialize(strs: &[impl AsRef<str>]) -> (Enc, Vec<u8>) {
+	let mut enc = Enc::Iso88591;
 	let mut estimated_len_bytes = 0;
 
 	for one_str in strs.iter().map(|s| s.as_ref()) {
 		estimated_len_bytes += one_str.chars().count() + 1; // all strings will be null-terminated
 
-		if !is_unicode {
+		if enc == Enc::Iso88591 {
 			// We still don't know if it's Unicode?
 			let has_unicode_char = one_str.chars().position(|ch| ch as u32 > 0xff).is_some();
 			if has_unicode_char {
-				is_unicode = true; // at least 1 string is Unicode
+				enc = Enc::Unicode; // at least 1 string is Unicode
 			}
 		}
 	}
 
-	if is_unicode {
+	if enc == Enc::Unicode {
 		// Chars will be serialized as u16.
 		estimated_len_bytes *= 2;
 		estimated_len_bytes += 2 * strs.len(); // BOM bytes for each string
@@ -142,7 +143,7 @@ pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
 
 	let mut ret_buf = Vec::<u8>::with_capacity(estimated_len_bytes);
 	for one_str in strs.iter().map(|s| s.as_ref()) {
-		if is_unicode {
+		if enc == Enc::Unicode {
 			// Insert BOM bytes for each string.
 			// Strings will be encoded as little-endian.
 			ret_buf.extend(&BOM_LE.to_le_bytes());
@@ -150,19 +151,19 @@ pub fn serialize(strs: &[impl AsRef<str>]) -> (u8, Vec<u8>) {
 
 		for ch in one_str.chars() {
 			// Write each char of the string.
-			if is_unicode {
+			if enc == Enc::Unicode {
 				ret_buf.extend(&(ch as u16).to_le_bytes()); // simple conversion to wide
 			} else {
 				ret_buf.push(ch as _); // simple narrowing to u8
 			}
 		}
 
-		if is_unicode {
+		if enc == Enc::Unicode {
 			ret_buf.extend(&[0x00, 0x00]); // append terminating null
 		} else {
 			ret_buf.push(0x00);
 		}
 	}
 
-	(if is_unicode { 0x01 } else { 0x00 }, ret_buf)
+	(enc, ret_buf)
 }
