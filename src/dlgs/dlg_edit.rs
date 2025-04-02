@@ -1,6 +1,5 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use std::sync::Arc;
 use winsafe::{self as w, co, gui, prelude::*};
 
 use super::{Input, WndPicture};
@@ -9,67 +8,112 @@ use crate::{id3v2, ids};
 #[derive(Clone)]
 pub struct DlgEdit {
 	pub(super) wnd: gui::WindowModal,
-	pub(super) btn_ok: gui::Button,
-	pub(super) btn_cancel: gui::Button,
-	pub(super) inputs: Rc<RefCell<Vec<Input>>>,
+	pub(super) inputs: Vec<Input>, // all checkbox + textbox for the fields
+	pub(super) chk_pic: gui::CheckBox,
 	pub(super) wnd_pic: WndPicture,
-	pub(super) btn_uncheck: gui::Button,
+	pub(super) lbl_pic: gui::Label,
 	pub(super) lst_frames: gui::ListView,
-	pub(super) sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>,
-	pub(super) modal_return: Rc<Cell<bool>>,
+	pub(super) btn_uncheck_all: gui::Button,
+	pub(super) btn_check_filled: gui::Button,
+	pub(super) sel_tags: Rc<RefCell<Vec<id3v2::Tag>>>, // these will be modified and then returned
+	pub(super) user_clicked_ok: Rc<Cell<bool>>,
 }
 
 impl DlgEdit {
+	/// Creates the dialog and displays it, blocking until it's closed.
+	///
+	/// Takes ownership of the tags, and returns the modified tags.
 	#[must_use]
-	pub fn new(sel_tags: Vec<Rc<RefCell<id3v2::Tag>>>) -> w::AnyResult<Self> {
-		let none2 = (gui::Horz::None, gui::Vert::None);
+	pub fn show(
+		parent: &(impl GuiParent + 'static),
+		sel_tags: Vec<id3v2::Tag>,
+	) -> w::AnyResult<Option<Vec<id3v2::Tag>>> {
+		let no_res = (gui::Horz::None, gui::Vert::None);
 
 		let wnd = gui::WindowModal::new_dlg(ids::DLG_EDIT);
-		let btn_ok = gui::Button::new_dlg(&wnd, co::DLGID::OK.into(), none2);
-		let btn_cancel = gui::Button::new_dlg(&wnd, co::DLGID::CANCEL.into(), none2);
-		let inputs = Rc::new(RefCell::new(vec![
-			Input::new_edit("TPE1", &wnd, ids::CHK_ARTIST),
-			Input::new_edit("TIT2", &wnd, ids::CHK_TITLE),
-			Input::new_edit("TIT3", &wnd, ids::CHK_SUBTITLE),
-			Input::new_edit("TALB", &wnd, ids::CHK_ALBUM),
-			Input::new_edit("TRCK", &wnd, ids::CHK_TRACK),
-			Input::new_edit("TYER", &wnd, ids::CHK_YEAR),
-			Input {
-				name4: "TCON".to_owned(),
-				chk: gui::CheckBox::new_dlg(&wnd, ids::CHK_GENRE, none2),
-				txt: Arc::new(gui::ComboBox::new_dlg(&wnd, ids::CMB_GENRE, none2)),
-			},
-			Input::new_edit("TPE3", &wnd, ids::CHK_PERFORMER),
-			Input::new_edit("TPUB", &wnd, ids::CHK_PUBLISHER),
-			Input::new_edit("TOPE", &wnd, ids::CHK_ORIG_ARTIST),
-			Input::new_edit("TOAL", &wnd, ids::CHK_ORIG_ALBUM),
-			Input::new_edit("TORY", &wnd, ids::CHK_ORIG_YEAR),
-			Input::new_edit("TCOM", &wnd, ids::CHK_COMPOSER),
-			Input::new_edit("TEXT", &wnd, ids::CHK_LYRICIST),
-			Input::new_edit("COMM", &wnd, ids::CHK_COMMENT),
-		]));
-		let wnd_pic =
-			WndPicture::new(&wnd, sel_tags.clone(), gui::dpi(440, 50), gui::dpi(200, 200), none2)?;
-		let btn_uncheck = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, none2);
-		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, none2, None);
-		let modal_return = Rc::new(Cell::new(false));
+		let inputs = (ids::CHK_ARTIST..=ids::CHK_COMMENT)
+			.step_by(2)
+			.zip(FIELDS_NAME4.iter())
+			.map(|(chk_id, name4)| Input::new(&wnd, *name4, chk_id))
+			.collect::<Vec<_>>();
+		let chk_picture = gui::CheckBox::new_dlg(&wnd, ids::CHK_PICTURE, no_res);
+		let wnd_pic = WndPicture::new(&wnd, gui::dpi(420, 60), gui::dpi(200, 200), no_res);
+		let lbl_pic = gui::Label::new_dlg(&wnd, ids::LBL_PICTURE, no_res);
+		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, no_res, None);
+		let btn_uncheck_all = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, no_res);
+		let btn_check_filled = gui::Button::new_dlg(&wnd, ids::BTN_CHECK_FILLED, no_res);
+		let sel_tags = Rc::new(RefCell::new(sel_tags));
+		let user_clicked_ok = Rc::new(Cell::new(false));
 
 		let new_self = Self {
 			wnd,
-			btn_ok,
-			btn_cancel,
 			inputs,
+			chk_pic: chk_picture,
 			wnd_pic,
-			btn_uncheck,
+			lbl_pic,
 			lst_frames,
+			btn_uncheck_all,
+			btn_check_filled,
 			sel_tags,
-			modal_return,
+			user_clicked_ok,
 		};
-		new_self.wm_events();
-		Ok(new_self)
+		new_self.events();
+		new_self.show_modal(parent)
 	}
 
-	pub fn show(&self, parent: &impl GuiParent) -> w::AnyResult<bool> {
-		self.wnd.show_modal(parent).map(|_| self.modal_return.get())
+	fn show_modal(&self, parent: &impl GuiParent) -> w::AnyResult<Option<Vec<id3v2::Tag>>> {
+		self.wnd.show_modal(parent)?;
+		if self.user_clicked_ok.get() {
+			let edited_tags = self.sel_tags.replace(Vec::new());
+			Ok(Some(edited_tags)) // user clicked OK
+		} else {
+			Ok(None) // user clicked Cancel
+		}
+	}
+
+	fn events(&self) {
+		self.wnd
+			.on()
+			.wm_init_dialog({
+				let self2 = self.clone();
+				move |_| self2.on_init_dialog()
+			})
+			.wm_command_accel_menu(co::DLGID::OK, {
+				let self2 = self.clone();
+				move || self2.on_ok()
+			})
+			.wm_command_accel_menu(co::DLGID::CANCEL, {
+				let self2 = self.clone();
+				move || self2.on_cancel()
+			});
+
+		self.inputs.iter().for_each(|input| {
+			input.chk.on().bn_clicked({
+				let self2 = self.clone();
+				let input2 = input.clone();
+				move || self2.on_chk_click(&input2)
+			});
+		});
+
+		self.chk_pic.on().bn_clicked({
+			let self2 = self.clone();
+			move || self2.on_chk_pic_click()
+		});
+
+		self.btn_uncheck_all.on().bn_clicked({
+			let self2 = self.clone();
+			move || self2.on_uncheck_all()
+		});
+
+		self.btn_check_filled.on().bn_clicked({
+			let self2 = self.clone();
+			move || self2.on_check_filled()
+		});
 	}
 }
+
+/// Frame names for each Input, in order.
+pub const FIELDS_NAME4: &[&str] = &[
+	"TPE1", "TIT2", "TIT3", "TALB", "TRCK", "TYER", "TCON", "TPE3", "TPUB", "TOPE", "TOAL", "TORY",
+	"TCOM", "TEXT", "COMM",
+];

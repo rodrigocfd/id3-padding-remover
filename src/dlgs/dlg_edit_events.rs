@@ -1,69 +1,96 @@
-use winsafe::{self as w, prelude::*};
+use winsafe::{self as w, co, gui, prelude::*};
 
-use super::DlgEdit;
+use super::{DlgEdit, Input};
 
 impl DlgEdit {
-	pub(super) fn wm_events(&self) {
-		let self2 = self.clone();
-		self.wnd.on().wm_init_dialog(move |_| {
-			self2.wnd.hwnd().SetWindowText(&format!(
-				"Edit {} file{}",
-				self2.sel_tags.len(),
-				if self2.sel_tags.len() == 1 { "" } else { "s" },
-			))?;
-			self2.fill_chks_and_txts()?;
-			self2.fill_listview_fields()?;
-			Ok(true)
-		});
+	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
+		// Add all the genres to the ComboBox.
+		self.load_combo_genres()?;
 
-		let self2 = self.clone();
-		self.btn_uncheck.on().bn_clicked(move || {
-			self2.inputs.try_borrow()?.iter().try_for_each(|input| {
-				input.chk.set_check_and_trigger(false)?;
-				w::SysResult::Ok(())
-			})?;
-			Ok(())
-		});
+		// For each checkbox + input, check if the frame has the same value across all tags.
+		{
+			let sel_tags = self.sel_tags.try_borrow()?;
+			self.inputs
+				.iter()
+				.try_for_each(|input| input.set_text_if_equal_in_tags(&sel_tags))?;
+		}
 
-		let self2 = self.clone();
-		self.btn_ok.on().bn_clicked(move || {
-			self2.inputs.try_borrow()?.iter().try_for_each(|input| {
-				if input.chk.is_checked() {
-					self2.sel_tags.iter().try_for_each(|rc_tag| {
-						// For each MP3 being edited.
-						let mut tag = rc_tag.try_borrow_mut()?;
-						let text = input.txt.hwnd().GetWindowText()?;
-						tag.set_frame_str(&input.name4, text.trim())?;
-						w::AnyResult::Ok(())
-					})?;
-				}
-				w::AnyResult::Ok(())
-			})?;
-			self2.modal_return.set(true);
-			self2.wnd.close();
-			Ok(())
-		});
+		// Setup the frames listview.
+		self.lst_frames.cols().add("Frame", gui::dpi_x(56))?;
+		self.lst_frames
+			.cols()
+			.add("Value", gui::dpi_x(100))?
+			.set_width_to_fill()?;
+		self.lst_frames
+			.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
 
-		let self2 = self.clone();
-		self.btn_cancel.on().bn_clicked(move || {
-			// Will also fire on Esc.
-			self2.modal_return.set(false);
-			self2.wnd.close();
-			Ok(())
-		});
+		self.render_frames_list()?;
+		self.load_picture()?;
+		self.chk_pic.hwnd().EnableWindow(false); // to be implemented later
+		Ok(true)
+	}
 
-		self.inputs.borrow().iter().for_each(|input| {
-			let fp2 = input.clone();
-			input.chk.on().bn_clicked(move || {
-				// Event on each checkbox.
-				if fp2.chk.is_checked() {
-					fp2.txt.hwnd().EnableWindow(true);
-					fp2.txt.focus()?;
-				} else {
-					fp2.txt.hwnd().EnableWindow(false);
+	pub(super) fn on_chk_click(&self, input: &Input) -> w::AnyResult<()> {
+		if input.chk.is_checked() {
+			input.txt.hwnd().EnableWindow(true);
+			input.txt.focus()?; // when checked, enable the textbox and focus it
+		} else {
+			input.txt.hwnd().EnableWindow(false);
+		}
+		Ok(())
+	}
+
+	pub(super) fn on_chk_pic_click(&self) -> w::AnyResult<()> {
+		if self.chk_pic.is_checked() {
+			self.wnd_pic.load_picture(&self.sel_tags.try_borrow()?)?; // ask the control to load the IPicture
+		} else {
+			self.wnd_pic.unload_picture()?;
+		}
+		Ok(())
+	}
+
+	pub(super) fn on_uncheck_all(&self) -> w::AnyResult<()> {
+		self.inputs
+			.iter()
+			.try_for_each(|input| input.chk.set_check_and_trigger(false))?;
+		self.chk_pic.set_check(false);
+		Ok(())
+	}
+
+	pub(super) fn on_check_filled(&self) -> w::AnyResult<()> {
+		self.inputs
+			.iter()
+			.try_for_each(|input| -> w::AnyResult<()> {
+				let text = input.txt.hwnd().GetWindowText()?;
+				if !text.is_empty() {
+					input.chk.set_check(true);
+					input.txt.hwnd().EnableWindow(true);
 				}
 				Ok(())
-			});
-		});
+			})
+	}
+
+	pub(super) fn on_ok(&self) -> w::AnyResult<()> {
+		self.inputs
+			.iter()
+			.filter(|input| input.chk.is_checked())
+			.try_for_each(|input| -> w::AnyResult<()> {
+				let text = input.txt.hwnd().GetWindowText()?;
+				let mut sel_tags = self.sel_tags.try_borrow_mut()?;
+				sel_tags
+					.iter_mut()
+					.try_for_each(|tag| tag.set_editable_string(&input.name4, &text))?;
+				Ok(())
+			})?;
+
+		self.user_clicked_ok.set(true);
+		self.wnd.close();
+		Ok(())
+	}
+
+	pub(super) fn on_cancel(&self) -> w::AnyResult<()> {
+		self.user_clicked_ok.set(false);
+		self.wnd.close();
+		Ok(())
 	}
 }

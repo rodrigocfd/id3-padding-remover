@@ -1,3 +1,6 @@
+//! Declaration of resource IDs used in resources.res file, to be loaded
+//! throughout the application.
+
 use winsafe::seq_ids;
 
 seq_ids! {
@@ -6,18 +9,33 @@ seq_ids! {
 }
 
 seq_ids! {
-	DLG_MAIN = 1000;
-	LST_FILES
+	MNU_FILE = 200;
+	MNU_FILE_OPEN // Ctrl+O
+	MNU_FILE_EDIT
+	MNU_FILE_REMOVE
+	MNU_FILE_RESAVE
+	MNU_FILE_DELRG
+	MNU_FILE_DELRGART
+	MNU_FILE_ABOUT // F1
 }
 
 seq_ids! {
-	MNU_MAIN = 1500;
-	MNU_MAIN_OPEN // Ctrl+O
-	MNU_MAIN_EDIT
-	MNU_MAIN_REMOVE
-	MNU_MAIN_STRIP_RG
-	MNU_MAIN_STRIP_RG_ART
-	MNU_MAIN_ABOUT // F1
+	MNU_FRAMES = 300;
+	MNU_FRAMES_MOVEUP
+	MNU_FRAMES_MOVEDOWN
+	MNU_FRAMES_DELETE
+}
+
+seq_ids! {
+	MNU_PIC = 400;
+	MNU_PIC_INSERT
+	MNU_PIC_EXTRACT
+	MNU_PIC_DELETE
+}
+
+seq_ids! {
+	DLG_MAIN = 1000;
+	LST_FILES
 }
 
 seq_ids! {
@@ -52,6 +70,9 @@ seq_ids! {
 	TXT_LYRICIST
 	CHK_COMMENT
 	TXT_COMMENT
+	CHK_PICTURE
+	LBL_PICTURE
 	BTN_UNCHECK_ALL
+	BTN_CHECK_FILLED
 	LST_FRAMES
 }

@@ -1,6 +1,6 @@
 use std::cell::Cell;
 use std::rc::Rc;
-use winsafe::{self as w, gui};
+use winsafe::{self as w, co, gui, prelude::*};
 
 use crate::{id3v2, ids};
 
@@ -8,7 +8,8 @@ use crate::{id3v2, ids};
 pub struct DlgMain {
 	pub(super) wnd: gui::WindowMain,
 	pub(super) lst_files: gui::ListView<id3v2::Tag>,
-	pub(super) cur_sort_col: Rc<Cell<(u32, bool)>>, // index, reversed
+	pub(super) cur_sort: Rc<Cell<(u32, bool)>>, // index, ascending
+	pub(super) drop_target: w::IDropTarget,
 }
 
 impl DlgMain {
@@ -21,17 +22,107 @@ impl DlgMain {
 			&wnd,
 			ids::LST_FILES,
 			(H::Resize, V::Resize),
-			Some(ids::MNU_MAIN),
+			Some(ids::MNU_FILE),
 		);
-		let cur_sort_col = Rc::new(Cell::new((u32::MAX, false)));
+		let cur_sort = Rc::new(Cell::new((0, true))); // 1st col, ascending
+		let drop_target = w::IDropTarget::new_impl();
 
-		let new_self = Self { wnd, lst_files, cur_sort_col };
+		let new_self = Self { wnd, lst_files, cur_sort, drop_target };
 		new_self.events();
 		new_self
 	}
 
 	pub fn run(&self) -> w::AnyResult<i32> {
 		self.wnd.run_main(None)
+	}
+
+	fn events(&self) {
+		self.wnd
+			.on()
+			.wm_init_dialog({
+				let self2 = self.clone();
+				move |_| self2.on_init_dialog()
+			})
+			.wm_init_menu_popup({
+				let self2 = self.clone();
+				move |p| self2.on_init_menu_popup(p)
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_OPEN, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_open()
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_EDIT, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_edit()
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_REMOVE, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_remove()
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_RESAVE, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_resave()
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_DELRG, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_del_rg_art(false)
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_DELRGART, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_del_rg_art(true)
+			})
+			.wm_command_accel_menu(ids::MNU_FILE_ABOUT, {
+				let self2 = self.clone();
+				move || self2.on_menu_file_about()
+			});
+
+		self.lst_files
+			.on()
+			.lvn_item_changed({
+				let self2 = self.clone();
+				move |_| self2.on_lst_files_item_changed()
+			})
+			.lvn_key_down({
+				let self2 = self.clone();
+				move |p| self2.on_lst_files_key_down(p)
+			})
+			.nm_dbl_clk({
+				let self2 = self.clone();
+				move |_| self2.on_menu_file_edit()
+			})
+			.lvn_delete_item({
+				let self2 = self.clone();
+				move |_| self2.on_lst_files_delete_item()
+			});
+
+		self.lst_files.header().unwrap().on().hdn_item_click({
+			let self2 = self.clone();
+			move |p| self2.on_header_item_click(p)
+		});
+
+		self.drop_target
+			.DragEnter({
+				let self2 = self.clone();
+				move |_: &w::IDataObject,
+				      _: co::MK,
+				      _: w::POINT,
+				      fx: &mut co::DROPEFFECT|
+				      -> w::AnyResult<()> { self2.on_drop_target_drag_enter(fx) }
+			})
+			.DragOver({
+				let self2 = self.clone();
+				move |_: co::MK, _: w::POINT, fx: &mut co::DROPEFFECT| -> w::AnyResult<()> {
+					self2.on_drop_target_drag_over(fx)
+				}
+			})
+			.Drop({
+				let self2 = self.clone();
+				move |d: &w::IDataObject,
+				      _: co::MK,
+				      _: w::POINT,
+				      de: &mut co::DROPEFFECT|
+				      -> w::AnyResult<()> { self2.on_drop_target_drop(d, de) }
+			});
 	}
 }
 

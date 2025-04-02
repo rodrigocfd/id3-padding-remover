@@ -4,7 +4,7 @@ use super::body::Body;
 use super::str_engine;
 
 /// A unit of data within a tag.
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Frame {
 	name4: String,
 	flags: (u8, u8),
@@ -19,11 +19,11 @@ impl std::fmt::Display for Frame {
 
 impl Frame {
 	#[must_use]
-	pub(in crate::id3v2) fn new_from_string(name4: &str, text: &str) -> w::AnyResult<Self> {
+	pub(in crate::id3v2) fn new_from_editable_string(name4: &str, val: &str) -> w::AnyResult<Self> {
 		Ok(Self {
 			name4: name4.to_owned(),
 			flags: (0, 0),
-			body: Body::new_from_string(name4, text)?,
+			body: Body::new_from_editable_string(name4, val)?,
 		})
 	}
 
@@ -69,8 +69,13 @@ impl Frame {
 		&self.body
 	}
 
-	pub fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
-		self.body.set_string(val)
+	#[must_use]
+	pub fn as_editable_string(&self) -> w::AnyResult<String> {
+		self.body.as_editable_string()
+	}
+
+	pub fn set_editable_string(&mut self, val: &str) -> w::AnyResult<()> {
+		self.body.set_editable_string(val)
 	}
 
 	#[must_use]

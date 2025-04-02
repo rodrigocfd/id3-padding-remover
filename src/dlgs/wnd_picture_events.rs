@@ -1,16 +1,13 @@
-use winsafe::prelude::*;
+use winsafe::{self as w, prelude::*};
 
 use super::WndPicture;
 
 impl WndPicture {
-	pub(super) fn events(&self) {
-		let self2 = self.clone();
-		self.wnd.on().wm_paint(move || {
-			let hdc = self2.wnd.hwnd().BeginPaint()?;
-			if let Some(ipic) = &self2.ipic {
-				ipic.Render(&hdc, None, None, None, None, None)?;
-			}
-			Ok(())
-		});
+	pub(super) fn on_paint(&self) -> w::AnyResult<()> {
+		let hdc = self.wnd.hwnd().BeginPaint()?;
+		if let Some(pic) = &*self.pic.try_borrow()? {
+			pic.Render(&hdc, None, None, None, None, None)?;
+		}
+		Ok(())
 	}
 }

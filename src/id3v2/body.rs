@@ -4,6 +4,7 @@ use super::consts::PicType;
 use super::str_engine;
 
 /// Polymorphic data of a frame.
+#[derive(Clone)]
 pub enum Body {
 	Text(String),
 	UserText(UserText),
@@ -12,15 +13,20 @@ pub enum Body {
 	Picture(Picture),
 }
 
+#[derive(Clone)]
 pub struct UserText {
 	pub descr: String,
 	pub text: String,
 }
+
+#[derive(Clone)]
 pub struct Comment {
 	pub lang3: String,
 	pub descr: String,
 	pub text: String,
 }
+
+#[derive(Clone)]
 pub struct Picture {
 	pub mime: String,
 	pub pic_type: PicType,
@@ -83,7 +89,7 @@ impl PartialEq for Body {
 impl Body {
 	/// Creates a body from a string. If not possible, returns an error.
 	#[must_use]
-	pub(in crate::id3v2) fn new_from_string(name4: &str, val: &str) -> w::AnyResult<Self> {
+	pub(in crate::id3v2) fn new_from_editable_string(name4: &str, val: &str) -> w::AnyResult<Self> {
 		if name4 == "COMM" {
 			Ok(Self::Comment(Comment {
 				lang3: "eng".to_owned(), // default lang
@@ -232,8 +238,23 @@ impl Body {
 		}
 	}
 
-	/// Tries to set the value as a string, returning an error if not possible.
-	pub(in crate::id3v2) fn set_string(&mut self, val: &str) -> w::AnyResult<()> {
+	/// Tries to return the value as an editable string, or an error if not
+	/// possible.
+	#[must_use]
+	pub(in crate::id3v2) fn as_editable_string(&self) -> w::AnyResult<String> {
+		use Body::*;
+		Ok(match self {
+			Text(s) => s.clone(),
+			UserText(ut) => ut.text.clone(),
+			Binary(_) => return Err("Binary data cannot be represented as string.".into()),
+			Comment(c) => c.text.clone(),
+			Picture(_) => return Err("Picture data cannot be represented as string.".into()),
+		})
+	}
+
+	/// Tries to set the value as an editable string, returning an error if not
+	/// possible.
+	pub(in crate::id3v2) fn set_editable_string(&mut self, val: &str) -> w::AnyResult<()> {
 		use Body::*;
 		Ok(match self {
 			Text(s) => {

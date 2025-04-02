@@ -1,227 +1,300 @@
-use winsafe::{self as w, co, gui, prelude::*};
+use winsafe::{self as w, co, gui, msg, prelude::*};
 
-use super::{DlgMain, LIST_COLS};
+use super::{DlgEdit, DlgMain, LIST_COLS};
 use crate::ids;
 
 impl DlgMain {
-	pub(super) fn events(&self) {
-		let self2 = self.clone();
-		self.wnd.on().wm_init_dialog(move |_| {
-			self2.update_num_files(self2.lst_files.items().count())?;
+	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
+		self.update_num_files(self.lst_files.items().count())?;
 
-			self2.lst_files.set_image_list(co::LVSIL::SMALL, {
-				let il = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
-				il.add_icons_from_shell(&["mp3"])?;
-				il
-			});
-			self2
-				.lst_files
-				.context_menu()
-				.unwrap()
-				.SetMenuDefaultItem(w::IdPos::Id(ids::MNU_MAIN_EDIT))?;
-			self2
-				.lst_files
-				.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
-			LIST_COLS.iter().try_for_each(|(title, cx, _)| {
-				self2.lst_files.cols().add(*title, gui::dpi_x(*cx))?;
-				w::SysResult::Ok(())
+		// Setup the files listview.
+		self.lst_files.set_image_list(co::LVSIL::SMALL, {
+			let il = w::HIMAGELIST::Create(w::SIZE::new(16, 16), co::ILC::COLOR32, 1, 1)?;
+			il.add_icons_from_shell(&["mp3"])?;
+			il
+		});
+		self.lst_files
+			.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
+		self.lst_files
+			.context_menu()
+			.unwrap()
+			.SetMenuDefaultItem(w::IdPos::Id(ids::MNU_FILE_EDIT))?;
+		LIST_COLS
+			.iter()
+			.try_for_each(|(title, cx, _)| -> w::SysResult<()> {
+				self.lst_files.cols().add(*title, gui::dpi_x(*cx))?;
+				Ok(())
 			})?;
 
-			[1, 5, 8]
-				.iter() // padding, track #, year
-				.for_each(|i| {
-					self2
-						.lst_files
-						.header()
-						.unwrap()
-						.items()
-						.get(*i)
-						.set_justify(gui::HeaderJustify::Right);
-				});
-			[2, 3]
-				.iter() // art, RG
-				.for_each(|i| {
-					self2
-						.lst_files
-						.header()
-						.unwrap()
-						.items()
-						.get(*i)
-						.set_justify(gui::HeaderJustify::Center);
-				});
+		// Set files listview columns justification.
+		[1, 5, 8]
+			.iter() // padding, track #, year
+			.for_each(|i| {
+				self.lst_files
+					.header()
+					.unwrap()
+					.items()
+					.get(*i)
+					.set_justify(gui::HeaderJustify::Right);
+			});
+		[2, 3]
+			.iter() // art, RG
+			.for_each(|i| {
+				self.lst_files
+					.header()
+					.unwrap()
+					.items()
+					.get(*i)
+					.set_justify(gui::HeaderJustify::Center);
+			});
 
-			self2.sort_list(0, true)?; // sort by path initially
-			Ok(true)
-		});
+		self.wnd.hwnd().RegisterDragDrop(&self.drop_target)?;
+		Ok(true)
+	}
 
-		let self2 = self.clone();
-		self.wnd.on().wm_drop_files(move |p| {
-			let dropped_files = p.hdrop.DragQueryFile()?.collect::<w::SysResult<Vec<_>>>()?;
-			let mut valid_files = Vec::<String>::with_capacity(dropped_files.len());
+	pub(super) fn on_init_menu_popup(&self, p: msg::wm::InitMenuPopup) -> w::AnyResult<()> {
+		if p.hmenu == self.lst_files.context_menu().unwrap() {
+			[
+				ids::MNU_FILE_EDIT,
+				ids::MNU_FILE_REMOVE,
+				ids::MNU_FILE_RESAVE,
+				ids::MNU_FILE_DELRG,
+				ids::MNU_FILE_DELRGART,
+			]
+			.into_iter()
+			.try_for_each(|id| {
+				p.hmenu
+					.EnableMenuItem(
+						w::IdPos::Id(id),
+						self.lst_files.items().selected_count() > 0, // at least 1 file selected?
+					)
+					.map(|_| ())
+			})?;
+		}
+		Ok(())
+	}
 
-			for file in dropped_files.iter() {
-				if w::path::is_directory(file) {
-					for sub_file in w::path::dir_list(file, Some("*.mp3")) {
-						valid_files.push(sub_file?); // search only 1 level below
+	pub(super) fn on_menu_file_open(&self) -> w::AnyResult<()> {
+		let fod = w::CoCreateInstance::<w::IFileOpenDialog>(
+			&co::CLSID::FileOpenDialog,
+			None,
+			co::CLSCTX::INPROC_SERVER,
+		)?;
+
+		fod.SetOptions(
+			fod.GetOptions()?
+				| co::FOS::FORCEFILESYSTEM
+				| co::FOS::FILEMUSTEXIST
+				| co::FOS::ALLOWMULTISELECT,
+		)?;
+
+		fod.SetFileTypes(&[("MP3 audio files", "*.mp3"), ("All files", "*.*")])?;
+		fod.SetFileTypeIndex(1)?;
+
+		if fod.Show(self.wnd.hwnd())? {
+			self.add_files_to_list(
+				&fod.GetResults()?
+					.iter()?
+					.map(|shi| shi?.GetDisplayName(co::SIGDN::FILESYSPATH))
+					.collect::<w::HrResult<Vec<_>>>()?,
+			)?;
+		}
+		Ok(())
+	}
+
+	pub(super) fn on_menu_file_edit(&self) -> w::AnyResult<()> {
+		if self.lst_files.items().selected_count() == 0 {
+			return Ok(()); // Enter key will hit here even if there are no selected items
+		}
+
+		let cloned_sel_tags = self
+			.lst_files
+			.items()
+			.iter_selected()
+			.map(|sel_item| {
+				let rc_tag = sel_item.data()?;
+				let cloned_tag = rc_tag.try_borrow()?.clone();
+				Ok(cloned_tag)
+			})
+			.collect::<w::AnyResult<Vec<_>>>()?; // deep copy of selected tags
+
+		if let Some(edited_tags) = DlgEdit::show(&self.wnd, cloned_sel_tags)? {
+			self.lst_files.set_redraw(false);
+
+			self.lst_files
+				.items()
+				.iter_selected() // the items order should be the same
+				.zip(edited_tags.into_iter())
+				.try_for_each(|(sel_item, mut edited_tag)| -> w::AnyResult<()> {
+					edited_tag.save_to_file(&sel_item.text(0))?;
+					*sel_item.data()?.try_borrow_mut()? = edited_tag; // replace the tag currently stored in the item
+					Self::render_tag(sel_item)?; // update the listview with the new values
+					Ok(())
+				})?;
+
+			self.lst_files.set_redraw(true);
+		}
+
+		Ok(())
+	}
+
+	pub(super) fn on_menu_file_remove(&self) -> w::AnyResult<()> {
+		self.lst_files.items().delete_selected()?;
+		Ok(())
+	}
+
+	pub(super) fn on_menu_file_resave(&self) -> w::AnyResult<()> {
+		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
+			hwnd_parent: Some(self.wnd.hwnd()),
+			window_title: Some("Re-save file(s)"),
+			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
+			common_buttons: co::TDCBF::CANCEL,
+			buttons: &[(co::DLGID::OK.into(), "&Rewrite")],
+			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
+			content: Some(&format!(
+				"Rewrite the tag in {} file(s)?",
+				self.lst_files.items().selected_count()
+			)),
+			..Default::default()
+		})?;
+		if res == co::DLGID::OK {
+			self.lst_files.items().iter_selected().try_for_each(
+				|sel_item| -> w::AnyResult<()> {
+					{
+						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
+						let mut tag = rc_tag.try_borrow_mut()?;
+						tag.save_to_file(&sel_item.text(0))?; // save to MP3 file
 					}
-				} else if w::path::has_extension(file, &[".mp3"]) {
-					valid_files.push(file.clone());
-				}
-			}
+					Self::render_tag(sel_item)?; // padding will be set to zero, if any
+					Ok(())
+				},
+			)?;
+		}
+		Ok(())
+	}
 
-			self2.add_files_to_list(&valid_files)?;
-			Ok(())
-		});
+	pub(super) fn on_menu_file_del_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
+		let sel_count = self.lst_files.items().selected_count();
+		let window_title = if del_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" };
+		let content = format!(
+			"Strip ReplayGain {} frames of {} tag{}?",
+			if del_art { "and art" } else { "" },
+			sel_count,
+			if sel_count == 1 { "" } else { "s" },
+		);
 
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_OPEN, move || {
-				let fod = w::CoCreateInstance::<w::IFileOpenDialog>(
-					&co::CLSID::FileOpenDialog,
-					None,
-					co::CLSCTX::INPROC_SERVER,
-				)?;
+		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
+			hwnd_parent: Some(self.wnd.hwnd()),
+			window_title: Some(window_title),
+			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
+			common_buttons: co::TDCBF::CANCEL,
+			buttons: &[(co::DLGID::OK.into(), "&Strip")],
+			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
+			content: Some(&content),
+			..Default::default()
+		})?;
+		if res == co::DLGID::OK {
+			self.lst_files.items().iter_selected().try_for_each(
+				|sel_item| -> w::AnyResult<()> {
+					{
+						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
+						let mut tag = rc_tag.try_borrow_mut()?;
+						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
+						if del_art {
+							tag.frames_mut().retain(|frame| frame.name4() != "APIC");
+						}
+						tag.save_to_file(&sel_item.text(0))?; // save to MP3 file
+					}
+					Self::render_tag(sel_item)?;
+					Ok(())
+				},
+			)?;
+		}
+		Ok(())
+	}
 
-				fod.SetOptions(
-					fod.GetOptions()?
-						| co::FOS::FORCEFILESYSTEM
-						| co::FOS::FILEMUSTEXIST
-						| co::FOS::ALLOWMULTISELECT,
-				)?;
+	pub(super) fn on_menu_file_about(&self) -> w::AnyResult<()> {
+		let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
+		let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
+		let version_parts = hversion.version_info()?.dwFileVersion();
 
-				fod.SetFileTypes(&[("MP3 audio files", "*.mp3"), ("All files", "*.*")])?;
-				fod.SetFileTypeIndex(1)?;
-
-				if fod.Show(self2.wnd.hwnd())? {
-					self2.add_files_to_list(
-						&fod.GetResults()?
-							.iter()?
-							.map(|shi| shi?.GetDisplayName(co::SIGDN::FILESYSPATH))
-							.collect::<w::HrResult<Vec<_>>>()?,
-					)?;
-				}
-				Ok(())
-			});
-
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_EDIT, move || {
-				self2.edit_selected()?;
-				Ok(())
-			});
-
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_REMOVE, move || {
-				self2.lst_files.items().delete_selected()?;
-				Ok(())
-			});
-
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_STRIP_RG, move || {
-				self2.strip_replaygain_art(false)?;
-				Ok(())
-			});
-
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_STRIP_RG_ART, move || {
-				self2.strip_replaygain_art(true)?;
-				Ok(())
-			});
-
-		let self2 = self.clone();
-		self.wnd
-			.on()
-			.wm_command_accel_menu(ids::MNU_MAIN_ABOUT, move || {
-				let exe_name = w::HINSTANCE::NULL.GetModuleFileName()?;
-				let hversion = w::HVERSIONINFO::GetFileVersionInfo(&exe_name)?;
-				let version_parts = hversion.version_info()?.dwFileVersion();
-
-				w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
-					hwnd_parent: Some(self2.wnd.hwnd()),
-					window_title: Some("About"),
-					main_instruction: Some("ID3 Fit"),
-					main_icon: w::IconIdTd::Td(co::TD_ICON::INFORMATION),
-					common_buttons: co::TDCBF::OK,
-					flags: co::TDF::ALLOW_DIALOG_CANCELLATION
-						| co::TDF::POSITION_RELATIVE_TO_WINDOW,
-					content: Some(&format!(
-						"Version {}.{}.{}\n\
+		let content = format!(
+			"Version {}.{}.{}\n\
 					Writen in Rust with WinSafe library.\n\n\
 					{}",
-						version_parts[0],
-						version_parts[1],
-						version_parts[2],
-						hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
-					)),
-					..Default::default()
-				})?;
-				Ok(())
-			});
+			version_parts[0],
+			version_parts[1],
+			version_parts[2],
+			hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
+		);
 
-		let self2 = self.clone();
-		self.wnd.on().wm_init_menu_popup(move |p| {
-			if self2.lst_files.context_menu().unwrap() == p.hmenu {
-				[
-					ids::MNU_MAIN_EDIT,
-					ids::MNU_MAIN_REMOVE,
-					ids::MNU_MAIN_STRIP_RG,
-					ids::MNU_MAIN_STRIP_RG_ART,
-				]
-				.into_iter()
-				.try_for_each(|id| {
-					p.hmenu
-						.EnableMenuItem(
-							w::IdPos::Id(id),
-							self2.lst_files.items().selected_count() > 0, // at least 1 file selected?
-						)
-						.map(|_| ())
-				})?;
-			}
-			Ok(())
-		});
+		w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
+			hwnd_parent: Some(self.wnd.hwnd()),
+			window_title: Some("About"),
+			main_instruction: Some("ID3 Fit"),
+			main_icon: w::IconIdTd::Td(co::TD_ICON::INFORMATION),
+			common_buttons: co::TDCBF::OK,
+			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
+			content: Some(&content),
+			..Default::default()
+		})?;
+		Ok(())
+	}
 
-		let self2 = self.clone();
-		self.lst_files.on().lvn_item_changed(move |_| {
-			self2.update_num_files(self2.lst_files.items().count())?;
-			Ok(())
-		});
+	pub(super) fn on_lst_files_item_changed(&self) -> w::AnyResult<()> {
+		self.update_num_files(self.lst_files.items().count())?;
+		Ok(())
+	}
 
-		let self2 = self.clone();
-		self.lst_files.on().lvn_key_down(move |p| {
-			if p.wVKey == co::VK::DELETE {
-				self2.lst_files.items().delete_selected()?; // on DEL key, remove selected files from the list
-			} else if p.wVKey == co::VK::RETURN {
-				self2.edit_selected()?; // on Enter key, edit the selected tags
-			}
-			Ok(())
-		});
+	pub(super) fn on_lst_files_key_down(&self, p: &w::NMLVKEYDOWN) -> w::AnyResult<()> {
+		if p.wVKey == co::VK::DELETE {
+			self.lst_files.items().delete_selected()?; // on DEL key, remove selected files from the list
+		} else if p.wVKey == co::VK::RETURN {
+			self.on_menu_file_edit()?; // on Enter key, edit the selected tags
+		}
+		Ok(())
+	}
 
-		let self2 = self.clone();
-		self.lst_files.on().nm_dbl_clk(move |_| {
-			self2.edit_selected()?;
-			Ok(())
-		});
+	pub(super) fn on_lst_files_delete_item(&self) -> w::AnyResult<()> {
+		// Notification is sent before the list is updated.
+		self.update_num_files(self.lst_files.items().count() - 1)?;
+		Ok(())
+	}
 
-		let self2 = self.clone();
-		self.lst_files.on().lvn_delete_item(move |_| {
-			// Notification is sent before the list is updated.
-			self2.update_num_files(self2.lst_files.items().count() - 1)?;
-			Ok(())
-		});
+	pub(super) fn on_header_item_click(&self, p: &w::NMHEADER) -> w::AnyResult<()> {
+		self.sort_list_clicked(p.iItem as _, false)?;
+		Ok(())
+	}
 
-		let self2 = self.clone();
-		let header = self.lst_files.header().unwrap();
-		header.on().hdn_item_click(move |p| {
-			self2.sort_list(p.iItem as u32, false)?;
-			Ok(())
-		});
+	pub(super) fn on_drop_target_drag_enter(&self, fx: &mut co::DROPEFFECT) -> w::AnyResult<()> {
+		*fx &= co::DROPEFFECT::COPY;
+		Ok(())
+	}
+
+	pub(super) fn on_drop_target_drag_over(&self, fx: &mut co::DROPEFFECT) -> w::AnyResult<()> {
+		*fx &= co::DROPEFFECT::COPY;
+		Ok(())
+	}
+
+	pub(super) fn on_drop_target_drop(
+		&self,
+		d: &w::IDataObject,
+		fx: &mut co::DROPEFFECT,
+	) -> w::AnyResult<()> {
+		let mut fmt = w::FORMATETC::default();
+		fmt.cfFormat = co::CF::HDROP;
+		fmt.dwAspect = co::DVASPECT::CONTENT;
+		fmt.tymed = co::TYMED::HGLOBAL;
+
+		let medium = unsafe { d.GetData(&fmt)? };
+		let hglobal = unsafe { medium.ptr_hglobal().unwrap() };
+		let ptr_lock = hglobal.GlobalLock()?;
+		let hdrop = unsafe { w::HDROP::from_ptr(ptr_lock.as_ptr() as _) };
+		let dropped_paths = hdrop.DragQueryFile()?.collect::<w::SysResult<Vec<_>>>()?;
+
+		self.add_files_to_list(&dropped_paths)?;
+
+		*fx &= co::DROPEFFECT::COPY;
+		Ok(())
 	}
 }

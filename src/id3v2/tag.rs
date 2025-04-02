@@ -6,7 +6,7 @@ use super::str_engine;
 use super::synch_safe;
 
 /// Metadata of a single MP3 file.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Tag {
 	mp3_offset: usize,
 	padding: usize,
@@ -152,7 +152,9 @@ impl Tag {
 
 	/// Saves the tag to an MP3 file. If there are no frames, the tag will be
 	/// entirely removed from the file.
-	pub fn save_to_file(&self, mp3_path: &str) -> w::AnyResult<()> {
+	///
+	/// No padding will be written, and the `padding` field will be set to zero.
+	pub fn save_to_file(&mut self, mp3_path: &str) -> w::AnyResult<()> {
 		let fout = w::File::open(mp3_path, w::FileAccess::ExistingRW)?;
 		let current_contents = fout.read_all()?; // read the whole MP3 into a buffer
 		let (_, mp3_offset) = Self::parse_header(&current_contents)?;
@@ -170,6 +172,7 @@ impl Tag {
 					.collect::<Vec<_>>(),
 			)?;
 		}
+		self.padding = 0;
 		Ok(())
 	}
 
@@ -189,8 +192,30 @@ impl Tag {
 	}
 
 	#[must_use]
-	pub fn frame(&self, name4: &str) -> Option<&Frame> {
+	pub fn frame_by_name4(&self, name4: &str) -> Option<&Frame> {
 		self.frames.iter().find(|frame| frame.name4() == name4)
+	}
+
+	/// If the given frame does exist, tries to set the editable string on it.
+	///
+	/// If the frame doesn't exist, creates a new one with the editable string
+	/// on it.
+	///
+	/// An empty string will remove the frame, if any.
+	pub fn set_editable_string(&mut self, name4: &str, val: &str) -> w::AnyResult<()> {
+		let val = val.trim();
+		if val.is_empty() {
+			self.frames.retain(|frame| frame.name4() != name4); // remove empty new values
+		} else {
+			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
+				Some(frame) => frame.set_editable_string(val)?, // frame already exists
+				None => {
+					let new_frame = Frame::new_from_editable_string(name4, val)?;
+					self.frames.push(new_frame);
+				},
+			}
+		}
+		Ok(())
 	}
 
 	/// Any ReplayGain frame present?
@@ -210,21 +235,23 @@ impl Tag {
 			})
 			.is_some()
 	}
+}
 
-	/// Tries to set the frame value as a simple text, returning an error if not
-	/// possible. If frame does not exist, creates it.
-	pub fn set_frame_str(&mut self, name4: &str, text: &str) -> w::AnyResult<()> {
-		if text.is_empty() {
-			if let Some(idx) = self.frames.iter().position(|frame| frame.name4() == name4) {
-				self.frames.remove(idx); // empty string will remove frame
-			}
-		} else {
-			// Text is not empty.
-			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
-				Some(frame) => frame.set_string(text)?, // field exists, update
-				None => self.frames.push(Frame::new_from_string(name4, text)?), // create simple text frame
-			}
-		}
-		Ok(())
+/// Returns true if the given frame is equal across all given tags.
+pub fn equal_frame_across_all_tags(name4: &str, tags: &[Tag]) -> bool {
+	if tags.is_empty() {
+		return false; // nothing to do
 	}
+
+	let frame0 = match tags[0].frame_by_name4(name4) {
+		Some(f) => f,
+		None => return false, // the 1st tag doesn't have this frame
+	};
+
+	tags.iter().skip(1).all(|tag| {
+		match tag.frame_by_name4(name4) {
+			Some(f) => f == frame0, // frame present, check equality
+			None => false,          // this tag doesn't have this frame
+		}
+	})
 }

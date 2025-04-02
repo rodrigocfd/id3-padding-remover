@@ -1,97 +1,59 @@
-use try_iterator::prelude::*;
-use winsafe::{self as w, co, gui, prelude::*};
+use winsafe::{self as w, gui, prelude::*};
 
 use super::DlgEdit;
+use crate::ids;
 
 impl DlgEdit {
-	pub(super) fn fill_chks_and_txts(&self) -> w::AnyResult<()> {
-		let genres = include_str!("genres.txt");
-		self.inputs.try_borrow()?.iter().try_for_each(|input| {
-			if input.name4 == "TCON" {
-				// Feed the genres to the combo.
-				let cmb = input
-					.txt
-					.as_any()
-					.downcast_ref::<gui::ComboBox>()
-					.expect("ComboBox downcast failed.");
-				genres
-					.lines()
-					.filter(|line| !line.is_empty())
-					.try_for_each(|genre| {
-						cmb.items().add(&[genre])?;
-						w::SysResult::Ok(())
-					})?;
-			}
-
-			let maybe_idx_first_mp3 = self
-				.sel_tags
-				.iter() // index of first MP3 which has the field
-				.try_position(|tag| {
-					let has = tag.try_borrow()?.frame(&input.name4).is_some();
-					w::AnyResult::Ok(has)
-				})?;
-
-			match maybe_idx_first_mp3 {
-				Some(idx_first) => {
-					// At least 1 MP3 has this field.
-					let first_tag = self.sel_tags[idx_first].try_borrow()?;
-					let first_frame = first_tag.frame(&input.name4).unwrap();
-
-					let frame_equal_in_all_mp3s =
-						self.sel_tags.iter().skip(idx_first + 1).try_all(|tag| {
-							let is_equal_to_1st = match tag.try_borrow()?.frame(&input.name4) {
-								None => false, // this MP3 doesn't have this field
-								Some(frame) => frame == first_frame,
-							};
-							w::AnyResult::Ok(is_equal_to_1st)
-						})?;
-
-					if frame_equal_in_all_mp3s {
-						input
-							.txt
-							.hwnd()
-							.SetWindowText(&first_frame.body().to_string())?;
-						input.chk.set_check_and_trigger(true)?;
-					} else {
-						input.chk.set_check_and_trigger(false)?;
-					}
-				},
-				None => {
-					input.chk.set_check_and_trigger(false)?; // no MP3 has this field
-				},
-			}
-
-			w::AnyResult::Ok(())
-		})
+	pub(super) fn load_combo_genres(&self) -> w::AnyResult<()> {
+		if let Some(input) = self
+			.inputs
+			.iter()
+			.find(|input| input.txt.ctrl_id() == ids::CMB_GENRE)
+		{
+			let cmb_genres = input.txt.as_any().downcast_ref::<gui::ComboBox>().unwrap();
+			let genres = include_str!("genres.txt");
+			genres
+				.lines()
+				.filter(|line| !line.is_empty())
+				.try_for_each(|genre| cmb_genres.items().add(&[genre]))?;
+		}
+		Ok(())
 	}
 
-	pub(super) fn fill_listview_fields(&self) -> w::AnyResult<()> {
-		self.lst_frames.cols().add("Frame", gui::dpi_x(56))?;
-		self.lst_frames
-			.cols()
-			.add("Value", 1)?
-			.set_width_to_fill()?;
-		self.lst_frames
-			.set_extended_style(true, co::LVS_EX::FULLROWSELECT | co::LVS_EX::GRIDLINES);
-
-		if self.sel_tags.len() > 1 {
-			self.lst_frames.items().add(
-				&["", &format!("{} files...", self.sel_tags.len())],
-				None,
-				(),
-			)?;
+	pub(super) fn render_frames_list(&self) -> w::AnyResult<()> {
+		let sel_tags = self.sel_tags.try_borrow()?;
+		if sel_tags.len() == 1 {
+			sel_tags[0]
+				.frames()
+				.iter()
+				.try_for_each(|frame| -> w::AnyResult<()> {
+					let text = frame.body().to_string(); // textual representation of the frame data
+					self.lst_frames
+						.items()
+						.add(&[frame.name4(), &text], None, ())?;
+					Ok(())
+				})?;
 		} else {
-			let sel_tag = self.sel_tags[0].try_borrow()?;
-			sel_tag.frames().iter().try_for_each(|frame| {
-				self.lst_frames.items().add(
-					&[frame.name4(), &frame.body().to_string()],
-					None,
-					(),
-				)?;
-				w::SysResult::Ok(())
-			})?;
+			let text = format!("{} files...", sel_tags.len()); // multiple files, just display the file count
+			self.lst_frames.items().add(&["", &text], None, ())?;
+			self.lst_frames.hwnd().EnableWindow(false);
 		}
+		Ok(())
+	}
 
+	pub(super) fn load_picture(&self) -> w::AnyResult<()> {
+		self.wnd_pic.load_picture(&self.sel_tags.try_borrow()?)?; // ask the control to load the IPicture
+		if let Some(pic_obj) = &*self.wnd_pic.pic.try_borrow()? {
+			// Do we have an actual picture loaded?
+			self.chk_pic.set_check(true);
+			let (cx, cy) = pic_obj.size_px()?;
+			self.lbl_pic
+				.hwnd()
+				.SetWindowText(&format!("{cx} x {cy} px"))?;
+		} else {
+			self.chk_pic.set_check(false);
+			self.lbl_pic.hwnd().SetWindowText("")?;
+		}
 		Ok(())
 	}
 }
