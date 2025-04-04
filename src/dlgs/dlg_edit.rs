@@ -39,7 +39,8 @@ impl DlgEdit {
 		let chk_picture = gui::CheckBox::new_dlg(&wnd, ids::CHK_PICTURE, no_res);
 		let wnd_pic = WndPicture::new(&wnd, gui::dpi(420, 60), gui::dpi(200, 200), no_res);
 		let lbl_pic = gui::Label::new_dlg(&wnd, ids::LBL_PICTURE, no_res);
-		let lst_frames = gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, no_res, None);
+		let lst_frames =
+			gui::ListView::new_dlg(&wnd, ids::LST_FRAMES, no_res, Some(ids::MNU_FRAMES));
 		let btn_uncheck_all = gui::Button::new_dlg(&wnd, ids::BTN_UNCHECK_ALL, no_res);
 		let btn_check_filled = gui::Button::new_dlg(&wnd, ids::BTN_CHECK_FILLED, no_res);
 		let sel_tags = Rc::new(RefCell::new(sel_tags));
@@ -77,6 +78,22 @@ impl DlgEdit {
 			.wm_init_dialog({
 				let self2 = self.clone();
 				move |_| self2.on_init_dialog()
+			})
+			.wm_init_menu_popup({
+				let self2 = self.clone();
+				move |p| self2.on_init_menu_popup(p)
+			})
+			.wm_command_accel_menu(ids::MNU_FRAMES_MOVEUP, {
+				let self2 = self.clone();
+				move || self2.on_menu_frames_move_up()
+			})
+			.wm_command_accel_menu(ids::MNU_FRAMES_MOVEDOWN, {
+				let self2 = self.clone();
+				move || self2.on_menu_frames_move_down()
+			})
+			.wm_command_accel_menu(ids::MNU_FRAMES_DELETE, {
+				let self2 = self.clone();
+				move || self2.on_menu_frames_delete()
 			})
 			.wm_command_accel_menu(co::DLGID::OK, {
 				let self2 = self.clone();

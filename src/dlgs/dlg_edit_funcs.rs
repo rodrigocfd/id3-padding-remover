@@ -21,6 +21,8 @@ impl DlgEdit {
 	}
 
 	pub(super) fn render_frames_list(&self) -> w::AnyResult<()> {
+		self.lst_frames.items().delete_all()?;
+
 		let sel_tags = self.sel_tags.try_borrow()?;
 		if sel_tags.len() == 1 {
 			sel_tags[0]

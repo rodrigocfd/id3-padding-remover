@@ -1,7 +1,7 @@
 use winsafe::{self as w, co, gui, msg, prelude::*};
 
 use super::{DlgEdit, DlgMain, LIST_COLS};
-use crate::ids;
+use crate::{ids, msgbox};
 
 impl DlgMain {
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
@@ -54,6 +54,7 @@ impl DlgMain {
 
 	pub(super) fn on_init_menu_popup(&self, p: msg::wm::InitMenuPopup) -> w::AnyResult<()> {
 		if p.hmenu == self.lst_files.context_menu().unwrap() {
+			let has_sel = self.lst_files.items().selected_count() >= 1;
 			[
 				ids::MNU_FILE_EDIT,
 				ids::MNU_FILE_REMOVE,
@@ -64,10 +65,7 @@ impl DlgMain {
 			.into_iter()
 			.try_for_each(|id| {
 				p.hmenu
-					.EnableMenuItem(
-						w::IdPos::Id(id),
-						self.lst_files.items().selected_count() > 0, // at least 1 file selected?
-					)
+					.EnableMenuItem(w::IdPos::Id(id), has_sel)
 					.map(|_| ())
 			})?;
 		}
@@ -144,20 +142,10 @@ impl DlgMain {
 	}
 
 	pub(super) fn on_menu_file_resave(&self) -> w::AnyResult<()> {
-		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
-			hwnd_parent: Some(self.wnd.hwnd()),
-			window_title: Some("Re-save file(s)"),
-			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
-			common_buttons: co::TDCBF::CANCEL,
-			buttons: &[(co::DLGID::OK.into(), "&Rewrite")],
-			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
-			content: Some(&format!(
-				"Rewrite the tag in {} file(s)?",
-				self.lst_files.items().selected_count()
-			)),
-			..Default::default()
-		})?;
-		if res == co::DLGID::OK {
+		let content =
+			format!("Rewrite the tag in {} file(s)?", self.lst_files.items().selected_count());
+
+		if msgbox::ask(&self.wnd, "Re-save file(s)", None, &content, "&Rewrite")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
@@ -183,17 +171,7 @@ impl DlgMain {
 			if sel_count == 1 { "" } else { "s" },
 		);
 
-		let (res, _, _) = w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
-			hwnd_parent: Some(self.wnd.hwnd()),
-			window_title: Some(window_title),
-			main_icon: w::IconIdTd::Td(co::TD_ICON::WARNING),
-			common_buttons: co::TDCBF::CANCEL,
-			buttons: &[(co::DLGID::OK.into(), "&Strip")],
-			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
-			content: Some(&content),
-			..Default::default()
-		})?;
-		if res == co::DLGID::OK {
+		if msgbox::ask(&self.wnd, window_title, None, &content, "&Strip")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
@@ -228,16 +206,7 @@ impl DlgMain {
 			hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
 		);
 
-		w::TaskDialogIndirect(&w::TASKDIALOGCONFIG {
-			hwnd_parent: Some(self.wnd.hwnd()),
-			window_title: Some("About"),
-			main_instruction: Some("ID3 Fit"),
-			main_icon: w::IconIdTd::Td(co::TD_ICON::INFORMATION),
-			common_buttons: co::TDCBF::OK,
-			flags: co::TDF::ALLOW_DIALOG_CANCELLATION | co::TDF::POSITION_RELATIVE_TO_WINDOW,
-			content: Some(&content),
-			..Default::default()
-		})?;
+		msgbox::info(&self.wnd, "About", Some("ID3 Fit"), &content)?;
 		Ok(())
 	}
 

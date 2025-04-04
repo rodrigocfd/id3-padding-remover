@@ -1,6 +1,7 @@
-use winsafe::{self as w, co, gui, prelude::*};
+use winsafe::{self as w, co, gui, msg, prelude::*};
 
 use super::{DlgEdit, Input};
+use crate::ids;
 
 impl DlgEdit {
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
@@ -28,6 +29,95 @@ impl DlgEdit {
 		self.load_picture()?;
 		self.chk_pic.hwnd().EnableWindow(false); // to be implemented later
 		Ok(true)
+	}
+
+	pub(super) fn on_init_menu_popup(&self, p: msg::wm::InitMenuPopup) -> w::AnyResult<()> {
+		if p.hmenu == self.lst_frames.context_menu().unwrap() {
+			let has_sel = self.lst_frames.items().selected_count() >= 1;
+			let first_is_sel = self.lst_frames.items().get(0).is_selected();
+			let last_is_sel = self.lst_frames.items().last().unwrap().is_selected();
+
+			p.hmenu
+				.EnableMenuItem(w::IdPos::Id(ids::MNU_FRAMES_MOVEUP), has_sel && !first_is_sel)?;
+			p.hmenu
+				.EnableMenuItem(w::IdPos::Id(ids::MNU_FRAMES_MOVEDOWN), has_sel && !last_is_sel)?;
+			p.hmenu
+				.EnableMenuItem(w::IdPos::Id(ids::MNU_FRAMES_DELETE), has_sel)?;
+		}
+		Ok(())
+	}
+
+	pub(super) fn on_menu_frames_move_up(&self) -> w::AnyResult<()> {
+		let focus_idx = self.lst_frames.items().focused().map(|item| item.index());
+
+		let new_sel_indexes = self
+			.lst_frames
+			.items()
+			.iter_selected()
+			.map(|sel_item| {
+				let idx = sel_item.index() as usize;
+				self.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
+					.frames_mut()
+					.swap(idx, idx - 1); // swap frames in tag
+				Ok(idx - 1)
+			})
+			.collect::<w::AnyResult<Vec<_>>>()?;
+
+		self.render_frames_list()?;
+
+		self.lst_frames.items().select_all(false)?;
+		new_sel_indexes
+			.iter()
+			.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
+				self.lst_frames
+					.items()
+					.get(*new_sel_idx as _)
+					.select(true)?;
+				Ok(())
+			})?;
+
+		focus_idx.map(|idx| self.lst_frames.items().get(idx - 1).focus());
+
+		Ok(())
+	}
+
+	pub(super) fn on_menu_frames_move_down(&self) -> w::AnyResult<()> {
+		let focus_idx = self.lst_frames.items().focused().map(|item| item.index());
+
+		let new_sel_indexes = self
+			.lst_frames
+			.items()
+			.iter_selected()
+			.rev()
+			.map(|sel_item| {
+				let idx = sel_item.index() as usize;
+				self.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
+					.frames_mut()
+					.swap(idx, idx + 1); // swap frames in tag
+				Ok(idx + 1)
+			})
+			.collect::<w::AnyResult<Vec<_>>>()?;
+
+		self.render_frames_list()?;
+
+		self.lst_frames.items().select_all(false)?;
+		new_sel_indexes
+			.iter()
+			.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
+				self.lst_frames
+					.items()
+					.get(*new_sel_idx as _)
+					.select(true)?;
+				Ok(())
+			})?;
+
+		focus_idx.map(|idx| self.lst_frames.items().get(idx + 1).focus());
+
+		Ok(())
+	}
+
+	pub(super) fn on_menu_frames_delete(&self) -> w::AnyResult<()> {
+		todo!()
 	}
 
 	pub(super) fn on_chk_click(&self, input: &Input) -> w::AnyResult<()> {
