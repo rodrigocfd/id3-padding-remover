@@ -12,14 +12,6 @@ impl DlgMain {
 		Ok(())
 	}
 
-	pub(super) fn sort_list_clicked(&self, new_col: u32, force_asc: bool) -> w::AnyResult<()> {
-		let (cur_col, cur_is_asc) = self.cur_sort.get(); // read current sort state
-		let is_asc = force_asc || new_col != cur_col || !cur_is_asc; // will sorting be ordinary, ascending?
-		self.cur_sort.set((new_col, is_asc)); // save new sort state
-		self.sort_list()?;
-		Ok(())
-	}
-
 	pub(super) fn sort_list(&self) -> w::AnyResult<()> {
 		let (col, is_asc) = self.cur_sort.get(); // read current sort state
 		let cols = self.lst_files.header().unwrap().items();

@@ -231,7 +231,11 @@ impl DlgMain {
 	}
 
 	pub(super) fn on_header_item_click(&self, p: &w::NMHEADER) -> w::AnyResult<()> {
-		self.sort_list_clicked(p.iItem as _, false)?;
+		let new_col = p.iItem as u32;
+		let (cur_col, cur_is_asc) = self.cur_sort.get(); // read current sort state
+		let is_asc = new_col != cur_col || !cur_is_asc; // will sorting be ordinary, ascending?
+		self.cur_sort.set((new_col, is_asc)); // save new sort state
+		self.sort_list()?;
 		Ok(())
 	}
 

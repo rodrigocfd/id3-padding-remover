@@ -25,6 +25,7 @@ impl DlgEdit {
 
 		let sel_tags = self.sel_tags.try_borrow()?;
 		if sel_tags.len() == 1 {
+			// Editing only 1 MP3 file, render each frame.
 			sel_tags[0]
 				.frames()
 				.iter()
@@ -36,7 +37,8 @@ impl DlgEdit {
 					Ok(())
 				})?;
 		} else {
-			let text = format!("{} files...", sel_tags.len()); // multiple files, just display the file count
+			// Editing multiple MP3 files, just display a file count.
+			let text = format!("{} files...", sel_tags.len());
 			self.lst_frames.items().add(&["", &text], None, ())?;
 			self.lst_frames.hwnd().EnableWindow(false);
 		}
