@@ -63,11 +63,11 @@ impl DlgMain {
 				let self2 = self.clone();
 				move || self2.on_menu_file_resave()
 			})
-			.wm_command_accel_menu(ids::MNU_FILE_DELRG, {
+			.wm_command_accel_menu(ids::MNU_FILE_REMRG, {
 				let self2 = self.clone();
 				move || self2.on_menu_file_del_rg_art(false)
 			})
-			.wm_command_accel_menu(ids::MNU_FILE_DELRGART, {
+			.wm_command_accel_menu(ids::MNU_FILE_REMRGART, {
 				let self2 = self.clone();
 				move || self2.on_menu_file_del_rg_art(true)
 			})

@@ -59,8 +59,8 @@ impl DlgMain {
 				ids::MNU_FILE_EDIT,
 				ids::MNU_FILE_REMOVE,
 				ids::MNU_FILE_RESAVE,
-				ids::MNU_FILE_DELRG,
-				ids::MNU_FILE_DELRGART,
+				ids::MNU_FILE_REMRG,
+				ids::MNU_FILE_REMRGART,
 			]
 			.into_iter()
 			.try_for_each(|id| {
@@ -142,10 +142,12 @@ impl DlgMain {
 	}
 
 	pub(super) fn on_menu_file_resave(&self) -> w::AnyResult<()> {
-		let content =
-			format!("Rewrite the tag in {} file(s)?", self.lst_files.items().selected_count());
+		let count = self.lst_files.items().selected_count();
+		let ss = if count == 1 { "" } else { "s" };
+		let content = format!("Rewrite the tag in {} file{}?", count, ss);
 
-		if msgbox::ask(self.wnd.hwnd(), "Re-save file(s)", None, &content, "&Rewrite")? {
+		if msgbox::ask(self.wnd.hwnd(), &format!("Rewrite file{}", ss), None, &content, "&Rewrite")?
+		{
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
@@ -163,15 +165,15 @@ impl DlgMain {
 
 	pub(super) fn on_menu_file_del_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
 		let sel_count = self.lst_files.items().selected_count();
-		let window_title = if del_art { "Strip ReplayGain and art" } else { "Strip ReplayGain" };
+		let window_title = if del_art { "Remove ReplayGain and art" } else { "Remove ReplayGain" };
 		let content = format!(
-			"Strip ReplayGain {} frames of {} tag{}?",
+			"Remove ReplayGain {} frames of {} tag{}?",
 			if del_art { "and art" } else { "" },
 			sel_count,
 			if sel_count == 1 { "" } else { "s" },
 		);
 
-		if msgbox::ask(self.wnd.hwnd(), window_title, None, &content, "&Strip")? {
+		if msgbox::ask(self.wnd.hwnd(), window_title, None, &content, "&Remove")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
