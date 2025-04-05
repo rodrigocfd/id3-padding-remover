@@ -104,29 +104,14 @@ impl DlgMain {
 			move |p| self2.on_header_item_click(p)
 		});
 
-		self.drop_target
-			.DragEnter({
-				let self2 = self.clone();
-				move |_: &w::IDataObject,
-				      _: co::MK,
-				      _: w::POINT,
-				      fx: &mut co::DROPEFFECT|
-				      -> w::AnyResult<()> { self2.on_drop_target_drag_enter(fx) }
-			})
-			.DragOver({
-				let self2 = self.clone();
-				move |_: co::MK, _: w::POINT, fx: &mut co::DROPEFFECT| -> w::AnyResult<()> {
-					self2.on_drop_target_drag_over(fx)
-				}
-			})
-			.Drop({
-				let self2 = self.clone();
-				move |d: &w::IDataObject,
-				      _: co::MK,
-				      _: w::POINT,
-				      de: &mut co::DROPEFFECT|
-				      -> w::AnyResult<()> { self2.on_drop_target_drop(d, de) }
-			});
+		self.drop_target.Drop({
+			let self2 = self.clone();
+			move |d: &w::IDataObject,
+			      _: co::MK,
+			      _: w::POINT,
+			      _: &mut co::DROPEFFECT|
+			      -> w::AnyResult<()> { self2.on_drop_target_drop(d) }
+		});
 	}
 }
 

@@ -249,21 +249,7 @@ impl DlgMain {
 		Ok(())
 	}
 
-	pub(super) fn on_drop_target_drag_enter(&self, fx: &mut co::DROPEFFECT) -> w::AnyResult<()> {
-		*fx &= co::DROPEFFECT::COPY;
-		Ok(())
-	}
-
-	pub(super) fn on_drop_target_drag_over(&self, fx: &mut co::DROPEFFECT) -> w::AnyResult<()> {
-		*fx &= co::DROPEFFECT::COPY;
-		Ok(())
-	}
-
-	pub(super) fn on_drop_target_drop(
-		&self,
-		d: &w::IDataObject,
-		fx: &mut co::DROPEFFECT,
-	) -> w::AnyResult<()> {
+	pub(super) fn on_drop_target_drop(&self, d: &w::IDataObject) -> w::AnyResult<()> {
 		let mut fmt = w::FORMATETC::default();
 		fmt.cfFormat = co::CF::HDROP;
 		fmt.dwAspect = co::DVASPECT::CONTENT;
@@ -276,8 +262,6 @@ impl DlgMain {
 		let dropped_paths = hdrop.DragQueryFile()?.collect::<w::SysResult<Vec<_>>>()?;
 
 		self.add_files_to_list(&dropped_paths)?;
-
-		*fx &= co::DROPEFFECT::COPY;
 		Ok(())
 	}
 }
