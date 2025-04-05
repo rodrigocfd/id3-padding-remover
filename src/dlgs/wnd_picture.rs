@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use winsafe::{self as w, co, gui, prelude::*};
 
@@ -6,6 +6,7 @@ use winsafe::{self as w, co, gui, prelude::*};
 pub struct WndPicture {
 	pub(super) wnd: gui::WindowControl,
 	pub(super) pic: Rc<RefCell<Option<w::IPicture>>>,
+	pub(super) pic_err: Rc<Cell<Option<co::HRESULT>>>,
 }
 
 impl WndPicture {
@@ -31,8 +32,9 @@ impl WndPicture {
 			},
 		);
 		let pic = Rc::new(RefCell::new(None));
+		let pic_err = Rc::new(Cell::new(None));
 
-		let new_self = Self { wnd, pic };
+		let new_self = Self { wnd, pic, pic_err };
 		new_self.events();
 		new_self
 	}

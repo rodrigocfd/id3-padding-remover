@@ -145,7 +145,7 @@ impl DlgMain {
 		let content =
 			format!("Rewrite the tag in {} file(s)?", self.lst_files.items().selected_count());
 
-		if msgbox::ask(&self.wnd, "Re-save file(s)", None, &content, "&Rewrite")? {
+		if msgbox::ask(self.wnd.hwnd(), "Re-save file(s)", None, &content, "&Rewrite")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
@@ -171,7 +171,7 @@ impl DlgMain {
 			if sel_count == 1 { "" } else { "s" },
 		);
 
-		if msgbox::ask(&self.wnd, window_title, None, &content, "&Strip")? {
+		if msgbox::ask(self.wnd.hwnd(), window_title, None, &content, "&Strip")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
@@ -206,7 +206,7 @@ impl DlgMain {
 			hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
 		);
 
-		msgbox::info(&self.wnd, "About", Some("ID3 Fit"), &content)?;
+		msgbox::info(self.wnd.hwnd(), "About", Some("ID3 Fit"), &content)?;
 		Ok(())
 	}
 

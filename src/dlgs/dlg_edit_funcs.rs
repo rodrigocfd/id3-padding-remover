@@ -53,8 +53,13 @@ impl DlgEdit {
 				.hwnd()
 				.SetWindowText(&format!("{cx} x {cy} px"))?;
 		} else {
+			// We don't have a picture loaded.
 			self.chk_pic.set_check(false);
-			self.lbl_pic.hwnd().SetWindowText("")?;
+			if self.wnd_pic.pic_err.get().is_some() {
+				self.lbl_pic.hwnd().SetWindowText("(failed to load)")?;
+			} else {
+				self.lbl_pic.hwnd().SetWindowText("")?;
+			}
 		}
 		Ok(())
 	}

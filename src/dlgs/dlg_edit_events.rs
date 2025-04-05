@@ -117,7 +117,17 @@ impl DlgEdit {
 	}
 
 	pub(super) fn on_menu_frames_delete(&self) -> w::AnyResult<()> {
-		todo!()
+		// self.lst_frames.items().iter_selected().rev().try_for_each(
+		// 	|sel_item| -> w::AnyResult<()> {
+		// 		self.sel_tags.try_borrow_mut()?[0]
+		// 			.frames_mut()
+		// 			.remove(sel_item.index() as _);
+		// 		Ok(())
+		// 	},
+		// )?;
+
+		// self.render_frames_list()?;
+		Ok(())
 	}
 
 	pub(super) fn on_chk_click(&self, input: &Input) -> w::AnyResult<()> {
