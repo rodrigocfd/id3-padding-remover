@@ -1,7 +1,7 @@
 use winsafe::{self as w, co, gui, msg, prelude::*};
 
 use super::{DlgEdit, Input};
-use crate::ids;
+use crate::{ids, msgbox};
 
 impl DlgEdit {
 	pub(super) fn on_init_dialog(&self) -> w::AnyResult<bool> {
@@ -117,17 +117,32 @@ impl DlgEdit {
 	}
 
 	pub(super) fn on_menu_frames_delete(&self) -> w::AnyResult<()> {
-		self.lst_frames.items().iter_selected().rev().try_for_each(
-			|sel_item| -> w::AnyResult<()> {
-				// Remove the frame by index directly from tag.
-				self.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
-					.frames_mut()
-					.remove(sel_item.index() as _);
-				Ok(())
-			},
-		)?;
+		if msgbox::ask(
+			self.wnd.hwnd(),
+			"Delete frame(s)",
+			None,
+			&format!("Delete {} selected frame(s)?", self.lst_frames.items().selected_count()),
+			"&Delete",
+		)? {
+			self.lst_frames.items().iter_selected().rev().try_for_each(
+				|sel_item| -> w::AnyResult<()> {
+					// Remove the frame by index directly from tag.
+					self.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
+						.frames_mut()
+						.remove(sel_item.index() as _);
+					Ok(())
+				},
+			)?;
 
-		self.render_frames_list()?;
+			self.render_frames_list()?;
+		}
+		Ok(())
+	}
+
+	pub(super) fn on_lst_frames_key_down(&self, p: &w::NMLVKEYDOWN) -> w::AnyResult<()> {
+		if p.wVKey == co::VK::DELETE {
+			self.on_menu_frames_delete()?;
+		}
 		Ok(())
 	}
 

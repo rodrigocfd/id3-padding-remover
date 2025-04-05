@@ -48,6 +48,7 @@ impl DlgMain {
 					.set_justify(gui::HeaderJustify::Center);
 			});
 
+		self.lst_files.cols().get(0).set_width_to_fill()?;
 		self.wnd.hwnd().RegisterDragDrop(&self.drop_target)?;
 		Ok(true)
 	}

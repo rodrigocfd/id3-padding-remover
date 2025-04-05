@@ -104,6 +104,11 @@ impl DlgEdit {
 				move || self2.on_cancel()
 			});
 
+		self.lst_frames.on().lvn_key_down({
+			let self2 = self.clone();
+			move |p| self2.on_lst_frames_key_down(p)
+		});
+
 		self.inputs.iter().for_each(|input| {
 			input.chk.on().bn_clicked({
 				let self2 = self.clone();

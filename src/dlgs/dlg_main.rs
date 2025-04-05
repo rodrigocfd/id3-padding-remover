@@ -131,7 +131,7 @@ impl DlgMain {
 }
 
 pub const LIST_COLS: &[(&str, i32, &str)] = &[
-	("File", 400, ""),
+	("File", 1, ""), // to fill the remaining space
 	("Pad", 50, ""),
 	("Art", 30, ""),
 	("RG", 30, ""),
