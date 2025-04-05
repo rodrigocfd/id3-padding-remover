@@ -43,6 +43,10 @@ impl DlgMain {
 				let self2 = self.clone();
 				move |_| self2.on_init_dialog()
 			})
+			.wm_size({
+				let self2 = self.clone();
+				move |p| self2.on_size(p)
+			})
 			.wm_init_menu_popup({
 				let self2 = self.clone();
 				move |p| self2.on_init_menu_popup(p)

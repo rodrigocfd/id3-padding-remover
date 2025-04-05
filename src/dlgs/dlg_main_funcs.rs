@@ -77,6 +77,7 @@ impl DlgMain {
 
 		self.sort_list()?;
 		self.lst_files.set_redraw(true);
+		self.lst_files.cols().get(0).set_width_to_fill()?;
 		self.update_num_files(self.lst_files.items().count())?;
 		Ok(())
 	}

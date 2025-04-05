@@ -52,6 +52,13 @@ impl DlgMain {
 		Ok(true)
 	}
 
+	pub(super) fn on_size(&self, p: msg::wm::Size) -> w::AnyResult<()> {
+		if p.request != co::SIZE_R::MINIMIZED {
+			self.lst_files.cols().get(0).set_width_to_fill()?;
+		}
+		Ok(())
+	}
+
 	pub(super) fn on_init_menu_popup(&self, p: msg::wm::InitMenuPopup) -> w::AnyResult<()> {
 		if p.hmenu == self.lst_files.context_menu().unwrap() {
 			let has_sel = self.lst_files.items().selected_count() >= 1;
