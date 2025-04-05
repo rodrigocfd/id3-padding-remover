@@ -1,7 +1,7 @@
 use winsafe::{self as w, gui, prelude::*};
 
 use super::DlgEdit;
-use crate::ids;
+use crate::{id3v2, ids};
 
 impl DlgEdit {
 	pub(super) fn load_combo_genres(&self) -> w::AnyResult<()> {
@@ -33,13 +33,15 @@ impl DlgEdit {
 					let text = frame.body().to_string(); // textual representation of the frame data
 					self.lst_frames
 						.items()
-						.add(&[frame.name4(), &text], None, ())?;
+						.add(&[frame.name4(), &text], None, frame.clone())?; // store a copy of the frame in the item
 					Ok(())
 				})?;
 		} else {
 			// Editing multiple MP3 files, just display a file count.
 			let text = format!("{} files...", sel_tags.len());
-			self.lst_frames.items().add(&["", &text], None, ())?;
+			self.lst_frames
+				.items()
+				.add(&["", &text], None, id3v2::Frame::default())?;
 			self.lst_frames.hwnd().EnableWindow(false);
 		}
 		Ok(())
@@ -48,18 +50,20 @@ impl DlgEdit {
 	pub(super) fn load_picture(&self) -> w::AnyResult<()> {
 		self.wnd_pic.load_picture(&self.sel_tags.try_borrow()?)?; // ask the control to load the IPicture
 		if let Some(pic_obj) = &*self.wnd_pic.pic.try_borrow()? {
-			// Do we have an actual picture loaded?
+			// We have a picture loaded.
 			self.chk_pic.set_check(true);
 			let (cx, cy) = pic_obj.size_px()?;
 			self.lbl_pic
 				.hwnd()
 				.SetWindowText(&format!("{cx} x {cy} px"))?;
 		} else {
-			// We don't have a picture loaded.
-			self.chk_pic.set_check(false);
 			if self.wnd_pic.pic_err.get().is_some() {
+				// There is a picture, but it failed to render.
+				self.chk_pic.set_check(true);
 				self.lbl_pic.hwnd().SetWindowText("(failed to load)")?;
 			} else {
+				// We don't have a picture loaded.
+				self.chk_pic.set_check(false);
 				self.lbl_pic.hwnd().SetWindowText("")?;
 			}
 		}

@@ -12,7 +12,7 @@ pub struct DlgEdit {
 	pub(super) chk_pic: gui::CheckBox,
 	pub(super) wnd_pic: WndPicture,
 	pub(super) lbl_pic: gui::Label,
-	pub(super) lst_frames: gui::ListView,
+	pub(super) lst_frames: gui::ListView<id3v2::Frame>,
 	pub(super) btn_uncheck_all: gui::Button,
 	pub(super) btn_check_filled: gui::Button,
 	pub(super) sel_tags: Rc<RefCell<Vec<id3v2::Tag>>>, // these will be modified and then returned

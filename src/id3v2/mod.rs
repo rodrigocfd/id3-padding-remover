@@ -6,4 +6,5 @@ mod synch_safe;
 mod tag;
 
 pub use body::*;
+pub use frame::*;
 pub use tag::*;

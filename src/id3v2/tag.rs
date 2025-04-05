@@ -208,10 +208,10 @@ impl Tag {
 			self.frames.retain(|frame| frame.name4() != name4); // remove empty new values
 		} else {
 			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
-				Some(frame) => frame.set_editable_string(val)?, // frame already exists
+				Some(frame) => frame.set_editable_string(val)?, // frame already exists, set new value
 				None => {
 					let new_frame = Frame::new_from_editable_string(name4, val)?;
-					self.frames.push(new_frame);
+					self.frames.push(new_frame); // frame doesn't exist, push new
 				},
 			}
 		}

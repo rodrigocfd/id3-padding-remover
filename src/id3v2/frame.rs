@@ -11,6 +11,16 @@ pub struct Frame {
 	body: Body,
 }
 
+impl Default for Frame {
+	fn default() -> Self {
+		Self {
+			name4: "AAAA".to_owned(),
+			flags: (0, 0),
+			body: Body::Text("".to_owned()),
+		}
+	}
+}
+
 impl std::fmt::Display for Frame {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 		write!(f, "{}: {}", self.name4, self.body)

@@ -88,7 +88,7 @@ impl DlgMain {
 			Some(existing_item) => {
 				// MP3 already present in the list?
 				let rc_tag = existing_item.data()?;
-				*rc_tag.borrow_mut() = tag; // replace the tag currently stored in the item
+				*rc_tag.try_borrow_mut()? = tag; // replace the tag currently stored in the item
 				existing_item
 			},
 			None => {

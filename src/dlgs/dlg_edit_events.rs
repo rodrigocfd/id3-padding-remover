@@ -117,16 +117,17 @@ impl DlgEdit {
 	}
 
 	pub(super) fn on_menu_frames_delete(&self) -> w::AnyResult<()> {
-		// self.lst_frames.items().iter_selected().rev().try_for_each(
-		// 	|sel_item| -> w::AnyResult<()> {
-		// 		self.sel_tags.try_borrow_mut()?[0]
-		// 			.frames_mut()
-		// 			.remove(sel_item.index() as _);
-		// 		Ok(())
-		// 	},
-		// )?;
+		self.lst_frames.items().iter_selected().rev().try_for_each(
+			|sel_item| -> w::AnyResult<()> {
+				// Remove the frame by index directly from tag.
+				self.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
+					.frames_mut()
+					.remove(sel_item.index() as _);
+				Ok(())
+			},
+		)?;
 
-		// self.render_frames_list()?;
+		self.render_frames_list()?;
 		Ok(())
 	}
 
@@ -171,12 +172,28 @@ impl DlgEdit {
 	}
 
 	pub(super) fn on_ok(&self) -> w::AnyResult<()> {
+		let mut sel_tags = self.sel_tags.try_borrow_mut()?;
+
+		if sel_tags.len() == 1 {
+			// If we're editing a single MP3 file, replace the frames with the current ones in the listview.
+			sel_tags[0].frames_mut().clear();
+			self.lst_frames
+				.items()
+				.iter()
+				.try_for_each(|item| -> w::AnyResult<()> {
+					let rc_frame = item.data()?;
+					let cloned_frame = rc_frame.try_borrow()?.clone();
+					sel_tags[0].frames_mut().push(cloned_frame); // add the frame from the listview
+					Ok(())
+				})?;
+		}
+
+		// Run through all textboxes and set/remove the text values on all tags.
 		self.inputs
 			.iter()
 			.filter(|input| input.chk.is_checked())
 			.try_for_each(|input| -> w::AnyResult<()> {
 				let text = input.txt.hwnd().GetWindowText()?;
-				let mut sel_tags = self.sel_tags.try_borrow_mut()?;
 				sel_tags
 					.iter_mut()
 					.try_for_each(|tag| tag.set_editable_string(&input.name4, &text))?;
