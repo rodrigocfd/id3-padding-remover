@@ -27,25 +27,16 @@ impl DlgMain {
 			})?;
 
 		// Set files listview columns justification.
+		let hcols = self.lst_files.header().unwrap().items();
 		[1, 5, 8]
 			.iter() // padding, track #, year
 			.for_each(|i| {
-				self.lst_files
-					.header()
-					.unwrap()
-					.items()
-					.get(*i)
-					.set_justify(gui::HeaderJustify::Right);
+				hcols.get(*i).set_justify(gui::HeaderJustify::Right);
 			});
 		[2, 3]
 			.iter() // art, RG
 			.for_each(|i| {
-				self.lst_files
-					.header()
-					.unwrap()
-					.items()
-					.get(*i)
-					.set_justify(gui::HeaderJustify::Center);
+				hcols.get(*i).set_justify(gui::HeaderJustify::Center);
 			});
 
 		self.lst_files.cols().get(0).set_width_to_fill()?;
@@ -66,7 +57,7 @@ impl DlgMain {
 			[
 				ids::MNU_FILE_EDIT,
 				ids::MNU_FILE_REMOVE,
-				ids::MNU_FILE_RESAVE,
+				ids::MNU_FILE_REWRITE,
 				ids::MNU_FILE_REMRG,
 				ids::MNU_FILE_REMRGART,
 			]
@@ -149,7 +140,7 @@ impl DlgMain {
 		Ok(())
 	}
 
-	pub(super) fn on_menu_file_resave(&self) -> w::AnyResult<()> {
+	pub(super) fn on_menu_file_rewrite(&self) -> w::AnyResult<()> {
 		let count = self.lst_files.items().selected_count();
 		let ss = if count == 1 { "" } else { "s" };
 		let content = format!("Rewrite the tag in {} file{}?", count, ss);
@@ -171,7 +162,7 @@ impl DlgMain {
 		Ok(())
 	}
 
-	pub(super) fn on_menu_file_del_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
+	pub(super) fn on_menu_file_rem_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
 		let sel_count = self.lst_files.items().selected_count();
 		let window_title = if del_art { "Remove ReplayGain and art" } else { "Remove ReplayGain" };
 		let content = format!(
