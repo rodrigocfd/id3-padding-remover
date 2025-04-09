@@ -183,7 +183,11 @@ impl DlgEdit {
 					input.txt.hwnd().EnableWindow(true);
 				}
 				Ok(())
-			})
+			})?;
+
+		let has_pic = self.wnd_pic.pic.try_borrow()?.is_some();
+		self.chk_pic.set_check(has_pic);
+		Ok(())
 	}
 
 	pub(super) fn on_ok(&self) -> w::AnyResult<()> {
