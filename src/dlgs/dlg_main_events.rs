@@ -199,8 +199,8 @@ impl DlgMain {
 
 		let content = format!(
 			"Version {}.{}.{}\n\
-					Writen in Rust with WinSafe library.\n\n\
-					{}",
+			Writen in Rust with WinSafe library.\n\n\
+			{}",
 			version_parts[0],
 			version_parts[1],
 			version_parts[2],

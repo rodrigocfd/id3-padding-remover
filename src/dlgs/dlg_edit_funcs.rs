@@ -52,7 +52,10 @@ impl DlgEdit {
 		if let Some(pic_obj) = &*self.wnd_pic.pic.try_borrow()? {
 			// We have a picture loaded.
 			self.chk_pic.set_check(true);
-			let (cx, cy) = pic_obj.size_px()?;
+			let (cx, cy) = {
+				let hdc_screen = w::HWND::NULL.GetDC()?;
+				hdc_screen.HiMetricToPixel(pic_obj.get_Width()?, pic_obj.get_Height()?)
+			};
 			self.lbl_pic
 				.hwnd()
 				.SetWindowText(&format!("{cx} x {cy} px"))?;
