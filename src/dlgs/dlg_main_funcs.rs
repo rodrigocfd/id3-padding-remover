@@ -1,7 +1,7 @@
 use winsafe::{self as w, gui, prelude::*};
 
 use super::{DlgMain, LIST_COLS};
-use crate::id3v2;
+use crate::{id3v2, msgbox};
 
 impl DlgMain {
 	pub(super) fn update_num_files(&self, tot_files: u32) -> w::SysResult<()> {
@@ -121,11 +121,41 @@ impl DlgMain {
 				};
 				(idx, text)
 			})
-			.try_for_each(|(idx, frame_val)| -> w::SysResult<()> {
-				item.set_text(idx as _, &frame_val)?;
+			.try_for_each(|(idx, cell_text)| -> w::SysResult<()> {
+				item.set_text(idx as _, &cell_text)?;
 				Ok(())
 			})?;
 
+		Ok(())
+	}
+
+	pub(super) fn remove_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
+		let sel_count = self.lst_files.items().selected_count();
+		let window_title = if del_art { "Remove ReplayGain and art" } else { "Remove ReplayGain" };
+		let content = format!(
+			"Remove ReplayGain {} frames of {} tag{}?",
+			if del_art { "and art" } else { "" },
+			sel_count,
+			if sel_count == 1 { "" } else { "s" },
+		);
+
+		if msgbox::ask(self.wnd.hwnd(), window_title, None, &content, "&Remove")? {
+			self.lst_files.items().iter_selected().try_for_each(
+				|sel_item| -> w::AnyResult<()> {
+					{
+						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
+						let mut tag = rc_tag.try_borrow_mut()?;
+						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
+						if del_art {
+							tag.frames_mut().retain(|frame| frame.name4() != "APIC");
+						}
+						tag.save_to_file(&sel_item.text(0))?; // save to MP3 file
+					}
+					Self::render_tag(sel_item)?;
+					Ok(())
+				},
+			)?;
+		}
 		Ok(())
 	}
 }

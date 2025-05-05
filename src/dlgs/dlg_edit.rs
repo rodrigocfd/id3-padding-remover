@@ -1,6 +1,6 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use winsafe::{self as w, co, gui, prelude::*};
+use winsafe::{self as w, bind, bind_ig, bind_p, co, gui, prelude::*};
 
 use super::{Input, WndPicture};
 use crate::{id3v2, ids};
@@ -75,39 +75,20 @@ impl DlgEdit {
 	fn events(&self) {
 		self.wnd
 			.on()
-			.wm_init_dialog({
-				let self2 = self.clone();
-				move |_| self2.on_init_dialog()
-			})
-			.wm_init_menu_popup({
-				let self2 = self.clone();
-				move |p| self2.on_init_menu_popup(p)
-			})
-			.wm_command_accel_menu(ids::MNU_FRAMES_MOVEUP, {
-				let self2 = self.clone();
-				move || self2.on_menu_frames_move_up()
-			})
-			.wm_command_accel_menu(ids::MNU_FRAMES_MOVEDOWN, {
-				let self2 = self.clone();
-				move || self2.on_menu_frames_move_down()
-			})
-			.wm_command_accel_menu(ids::MNU_FRAMES_DELETE, {
-				let self2 = self.clone();
-				move || self2.on_menu_frames_delete()
-			})
-			.wm_command_accel_menu(co::DLGID::OK, {
-				let self2 = self.clone();
-				move || self2.on_ok()
-			})
-			.wm_command_accel_menu(co::DLGID::CANCEL, {
-				let self2 = self.clone();
-				move || self2.on_cancel()
-			});
+			.wm_init_dialog(bind_ig!(self, Self::on_init_dialog))
+			.wm_init_menu_popup(bind_p!(self, Self::on_init_menu_popup))
+			.wm_command_acc_menu(ids::MNU_FRAMES_MOVEUP, bind!(self, Self::on_menu_frames_move_up))
+			.wm_command_acc_menu(
+				ids::MNU_FRAMES_MOVEDOWN,
+				bind!(self, Self::on_menu_frames_move_down),
+			)
+			.wm_command_acc_menu(ids::MNU_FRAMES_DELETE, bind!(self, Self::on_menu_frames_delete))
+			.wm_command_acc_menu(co::DLGID::OK, bind!(self, Self::on_ok))
+			.wm_command_acc_menu(co::DLGID::CANCEL, bind!(self, Self::on_cancel));
 
-		self.lst_frames.on().lvn_key_down({
-			let self2 = self.clone();
-			move |p| self2.on_lst_frames_key_down(p)
-		});
+		self.lst_frames
+			.on()
+			.lvn_key_down(bind_p!(self, Self::on_lst_frames_key_down));
 
 		self.inputs.iter().for_each(|input| {
 			input.chk.on().bn_clicked({
@@ -117,20 +98,17 @@ impl DlgEdit {
 			});
 		});
 
-		self.chk_pic.on().bn_clicked({
-			let self2 = self.clone();
-			move || self2.on_chk_pic_click()
-		});
+		self.chk_pic
+			.on()
+			.bn_clicked(bind!(self, Self::on_chk_pic_click));
 
-		self.btn_uncheck_all.on().bn_clicked({
-			let self2 = self.clone();
-			move || self2.on_uncheck_all()
-		});
+		self.btn_uncheck_all
+			.on()
+			.bn_clicked(bind!(self, Self::on_uncheck_all));
 
-		self.btn_check_filled.on().bn_clicked({
-			let self2 = self.clone();
-			move || self2.on_check_filled()
-		});
+		self.btn_check_filled
+			.on()
+			.bn_clicked(bind!(self, Self::on_check_filled));
 	}
 }
 
