@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/rodrigocfd/windigo/win/heap"
+	"github.com/rodrigocfd/windigo/win"
 )
 
 type Frame struct {
@@ -21,7 +21,7 @@ func (me *Frame) DeclaredSize() uint { return me.declaredSize }
 func (me *Frame) Body() Body         { return me.body }
 
 // Constructor.
-func newFrameWithText(name4, text string) *Frame {
+func _FrameNewWithText(name4, text string) *Frame {
 	me := &Frame{
 		name4: name4,
 	}
@@ -40,7 +40,7 @@ func newFrameWithText(name4, text string) *Frame {
 }
 
 // Constructor.
-func parseFrame(src []byte) (*Frame, error) {
+func _FrameParse(src []byte) (*Frame, error) {
 	// Parse the 10-byte frame header.
 	me := &Frame{
 		name4:        string(src[0:4]),
@@ -61,13 +61,13 @@ func parseFrame(src []byte) (*Frame, error) {
 
 func (me *Frame) parseBody(src []byte) error {
 	if me.name4 == "COMM" {
-		comm, err := parseBodyComment(src)
+		comm, err := _BodyCommentParse(src)
 		if err != nil {
 			return err
 		}
 		me.body = comm
 	} else if me.name4 == "APIC" {
-		apic, err := parseBodyPicture(src)
+		apic, err := _BodyPictureParse(src)
 		if err != nil {
 			return err
 		}
@@ -89,13 +89,18 @@ func (me *Frame) parseBody(src []byte) error {
 			return fmt.Errorf("frame %s contains %d texts", me.name4, len(texts))
 		}
 	} else { // everything else is treated as raw binary
-		me.body = parseBodyBinary(src)
+		me.body = _BodyBinaryParse(src)
 	}
 	return nil
 }
 
+// Returns a newly allocated frame with a copy of all the data.
+func (me *Frame) Clone() *Frame {
+	return &Frame{me.name4, me.declaredSize, me.flags, me.body.Clone()}
+}
+
 // Serializes the frame into bytes.
-func (me *Frame) Serialize(pDest *heap.Vec[byte]) uint {
+func (me *Frame) Serialize(pDest *win.Vec[byte]) uint {
 	pDest.Reserve(pDest.Len() + 10) // header size
 	pDest.Append([]byte(me.name4)...)
 

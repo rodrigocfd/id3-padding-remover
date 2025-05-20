@@ -25,18 +25,11 @@ func AllEqualFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) bool {
 	return true
 }
 
-// Collects values from the iterator into a new slice, returning it and nil.
-//
-// If an error is found, returns nil and the error.
-func CollectErr[T any](seq iter.Seq2[T, error]) ([]T, error) {
-	buf := make([]T, 0)
-	for val, err := range seq {
-		if err != nil {
-			return nil, err
-		}
-		buf = append(buf, val)
-	}
-	return buf, nil
+// Returns a newly allocated slice with the contents copied.
+func Clone[T any](src []T) []T {
+	cloned := make([]T, len(src))
+	copy(cloned, src)
+	return cloned
 }
 
 // Returns the index of the last element to which the predicate returns true.
@@ -92,7 +85,13 @@ func Split[S ~[]T, T comparable](src S, separator T) iter.Seq[[]T] {
 	}
 }
 
-// Returns a subslice without the first elements whose contiguously match the
+// Returns a subslice without the first and last elements which contiguously
+// match the given element.
+func Trim[S ~[]T, T comparable](src S, elem T) S {
+	return TrimRight(TrimLeft(src, elem), elem)
+}
+
+// Returns a subslice without the first elements which contiguously match the
 // given element.
 func TrimLeft[S ~[]T, T comparable](src S, elem T) S {
 	for i := range len(src) {
@@ -103,7 +102,7 @@ func TrimLeft[S ~[]T, T comparable](src S, elem T) S {
 	return []T{}
 }
 
-// Returns a subslice without the last elements whose contiguously match the
+// Returns a subslice without the last elements which contiguously match the
 // given element.
 func TrimRight[S ~[]T, T comparable](src S, elem T) S {
 	for i := len(src) - 1; i >= 0; i-- {

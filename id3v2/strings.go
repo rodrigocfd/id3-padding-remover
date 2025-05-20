@@ -11,7 +11,7 @@ import (
 	"unsafe"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/heap"
+	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
 // String encoding.
@@ -46,7 +46,7 @@ func parseIso88591Strings(src []byte) []string {
 
 	blocks := slices.Collect(slices2.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
-	wideStrBuf := heap.NewWideStr[heap.Stack20]() // buffer to convert bytes to Go strings
+	wideStrBuf := wstr.NewBuf[wstr.Stack20]() // buffer to convert bytes to Go strings
 
 	for _, block := range blocks {
 		if len(block) == 0 {
@@ -58,7 +58,7 @@ func parseIso88591Strings(src []byte) []string {
 			for i, ch := range block {
 				*wideStrBuf.At(uint(i)) = uint16(ch)
 			}
-			texts = append(texts, win.Str.FromUtf16Slice(wideStrBuf.HotSlice()))
+			texts = append(texts, wstr.WstrSliceToStr(wideStrBuf.HotSlice()))
 		}
 	}
 	return texts
@@ -80,7 +80,7 @@ func parseUnicodeStrings(src []byte) []string {
 
 	blocks := slices.Collect(slices2.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
-	wideStrBuf := heap.NewWideStr[heap.Stack20]() // buffer to convert bytes to Go strings
+	wideStrBuf := wstr.NewBuf[wstr.Stack20]() // buffer to convert bytes to Go strings
 
 	for _, block := range blocks {
 		isLE := true
@@ -103,7 +103,7 @@ func parseUnicodeStrings(src []byte) []string {
 				}
 				*wideStrBuf.At(uint(i)) = ch
 			}
-			texts = append(texts, win.Str.FromUtf16Slice(wideStrBuf.HotSlice()))
+			texts = append(texts, wstr.WstrSliceToStr(wideStrBuf.HotSlice()))
 		}
 	}
 	return texts
@@ -128,7 +128,7 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 	}
 
 	buf := make([]byte, 0, estimatedLenBytes) // to be returned
-	str16 := heap.NewWideStr[heap.Stack20]()  // to serialize each Go string
+	str16 := wstr.NewBuf[wstr.Stack20]()      // to serialize each Go string
 
 	for _, str := range strs {
 		if encoding == ENC_UNICODE {
@@ -137,7 +137,7 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 			buf = append(buf, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
 		}
 
-		str16.Set(str, heap.ALLOW_EMPTY) // contains terminating null
+		str16.Set(str, wstr.ALLOW_EMPTY) // contains terminating null
 
 		for _, ch := range str16.HotSlice() { // write each char of the string
 			if encoding == ENC_UNICODE {

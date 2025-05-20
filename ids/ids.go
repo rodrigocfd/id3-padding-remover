@@ -8,8 +8,8 @@ const (
 )
 
 const (
-	MNU_FILE      = iota + 200
-	MNU_FILE_OPEN // Ctrl+O
+	MNU_FILE      uint16 = iota + 200
+	MNU_FILE_OPEN        // Ctrl+O
 	MNU_FILE_EDIT
 	MNU_FILE_REMOVE
 	MNU_FILE_RESAVE
@@ -19,14 +19,21 @@ const (
 )
 
 const (
-	MNU_FRAMES = iota + 300
+	MNU_FRAMES uint16 = iota + 300
 	MNU_FRAMES_MOVEUP
 	MNU_FRAMES_MOVEDOWN
 	MNU_FRAMES_DELETE
 )
 
 const (
-	DLG_MAIN = iota + 1000
+	MNU_PIC uint16 = iota + 400
+	MNU_PIC_INSERT
+	MNU_PIC_EXTRACT
+	MNU_PIC_DELETE
+)
+
+const (
+	DLG_MAIN uint16 = iota + 1000
 	LST_FILES
 )
 
@@ -62,6 +69,7 @@ const (
 	TXT_LYRICIST
 	CHK_COMMENT
 	TXT_COMMENT
+	CHK_PICTURE
 	LBL_IMAGE_DESCR
 	BTN_UNCHECK_ALL
 	BTN_CHECK_FILLED

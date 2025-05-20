@@ -13,7 +13,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
-	"github.com/rodrigocfd/windigo/win/heap"
 )
 
 // Each MP3 file has a single ID3v2 tag.
@@ -35,13 +34,13 @@ func LoadTag(mp3Path string) (*Tag, error) {
 		path: mp3Path,
 	}
 
-	f, err := win.FileMapOpen(mp3Path, co.FILE_OPEN_READ_EXISTING)
+	f, err := win.FileMapOpen(mp3Path, co.FOPEN_READ_EXISTING)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	mp3Offset, _, err := parseTagHeader(f.HotSlice()) // ignore declared size, we'll use MP3 offset
+	mp3Offset, _, err := tagParseHeader(f.HotSlice()) // ignore declared size, we'll use MP3 offset
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +56,7 @@ func LoadTag(mp3Path string) (*Tag, error) {
 	return &me, nil
 }
 
-func parseTagHeader(src []byte) (mp3Offset, declaredSize uint, err error) {
+func tagParseHeader(src []byte) (mp3Offset, declaredSize uint, err error) {
 	// Retrieve MP3 offset.
 	idxMp3Offset := bytes.Index(src, []byte{0xff, 0xfb}) // https://stackoverflow.com/a/7302482/6923555
 	if idxMp3Offset == -1 {
@@ -107,7 +106,7 @@ func (me *Tag) parseFrames(src []byte) error {
 			return nil
 		}
 
-		pFrame, err := parseFrame(src)
+		pFrame, err := _FrameParse(src)
 		if err != nil {
 			return err
 		}
@@ -122,9 +121,19 @@ func (me *Tag) parseFrames(src []byte) error {
 	}
 }
 
+// Returns a new tag with all the data and frames copied.
+func (me *Tag) Clone() *Tag {
+	clonedFrames := make([]*Frame, 0, len(me.frames))
+	for _, pFrame := range me.frames {
+		clonedFrames = append(clonedFrames, pFrame.Clone())
+	}
+
+	return &Tag{me.path, me.mp3Offset, me.padding, clonedFrames}
+}
+
 // Appends a new frame with a simple text as its contents.
 func (me *Tag) AddFrameWithText(name4, text string) {
-	me.frames = append(me.frames, newFrameWithText(name4, text))
+	me.frames = append(me.frames, _FrameNewWithText(name4, text))
 }
 
 // Returns the tag with the given name, or nil of none.
@@ -149,9 +158,9 @@ func (me *Tag) RemoveFrameIf(fun func(pFrame *Frame) bool) {
 	})
 }
 
-// Replaces the frame slice, discarding the old one.
-func (me *Tag) ReplaceFrames(newSlice []*Frame) {
-	me.frames = newSlice
+// Removes the frame at the given index.
+func (me *Tag) RemoveFrame(index int) {
+	me.frames = slices.Delete(me.frames, index, index+1)
 }
 
 // Returns a string resume of the ReplayGain tags, or an empty string if none.
@@ -192,7 +201,7 @@ func (me *Tag) SaveToFile() error {
 		return errors.New("Tag has no path")
 	}
 
-	fout, err := win.FileOpen(me.path, co.FILE_OPEN_RW_EXISTING)
+	fout, err := win.FileOpen(me.path, co.FOPEN_RW_EXISTING)
 	if err != nil {
 		return err
 	}
@@ -204,7 +213,7 @@ func (me *Tag) SaveToFile() error {
 	}
 	defer currentContents.Free()
 
-	mp3Offset, _, err := parseTagHeader(currentContents.HotSlice())
+	mp3Offset, _, err := tagParseHeader(currentContents.HotSlice())
 	if err != nil {
 		return err
 	}
@@ -227,14 +236,14 @@ func (me *Tag) SaveToFile() error {
 }
 
 // Serializes the tag into raw bytes.
-func (me *Tag) Serialize() heap.Vec[byte] {
+func (me *Tag) Serialize() win.Vec[byte] {
 	apicSz := uint(0)
 	if pApic := me.FrameByName4("APIC"); pApic != nil {
 		pApicBody, _ := pApic.Body().(*BodyPicture)
 		apicSz = uint(len(pApicBody.Bin))
 	}
 
-	buf := heap.NewVecReserved[byte](10 + 10*uint(len(me.frames)) + apicSz) // arbitrary
+	buf := win.NewVecReserved[byte](10 + 10*uint(len(me.frames)) + apicSz) // arbitrary
 
 	buf.Append([]byte("ID3")...) // magic bytes
 	buf.Append(0x03, 0x00)       // tag version

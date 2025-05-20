@@ -9,27 +9,28 @@ import (
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/ui/wm"
-	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgEdit) events() {
 
-	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
+	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
+		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("Editing %d ID3v2 tag(s)", len(me.tags)))
+
 		me.lstFrames.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT|co.LVS_EX_GRIDLINES)
 		me.lstFrames.Cols.Add("Frame", ui.DpiX(56))
 		me.lstFrames.Cols.Add("Value", ui.DpiX(100))
 
-		me.updateTitlebar()
 		me.fillComboGenres()
 		me.fillTextboxes()
-		me.showPicSize()
 		me.fillFramesList()
+		me.wndPic.LoadPicOle(me.tags)
+		me.fillPicInfo()
+
 		return true
 	})
 
-	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
+	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
 		if firstId == ids.MNU_FRAMES_MOVEUP {
 			oneTag := len(me.tags) == 1
@@ -46,10 +47,10 @@ func (me *DlgEdit) events() {
 	for _, input := range me.inputs {
 		input.chk.On().BnClicked(func() { // checkboxes enable/disable inputs
 			if input.chk.IsChecked() {
-				input.in.Hwnd().EnableWindow(true)
-				input.in.Focus()
+				input.txt.Hwnd().EnableWindow(true)
+				input.txt.Focus()
 			} else {
-				input.in.Hwnd().EnableWindow(false)
+				input.txt.Hwnd().EnableWindow(false)
 			}
 		})
 	}
@@ -62,62 +63,10 @@ func (me *DlgEdit) events() {
 
 	me.btnCheckFilled.On().BnClicked(func() {
 		for _, input := range me.inputs {
-			txt, _ := input.in.Hwnd().GetWindowText()
+			txt, _ := input.txt.Hwnd().GetWindowText()
 			if strings.TrimSpace(txt) != "" {
 				input.chk.SetCheckAndTrigger(true) // check if has text
 			}
-		}
-	})
-
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEUP, func() {
-		selItems := slices.Collect(me.lstFrames.Items.IterSelected())
-		for _, sel := range selItems {
-			idx := sel.Index()
-			me.orderedFrames[idx], me.orderedFrames[idx-1] =
-				me.orderedFrames[idx-1], me.orderedFrames[idx]
-		}
-		me.fillFramesList()
-		for _, sel := range selItems {
-			prev, _ := sel.Prev()
-			prev.Select(true)
-		}
-	})
-
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEDOWN, func() {
-		selItems := slices.Collect(me.lstFrames.Items.IterSelected())
-		for _, selItem := range slices.Backward(selItems) {
-			idx := selItem.Index()
-			me.orderedFrames[idx], me.orderedFrames[idx+1] =
-				me.orderedFrames[idx+1], me.orderedFrames[idx]
-		}
-		me.fillFramesList()
-		for _, selItem := range selItems {
-			next, _ := selItem.Next()
-			next.Select(true)
-		}
-	})
-
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_DELETE, func() {
-		selItems := slices.Collect(me.lstFrames.Items.IterSelected())
-
-		ret, _ := win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
-			HwndParent:  me.wnd.Hwnd(),
-			WindowTitle: "Remove frames",
-			Content:     fmt.Sprintf("Do you want to remove %d frame(s)?", len(selItems)),
-			HMainIcon:   win.TdcIconTdi(co.TDICON_WARNING),
-			Flags:       co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
-			Buttons: []win.TASKDIALOG_BUTTON{
-				{Id: co.ID_OK, Text: "&Remove"},
-				{Id: co.ID_CANCEL, Text: "&Cancel"},
-			},
-		})
-		if ret == co.ID_OK {
-			for _, selItem := range slices.Backward(selItems) {
-				me.orderedFrames = slices.Delete(me.orderedFrames,
-					selItem.Index(), selItem.Index()+1)
-			}
-			me.updateTitlebar()
-			me.fillFramesList()
 		}
 	})
 
@@ -128,7 +77,60 @@ func (me *DlgEdit) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(uint16(co.ID_CANCEL), func() {
+		me.result = co.ID_CANCEL
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
+	})
+
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEUP, func() {
+		focusedItem, hasFocused := me.lstFrames.Items.Focused()
+
+		selItems := me.lstFrames.Items.Selected()
+		for _, sel := range selItems {
+			idx := sel.Index()
+			me.tags[0].Frames()[idx], me.tags[0].Frames()[idx-1] =
+				me.tags[0].Frames()[idx-1], me.tags[0].Frames()[idx]
+		}
+		me.fillFramesList()
+		for _, sel := range selItems {
+			prev, _ := sel.Prev()
+			prev.Select(true)
+		}
+
+		if hasFocused {
+			me.lstFrames.Items.Get(focusedItem.Index() - 1).Focus()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEDOWN, func() {
+		focusedItem, hasFocused := me.lstFrames.Items.Focused()
+
+		selItems := me.lstFrames.Items.Selected()
+		for _, selItem := range slices.Backward(selItems) {
+			idx := selItem.Index()
+			me.tags[0].Frames()[idx], me.tags[0].Frames()[idx+1] =
+				me.tags[0].Frames()[idx+1], me.tags[0].Frames()[idx]
+		}
+		me.fillFramesList()
+		for _, selItem := range selItems {
+			next, _ := selItem.Next()
+			next.Select(true)
+		}
+
+		if hasFocused {
+			me.lstFrames.Items.Get(focusedItem.Index() + 1).Focus()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_DELETE, func() {
+		selItems := me.lstFrames.Items.Selected()
+		text := fmt.Sprintf("Do you want to remove %d frame(s)?", len(selItems))
+
+		if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") == co.ID_OK {
+			for _, selItem := range slices.Backward(selItems) {
+				me.tags[0].RemoveFrame(selItem.Index())
+			}
+			me.fillFramesList()
+		}
 	})
 
 }

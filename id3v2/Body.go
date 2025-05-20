@@ -6,17 +6,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"id3fit/slices2"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/heap"
+	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
 // Polymorphic data of a frame.
 type Body interface {
 	implBody()
+	Clone() Body
 	AsText() string
 	ForceText(text string)
-	Serialize(dest *heap.Vec[byte]) uint
+	Serialize(dest *win.Vec[byte]) uint
 }
 
 // Concrete type.
@@ -26,6 +28,10 @@ type BodyText struct {
 
 func (*BodyText) implBody() {}
 
+func (me *BodyText) Clone() Body {
+	return &BodyText{me.Text}
+}
+
 func (me *BodyText) AsText() string {
 	return me.Text
 }
@@ -34,7 +40,7 @@ func (me *BodyText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyText) Serialize(dest *heap.Vec[byte]) uint {
+func (me *BodyText) Serialize(dest *win.Vec[byte]) uint {
 	encByte, serializedText := serializeStrings(me.Text)
 	packLen := 1 + uint(len(serializedText))
 
@@ -53,6 +59,10 @@ type BodyUserText struct {
 
 func (*BodyUserText) implBody() {}
 
+func (me *BodyUserText) Clone() Body {
+	return &BodyUserText{me.Descr, me.Text}
+}
+
 func (me *BodyUserText) AsText() string {
 	if me.Descr != "" {
 		return me.Descr + " " + me.Text
@@ -66,7 +76,7 @@ func (me *BodyUserText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyUserText) Serialize(dest *heap.Vec[byte]) uint {
+func (me *BodyUserText) Serialize(dest *win.Vec[byte]) uint {
 	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
 	packLen := 1 + uint(len(serializedStrs))
 
@@ -83,23 +93,25 @@ type BodyBinary struct {
 }
 
 // Constructor.
-func parseBodyBinary(src []byte) *BodyBinary {
-	bin := make([]byte, len(src)) // simply copy all the data
-	copy(bin, src)
-	return &BodyBinary{Bin: bin}
+func _BodyBinaryParse(src []byte) *BodyBinary {
+	return &BodyBinary{slices2.Clone(src)} // simply copy all the data
 }
 
 func (*BodyBinary) implBody() {}
 
+func (me *BodyBinary) Clone() Body {
+	return &BodyBinary{slices2.Clone(me.Bin)}
+}
+
 func (me *BodyBinary) AsText() string {
-	return win.Str.FmtBytes(uint64(len(me.Bin)))
+	return wstr.FmtBytes(uint64(len(me.Bin)))
 }
 
 func (me *BodyBinary) ForceText(text string) {
 	panic("Cannot set text to a binary frame.")
 }
 
-func (me *BodyBinary) Serialize(dest *heap.Vec[byte]) uint {
+func (me *BodyBinary) Serialize(dest *win.Vec[byte]) uint {
 	dest.Append(me.Bin...)
 	return uint(len(me.Bin))
 }
@@ -112,7 +124,7 @@ type BodyComment struct {
 }
 
 // Constructor.
-func parseBodyComment(src []byte) (*BodyComment, error) {
+func _BodyCommentParse(src []byte) (*BodyComment, error) {
 	encByte := ENC(src[0])
 	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
 		return nil, fmt.Errorf("unknown comment encoding: %d", encByte)
@@ -146,6 +158,10 @@ func parseBodyComment(src []byte) (*BodyComment, error) {
 
 func (*BodyComment) implBody() {}
 
+func (me *BodyComment) Clone() Body {
+	return &BodyComment{me.Lang3, me.Descr, me.Text}
+}
+
 func (me *BodyComment) AsText() string {
 	if me.Descr != "" {
 		return me.Descr + " " + me.Text
@@ -160,7 +176,7 @@ func (me *BodyComment) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyComment) Serialize(dest *heap.Vec[byte]) uint {
+func (me *BodyComment) Serialize(dest *win.Vec[byte]) uint {
 	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
 	packLen := 1 + 3 + uint(len(serializedStrs))
 
@@ -181,7 +197,7 @@ type BodyPicture struct {
 }
 
 // Constructor.
-func parseBodyPicture(src []byte) (*BodyPicture, error) {
+func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 	encByte := ENC(src[0])
 	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
 		return nil, fmt.Errorf("unknown picture encoding: %d", encByte)
@@ -220,16 +236,20 @@ func parseBodyPicture(src []byte) (*BodyPicture, error) {
 
 func (*BodyPicture) implBody() {}
 
+func (me *BodyPicture) Clone() Body {
+	return &BodyPicture{me.Mime, me.Type, me.Descr, slices2.Clone(me.Bin)}
+}
+
 func (me *BodyPicture) AsText() string {
 	return fmt.Sprintf("%s %s %s",
-		PICNAMES[me.Type], me.Mime, win.Str.FmtBytes(uint64(len(me.Bin))))
+		PICNAMES[me.Type], me.Mime, wstr.FmtBytes(uint64(len(me.Bin))))
 }
 
 func (me *BodyPicture) ForceText(text string) {
 	panic("Cannot set text to a picture frame.")
 }
 
-func (me *BodyPicture) Serialize(pDest *heap.Vec[byte]) uint {
+func (me *BodyPicture) Serialize(pDest *win.Vec[byte]) uint {
 	encByte, serializedDescr := serializeStrings(me.Descr)
 	packLen := 1 + uint(len(me.Mime)) + 1 + 1 + uint(len(serializedDescr)) + uint(len(me.Bin))
 

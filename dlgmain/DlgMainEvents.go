@@ -5,24 +5,22 @@ package dlgmain
 import (
 	"fmt"
 	"id3fit/ids"
-	"id3fit/slices2"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/ui/wm"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 	"github.com/rodrigocfd/windigo/win/ole"
 	"github.com/rodrigocfd/windigo/win/ole/shell"
+	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
 func (me *DlgMain) events() {
 
-	me.wnd.On().WmInitDialog(func(_ wm.InitDialog) bool {
-		hImg, _ := win.ImageListCreate(16, 16, co.ILC_COLOR32, 1, 1)
-		hImg.AddIconFromShell("mp3")
-		me.lstFiles.SetImageList(co.LVSIL_SMALL, hImg) // owned, no co.LVS_SHAREIMAGELISTS
+	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
+		ole.RegisterDragDrop(me.wnd.Hwnd(), me.dropTarget)
 
+		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
 
 		me.lstFiles.Cols.Add("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)
@@ -45,13 +43,13 @@ func (me *DlgMain) events() {
 		return false
 	})
 
-	me.wnd.On().WmSize(func(p wm.Size) {
+	me.wnd.On().WmSize(func(p ui.WmSize) {
 		if p.Request() != co.SIZE_REQ_MINIMIZED {
 			me.lstFiles.Cols.Get(0).SetWidthToFill()
 		}
 	})
 
-	me.wnd.On().WmInitMenuPopup(func(p wm.InitMenuPopup) {
+	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
 		if firstId == ids.MNU_FILE_OPEN {
 			p.HMenu().SetMenuDefaultItemByCmd(ids.MNU_FILE_EDIT)
@@ -66,21 +64,12 @@ func (me *DlgMain) events() {
 		}
 	})
 
-	me.wnd.On().WmDropFiles(func(p wm.DropFiles) {
-		paths, _ := slices2.CollectErr(p.HDrop().Iter())
-		me.withWaitCursor(func() {
-			me.addMp3sToList(paths)
-		})
-	})
-
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_OPEN, func() {
 		rel := ole.NewReleaser()
 		defer rel.Release()
 
-		fod, _ := shell.NewIFileOpenDialog(
-			ole.CoCreateInstance(&rel, co.CLSID_FileOpenDialog,
-				co.CLSCTX_INPROC_SERVER, co.IID_IFileOpenDialog),
-		)
+		fod, _ := ole.CoCreateInstance[shell.IFileOpenDialog](
+			rel, co.CLSID_FileOpenDialog, co.CLSCTX_INPROC_SERVER)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
@@ -96,8 +85,8 @@ func (me *DlgMain) events() {
 		fod.SetFileTypeIndex(1)
 
 		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
-			arr, _ := fod.GetResults(&rel)
-			paths, _ := slices2.CollectErr(arr.IterDisplayNames(co.SIGDN_FILESYSPATH))
+			arr, _ := fod.GetResults(rel)
+			paths, _ := arr.EnumDisplayNames(co.SIGDN_FILESYSPATH)
 
 			me.withWaitCursor(func() {
 				me.addMp3sToList(paths)
@@ -106,7 +95,7 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_EDIT, func() {
-		if me.editSelected() == co.ID_OK {
+		if me.editSelected() {
 			me.withWaitCursor(func() {
 				me.saveSelected()
 			})
@@ -119,18 +108,9 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_RESAVE, func() {
-		ret, _ := win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
-			HwndParent:  me.wnd.Hwnd(),
-			WindowTitle: "Save files",
-			Content:     fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?", me.lstFiles.Items.SelectedCount()),
-			HMainIcon:   win.TdcIconTdi(co.TDICON_WARNING),
-			Flags:       co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
-			Buttons: []win.TASKDIALOG_BUTTON{
-				{Id: co.ID_OK, Text: "&Save"},
-				{Id: co.ID_CANCEL, Text: "&Cancel"},
-			},
-		})
-		if ret == co.ID_OK {
+		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
+			me.lstFiles.Items.SelectedCount())
+		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") == co.ID_OK {
 			me.withWaitCursor(func() {
 				me.saveSelected()
 			})
@@ -138,17 +118,19 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPIC, func() {
-		me.removePicRg(false)
-		me.withWaitCursor(func() {
-			me.saveSelected()
-		})
+		if me.removePicRg(false) {
+			me.withWaitCursor(func() {
+				me.saveSelected()
+			})
+		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPICRG, func() {
-		me.removePicRg(true)
-		me.withWaitCursor(func() {
-			me.saveSelected()
-		})
+		if me.removePicRg(true) {
+			me.withWaitCursor(func() {
+				me.saveSelected()
+			})
+		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_ABOUT, func() {
@@ -162,7 +144,7 @@ func (me *DlgMain) events() {
 		caption := fmt.Sprintf("%s %d.%d.%d",
 			nfo.ProductName, nfo.Version[0], nfo.Version[1], nfo.Version[2])
 
-		msg := fmt.Sprintf(
+		text := fmt.Sprintf(
 			"%s\n\n"+
 				"Compiler: %s\n"+
 				"GC cycles: %d\n"+
@@ -171,22 +153,14 @@ func (me *DlgMain) events() {
 				"Frees: %d",
 			nfo.LegalCopyright,
 			runtime.Version(),
-			stats.NumGC, win.Str.FmtBytes(stats.HeapAlloc),
-			win.Str.FmtBytes(stats.NextGC), stats.Frees)
+			stats.NumGC, wstr.FmtBytes(stats.HeapAlloc),
+			wstr.FmtBytes(stats.NextGC), stats.Frees)
 
-		win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
-			HwndParent:      me.wnd.Hwnd(),
-			WindowTitle:     "About",
-			MainInstruction: caption,
-			Content:         msg,
-			HMainIcon:       win.TdcIconTdi(co.TDICON_INFORMATION),
-			CommonButtons:   co.TDCBF_OK,
-			Flags:           co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
-		})
+		ui.MsgOk(me.wnd, "About", caption, text)
 	})
 
 	me.lstFiles.On().NmDblClk(func(_ *win.NMITEMACTIVATE) {
-		if me.editSelected() == co.ID_OK {
+		if me.editSelected() {
 			me.withWaitCursor(func() {
 				me.saveSelected()
 			})
@@ -198,7 +172,7 @@ func (me *DlgMain) events() {
 			me.lstFiles.Items.DeleteSelected()
 			me.updateTitlebarCount()
 		} else if p.WVKey == co.VK_RETURN { // Enter key
-			if me.editSelected() == co.ID_OK {
+			if me.editSelected() {
 				me.withWaitCursor(func() {
 					me.saveSelected()
 				})
@@ -228,5 +202,34 @@ func (me *DlgMain) events() {
 		me.sortCol = newCol.Index()
 		me.sortList()
 	})
+
+	me.dropTarget.Drop(
+		func(dataObj *ole.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
+			fetc := ole.FORMATETC{
+				CfFormat: co.CF_HDROP,
+				Aspect:   co.DVASPECT_CONTENT,
+				Lindex:   -1,
+				Tymed:    co.TYMED_HGLOBAL,
+			}
+
+			stg, err := dataObj.GetData(&fetc)
+			if err != nil {
+				panic(err)
+			}
+			defer ole.ReleaseStgMedium(&stg)
+
+			if hGlobal, ok := stg.HGlobal(); ok {
+				hMem, _ := hGlobal.GlobalLock()
+				defer hGlobal.GlobalUnlock()
+
+				hDrop := win.HDROP(hMem) // DragFinish() crashes ReleaseStgMedium(), don't call
+				paths, _ := hDrop.DragQueryFile()
+				me.withWaitCursor(func() {
+					me.addMp3sToList(paths)
+				})
+			}
+			return co.HRESULT_S_OK
+		},
+	)
 
 }

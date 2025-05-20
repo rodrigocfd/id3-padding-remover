@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"id3fit/dlgedit"
 	"id3fit/id3v2"
-	"slices"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
+	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
 func (me *DlgMain) withWaitCursor(fun func()) {
@@ -30,9 +30,9 @@ func (me *DlgMain) withWaitCursor(fun func()) {
 func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 	allPaths := make([]string, 0, len(incomingPaths)) // grab all files within all subfolders
 	for _, incomingPath := range incomingPaths {
-		if win.Path.IsFolder(incomingPath) {
-			allPaths = append(allPaths,
-				slices.Collect(win.Path.IterFilesDeep(incomingPath))...)
+		if win.PathIsFolder(incomingPath) {
+			nested, _ := win.EnumFilesDeep(incomingPath)
+			allPaths = append(allPaths, nested...)
 		} else {
 			allPaths = append(allPaths, incomingPath)
 		}
@@ -40,7 +40,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 
 	nonMp3Count := 0 // count how many non-MP3 we have
 	for _, path := range allPaths {
-		if !win.Path.HasExtension(path, "mp3") {
+		if !win.PathHasExtension(path, "mp3") {
 			nonMp3Count++
 		}
 	}
@@ -51,9 +51,9 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 		return // nothing do to
 	}
 
-	tags := make([]*id3v2.Tag, 0, len(allPaths)) // cache all the tags
+	tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // cache all the tags
 	for _, path := range allPaths {
-		if win.Path.HasExtension(path, "mp3") { // ignore non-MP3 files
+		if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
 			tag, err := id3v2.LoadTag(path)
 			if err != nil {
 				me.wnd.Hwnd().MessageBox(
@@ -80,43 +80,43 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 }
 
 func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
-	tag := item.Data().(*id3v2.Tag) // retrieve tag stored in item
-	if tag.IsEmpty() {
+	pTag := item.Data().(*id3v2.Tag) // retrieve tag stored in item
+	if pTag.IsEmpty() {
 		item.SetText(1, "N/A") // MP3 without tag
 	} else {
-		item.SetText(1, fmt.Sprintf("%d", tag.Padding()))
+		item.SetText(1, fmt.Sprintf("%d", pTag.Padding()))
 	}
 
-	if tag.FrameByName4("APIC") != nil {
+	if pTag.FrameByName4("APIC") != nil {
 		item.SetText(2, "\u2713") // checkmark
 	} else {
 		item.SetText(2, "")
 	}
 
-	item.SetText(3, tag.ReplayGainStatus())
+	item.SetText(3, pTag.ReplayGainStatus())
 
-	me.renderMp3TextColumn(item, 4, tag, "TPE1")
-	me.renderMp3TextColumn(item, 5, tag, "TYER")
-	me.renderMp3TextColumn(item, 6, tag, "TALB")
-	me.renderMp3TextColumn(item, 7, tag, "TRCK")
-	me.renderMp3TextColumn(item, 8, tag, "TIT2")
-	me.renderMp3TextColumn(item, 9, tag, "TCON")
-	me.renderMp3TextColumn(item, 10, tag, "TPE3")
-	me.renderMp3TextColumn(item, 11, tag, "TCOM")
-	me.renderMp3TextColumn(item, 12, tag, "TEXT")
-	me.renderMp3TextColumn(item, 13, tag, "TOPE")
+	me.renderMp3TextCell(item, 4, pTag, "TPE1")
+	me.renderMp3TextCell(item, 5, pTag, "TYER")
+	me.renderMp3TextCell(item, 6, pTag, "TALB")
+	me.renderMp3TextCell(item, 7, pTag, "TRCK")
+	me.renderMp3TextCell(item, 8, pTag, "TIT2")
+	me.renderMp3TextCell(item, 9, pTag, "TCON")
+	me.renderMp3TextCell(item, 10, pTag, "TPE3")
+	me.renderMp3TextCell(item, 11, pTag, "TCOM")
+	me.renderMp3TextCell(item, 12, pTag, "TEXT")
+	me.renderMp3TextCell(item, 13, pTag, "TOPE")
 
-	if frame := tag.FrameByName4("COMM"); frame != nil {
-		body, _ := frame.Body().(*id3v2.BodyComment)
+	if pFrame := pTag.FrameByName4("COMM"); pFrame != nil {
+		body, _ := pFrame.Body().(*id3v2.BodyComment)
 		item.SetText(14, body.Text)
 	} else {
 		item.SetText(14, "") // clear
 	}
 }
 
-func (me *DlgMain) renderMp3TextColumn(item ui.ListViewItem, colIndex int, tag *id3v2.Tag, name4 string) {
-	if frame := tag.FrameByName4(name4); frame != nil {
-		body, _ := frame.Body().(*id3v2.BodyText)
+func (me *DlgMain) renderMp3TextCell(item ui.ListViewItem, colIndex int, tag *id3v2.Tag, name4 string) {
+	if pFrame := tag.FrameByName4(name4); pFrame != nil {
+		body, _ := pFrame.Body().(*id3v2.BodyText)
 		item.SetText(colIndex, body.Text)
 	} else {
 		item.SetText(colIndex, "") // clear
@@ -137,7 +137,7 @@ func (me *DlgMain) sortList() {
 			tagB := itemB.Data().(*id3v2.Tag)
 			cmp = int(tagA.Padding()) - int(tagB.Padding())
 		} else { // by column text
-			cmp = win.Str.CmpI(itemA.Text(me.sortCol), itemB.Text(me.sortCol))
+			cmp = wstr.CmpI(itemA.Text(me.sortCol), itemB.Text(me.sortCol))
 		}
 
 		if me.sortAsc {
@@ -148,38 +148,26 @@ func (me *DlgMain) sortList() {
 	})
 }
 
-func (me *DlgMain) removePicRg(delRg bool) {
+func (me *DlgMain) removePicRg(delRg bool) bool {
 	nFiles := me.lstFiles.Items.SelectedCount()
-	msg := fmt.Sprintf("Remove picture frame from %d file(s)?", nFiles)
+	text := fmt.Sprintf("Remove picture frame from %d file(s)?", nFiles)
 	if delRg {
-		msg = fmt.Sprintf("Remove picture and ReplayGain frames from %d file(s)?", nFiles)
+		text = fmt.Sprintf("Remove picture and ReplayGain frames from %d file(s)?", nFiles)
+	}
+	if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") != co.ID_OK {
+		return false
 	}
 
-	ret, _ := win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
-		HwndParent:  me.wnd.Hwnd(),
-		WindowTitle: "Remove frames",
-		Content:     msg,
-		HMainIcon:   win.TdcIconTdi(co.TDICON_WARNING),
-		Flags:       co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
-		Buttons: []win.TASKDIALOG_BUTTON{
-			{Id: co.ID_OK, Text: "&Remove"},
-			{Id: co.ID_CANCEL, Text: "&Cancel"},
-		},
-	})
-	if ret != co.ID_OK {
-		return
-	}
-
-	for item := range me.lstFiles.Items.IterSelected() {
-		tag := item.Data().(*id3v2.Tag)
-		tag.RemoveFrameIf(func(frame *id3v2.Frame) bool {
-			if frame.Name4() == "APIC" {
+	for _, item := range me.lstFiles.Items.Selected() {
+		pTag := item.Data().(*id3v2.Tag)
+		pTag.RemoveFrameIf(func(pFrame *id3v2.Frame) bool {
+			if pFrame.Name4() == "APIC" {
 				return true
 			}
-			if delRg && frame.Name4() == "TXXX" {
-				if body, ok := frame.Body().(*id3v2.BodyUserText); ok {
-					if strings.HasPrefix(body.Descr, "replaygain_track_") ||
-						strings.HasPrefix(body.Descr, "replaygain_album_") {
+			if delRg && pFrame.Name4() == "TXXX" {
+				if pBody, ok := pFrame.Body().(*id3v2.BodyUserText); ok {
+					if strings.HasPrefix(pBody.Descr, "replaygain_track_") ||
+						strings.HasPrefix(pBody.Descr, "replaygain_album_") {
 						return true
 					}
 				}
@@ -187,53 +175,55 @@ func (me *DlgMain) removePicRg(delRg bool) {
 			return false
 		})
 	}
+	return true
 }
 
-func (me *DlgMain) editSelected() co.ID {
+func (me *DlgMain) editSelected() bool {
 	if me.lstFiles.Items.SelectedCount() == 0 {
-		return co.ID_CANCEL // Enter key will hit here even without selected items
+		return false // Enter key will hit here even without selected items
 	}
 
-	selTags := make([]*id3v2.Tag, 0, me.lstFiles.Items.SelectedCount())
-	for item := range me.lstFiles.Items.IterSelected() {
-		selTags = append(selTags, item.Data().(*id3v2.Tag))
+	clonedTags := make([]*id3v2.Tag, 0, me.lstFiles.Items.SelectedCount())
+	for _, item := range me.lstFiles.Items.Selected() {
+		pTag := item.Data().(*id3v2.Tag)
+		clonedTags = append(clonedTags, pTag.Clone())
 	}
-	wndEdit := dlgedit.New(me.wnd, selTags)
-	return wndEdit.ShowModal()
+
+	if dlgedit.Show(me.wnd, clonedTags) == co.ID_OK {
+		for i, item := range me.lstFiles.Items.Selected() {
+			item.SetData(clonedTags[i]) // replace the selected tags with the edited ones
+		}
+		return true
+	}
+
+	return false
 }
 
 func (me *DlgMain) saveSelected() {
-	type Fail struct {
+	type SaveFail struct {
 		file string
 		err  error
 	}
-	failed := make([]Fail, 0)
+	saveFails := make([]SaveFail, 0)
 
-	for item := range me.lstFiles.Items.IterSelected() {
-		tag := item.Data().(*id3v2.Tag)
-		if err := tag.SaveToFile(); err != nil {
-			failed = append(failed, Fail{file: tag.Path(), err: err})
+	for _, item := range me.lstFiles.Items.Selected() {
+		pTag := item.Data().(*id3v2.Tag)
+		if err := pTag.SaveToFile(); err != nil {
+			saveFails = append(saveFails, SaveFail{pTag.Path(), err})
 		}
 		me.renderMp3InList(item)
 	}
 	me.sortList()
 
-	if len(failed) > 0 {
+	if len(saveFails) > 0 {
 		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(failed)))
-		for _, fail := range failed {
+		sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(saveFails)))
+		for _, fail := range saveFails {
 			sb.WriteString("\n\n")
 			sb.WriteString(fail.file)
 			sb.WriteString("\n")
 			sb.WriteString(fail.err.Error())
 		}
-		win.TaskDialogIndirect(win.TASKDIALOGCONFIG{
-			HwndParent:    me.wnd.Hwnd(),
-			WindowTitle:   "Error saving file(s)",
-			Content:       sb.String(),
-			HMainIcon:     win.TdcIconTdi(co.TDICON_ERROR),
-			CommonButtons: co.TDCBF_OK,
-			Flags:         co.TDF_ALLOW_DIALOG_CANCELLATION | co.TDF_POSITION_RELATIVE_TO_WINDOW,
-		})
+		ui.MsgError(me.wnd, "Error saving file(s)", "", sb.String())
 	}
 }
