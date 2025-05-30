@@ -69,7 +69,7 @@ func (me *DlgMain) events() {
 		defer rel.Release()
 
 		var fod *shell.IFileOpenDialog
-		ole.CoCreateInstance(rel, co.CLSID_FileOpenDialog, co.CLSCTX_INPROC_SERVER, &fod)
+		ole.CoCreateInstance(rel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
