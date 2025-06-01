@@ -75,7 +75,7 @@ impl DlgMain {
 			      _: co::MK,
 			      _: w::POINT,
 			      _: &mut co::DROPEFFECT|
-			      -> w::AnyResult<()> { self2.on_drop_target_drop(d) }
+			      -> w::AnyResult<()> { self2.on_drop_target(d) }
 		});
 	}
 }

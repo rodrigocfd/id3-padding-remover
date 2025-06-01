@@ -72,7 +72,7 @@ impl DlgMain {
 	pub(super) fn on_menu_file_open(&self) -> w::AnyResult<()> {
 		let fod = w::CoCreateInstance::<w::IFileOpenDialog>(
 			&co::CLSID::FileOpenDialog,
-			None,
+			None::<&w::IUnknown>,
 			co::CLSCTX::INPROC_SERVER,
 		)?;
 
@@ -167,7 +167,7 @@ impl DlgMain {
 
 		let content = format!(
 			"Version {}.{}.{}\n\
-			Writen in Rust with WinSafe library.\n\n\
+			Written in Rust with WinSafe library.\n\n\
 			{}",
 			version_parts[0],
 			version_parts[1],
@@ -208,7 +208,7 @@ impl DlgMain {
 		Ok(())
 	}
 
-	pub(super) fn on_drop_target_drop(&self, d: &w::IDataObject) -> w::AnyResult<()> {
+	pub(super) fn on_drop_target(&self, d: &w::IDataObject) -> w::AnyResult<()> {
 		let mut fmt = w::FORMATETC::default();
 		fmt.cfFormat = co::CF::HDROP;
 		fmt.dwAspect = co::DVASPECT::CONTENT;
