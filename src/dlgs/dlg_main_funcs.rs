@@ -13,43 +13,37 @@ impl DlgMain {
 	}
 
 	pub(super) fn sort_list(&self) -> w::AnyResult<()> {
-		let (col, is_asc) = self.cur_sort.get(); // read current sort state
-		let cols = self.lst_files.header().unwrap().items();
-		cols.iter()?.for_each(|col| {
-			col.set_arrow(gui::HeaderArrow::None); // remove arrow from all cols
-		});
-
-		if [1, 5, 8].contains(&col) {
-			self.sort_numeric_col(col, is_asc)?; // padding, track no. or year
-		} else {
+		let (cur_col, cur_is_asc) = self.cur_sort.get(); // read current sort state
+		if [1, 5, 8].contains(&cur_col) {
+			// Chosen column is padding, track no., or year
 			self.lst_files.items().sort(|a, b| {
-				if is_asc { a.text(col).cmp(&b.text(col)) } else { b.text(col).cmp(&a.text(col)) }
-			})?;
-		}
+				let text1 = a.text(cur_col);
+				let text2 = b.text(cur_col);
 
-		let new_arrow = if is_asc { gui::HeaderArrow::Asc } else { gui::HeaderArrow::Desc };
-		cols.get(col).set_arrow(new_arrow); // draw arrow in current col
-		Ok(())
-	}
-
-	fn sort_numeric_col(&self, num_col: u32, is_asc: bool) -> w::SysResult<()> {
-		self.lst_files.items().sort(|a, b| {
-			let text1 = a.text(num_col);
-			let text2 = b.text(num_col);
-
-			if let Ok(num1) = text1.parse::<u32>() {
-				if let Ok(num2) = text2.parse::<u32>() {
-					if is_asc {
-						return num1.cmp(&num2);
-					} else {
-						return num2.cmp(&num1);
+				// Check if both texts are numeric values.
+				if let Ok(num1) = text1.parse::<u32>() {
+					if let Ok(num2) = text2.parse::<u32>() {
+						if cur_is_asc {
+							return num1.cmp(&num2);
+						} else {
+							return num2.cmp(&num1);
+						}
 					}
 				}
-			}
 
-			// One of the texts is not numeric, simply compare strings.
-			if is_asc { text1.cmp(&text2) } else { text2.cmp(&text1) }
-		})
+				// One of the texts is not numeric, simply compare strings.
+				if cur_is_asc { text1.cmp(&text2) } else { text2.cmp(&text1) }
+			})?;
+		} else {
+			self.lst_files.items().sort(|a, b| {
+				if cur_is_asc {
+					a.text(cur_col).cmp(&b.text(cur_col))
+				} else {
+					b.text(cur_col).cmp(&a.text(cur_col))
+				}
+			})?;
+		}
+		Ok(())
 	}
 
 	pub(super) fn add_files_to_list(&self, file_paths: &[impl AsRef<str>]) -> w::AnyResult<()> {

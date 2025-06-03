@@ -20,7 +20,7 @@ impl DlgMain {
 		LIST_COLS
 			.iter()
 			.try_for_each(|(title, cx, _)| -> w::SysResult<()> {
-				self.lst_files.cols().add(*title, gui::dpi_x(*cx))?;
+				self.lst_files.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
 				Ok(())
 			})?;
 
@@ -37,6 +37,7 @@ impl DlgMain {
 				hcols.get(i).set_justify(gui::HeaderJustify::Center);
 			});
 
+		hcols.get(0).set_arrow(gui::HeaderArrow::Asc); // initially 1st col, ascending
 		self.lst_files.cols().get(0).set_width_to_fill()?;
 		self.wnd.hwnd().RegisterDragDrop(&self.drop_target)?;
 		Ok(true)
@@ -202,8 +203,16 @@ impl DlgMain {
 	pub(super) fn on_header_item_click(&self, p: &w::NMHEADER) -> w::AnyResult<()> {
 		let new_col = p.iItem as u32;
 		let (cur_col, cur_is_asc) = self.cur_sort.get(); // read current sort state
-		let is_asc = new_col != cur_col || !cur_is_asc; // will sorting be ordinary, ascending?
-		self.cur_sort.set((new_col, is_asc)); // save new sort state
+		let new_is_asc = new_col != cur_col || !cur_is_asc; // will sorting be ordinary, ascending?
+		self.cur_sort.set((new_col, new_is_asc)); // save new sort state
+
+		let cols = self.lst_files.header().unwrap().items();
+		cols.iter()?.for_each(|col| {
+			col.set_arrow(gui::HeaderArrow::None); // remove arrow from all listview cols
+		});
+		let new_arrow = if new_is_asc { gui::HeaderArrow::Asc } else { gui::HeaderArrow::Desc };
+		cols.get(new_col).set_arrow(new_arrow); // draw arrow in current col
+
 		self.sort_list()?;
 		Ok(())
 	}
