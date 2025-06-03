@@ -27,14 +27,14 @@ impl DlgMain {
 		// Set files listview columns justification.
 		let hcols = self.lst_files.header().unwrap().items();
 		[1, 5, 8]
-			.iter() // padding, track #, year
+			.into_iter() // padding, track #, year
 			.for_each(|i| {
-				hcols.get(*i).set_justify(gui::HeaderJustify::Right);
+				hcols.get(i).set_justify(gui::HeaderJustify::Right);
 			});
 		[2, 3]
-			.iter() // art, RG
+			.into_iter() // art, RG
 			.for_each(|i| {
-				hcols.get(*i).set_justify(gui::HeaderJustify::Center);
+				hcols.get(i).set_justify(gui::HeaderJustify::Center);
 			});
 
 		self.lst_files.cols().get(0).set_width_to_fill()?;

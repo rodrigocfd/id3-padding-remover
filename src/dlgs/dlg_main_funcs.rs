@@ -129,6 +129,59 @@ impl DlgMain {
 		Ok(())
 	}
 
+	pub(super) fn rename(&self, has_track_no: bool) -> w::AnyResult<()> {
+		match self
+			.lst_files
+			.items()
+			.iter_selected()
+			.try_for_each(|sel_item| -> w::AnyResult<()> {
+				let new_name = {
+					let rc_tag = sel_item.data()?; // retrieve data saved in the listview item
+					let tag = rc_tag.try_borrow()?;
+
+					let mut new_name = String::with_capacity(30);
+					if has_track_no {
+						match tag.frame_by_name4("TRCK") {
+							Some(track) => {
+								new_name.push_str(&format!("{:0>2} ", track.as_editable_string()?));
+							},
+							None => return Err("Missing track field.".into()),
+						}
+					}
+					match tag.frame_by_name4("TPE1") {
+						Some(artist) => {
+							new_name.push_str(&artist.as_editable_string()?);
+						},
+						None => return Err("Missing artist field.".into()),
+					}
+					match tag.frame_by_name4("TIT2") {
+						Some(title) => {
+							new_name.push_str(" - ");
+							new_name.push_str(&title.as_editable_string()?);
+						},
+						None => return Err("Missing title field.".into()),
+					}
+					new_name.push_str(".mp3");
+					new_name
+				};
+
+				let cur_path = sel_item.text(0);
+				let new_path = w::path::replace_file_name(&cur_path, &new_name);
+				w::MoveFile(&cur_path, &new_path)?;
+				sel_item.set_text(0, &new_path)?;
+				Ok(())
+			}) {
+			Err(e) => {
+				msgbox::err(self.wnd.hwnd(), "Missing field(s)", None, &e.to_string())?;
+			},
+			Ok(_) => {
+				self.sort_list()?;
+			},
+		}
+
+		Ok(())
+	}
+
 	pub(super) fn remove_rg_art(&self, del_art: bool) -> w::AnyResult<()> {
 		let sel_count = self.lst_files.items().selected_count();
 		let window_title = if del_art { "Remove ReplayGain and art" } else { "Remove ReplayGain" };

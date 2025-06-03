@@ -46,6 +46,14 @@ impl DlgMain {
 			.wm_command_acc_menu(ids::MNU_FILE_EDIT, bind!(self, Self::on_menu_file_edit))
 			.wm_command_acc_menu(ids::MNU_FILE_REMOVE, bind!(self, Self::on_menu_file_remove))
 			.wm_command_acc_menu(ids::MNU_FILE_REWRITE, bind!(self, Self::on_menu_file_rewrite))
+			.wm_command_acc_menu(ids::MNU_FILE_RENAME_TAT, {
+				let self2 = self.clone();
+				move || self2.rename(true)
+			})
+			.wm_command_acc_menu(ids::MNU_FILE_RENAME_AT, {
+				let self2 = self.clone();
+				move || self2.rename(false)
+			})
 			.wm_command_acc_menu(ids::MNU_FILE_REMRG, {
 				let self2 = self.clone();
 				move || self2.remove_rg_art(false)
