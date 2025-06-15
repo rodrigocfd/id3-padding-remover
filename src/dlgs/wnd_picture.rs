@@ -1,6 +1,6 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use winsafe::{self as w, bind, co, gui, prelude::*};
+use winsafe::{self as w, co, gui, prelude::*};
 
 #[derive(Clone)]
 pub struct WndPicture {
@@ -37,9 +37,5 @@ impl WndPicture {
 		let new_self = Self { wnd, pic, pic_err };
 		new_self.events();
 		new_self
-	}
-
-	fn events(&self) {
-		self.wnd.on().wm_paint(bind!(self, Self::on_paint));
 	}
 }

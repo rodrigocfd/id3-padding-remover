@@ -1,6 +1,6 @@
 use std::cell::Cell;
 use std::rc::Rc;
-use winsafe::{self as w, bind, bind_ig, bind_p, co, gui, prelude::*};
+use winsafe::{self as w, gui};
 
 use crate::{id3v2, ids};
 
@@ -34,57 +34,6 @@ impl DlgMain {
 
 	pub fn run(&self) -> w::AnyResult<i32> {
 		self.wnd.run_main(None)
-	}
-
-	fn events(&self) {
-		self.wnd
-			.on()
-			.wm_init_dialog(bind_ig!(self, Self::on_init_dialog))
-			.wm_size(bind_p!(self, Self::on_size))
-			.wm_init_menu_popup(bind_p!(self, Self::on_init_menu_popup))
-			.wm_command_acc_menu(ids::MNU_FILE_OPEN, bind!(self, Self::on_menu_file_open))
-			.wm_command_acc_menu(ids::MNU_FILE_EDIT, bind!(self, Self::on_menu_file_edit))
-			.wm_command_acc_menu(ids::MNU_FILE_REMOVE, bind!(self, Self::on_menu_file_remove))
-			.wm_command_acc_menu(ids::MNU_FILE_REWRITE, bind!(self, Self::on_menu_file_rewrite))
-			.wm_command_acc_menu(ids::MNU_FILE_RENAME_TAT, {
-				let self2 = self.clone();
-				move || self2.rename(true)
-			})
-			.wm_command_acc_menu(ids::MNU_FILE_RENAME_AT, {
-				let self2 = self.clone();
-				move || self2.rename(false)
-			})
-			.wm_command_acc_menu(ids::MNU_FILE_REMRG, {
-				let self2 = self.clone();
-				move || self2.remove_rg_art(false)
-			})
-			.wm_command_acc_menu(ids::MNU_FILE_REMRGART, {
-				let self2 = self.clone();
-				move || self2.remove_rg_art(true)
-			})
-			.wm_command_acc_menu(ids::MNU_FILE_ABOUT, bind!(self, Self::on_menu_file_about));
-
-		self.lst_files
-			.on()
-			.lvn_item_changed(bind_ig!(self, Self::on_lst_files_item_changed))
-			.lvn_key_down(bind_p!(self, Self::on_lst_files_key_down))
-			.nm_dbl_clk(bind_ig!(self, Self::on_menu_file_edit))
-			.lvn_delete_item(bind_ig!(self, Self::on_lst_files_delete_item));
-
-		self.lst_files
-			.header()
-			.unwrap()
-			.on()
-			.hdn_item_click(bind_p!(self, Self::on_header_item_click));
-
-		self.drop_target.Drop({
-			let self2 = self.clone();
-			move |d: &w::IDataObject,
-			      _: co::MK,
-			      _: w::POINT,
-			      _: &mut co::DROPEFFECT|
-			      -> w::AnyResult<()> { self2.on_drop_target(d) }
-		});
 	}
 }
 

@@ -1,6 +1,6 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use winsafe::{self as w, bind, bind_ig, bind_p, co, gui, prelude::*};
+use winsafe::{self as w, gui, prelude::*};
 
 use super::{Input, WndPicture};
 use crate::{id3v2, ids};
@@ -70,45 +70,6 @@ impl DlgEdit {
 		} else {
 			Ok(None) // user clicked Cancel
 		}
-	}
-
-	fn events(&self) {
-		self.wnd
-			.on()
-			.wm_init_dialog(bind_ig!(self, Self::on_init_dialog))
-			.wm_init_menu_popup(bind_p!(self, Self::on_init_menu_popup))
-			.wm_command_acc_menu(ids::MNU_FRAMES_MOVEUP, bind!(self, Self::on_menu_frames_move_up))
-			.wm_command_acc_menu(
-				ids::MNU_FRAMES_MOVEDOWN,
-				bind!(self, Self::on_menu_frames_move_down),
-			)
-			.wm_command_acc_menu(ids::MNU_FRAMES_DELETE, bind!(self, Self::on_menu_frames_delete))
-			.wm_command_acc_menu(co::DLGID::OK, bind!(self, Self::on_ok))
-			.wm_command_acc_menu(co::DLGID::CANCEL, bind!(self, Self::on_cancel));
-
-		self.lst_frames
-			.on()
-			.lvn_key_down(bind_p!(self, Self::on_lst_frames_key_down));
-
-		self.inputs.iter().for_each(|input| {
-			input.chk.on().bn_clicked({
-				let self2 = self.clone();
-				let input2 = input.clone();
-				move || self2.on_chk_click(&input2)
-			});
-		});
-
-		self.chk_pic
-			.on()
-			.bn_clicked(bind!(self, Self::on_chk_pic_click));
-
-		self.btn_uncheck_all
-			.on()
-			.bn_clicked(bind!(self, Self::on_uncheck_all));
-
-		self.btn_check_filled
-			.on()
-			.bn_clicked(bind!(self, Self::on_check_filled));
 	}
 }
 
