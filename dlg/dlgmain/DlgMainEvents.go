@@ -4,7 +4,7 @@ package dlgmain
 
 import (
 	"fmt"
-	"id3fit/ids"
+	"id3fit/dlg/ids"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -185,21 +185,21 @@ func (me *DlgMain) events() {
 	})
 
 	me.lstFiles.Header().On().HdnItemClick(func(p *win.NMHEADER) {
-		newCol := me.lstFiles.Cols.Get(int(p.IItem))
-		if newCol.Index() != me.sortCol { // changing column
-			newCol.SetSortArrow(co.HDF_SORTUP)
+		lvCol := me.lstFiles.Cols.Get(int(p.IItem))
+		if lvCol.Index() != me.sortCol { // user changed the column
+			lvCol.SetSortArrow(co.HDF_SORTUP)
 			me.sortAsc = true
-		} else { // reversing current column
-			curArrow := newCol.SortArrow()
+		} else { // user is reversing the same column
+			curArrow := lvCol.SortArrow()
 			if curArrow == co.HDF_SORTUP {
-				newCol.SetSortArrow(co.HDF_SORTDOWN)
+				lvCol.SetSortArrow(co.HDF_SORTDOWN)
 				me.sortAsc = false
 			} else {
-				newCol.SetSortArrow(co.HDF_SORTUP)
+				lvCol.SetSortArrow(co.HDF_SORTUP)
 				me.sortAsc = true
 			}
 		}
-		me.sortCol = newCol.Index()
+		me.sortCol = lvCol.Index()
 		me.sortList()
 	})
 

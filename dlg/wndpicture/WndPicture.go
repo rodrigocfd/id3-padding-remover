@@ -1,6 +1,6 @@
 //go:build windows
 
-package dlgpicture
+package wndpicture
 
 import (
 	"github.com/rodrigocfd/windigo/ui"
@@ -9,7 +9,7 @@ import (
 )
 
 // Child window to render pictures.
-type DlgPicture struct {
+type WndPicture struct {
 	wnd *ui.Control
 
 	rel    *ole.Releaser
@@ -17,8 +17,8 @@ type DlgPicture struct {
 }
 
 // Constructor.
-func New(parent ui.Parent, x, y, cx, cy int) *DlgPicture {
-	me := &DlgPicture{
+func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
+	me := &WndPicture{
 		wnd: ui.NewControl(parent, ui.OptsControl().
 			Position(x, y).
 			Size(cx, cy),
@@ -30,6 +30,6 @@ func New(parent ui.Parent, x, y, cx, cy int) *DlgPicture {
 	return me
 }
 
-func (me *DlgPicture) Repaint() error {
+func (me *WndPicture) Repaint() error {
 	return me.wnd.Hwnd().InvalidateRect(nil, true)
 }

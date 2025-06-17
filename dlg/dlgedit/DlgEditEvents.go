@@ -4,7 +4,7 @@ package dlgedit
 
 import (
 	"fmt"
-	"id3fit/ids"
+	"id3fit/dlg/ids"
 	"slices"
 	"strings"
 

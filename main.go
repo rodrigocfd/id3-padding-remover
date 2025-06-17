@@ -3,7 +3,7 @@
 package main
 
 import (
-	"id3fit/dlgmain"
+	"id3fit/dlg/dlgmain"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/win/ole"

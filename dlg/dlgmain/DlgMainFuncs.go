@@ -4,7 +4,7 @@ package dlgmain
 
 import (
 	"fmt"
-	"id3fit/dlgedit"
+	"id3fit/dlg/dlgedit"
 	"id3fit/id3v2"
 	"strings"
 
@@ -51,7 +51,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 		return // nothing do to
 	}
 
-	tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // cache all the tags
+	tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // cache all the MP3 tags
 	for _, path := range allPaths {
 		if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
 			tag, err := id3v2.LoadTag(path)
@@ -67,7 +67,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 
 	for _, tag := range tags {
 		var item ui.ListViewItem
-		if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok {
+		if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok { // file already loaded?
 			item = existingItem // current tag object will be replaced
 		} else {
 			item = me.lstFiles.Items.AddWithIcon(0, tag.Path()) // insert new item
@@ -88,7 +88,7 @@ func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
 	}
 
 	if pTag.FrameByName4("APIC") != nil {
-		item.SetText(2, "\u2713") // checkmark
+		item.SetText(2, "\u2713") // checkmark symbol
 	} else {
 		item.SetText(2, "")
 	}
@@ -115,7 +115,7 @@ func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
 }
 
 func (me *DlgMain) renderMp3TextCell(item ui.ListViewItem, colIndex int, tag *id3v2.Tag, name4 string) {
-	if pFrame := tag.FrameByName4(name4); pFrame != nil {
+	if pFrame := tag.FrameByName4(name4); pFrame != nil { // such name4 frame exists
 		body, _ := pFrame.Body().(*id3v2.BodyText)
 		item.SetText(colIndex, body.Text)
 	} else {

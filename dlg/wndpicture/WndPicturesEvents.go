@@ -1,12 +1,12 @@
 //go:build windows
 
-package dlgpicture
+package wndpicture
 
 import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *DlgPicture) events() {
+func (me *WndPicture) events() {
 
 	me.wnd.On().WmDestroy(func() {
 		me.rel.Release()

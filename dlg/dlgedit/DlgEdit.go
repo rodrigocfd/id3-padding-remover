@@ -3,9 +3,9 @@
 package dlgedit
 
 import (
-	"id3fit/dlgpicture"
+	"id3fit/dlg/ids"
+	"id3fit/dlg/wndpicture"
 	"id3fit/id3v2"
-	"id3fit/ids"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win/co"
@@ -16,7 +16,7 @@ type DlgEdit struct {
 	wnd            *ui.Modal
 	inputs         []CheckInput // checkbox + input fields
 	chkPick        *ui.CheckBox
-	wndPic         *dlgpicture.DlgPicture
+	wndPic         *wndpicture.WndPicture
 	lblPic         *ui.Static
 	lstFrames      *ui.ListView
 	btnUncheckAll  *ui.Button
@@ -49,7 +49,7 @@ func Show(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	}
 
 	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_NONE_NONE)
-	wndPic := dlgpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200))
+	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200))
 	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_NONE_NONE)
 
 	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_NONE_NONE)

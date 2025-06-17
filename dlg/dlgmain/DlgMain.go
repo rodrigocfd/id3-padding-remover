@@ -3,7 +3,7 @@
 package dlgmain
 
 import (
-	"id3fit/ids"
+	"id3fit/dlg/ids"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win/ole"
@@ -41,6 +41,6 @@ func New() *DlgMain {
 }
 
 func (me *DlgMain) Run() int {
-	defer me.rel.Release()
+	defer me.rel.Release() // COM objects cleanup
 	return me.wnd.RunAsMain()
 }

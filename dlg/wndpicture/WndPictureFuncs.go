@@ -1,6 +1,6 @@
 //go:build windows
 
-package dlgpicture
+package wndpicture
 
 import (
 	"id3fit/id3v2"
@@ -10,7 +10,7 @@ import (
 	"github.com/rodrigocfd/windigo/win/ole/oleaut"
 )
 
-func (me *DlgPicture) LoadPicOle(tags []*id3v2.Tag) {
+func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	apic := id3v2.SameFrameAcrossAllTags("APIC", tags)
 	if apic == nil {
 		return // we don't have a picture to display
@@ -40,6 +40,6 @@ func (me *DlgPicture) LoadPicOle(tags []*id3v2.Tag) {
 	}
 }
 
-func (me *DlgPicture) PicOle() *oleaut.IPicture {
+func (me *WndPicture) PicOle() *oleaut.IPicture {
 	return me.picOle
 }
