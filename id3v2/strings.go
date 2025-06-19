@@ -46,19 +46,19 @@ func parseIso88591Strings(src []byte) []string {
 
 	blocks := slices.Collect(slices2.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
-	wideStrBuf := wstr.NewBuf[wstr.Stack20]() // buffer to convert bytes to Go strings
+
+	recvBuf := wstr.NewBufReceiver(wstr.BUF_MAX) // to convert bytes to Go strings
+	defer recvBuf.Free()
 
 	for _, block := range blocks {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			wideStrBuf.Resize(uint(len(block)))
-			wideStrBuf.ZeroBuffer()
-
+			recvBuf.Resize(uint(len(block)))
 			for i, ch := range block {
-				*wideStrBuf.At(uint(i)) = uint16(ch)
+				recvBuf.HotSlice()[i] = uint16(ch)
 			}
-			texts = append(texts, wstr.WstrSliceToStr(wideStrBuf.HotSlice()))
+			texts = append(texts, recvBuf.String())
 		}
 	}
 	return texts
@@ -80,7 +80,9 @@ func parseUnicodeStrings(src []byte) []string {
 
 	blocks := slices.Collect(slices2.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
-	wideStrBuf := wstr.NewBuf[wstr.Stack20]() // buffer to convert bytes to Go strings
+
+	recvBuf := wstr.NewBufReceiver(wstr.BUF_MAX) // to convert bytes to Go strings
+	defer recvBuf.Free()
 
 	for _, block := range blocks {
 		isLE := true
@@ -94,16 +96,14 @@ func parseUnicodeStrings(src []byte) []string {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			wideStrBuf.Resize(uint(len(block)))
-			wideStrBuf.ZeroBuffer()
-
+			recvBuf.Resize(uint(len(block)))
 			for i, ch := range block {
 				if isLE {
 					ch = bits.ReverseBytes16(ch)
 				}
-				*wideStrBuf.At(uint(i)) = ch
+				recvBuf.HotSlice()[i] = ch
 			}
-			texts = append(texts, wstr.WstrSliceToStr(wideStrBuf.HotSlice()))
+			texts = append(texts, recvBuf.String())
 		}
 	}
 	return texts
@@ -128,7 +128,9 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 	}
 
 	buf := make([]byte, 0, estimatedLenBytes) // to be returned
-	str16 := wstr.NewBuf[wstr.Stack20]()      // to serialize each Go string
+
+	wbuf := wstr.NewBufConverter() // to serialize each Go string
+	defer wbuf.Free()
 
 	for _, str := range strs {
 		if encoding == ENC_UNICODE {
@@ -137,9 +139,8 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 			buf = append(buf, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
 		}
 
-		str16.Set(str, wstr.ALLOW_EMPTY) // contains terminating null
-
-		for _, ch := range str16.HotSlice() { // write each char of the string
+		slice := wbuf.SliceAllowEmpty(str) // contains terminating null
+		for _, ch := range slice {         // write each char of the string
 			if encoding == ENC_UNICODE {
 				buf = append(buf, win.LOBYTE(ch), win.HIBYTE(ch))
 			} else {

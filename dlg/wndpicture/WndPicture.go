@@ -19,11 +19,12 @@ type WndPicture struct {
 // Constructor.
 func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
 	me := &WndPicture{
-		wnd: ui.NewControl(parent, ui.OptsControl().
-			Position(x, y).
-			Size(cx, cy),
+		wnd: ui.NewControl(parent,
+			ui.OptsControl().
+				Position(x, y).
+				Size(cx, cy),
 		),
-		rel:    ole.NewReleaser(),
+		rel:    ole.NewReleaser(), // released in WM_DESTROY
 		picOle: nil,
 	}
 	me.events()
