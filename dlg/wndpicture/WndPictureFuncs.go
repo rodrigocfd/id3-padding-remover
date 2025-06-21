@@ -6,8 +6,7 @@ import (
 	"id3fit/id3v2"
 
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win/ole"
-	"github.com/rodrigocfd/windigo/win/ole/oleaut"
+	"github.com/rodrigocfd/windigo/win"
 )
 
 func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
@@ -23,9 +22,9 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 		return
 	}
 
-	localRel := ole.NewReleaser()
+	localRel := win.NewOleReleaser()
 	defer localRel.Release()
-	stream, err := ole.SHCreateMemStream(localRel, body.Bin)
+	stream, err := win.SHCreateMemStream(localRel, body.Bin)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
 			"Failed to stream picture:\n"+err.Error())
@@ -33,13 +32,13 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	}
 
 	me.rel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
-	me.picOle, err = oleaut.OleLoadPicture(me.rel, stream, uint(len(body.Bin)), true)
+	me.picOle, err = win.OleLoadPicture(me.rel, stream, uint(len(body.Bin)), true)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())
 	}
 }
 
-func (me *WndPicture) PicOle() *oleaut.IPicture {
+func (me *WndPicture) PicOle() *win.IPicture {
 	return me.picOle
 }

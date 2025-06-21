@@ -4,16 +4,15 @@ package wndpicture
 
 import (
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win/ole"
-	"github.com/rodrigocfd/windigo/win/ole/oleaut"
+	"github.com/rodrigocfd/windigo/win"
 )
 
 // Child window to render pictures.
 type WndPicture struct {
 	wnd *ui.Control
 
-	rel    *ole.Releaser
-	picOle *oleaut.IPicture
+	rel    *win.OleReleaser
+	picOle *win.IPicture
 }
 
 // Constructor.
@@ -24,7 +23,7 @@ func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
 				Position(x, y).
 				Size(cx, cy),
 		),
-		rel:    ole.NewReleaser(), // released in WM_DESTROY
+		rel:    win.NewOleReleaser(), // released in WM_DESTROY
 		picOle: nil,
 	}
 	me.events()

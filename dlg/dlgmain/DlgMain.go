@@ -6,7 +6,7 @@ import (
 	"id3fit/dlg/ids"
 
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win/ole"
+	"github.com/rodrigocfd/windigo/win"
 )
 
 // Main application dialog.
@@ -16,8 +16,8 @@ type DlgMain struct {
 	sortCol  int
 	sortAsc  bool
 
-	rel        *ole.Releaser
-	dropTarget *ole.IDropTarget
+	rel        *win.OleReleaser
+	dropTarget *win.IDropTarget
 }
 
 // Constructor.
@@ -32,8 +32,8 @@ func New() *DlgMain {
 	sortCol := 0
 	sortAsc := true
 
-	rel := ole.NewReleaser()
-	dropTarget := ole.NewIDropTargetImpl(rel)
+	rel := win.NewOleReleaser()
+	dropTarget := win.NewIDropTargetImpl(rel)
 
 	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, rel, dropTarget}
 	me.events()

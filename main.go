@@ -6,7 +6,7 @@ import (
 	"id3fit/dlg/dlgmain"
 	"runtime"
 
-	"github.com/rodrigocfd/windigo/win/ole"
+	"github.com/rodrigocfd/windigo/win"
 )
 
 func main() {
@@ -14,8 +14,8 @@ func main() {
 
 	// go dbgMem()
 
-	ole.OleInitialize()
-	defer ole.OleUninitialize()
+	win.OleInitialize()
+	defer win.OleUninitialize()
 
 	d := dlgmain.New()
 	d.Run()

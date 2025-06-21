@@ -10,15 +10,13 @@ import (
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
-	"github.com/rodrigocfd/windigo/win/ole"
-	"github.com/rodrigocfd/windigo/win/ole/shell"
 	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
-		ole.RegisterDragDrop(me.wnd.Hwnd(), me.dropTarget)
+		win.RegisterDragDrop(me.wnd.Hwnd(), me.dropTarget)
 
 		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
@@ -65,11 +63,11 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_OPEN, func() {
-		rel := ole.NewReleaser()
+		rel := win.NewOleReleaser()
 		defer rel.Release()
 
-		var fod *shell.IFileOpenDialog
-		ole.CoCreateInstance(rel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
+		var fod *win.IFileOpenDialog
+		win.CoCreateInstance(rel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
@@ -78,7 +76,7 @@ func (me *DlgMain) events() {
 			co.FOS_ALLOWMULTISELECT,
 		)
 
-		fod.SetFileTypes([]shell.COMDLG_FILTERSPEC{
+		fod.SetFileTypes([]win.COMDLG_FILTERSPEC{
 			{Name: "MP3 files", Spec: "*.mp3"},
 			{Name: "All files", Spec: "*.*"},
 		})
@@ -204,8 +202,8 @@ func (me *DlgMain) events() {
 	})
 
 	me.dropTarget.Drop(
-		func(dataObj *ole.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
-			fetc := ole.FORMATETC{
+		func(dataObj *win.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
+			fetc := win.FORMATETC{
 				CfFormat: co.CF_HDROP,
 				Aspect:   co.DVASPECT_CONTENT,
 				Lindex:   -1,
@@ -216,7 +214,7 @@ func (me *DlgMain) events() {
 			if err != nil {
 				panic(err)
 			}
-			defer ole.ReleaseStgMedium(&stg)
+			defer win.ReleaseStgMedium(&stg)
 
 			if hGlobal, ok := stg.HGlobal(); ok {
 				hMem, _ := hGlobal.GlobalLock()
