@@ -7,30 +7,23 @@ impl DlgMain {
 	pub(super) fn events(&self) {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_dialog(move |_| {
-			self2.update_num_files(self2.lst_files.items().count())?;
+			let lv = &self2.lst_files;
+			self2.update_num_files(lv.items().count())?;
 
 			// Setup the files listview.
-			self2
-				.lst_files
-				.image_list(co::LVSIL::SMALL)?
+			lv.image_list(co::LVSIL::SMALL)?
 				.add_icons_from_shell(&["mp3"])?;
-			self2
-				.lst_files
-				.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
-			self2
-				.lst_files
-				.context_menu()
+			lv.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
+			lv.context_menu()
 				.unwrap()
 				.SetMenuDefaultItem(w::IdPos::Id(ids::MNU_FILE_EDIT))?;
-			LIST_COLS
-				.iter()
-				.try_for_each(|(title, cx, _)| -> w::SysResult<()> {
-					self2.lst_files.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
-					Ok(())
-				})?;
+			LIST_COLS.iter().try_for_each(|(title, cx, _)| {
+				lv.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
+				w::SysResult::Ok(())
+			})?;
 
 			// Set files listview columns justification.
-			let hcols = self2.lst_files.header().unwrap().items();
+			let hcols = lv.header().unwrap().items();
 			[1, 5, 8]
 				.into_iter() // padding, track #, year
 				.for_each(|i| {
@@ -43,7 +36,7 @@ impl DlgMain {
 				});
 
 			hcols.get(0).set_arrow(gui::HeaderArrow::Asc); // initially 1st col, ascending
-			self2.lst_files.cols().get(0).set_width_to_fill()?;
+			lv.cols().get(0).set_width_to_fill()?;
 			self2.wnd.hwnd().RegisterDragDrop(&self2.drop_target)?;
 			Ok(true)
 		});
@@ -127,6 +120,8 @@ impl DlgMain {
 					})
 					.collect::<w::AnyResult<Vec<_>>>()?; // deep copy of selected tags
 
+				// Show the modal window, which will take ownership of the cloned tags.
+				// If user clicked OK, returns Some with the modified tags.
 				if let Some(edited_tags) = DlgEdit::show(&self2.wnd, cloned_sel_tags)? {
 					self2.lst_files.set_redraw(false);
 
@@ -216,8 +211,8 @@ impl DlgMain {
 
 				let content = format!(
 					"Version {}.{}.{}\n\
-				Written in Rust with WinSafe library.\n\n\
-				{}",
+					Written in Rust with WinSafe library.\n\n\
+					{}",
 					version_parts[0],
 					version_parts[1],
 					version_parts[2],
@@ -271,9 +266,9 @@ impl DlgMain {
 			.unwrap()
 			.on()
 			.hdn_item_click(move |p| {
-				let new_col = p.iItem as u32;
+				let new_col = p.iItem as u32; // index of column clicked by user
 				let (cur_col, cur_is_asc) = self2.cur_sort.get(); // read current sort state
-				let new_is_asc = new_col != cur_col || !cur_is_asc; // will sorting be ordinary, ascending?
+				let new_is_asc = new_col != cur_col || !cur_is_asc; // will sorting be ascending?
 				self2.cur_sort.set((new_col, new_is_asc)); // save new sort state
 
 				let cols = self2.lst_files.header().unwrap().items();

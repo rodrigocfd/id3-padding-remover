@@ -5,7 +5,7 @@ use crate::{id3v2, ids};
 
 impl DlgEdit {
 	pub(super) fn load_combo_genres(&self) -> w::AnyResult<()> {
-		if let Some(input) = self
+		if let Some(input) = self // find the genres ComboBox among the inputs
 			.inputs
 			.iter()
 			.find(|input| input.txt.ctrl_id() == ids::CMB_GENRE)

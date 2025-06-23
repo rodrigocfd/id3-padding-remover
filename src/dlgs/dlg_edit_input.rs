@@ -14,6 +14,7 @@ pub struct Input {
 }
 
 impl Input {
+	// Only receives the CheckBox ID because the Edit ID is always the next one.
 	pub(super) fn new(parent: &(impl GuiParent + 'static), name4: &str, chk_id: u16) -> Self {
 		let no_res = (gui::Horz::None, gui::Vert::None);
 
@@ -22,7 +23,7 @@ impl Input {
 		let txt: Arc<dyn GuiControl> = if chk_id == ids::CHK_GENRE {
 			Arc::new(gui::ComboBox::new_dlg(parent, chk_id + 1, no_res)) // genre is a ComboBox
 		} else {
-			Arc::new(gui::Edit::new_dlg(parent, chk_id + 1, no_res)) // all other frames are just textboxes
+			Arc::new(gui::Edit::new_dlg(parent, chk_id + 1, no_res)) // all other frames are Edit
 		};
 
 		Self { name4, chk, txt }

@@ -6,7 +6,7 @@ use winsafe::{self as w, co, gui, prelude::*};
 pub struct WndPicture {
 	pub(super) wnd: gui::WindowControl,
 	pub(super) pic: Rc<RefCell<Option<w::IPicture>>>,
-	pub(super) pic_err: Rc<Cell<Option<co::HRESULT>>>,
+	pub(super) pic_err: Rc<Cell<Option<co::HRESULT>>>, // read by DlgEdit
 }
 
 impl WndPicture {
