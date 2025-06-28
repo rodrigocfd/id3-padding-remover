@@ -16,7 +16,7 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
-		win.RegisterDragDrop(me.wnd.Hwnd(), me.dropTarget)
+		me.wnd.Hwnd().RegisterDragDrop(me.dropTarget)
 
 		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
