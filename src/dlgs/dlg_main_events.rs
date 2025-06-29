@@ -160,7 +160,7 @@ impl DlgMain {
 				let content = format!("Rewrite the tag in {} file{}?", count, ss);
 
 				if msgbox::ask(
-					self2.wnd.hwnd(),
+					&self2.wnd,
 					&format!("Rewrite file{}", ss),
 					None,
 					&content,
@@ -219,7 +219,7 @@ impl DlgMain {
 					hversion.str_val(hversion.langs_and_cps()?[0], "LegalCopyright")?,
 				);
 
-				msgbox::info(self2.wnd.hwnd(), "About", Some("ID3 Fit"), &content)?;
+				msgbox::info(&self2.wnd, "About", Some("ID3 Fit"), &content)?;
 				Ok(())
 			});
 

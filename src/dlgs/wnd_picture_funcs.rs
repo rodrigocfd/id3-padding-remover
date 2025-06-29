@@ -14,12 +14,10 @@ impl WndPicture {
 			_ => return Err("APIC body is not picture.".into()), // should never happen
 		};
 
-		let hparent = self.wnd.hwnd().GetParent()?;
-
 		let stream = match w::SHCreateMemStream(&pic_body.data) {
 			Err(err) => {
 				msgbox::err(
-					&hparent,
+					&self.wnd,
 					"Cannot load picture stream",
 					None,
 					&format!("SHCreateMemStream error:\n{}", &err.to_string()),
@@ -33,7 +31,7 @@ impl WndPicture {
 		let pic_obj = match w::OleLoadPicture(&stream, None, true) {
 			Err(err) => {
 				msgbox::err(
-					&hparent,
+					&self.wnd,
 					"Cannot parse picture",
 					None,
 					&format!("OleLoadPicture error:\n{}", &err.to_string()),

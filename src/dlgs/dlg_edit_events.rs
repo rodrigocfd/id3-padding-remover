@@ -134,7 +134,7 @@ impl DlgEdit {
 					"Delete {} selected frame(s)?",
 					self2.lst_frames.items().selected_count()
 				);
-				if msgbox::ask(self2.wnd.hwnd(), "Delete frame(s)", None, &msg, "&Delete")? {
+				if msgbox::ask(&self2.wnd, "Delete frame(s)", None, &msg, "&Delete")? {
 					self2
 						.lst_frames
 						.items()

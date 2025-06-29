@@ -166,7 +166,7 @@ impl DlgMain {
 				Ok(())
 			}) {
 			Err(e) => {
-				msgbox::err(self.wnd.hwnd(), "Missing field(s)", None, &e.to_string())?;
+				msgbox::err(&self.wnd, "Missing field(s)", None, &e.to_string())?;
 			},
 			Ok(_) => {
 				self.sort_list()?;
@@ -186,7 +186,7 @@ impl DlgMain {
 			if sel_count == 1 { "" } else { "s" },
 		);
 
-		if msgbox::ask(self.wnd.hwnd(), window_title, None, &content, "&Remove")? {
+		if msgbox::ask(&self.wnd, window_title, None, &content, "&Remove")? {
 			self.lst_files.items().iter_selected().try_for_each(
 				|sel_item| -> w::AnyResult<()> {
 					{
