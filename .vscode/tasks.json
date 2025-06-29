@@ -1,4 +1,5 @@
 {
+	// https://code.visualstudio.com/docs/reference/variables-reference
 	"version": "2.0.0",
 	"tasks": [
 		{
@@ -6,8 +7,8 @@
 			"label": "cargo:build",
 			"command": "build",
 			"args": [
-				"--bin=id3-fit",
-				"--package=id3-fit",
+				"--bin=${workspaceFolderBasename}",
+				"--package=${workspaceFolderBasename}",
 			],
 		},
 	],
