@@ -56,7 +56,10 @@ impl DlgMain {
 				[
 					ids::MNU_FILE_EDIT,
 					ids::MNU_FILE_REMOVE,
+					ids::MNU_FILE_RENAME_TAT,
+					ids::MNU_FILE_RENAME_AT,
 					ids::MNU_FILE_REWRITE,
+					ids::MNU_FILE_WRITE_TRACK_NO,
 					ids::MNU_FILE_REMRG,
 					ids::MNU_FILE_REMRGART,
 				]
@@ -178,6 +181,29 @@ impl DlgMain {
 						},
 					)?;
 				}
+				Ok(())
+			});
+
+		let self2 = self.clone();
+		self.wnd
+			.on()
+			.wm_command_acc_menu(ids::MNU_FILE_WRITE_TRACK_NO, move || {
+				self2
+					.lst_files
+					.items()
+					.iter_selected()
+					.enumerate()
+					.try_for_each(|(idx, sel_item)| -> w::AnyResult<()> {
+						{
+							let rc_tag = sel_item.data()?;
+							let mut tag = rc_tag.try_borrow_mut()?;
+							tag.set_editable_string("TRCK", &(idx + 1).to_string())?;
+							tag.save_to_file(&sel_item.text(0))?;
+						}
+						Self::render_tag(sel_item)?;
+						Ok(())
+					})?;
+
 				Ok(())
 			});
 
