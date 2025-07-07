@@ -166,10 +166,11 @@ func (me *DlgMain) events() {
 	})
 
 	me.lstFiles.On().LvnKeyDown(func(p *win.NMLVKEYDOWN) {
-		if p.WVKey == co.VK_DELETE {
+		switch p.WVKey {
+		case co.VK_DELETE:
 			me.lstFiles.Items.DeleteSelected()
 			me.updateTitlebarCount()
-		} else if p.WVKey == co.VK_RETURN { // Enter key
+		case co.VK_RETURN: // Enter key
 			if me.editSelected() {
 				me.withWaitCursor(func() {
 					me.saveSelected()
