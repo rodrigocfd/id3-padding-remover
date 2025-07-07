@@ -20,8 +20,8 @@ type DlgMain struct {
 	dropTarget *win.IDropTarget
 }
 
-// Constructor.
-func New() *DlgMain {
+// Constructor; blocks until the window is closed.
+func RunNew() int {
 	wnd := ui.NewMainDlg(
 		ui.OptsMainDlg().
 			DlgId(ids.DLG_MAIN).
@@ -33,14 +33,10 @@ func New() *DlgMain {
 	sortAsc := true
 
 	rel := win.NewOleReleaser()
+	defer rel.Release()
 	dropTarget := win.NewIDropTargetImpl(rel)
 
 	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, rel, dropTarget}
 	me.events()
-	return me
-}
-
-func (me *DlgMain) Run() int {
-	defer me.rel.Release() // COM objects cleanup
 	return me.wnd.RunAsMain()
 }

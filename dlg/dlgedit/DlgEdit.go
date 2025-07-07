@@ -33,7 +33,7 @@ type CheckInput struct {
 }
 
 // Constructor; blocks until the modal is closed.
-func Show(parent ui.Parent, tags []*id3v2.Tag) co.ID {
+func ShowNew(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	wnd := ui.NewModalDlg(parent, ids.DLG_EDIT)
 
 	inputs := make([]CheckInput, 0, (ids.TXT_COMMENT-ids.CHK_ARTIST+1)/2)

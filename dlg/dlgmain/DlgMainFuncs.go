@@ -189,7 +189,7 @@ func (me *DlgMain) editSelected() bool {
 		clonedTags = append(clonedTags, pTag.Clone())
 	}
 
-	if dlgedit.Show(me.wnd, clonedTags) == co.ID_OK {
+	if dlgedit.ShowNew(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.Items.Selected() {
 			item.SetData(clonedTags[i]) // replace the selected tags with the edited ones
 		}
