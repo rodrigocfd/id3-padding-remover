@@ -47,7 +47,7 @@ func parseIso88591Strings(src []byte) []string {
 	blocks := slices.Collect(slices2.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
 
-	recvBuf := wstr.NewBufReceiver(wstr.BUF_MAX) // to convert bytes to Go strings
+	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
 	defer recvBuf.Free()
 
 	for _, block := range blocks {
@@ -81,7 +81,7 @@ func parseUnicodeStrings(src []byte) []string {
 	blocks := slices.Collect(slices2.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
 
-	recvBuf := wstr.NewBufReceiver(wstr.BUF_MAX) // to convert bytes to Go strings
+	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
 	defer recvBuf.Free()
 
 	for _, block := range blocks {
@@ -129,7 +129,7 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 
 	buf := make([]byte, 0, estimatedLenBytes) // to be returned
 
-	wbuf := wstr.NewBufConverter() // to serialize each Go string
+	wbuf := wstr.NewBufEncoder() // to serialize each Go string
 	defer wbuf.Free()
 
 	for _, str := range strs {
