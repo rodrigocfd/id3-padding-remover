@@ -8,11 +8,14 @@ import (
 	"id3fit/id3v2"
 
 	"github.com/rodrigocfd/windigo/ui"
+	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 )
 
 // Modal dialog to edit the fields of one or many tags.
 type DlgEdit struct {
+	rel *win.OleReleaser
+
 	wnd            *ui.Modal
 	inputs         []CheckInput // checkbox + input fields
 	chkPick        *ui.CheckBox
@@ -34,6 +37,9 @@ type CheckInput struct {
 
 // Constructor; blocks until the modal is closed.
 func ShowNew(parent ui.Parent, tags []*id3v2.Tag) co.ID {
+	rel := win.NewOleReleaser()
+	defer rel.Release()
+
 	wnd := ui.NewModalDlg(parent, ids.DLG_EDIT)
 
 	inputs := make([]CheckInput, 0, (ids.TXT_COMMENT-ids.CHK_ARTIST+1)/2)
@@ -49,14 +55,14 @@ func ShowNew(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	}
 
 	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_NONE_NONE)
-	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200))
+	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200), rel)
 	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_NONE_NONE)
 
 	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_NONE_NONE)
 	btnUncheckAll := ui.NewButtonDlg(wnd, ids.BTN_UNCHECK_ALL, ui.LAY_NONE_NONE)
 	btnCheckFilled := ui.NewButtonDlg(wnd, ids.BTN_CHECK_FILLED, ui.LAY_NONE_NONE)
 
-	me := &DlgEdit{wnd, inputs,
+	me := &DlgEdit{rel, wnd, inputs,
 		chkPic, wndPic, lblPic,
 		lstFrames, btnUncheckAll, btnCheckFilled,
 		tags, co.ID_CANCEL}

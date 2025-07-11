@@ -8,10 +8,6 @@ import (
 
 func (me *WndPicture) events() {
 
-	me.wnd.On().WmDestroy(func() {
-		me.rel.Release()
-	})
-
 	me.wnd.On().WmPaint(func() {
 		var ps win.PAINTSTRUCT
 		hdc, _ := me.wnd.Hwnd().BeginPaint(&ps)
