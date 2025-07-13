@@ -14,8 +14,6 @@ import (
 
 // Modal dialog to edit the fields of one or many tags.
 type DlgEdit struct {
-	rel *win.OleReleaser
-
 	wnd            *ui.Modal
 	inputs         []CheckInput // checkbox + input fields
 	chkPick        *ui.CheckBox
@@ -62,7 +60,7 @@ func ShowNew(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	btnUncheckAll := ui.NewButtonDlg(wnd, ids.BTN_UNCHECK_ALL, ui.LAY_NONE_NONE)
 	btnCheckFilled := ui.NewButtonDlg(wnd, ids.BTN_CHECK_FILLED, ui.LAY_NONE_NONE)
 
-	me := &DlgEdit{rel, wnd, inputs,
+	me := &DlgEdit{wnd, inputs,
 		chkPic, wndPic, lblPic,
 		lstFrames, btnUncheckAll, btnCheckFilled,
 		tags, co.ID_CANCEL}

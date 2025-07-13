@@ -24,7 +24,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 
 	localRel := win.NewOleReleaser()
 	defer localRel.Release()
-	stream, err := win.SHCreateMemStream(localRel, body.Bin)
+	memStream, err := win.SHCreateMemStream(localRel, body.Bin)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
 			"Failed to stream picture:\n"+err.Error())
@@ -32,7 +32,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	}
 
 	me.rel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
-	me.picOle, err = win.OleLoadPicture(me.rel, stream, uint(len(body.Bin)), true)
+	me.picOle, err = win.OleLoadPicture(me.rel, memStream, uint(len(body.Bin)), true)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())

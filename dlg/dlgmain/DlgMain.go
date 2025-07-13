@@ -13,10 +13,9 @@ import (
 type DlgMain struct {
 	wnd      *ui.Main
 	lstFiles *ui.ListView
-	sortCol  int
-	sortAsc  bool
 
-	rel        *win.OleReleaser
+	sortCol    int
+	sortAsc    bool
 	dropTarget *win.IDropTarget
 }
 
@@ -36,7 +35,7 @@ func RunNew() int {
 	defer rel.Release()
 	dropTarget := win.NewIDropTargetImpl(rel)
 
-	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, rel, dropTarget}
+	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, dropTarget}
 	me.events()
 	return me.wnd.RunAsMain()
 }
