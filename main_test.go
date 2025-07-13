@@ -17,20 +17,6 @@ func BenchmarkSyscall(b *testing.B) {
 }
 func BenchmarkSyscall2(b *testing.B) {
 	for range b.N {
-		win.GetLocalTime()
+		win.GetCurrentProcessId()
 	}
 }
-
-//	func BenchmarkAllocOS(b *testing.B) {
-//		for range b.N {
-//			a := heap.NewWideStr[heap.Stack20]()
-//			defer a.Free()
-//			a.Set("123456", heap.ALLOW_EMPTY)
-//		}
-//	}
-// func BenchmarkAllocGC(b *testing.B) {
-// 	for range b.N {
-// 		a := heap.NewWideStr[heap.Stack20]()
-// 		a.Set("123456", heap.ALLOW_EMPTY)
-// 	}
-// }

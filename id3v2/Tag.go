@@ -86,14 +86,16 @@ func (me *Tag) parseFrames(src []byte) (mp3Offset uint, err error) {
 	// Starts at 10 because we receive src already skipped 10-byte tag header.
 	fwdBytes := uint(10)
 
+	MP3_START_BYTES := [...]byte{0xff, 0xfb} // https://stackoverflow.com/a/7302482/6923555
+
 	for {
-		if bytes.Equal(src[0:2], []byte{0xff, 0xfb}) { // https://stackoverflow.com/a/7302482/6923555
+		if bytes.Equal(src[0:2], MP3_START_BYTES[:]) {
 			// We found the beginning of the MP3 data.
 			return fwdBytes, nil
 		} else if slices2.AllEqual(src[:4], 0x00) {
 			// The first 4 bytes should contain the 4-char frame name.
 			// If they're all zero, it means we entered a padding region after all frames.
-			idxMp3Offset := bytes.Index(src, []byte{0xff, 0xfb})
+			idxMp3Offset := bytes.Index(src, MP3_START_BYTES[:])
 			if idxMp3Offset == -1 {
 				return 0, errors.New("MP3 offset not found")
 			}
