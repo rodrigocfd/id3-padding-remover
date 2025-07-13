@@ -37,8 +37,9 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())
 	}
+	me.picNumBytes = uint(len(body.Bin))
 }
 
-func (me *WndPicture) PicOle() *win.IPicture {
-	return me.picOle
+func (me *WndPicture) PicOle() (*win.IPicture, uint) {
+	return me.picOle, me.picNumBytes
 }

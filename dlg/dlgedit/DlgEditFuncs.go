@@ -66,7 +66,7 @@ func (me *DlgEdit) fillFramesList() {
 }
 
 func (me *DlgEdit) fillPicInfo() {
-	picOle := me.wndPic.PicOle()
+	picOle, picNumBytes := me.wndPic.PicOle()
 	if picOle == nil {
 		if len(me.tags) == 1 {
 			me.lblPic.Hwnd().SetWindowText("(no picture)")
@@ -81,7 +81,8 @@ func (me *DlgEdit) fillPicInfo() {
 	hdcScreen, _ := win.HWND(0).GetDC()
 	defer win.HWND(0).ReleaseDC(hdcScreen)
 	szPic, _ := picOle.SizePixels(hdcScreen)
-	me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%d x % d pixels", szPic.Cx, szPic.Cy))
+	me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%dx%d px, %s",
+		szPic.Cx, szPic.Cy, wstr.FmtBytes(picNumBytes)))
 }
 
 func (me *DlgEdit) writeTextsToTags() {

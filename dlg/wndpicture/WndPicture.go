@@ -11,8 +11,9 @@ import (
 type WndPicture struct {
 	wnd *ui.Control
 
-	rel    *win.OleReleaser
-	picOle *win.IPicture
+	rel         *win.OleReleaser
+	picOle      *win.IPicture
+	picNumBytes uint
 }
 
 // Constructor.
