@@ -40,48 +40,37 @@ func LoadTag(mp3Path string) (*Tag, error) {
 	}
 	defer f.Close()
 
-	mp3Offset, _, err := tagParseHeader(f.HotSlice()) // ignore declared size, we'll use MP3 offset
+	declaredSize, err := me.tagParseHeader(f.HotSlice())
 	if err != nil {
 		return nil, err
-	}
-	if mp3Offset == 0 {
+	} else if declaredSize == 0 {
 		return &me, nil // MP3 has no ID3v2 tag
 	}
-	me.mp3Offset = mp3Offset
 
-	if err := me.parseFrames(f.HotSlice()[10:mp3Offset]); err != nil {
+	me.mp3Offset, err = me.parseFrames(f.HotSlice()[10:]) // skip 10-byte tag header
+	if err != nil {
 		return nil, err
 	}
 
 	return &me, nil
 }
 
-func tagParseHeader(src []byte) (mp3Offset, declaredSize uint, err error) {
-	// Retrieve MP3 offset.
-	idxMp3Offset := bytes.Index(src, []byte{0xff, 0xfb}) // https://stackoverflow.com/a/7302482/6923555
-	if idxMp3Offset == -1 {
-		return 0, 0, errors.New("no MP3 signature found")
-	} else if idxMp3Offset == 0 {
-		return 0, 0, nil // no tag present
-	}
-
-	src = src[0:idxMp3Offset]
-
+func (me *Tag) tagParseHeader(src []byte) (declaredSize uint, err error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
-		return 0, 0, nil // MP3 file has no tag
+		return 0, nil // MP3 file has no tag
 	}
 
 	// Validate tag version 2.3.0.
 	if !bytes.Equal(src[3:5], []byte{3, 0}) { // the first "2" is not stored in the tag
-		return 0, 0, fmt.Errorf("tag version 2.%d.%d is not supported, only 2.3.0", src[3], src[4])
+		return 0, fmt.Errorf("tag version 2.%d.%d is not supported, only 2.3.0", src[3], src[4])
 	}
 
 	// Validate unsupported flags.
 	if (src[5] & 0b1000_0000) != 0 {
-		return 0, 0, errors.New("unsynchronised tag not supported")
+		return 0, errors.New("unsynchronised tag not supported")
 	} else if (src[5] & 0b0100_0000) != 0 {
-		return 0, 0, errors.New("tag extended header not supported")
+		return 0, errors.New("tag extended header not supported")
 	}
 
 	// Read declared tag size.
@@ -89,33 +78,40 @@ func tagParseHeader(src []byte) (mp3Offset, declaredSize uint, err error) {
 		binary.BigEndian.Uint32(src[6:10]),
 	) + 10 // also count 10-byte tag header
 
-	return uint(idxMp3Offset), uint(nDeclaredSize), nil
+	return uint(nDeclaredSize), nil
 }
 
-func (me *Tag) parseFrames(src []byte) error {
+func (me *Tag) parseFrames(src []byte) (mp3Offset uint, err error) {
+	// How many bytes we forwarded since the beginning of file.
+	// Starts at 10 because we receive src already skipped 10-byte tag header.
+	fwdBytes := uint(10)
+
 	for {
-		if len(src) == 0 { // end of tag, no padding found
-			return nil
-		} else if len(src) < 10 { // we cant' have a frame with less than 10 bytes, which is the header size
-			me.padding = uint(len(src))
-			return nil
+		if bytes.Equal(src[0:2], []byte{0xff, 0xfb}) { // https://stackoverflow.com/a/7302482/6923555
+			// We found the beginning of the MP3 data.
+			return fwdBytes, nil
 		} else if slices2.AllEqual(src[:4], 0x00) {
 			// The first 4 bytes should contain the 4-char frame name.
 			// If they're all zero, it means we entered a padding region after all frames.
-			me.padding = uint(len(src))
-			return nil
+			idxMp3Offset := bytes.Index(src, []byte{0xff, 0xfb})
+			if idxMp3Offset == -1 {
+				return 0, errors.New("MP3 offset not found")
+			}
+			me.padding = uint(idxMp3Offset)
+			return fwdBytes + uint(idxMp3Offset), nil
 		}
 
 		pFrame, err := _FrameParse(src)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		if pFrame.DeclaredSize() > uint(len(src)) { // means the size was serialized with error
-			return fmt.Errorf("declared frame size greater than available size: %d vs %d",
+			return 0, fmt.Errorf("declared frame size greater than available size: %d vs %d",
 				pFrame.DeclaredSize(), len(src))
 		}
 
+		fwdBytes += pFrame.DeclaredSize()
 		src = src[pFrame.DeclaredSize():]
 		me.frames = append(me.frames, pFrame)
 	}
@@ -201,22 +197,22 @@ func (me *Tag) SaveToFile() error {
 		return errors.New("Tag has no path")
 	}
 
+	oldTag, err := LoadTag(me.path) // so we can have the MP3 offset
+	if err != nil {
+		return err
+	}
+
 	fout, err := win.FileOpen(me.path, co.FOPEN_RW_EXISTING)
 	if err != nil {
 		return err
 	}
 	defer fout.Close()
 
-	currentContents, err := fout.ReadAllAsVec()
+	currentContents, err := fout.ReadAllAsVec() // copy the whole file into memory
 	if err != nil {
 		return err
 	}
 	defer currentContents.Free()
-
-	mp3Offset, _, err := tagParseHeader(currentContents.HotSlice())
-	if err != nil {
-		return err
-	}
 
 	if err := fout.Resize(0); err != nil { // truncate file
 		return err
@@ -230,7 +226,7 @@ func (me *Tag) SaveToFile() error {
 		}
 	}
 
-	fout.Write(currentContents.HotSlice()[mp3Offset:]) // MP3 data
+	fout.Write(currentContents.HotSlice()[oldTag.Mp3Offset():]) // MP3 data
 	me.padding = 0
 	return nil
 }
