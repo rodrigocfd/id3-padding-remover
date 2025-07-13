@@ -54,7 +54,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 	tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // cache all the MP3 tags
 	for _, path := range allPaths {
 		if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
-			tag, err := id3v2.LoadTag(path)
+			tag, err := id3v2.LoadTagFromFile(path)
 			if err != nil {
 				me.wnd.Hwnd().MessageBox(
 					fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),

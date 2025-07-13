@@ -29,30 +29,38 @@ func (me *Tag) Padding() uint    { return me.padding }
 func (me *Tag) Frames() []*Frame { return me.frames }
 
 // Constructor.
-func LoadTag(mp3Path string) (*Tag, error) {
-	me := Tag{
-		path: mp3Path,
-	}
-
-	f, err := win.FileMapOpen(mp3Path, co.FOPEN_READ_EXISTING)
+func LoadTagFromFile(mp3Path string) (*Tag, error) {
+	fin, err := win.FileMapOpen(mp3Path, co.FOPEN_READ_EXISTING)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer fin.Close()
 
-	declaredSize, err := me.tagParseHeader(f.HotSlice())
+	me, err := LoadTagFromBin(fin.HotSlice())
+	if err != nil {
+		return nil, err
+	}
+	me.path = mp3Path
+	return me, nil
+}
+
+// Constructor.
+func LoadTagFromBin(src []byte) (*Tag, error) {
+	me := &Tag{} // note: path not set here
+
+	declaredSize, err := me.tagParseHeader(src)
 	if err != nil {
 		return nil, err
 	} else if declaredSize == 0 {
-		return &me, nil // MP3 has no ID3v2 tag
+		return me, nil // MP3 has no ID3v2 tag
 	}
 
-	me.mp3Offset, err = me.parseFrames(f.HotSlice()[10:]) // skip 10-byte tag header
+	me.mp3Offset, err = me.parseFrames(src[10:]) // skip 10-byte tag header
 	if err != nil {
 		return nil, err
 	}
 
-	return &me, nil
+	return me, nil
 }
 
 func (me *Tag) tagParseHeader(src []byte) (declaredSize uint, err error) {
@@ -199,11 +207,6 @@ func (me *Tag) SaveToFile() error {
 		return errors.New("Tag has no path")
 	}
 
-	oldTag, err := LoadTag(me.path) // so we can have the MP3 offset
-	if err != nil {
-		return err
-	}
-
 	fout, err := win.FileOpen(me.path, co.FOPEN_RW_EXISTING)
 	if err != nil {
 		return err
@@ -215,6 +218,11 @@ func (me *Tag) SaveToFile() error {
 		return err
 	}
 	defer currentContents.Free()
+
+	oldTag, err := LoadTagFromBin(currentContents.HotSlice()) // so we can have the MP3 offset
+	if err != nil {
+		return err
+	}
 
 	if err := fout.Resize(0); err != nil { // truncate file
 		return err
