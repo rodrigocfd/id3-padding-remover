@@ -269,21 +269,22 @@ func (me *Tag) Serialize() win.Vec[byte] {
 // If the frame is the same across all tags, returns it; otherwise returns nil.
 func SameFrameAcrossAllTags(name4 string, tags []*Tag) *Frame {
 	if len(tags) == 0 {
-		return nil
+		return nil // no tags, no frame
 	} else if len(tags) == 1 {
-		return tags[0].FrameByName4(name4)
+		return tags[0].FrameByName4(name4) // only 1 tag, direct query
 	}
 
-	pFrame0 := tags[0].FrameByName4(name4)
+	pFrame0 := tags[0].FrameByName4(name4) // query the first tag right away
 	if pFrame0 == nil {
-		return nil
+		return nil // first tag doesn't have the frame, stop right now
 	}
 
-	allSame := slices2.AllEqualFunc(tags[1:], func(pTag *Tag) bool {
+	allSame := slices2.AllTrueFunc(tags[1:], func(pTag *Tag) bool { // skip first tag
 		pFrame := pTag.FrameByName4(name4)
 		if pFrame == nil {
-			return false
+			return false // frame doesn't exist in this posterior tag
 		} else {
+			// Compare the textual rendering of this frame with the first frame.
 			return pFrame.Body().AsText() == pFrame0.Body().AsText()
 		}
 	})

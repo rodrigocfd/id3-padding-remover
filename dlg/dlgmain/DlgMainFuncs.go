@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"id3fit/dlg/dlgedit"
 	"id3fit/id3v2"
+	"id3fit/slices2"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -183,11 +184,10 @@ func (me *DlgMain) editSelected() bool {
 		return false // Enter key will hit here even without selected items
 	}
 
-	clonedTags := make([]*id3v2.Tag, 0, me.lstFiles.Items.SelectedCount())
-	for _, item := range me.lstFiles.Items.Selected() {
+	clonedTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
 		pTag := item.Data().(*id3v2.Tag)
-		clonedTags = append(clonedTags, pTag.Clone())
-	}
+		return pTag.Clone()
+	})
 
 	if dlgedit.ShowNew(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.Items.Selected() {

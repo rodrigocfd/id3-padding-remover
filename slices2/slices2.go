@@ -6,7 +6,7 @@ import (
 )
 
 // Returns true if all elements are equal to the given one.
-func AllEqual[S ~[]T, T comparable](src S, elemToCompare T) bool {
+func AllEqual[T comparable](src []T, elemToCompare T) bool {
 	for _, elem := range src {
 		if elem != elemToCompare {
 			return false
@@ -16,7 +16,7 @@ func AllEqual[S ~[]T, T comparable](src S, elemToCompare T) bool {
 }
 
 // Returns true if the predicate returns true for all elements.
-func AllEqualFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) bool {
+func AllTrueFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) bool {
 	for _, elem := range src {
 		if !pred(elem) {
 			return false
@@ -59,7 +59,7 @@ func LastIndexFunc[S ~[]T, T comparable](src S, pred func(elem T) bool) int {
 //	strs := slices2.Map(nums, func(index int, num uint) string {
 //		return fmt.Sprintf("Num %d", num)
 //	})
-func Map[S ~[]T, T, U any](src S, fun func(index int, elem T) U) []U {
+func Map[T, U any](src []T, fun func(index int, elem T) U) []U {
 	mapped := make([]U, 0, len(src))
 	for i := range len(src) {
 		mapped = append(mapped, fun(i, src[i]))
@@ -87,13 +87,13 @@ func Split[S ~[]T, T comparable](src S, separator T) iter.Seq[[]T] {
 
 // Returns a subslice without the first and last elements which contiguously
 // match the given element.
-func Trim[S ~[]T, T comparable](src S, elem T) S {
+func Trim[T comparable](src []T, elem T) []T {
 	return TrimRight(TrimLeft(src, elem), elem)
 }
 
 // Returns a subslice without the first elements which contiguously match the
 // given element.
-func TrimLeft[S ~[]T, T comparable](src S, elem T) S {
+func TrimLeft[T comparable](src []T, elem T) []T {
 	for i := range len(src) {
 		if src[i] != elem {
 			return src[i:]
@@ -104,7 +104,7 @@ func TrimLeft[S ~[]T, T comparable](src S, elem T) S {
 
 // Returns a subslice without the last elements which contiguously match the
 // given element.
-func TrimRight[S ~[]T, T comparable](src S, elem T) S {
+func TrimRight[T comparable](src []T, elem T) []T {
 	for i := len(src) - 1; i >= 0; i-- {
 		if src[i] != elem {
 			return src[:i+1]
