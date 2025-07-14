@@ -13,8 +13,9 @@ pub struct DlgMain {
 }
 
 impl DlgMain {
+	/// Creates the main dialog and displays it, blocking until it's closed.
 	#[must_use]
-	pub fn new() -> Self {
+	pub fn run_main() -> w::AnyResult<i32> {
 		use gui::{Horz as H, Vert as V};
 
 		let wnd = gui::WindowMain::new_dlg(ids::DLG_MAIN, Some(ids::ICO_APP), Some(ids::ACC_MAIN));
@@ -29,11 +30,7 @@ impl DlgMain {
 
 		let new_self = Self { wnd, lst_files, cur_sort, drop_target };
 		new_self.events();
-		new_self
-	}
-
-	pub fn run(&self) -> w::AnyResult<i32> {
-		self.wnd.run_main(None)
+		new_self.wnd.run_main(None)
 	}
 }
 
