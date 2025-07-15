@@ -32,18 +32,23 @@ impl DlgMain {
 				}
 
 				// One of the texts is not numeric, simply compare strings.
-				if cur_is_asc { text1.cmp(&text2) } else { text2.cmp(&text1) }
+				Self::cmp_insens(&text1, &text2, cur_is_asc)
 			})?;
 		} else {
-			self.lst_files.items().sort(|a, b| {
-				if cur_is_asc {
-					a.text(cur_col).cmp(&b.text(cur_col))
-				} else {
-					b.text(cur_col).cmp(&a.text(cur_col))
-				}
-			})?;
+			// Chosen column is simple text.
+			self.lst_files
+				.items()
+				.sort(|a, b| Self::cmp_insens(&a.text(cur_col), &b.text(cur_col), cur_is_asc))?;
 		}
 		Ok(())
+	}
+
+	fn cmp_insens(a: &str, b: &str, is_asc: bool) -> std::cmp::Ordering {
+		if is_asc {
+			a.to_uppercase().cmp(&b.to_uppercase())
+		} else {
+			b.to_uppercase().cmp(&a.to_uppercase())
+		}
 	}
 
 	pub(super) fn add_files_to_list(&self, file_paths: &[impl AsRef<str>]) -> w::AnyResult<()> {
