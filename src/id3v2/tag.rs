@@ -88,8 +88,10 @@ impl Tag {
 
 		// Two known magic byte sequences that identify the beginning of the MP3.
 		// https://stackoverflow.com/a/7302482/6923555
+		// https://en.wikipedia.org/wiki/List_of_file_signatures
 		// https://github.com/sindresorhus/file-type/issues/75#issuecomment-320650344
-		const MP3_MAGIC: [[u8; 2]; 2] = [[0xff, 0xfb], [0xff, 0xfa]];
+		const MP3_MAGIC: [[u8; 2]; 5] =
+			[[0xff, 0xfb], [0xff, 0xfb], [0xff, 0xf2], [0xff, 0xfa], [0xff, 0xf3]];
 
 		loop {
 			if MP3_MAGIC.iter().any(|magic| magic == &src[0..2]) {
