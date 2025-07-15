@@ -4,7 +4,7 @@ use super::{DlgMain, LIST_COLS};
 use crate::{id3v2, msgbox};
 
 impl DlgMain {
-	pub(super) fn update_num_files(&self, tot_files: u32) -> w::SysResult<()> {
+	pub(super) fn update_num_files_in_titlebar(&self, tot_files: u32) -> w::SysResult<()> {
 		let num_selec = self.lst_files.items().selected_count();
 		self.wnd
 			.hwnd()
@@ -54,30 +54,30 @@ impl DlgMain {
 	pub(super) fn add_files_to_list(&self, file_paths: &[impl AsRef<str>]) -> w::AnyResult<()> {
 		self.lst_files.set_redraw(false);
 
+		let mut all_files = Vec::with_capacity(file_paths.len()); // arbitrary
 		file_paths
 			.iter()
 			.map(|file_path| file_path.as_ref())
-			.try_for_each(|file_path| -> w::AnyResult<()> {
+			.try_for_each(|file_path| -> w::AnyResult<_> {
 				if w::path::is_directory(file_path) {
-					w::path::dir_walk(file_path).try_for_each(|inner_path| -> w::AnyResult<()> {
-						let inner_path = inner_path?;
-						if w::path::has_extension(&inner_path, &["mp3"]) {
-							self.add_one_file_to_list(&inner_path)?;
-						}
-						Ok(())
-					})
-				} else if w::path::has_extension(file_path, &["mp3"]) {
-					self.add_one_file_to_list(file_path)
+					let inner_files =
+						w::path::dir_walk(file_path).collect::<w::SysResult<Vec<_>>>()?;
+					all_files.extend_from_slice(&inner_files); // add all files within the directory
 				} else {
-					// Should never happen; protected by UI.
-					Err(format!("Not an MP3 file: {}", file_path).into())
+					all_files.push(file_path.to_owned());
 				}
+				Ok(())
 			})?;
+
+		all_files
+			.iter()
+			.filter(|file_path| w::path::has_extension(file_path, &["mp3"])) // simply ignore non-MP3
+			.try_for_each(|mp3_path| self.add_one_file_to_list(&mp3_path))?;
 
 		self.sort_list()?;
 		self.lst_files.set_redraw(true);
 		self.lst_files.cols().get(0).set_width_to_fill()?;
-		self.update_num_files(self.lst_files.items().count())?;
+		self.update_num_files_in_titlebar(self.lst_files.items().count())?;
 		Ok(())
 	}
 

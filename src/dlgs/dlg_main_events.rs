@@ -8,7 +8,7 @@ impl DlgMain {
 		let self2 = self.clone();
 		self.wnd.on().wm_init_dialog(move |_| {
 			let lv = &self2.lst_files;
-			self2.update_num_files(lv.items().count())?;
+			self2.update_num_files_in_titlebar(lv.items().count())?;
 
 			// Setup the files listview.
 			lv.image_list(co::LVSIL::SMALL)?
@@ -251,7 +251,7 @@ impl DlgMain {
 
 		let self2 = self.clone();
 		self.lst_files.on().lvn_item_changed(move |_| {
-			self2.update_num_files(self2.lst_files.items().count())?;
+			self2.update_num_files_in_titlebar(self2.lst_files.items().count())?;
 			Ok(())
 		});
 
@@ -282,7 +282,7 @@ impl DlgMain {
 		let self2 = self.clone();
 		self.lst_files.on().lvn_delete_item(move |_| {
 			// Notification is sent before the list is updated.
-			self2.update_num_files(self2.lst_files.items().count() - 1)?;
+			self2.update_num_files_in_titlebar(self2.lst_files.items().count() - 1)?;
 			Ok(())
 		});
 

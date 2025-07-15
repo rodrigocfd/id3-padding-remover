@@ -6,7 +6,7 @@ use crate::{id3v2, msgbox};
 impl WndPicture {
 	pub(super) fn load_picture(&self, sel_tags: &[id3v2::Tag]) -> w::AnyResult<()> {
 		if !id3v2::equal_frame_across_all_tags("APIC", sel_tags) {
-			return Ok(());
+			return Ok(()); // different picture among MP3s
 		}
 
 		let pic_body = match &sel_tags[0].frame_by_name4("APIC").unwrap().body() {
@@ -44,7 +44,6 @@ impl WndPicture {
 
 		*self.pic.try_borrow_mut()? = Some(pic_obj);
 		self.wnd.hwnd().InvalidateRect(None, true)?;
-
 		Ok(())
 	}
 
