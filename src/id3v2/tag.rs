@@ -86,7 +86,7 @@ impl Tag {
 		let mut frames = Vec::with_capacity(10); // arbitrary
 		let mut offset = 10usize; // start at 10 because src already skipped 10-byte header
 
-		// Two known magic byte sequences that identify the beginning of the MP3.
+		// Known magic byte sequences that identify the beginning of a MP3.
 		// https://stackoverflow.com/a/7302482/6923555
 		// https://en.wikipedia.org/wiki/List_of_file_signatures
 		// https://github.com/sindresorhus/file-type/issues/75#issuecomment-320650344
@@ -130,15 +130,15 @@ impl Tag {
 	/// Serializes the tag into a `Vec<u8>`.
 	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
-		let serialized_frames = self
+		let serialized_frames: Vec<u8> = self
 			.frames
 			.iter()
 			.flat_map(|frame| frame.serialize())
-			.collect::<Vec<_>>();
+			.collect();
 		let synch_safe_data_size = synch_safe::encode(serialized_frames.len() as _); // won't count 10-byte header
 
-		str_engine::to_ascii("ID3")
-			.into_iter() // magic bytes
+		str_engine::to_ascii("ID3") // ID3v2 magic bytes
+			.into_iter()
 			.chain([0x03, 0x00].into_iter()) // tag version 2.3.0
 			.chain([0x00].into_iter()) // flags
 			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header

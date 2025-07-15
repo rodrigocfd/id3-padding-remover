@@ -40,15 +40,15 @@ pub fn parse_iso_88591(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src = &src[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src.is_empty() {
-		return Ok(Vec::default()); // no strings
+		return Ok(Vec::new()); // no strings
 	}
 
-	let mut buf16 = Vec::<u16>::default();
+	let mut buf16 = Vec::<u16>::new();
 	let texts = src
 		.split(|b| *b == 0x00)
 		.map(|part| {
 			if part.is_empty() {
-				Ok(String::default()) // empty strings are also added
+				Ok(String::new()) // empty strings are also added
 			} else {
 				buf16.clear();
 				buf16.extend(
@@ -85,10 +85,10 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 		src16 = &src16[..=idx]; // right-trim zeros to avoid an extra empty string
 	}
 	if src16.is_empty() {
-		return Ok(Vec::default()); // no strings
+		return Ok(Vec::new()); // no strings
 	}
 
-	let mut buf16 = Vec::<u16>::default();
+	let mut buf16 = Vec::<u16>::new();
 	let texts = src16
 		.split(|ch| *ch == 0x0000)
 		.map(|mut part| {
@@ -101,7 +101,7 @@ pub fn parse_unicode(src: &[u8]) -> w::AnyResult<Vec<String>> {
 			}
 
 			if part.is_empty() {
-				Ok(String::default()) // empty strings are also added
+				Ok(String::new()) // empty strings are also added
 			} else {
 				buf16.clear();
 				buf16.extend(

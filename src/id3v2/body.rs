@@ -139,7 +139,7 @@ impl Body {
 		let lang3 = str_engine::from_ascii(&src[..3]);
 		src = &src[3..]; // skip lang chars
 
-		let mut descr = String::default();
+		let mut descr = String::new();
 		let text;
 
 		let mut texts = str_engine::parse_any(src)?;
@@ -173,7 +173,7 @@ impl Body {
 		let pic_type = PicType::try_from(src[0])?;
 		src = &src[1..]; // skip picture type
 
-		let mut descr = String::default();
+		let mut descr = String::new();
 		if enc_byte == 0x00 {
 			// Texts are ISO-8859-1.
 			let mut descr_parts = src.splitn(2, |b| *b == 0x00);
