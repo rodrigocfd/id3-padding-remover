@@ -62,7 +62,7 @@ impl DlgEdit {
 				let items = self2.lst_frames.items();
 				let focus_idx = items.focused().map(|item| item.index());
 
-				let new_sel_indexes = items
+				let new_sel_indexes = items // indexes of items that will appear as selected after the move
 					.iter_selected()
 					.map(|sel_item| {
 						let idx = sel_item.index() as usize;
@@ -79,7 +79,7 @@ impl DlgEdit {
 				new_sel_indexes
 					.iter()
 					.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
-						items.get(*new_sel_idx as _).select(true)?;
+						items.get(*new_sel_idx as _).select(true)?; // re-select the moved items
 						Ok(())
 					})?;
 
@@ -94,7 +94,7 @@ impl DlgEdit {
 				let items = self2.lst_frames.items();
 				let focus_idx = items.focused().map(|item| item.index());
 
-				let new_sel_indexes = items
+				let new_sel_indexes = items // indexes of items that will appear as selected after the move
 					.iter_selected()
 					.rev()
 					.map(|sel_item| {
@@ -112,7 +112,7 @@ impl DlgEdit {
 				new_sel_indexes
 					.iter()
 					.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
-						items.get(*new_sel_idx as _).select(true)?;
+						items.get(*new_sel_idx as _).select(true)?; // re-select the moved items
 						Ok(())
 					})?;
 

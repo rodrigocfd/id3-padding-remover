@@ -40,34 +40,22 @@ impl Tag {
 	/// Parses the tag from a binary blob.
 	#[must_use]
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (_, mp3_offset) = Self::parse_header(src)?; // discard declared size
-		if mp3_offset == 0 {
-			Ok(Self::default()) // MP3 file has no tag
-		} else {
-			let (frames, padding) = Self::parse_frames(&src[10..mp3_offset])?;
-			Ok(Self { mp3_offset, padding, frames })
+		match Self::parse_header(src)? {
+			Some(_declared_size) => {
+				let (frames, mp3_offset, padding) = Self::parse_frames(&src[10..])?;
+				Ok(Self { mp3_offset, padding, frames })
+			},
+			None => Ok(Self::default()), // MP3 file has no ID3v2 tag
 		}
 	}
 
-	/// Returns declared size and MP3 offset.
+	/// If an ID3v2 tag is present, return its declared size, including the
+	/// 10-byte header.
 	#[must_use]
-	fn parse_header(mut src: &[u8]) -> w::AnyResult<(u32, usize)> {
-		// Find MP3 offset.
-		let mp3_offset = match src
-			.windows(2)
-			.position(|bb| bb == &[0xff, 0xfb]) // https://stackoverflow.com/a/7302482/6923555
-		{
-			Some(idx) => match idx {
-				0 => return Ok((0, 0)), // MP3 file has no tag
-				idx => idx,
-			},
-			None => return Err(format!("No MP3 signature found.").into()),
-		};
-		src = &src[0..mp3_offset]; // limit our range
-
+	fn parse_header(src: &[u8]) -> w::AnyResult<Option<u32>> {
 		// Check ID3 magic bytes.
 		if &src[..3] != &str_engine::to_ascii("ID3") {
-			return Ok((0, mp3_offset)); // MP3 file has no tag
+			return Ok(None); // MP3 file has no tag
 		}
 
 		// Validate tag version 2.3.0.
@@ -89,28 +77,35 @@ impl Tag {
 
 		// Read declared tag size; also count 10-byte tag header.
 		let declared_size = synch_safe::decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10;
-
-		Ok((declared_size, mp3_offset))
+		Ok(Some(declared_size))
 	}
 
-	/// Returns the frames and the padding.
+	/// Returns the frames, MP3 offset and padding size.
 	#[must_use]
-	fn parse_frames(mut src: &[u8]) -> w::AnyResult<(Vec<Frame>, usize)> {
+	fn parse_frames(mut src: &[u8]) -> w::AnyResult<(Vec<Frame>, usize, usize)> {
 		let mut frames = Vec::with_capacity(10); // arbitrary
-		let mut padding = 0usize;
+		let mut offset = 10usize; // start at 10 because src already skipped 10-byte header
+
+		// Two known magic byte sequences that identify the beginning of the MP3.
+		// https://stackoverflow.com/a/7302482/6923555
+		// https://github.com/sindresorhus/file-type/issues/75#issuecomment-320650344
+		const MP3_MAGIC: [[u8; 2]; 2] = [[0xff, 0xfb], [0xff, 0xfa]];
 
 		loop {
-			if src.is_empty() {
-				break; // end of tag, no padding found
-			} else if src.len() < 10 {
-				// We cant' have a frame with less than 10 bytes, which is the header size.
-				padding = src.len();
-				break;
-			} else if src[0..4].iter().all(|b| *b == 0x00) {
-				// The first 4 bytes should contain the 4-char frame name.
-				// If they're all zero, it means we entered a padding region after all frames.
-				padding = src.len();
-				break;
+			if MP3_MAGIC.iter().any(|magic| magic == &src[0..2]) {
+				// We found the beginning of the MP3 file, no padding.
+				return Ok((frames, offset, 0));
+			} else if src[0] == 0x0000 {
+				// We entered a padding region after all frames.
+				match src
+					.windows(2)
+					.position(|by| MP3_MAGIC.iter().any(|magic| magic == by))
+				{
+					Some(idx_mp3_start) => {
+						return Ok((frames, offset + idx_mp3_start, idx_mp3_start));
+					},
+					None => return Err("MP3 offset not found.".into()),
+				}
 			}
 
 			let (new_frame, declared_size) = Frame::parse(src)?;
@@ -124,11 +119,10 @@ impl Tag {
 				.into());
 			}
 
+			offset += declared_size;
 			src = &src[declared_size..];
 			frames.push(new_frame); // add the frame to our collection
 		}
-
-		Ok((frames, padding))
 	}
 
 	/// Serializes the tag into a `Vec<u8>`.
@@ -157,22 +151,22 @@ impl Tag {
 	pub fn save_to_file(&mut self, mp3_path: &str) -> w::AnyResult<()> {
 		let fout = w::File::open(mp3_path, w::FileAccess::ExistingRW)?;
 		let current_contents = fout.read_all()?; // read the whole MP3 into a buffer
-		let (_, mp3_offset) = Self::parse_header(&current_contents)?;
+		let old_tag = Self::parse(&current_contents)?; // so we can extract MP3 offset
 
 		if self.frames.is_empty() {
 			fout.erase_and_write(
-				&current_contents[mp3_offset..], // no tag will be written
+				&current_contents[old_tag.mp3_offset..], // no tag will be written
 			)?;
 		} else {
 			fout.erase_and_write(
 				&self
 					.serialize()
 					.into_iter()
-					.chain(current_contents[mp3_offset..].iter().map(|b| *b)) // MP3 data
+					.chain(current_contents[old_tag.mp3_offset..].iter().map(|b| *b)) // MP3 data
 					.collect::<Vec<_>>(),
 			)?;
 		}
-		self.padding = 0;
+		self.padding = 0; // because we write no padding
 		Ok(())
 	}
 
