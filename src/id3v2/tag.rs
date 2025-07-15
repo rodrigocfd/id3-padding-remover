@@ -217,19 +217,16 @@ impl Tag {
 	/// Any ReplayGain frame present?
 	#[must_use]
 	pub fn has_replay_gain(&self) -> bool {
-		self.frames
-			.iter()
-			.find(|frame| {
-				if frame.name4() == "TXXX" {
-					if let Body::UserText(ut) = frame.body() {
-						if ut.descr.starts_with("replaygain") {
-							return true;
-						}
-					}
-				}
+		self.frames.iter().any(|frame| {
+			if frame.name4() == "TXXX"
+				&& let Body::UserText(ut) = frame.body()
+				&& ut.descr.starts_with("replaygain")
+			{
+				true
+			} else {
 				false
-			})
-			.is_some()
+			}
+		})
 	}
 }
 
