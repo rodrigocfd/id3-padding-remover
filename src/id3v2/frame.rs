@@ -11,16 +11,6 @@ pub struct Frame {
 	body: Body,
 }
 
-impl Default for Frame {
-	fn default() -> Self {
-		Self {
-			name4: "AAAA".to_owned(),
-			flags: (0, 0),
-			body: Body::Text("".to_owned()),
-		}
-	}
-}
-
 impl std::fmt::Display for Frame {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 		write!(f, "{}: {}", self.name4, self.body)
@@ -28,6 +18,15 @@ impl std::fmt::Display for Frame {
 }
 
 impl Frame {
+	#[must_use]
+	pub fn new_empty() -> Self {
+		Self {
+			name4: "AAAA".to_owned(),
+			flags: (0, 0),
+			body: Body::Text("".to_owned()),
+		}
+	}
+
 	#[must_use]
 	pub(in crate::id3v2) fn new_from_editable_string(name4: &str, val: &str) -> w::AnyResult<Self> {
 		Ok(Self {

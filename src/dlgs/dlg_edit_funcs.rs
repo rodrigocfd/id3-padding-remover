@@ -41,7 +41,7 @@ impl DlgEdit {
 			let text = format!("{} files...", sel_tags.len());
 			self.lst_frames
 				.items()
-				.add(&["", &text], None, id3v2::Frame::default())?;
+				.add(&["", &text], None, id3v2::Frame::new_empty())?;
 			self.lst_frames.hwnd().EnableWindow(false);
 		}
 		Ok(())
