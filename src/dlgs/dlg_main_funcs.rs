@@ -120,7 +120,7 @@ impl DlgMain {
 				};
 				(idx, text)
 			})
-			.try_for_each(|(idx, cell_text)| -> w::SysResult<()> {
+			.try_for_each(|(idx, cell_text)| -> w::SysResult<_> {
 				item.set_text(idx as _, &cell_text)?;
 				Ok(())
 			})?;
@@ -133,7 +133,7 @@ impl DlgMain {
 			.lst_files
 			.items()
 			.iter_selected()
-			.try_for_each(|sel_item| -> w::AnyResult<()> {
+			.try_for_each(|sel_item| -> w::AnyResult<_> {
 				let new_name = {
 					let rc_tag = sel_item.data()?; // retrieve data saved in the listview item
 					let tag = rc_tag.try_borrow()?;
@@ -192,8 +192,10 @@ impl DlgMain {
 		);
 
 		if msgbox::ask(&self.wnd, window_title, None, &content, "&Remove")? {
-			self.lst_files.items().iter_selected().try_for_each(
-				|sel_item| -> w::AnyResult<()> {
+			self.lst_files
+				.items()
+				.iter_selected()
+				.try_for_each(|sel_item| -> w::AnyResult<_> {
 					{
 						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
 						let mut tag = rc_tag.try_borrow_mut()?;
@@ -205,8 +207,7 @@ impl DlgMain {
 					}
 					Self::render_tag(sel_item)?;
 					Ok(())
-				},
-			)?;
+				})?;
 		}
 		Ok(())
 	}

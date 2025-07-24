@@ -78,7 +78,7 @@ impl DlgEdit {
 				items.select_all(false)?;
 				new_sel_indexes
 					.iter()
-					.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
+					.try_for_each(|new_sel_idx| -> w::AnyResult<_> {
 						items.get(*new_sel_idx as _).select(true)?; // re-select the moved items
 						Ok(())
 					})?;
@@ -111,7 +111,7 @@ impl DlgEdit {
 				items.select_all(false)?;
 				new_sel_indexes
 					.iter()
-					.try_for_each(|new_sel_idx| -> w::AnyResult<()> {
+					.try_for_each(|new_sel_idx| -> w::AnyResult<_> {
 						items.get(*new_sel_idx as _).select(true)?; // re-select the moved items
 						Ok(())
 					})?;
@@ -140,7 +140,7 @@ impl DlgEdit {
 						.items()
 						.iter_selected()
 						.rev()
-						.try_for_each(|sel_item| -> w::AnyResult<()> {
+						.try_for_each(|sel_item| -> w::AnyResult<_> {
 							// Remove the frame by index directly from tag.
 							self2.sel_tags.try_borrow_mut()?[0] // assume we have only 1 MP3 loaded
 								.frames_mut()
@@ -202,7 +202,7 @@ impl DlgEdit {
 			self2
 				.inputs
 				.iter()
-				.try_for_each(|input| -> w::AnyResult<()> {
+				.try_for_each(|input| -> w::AnyResult<_> {
 					let text = input.txt.hwnd().GetWindowText()?;
 					if !text.is_empty() {
 						input.chk.set_check(true);
@@ -228,7 +228,7 @@ impl DlgEdit {
 					.lst_frames
 					.items()
 					.iter()
-					.try_for_each(|item| -> w::AnyResult<()> {
+					.try_for_each(|item| -> w::AnyResult<_> {
 						let rc_frame = item.data()?;
 						let cloned_frame = rc_frame.try_borrow()?.clone();
 						sel_tags[0].frames_mut().push(cloned_frame); // add the frame from the listview
@@ -241,7 +241,7 @@ impl DlgEdit {
 				.inputs
 				.iter()
 				.filter(|input| input.chk.is_checked())
-				.try_for_each(|input| -> w::AnyResult<()> {
+				.try_for_each(|input| -> w::AnyResult<_> {
 					let text = input.txt.hwnd().GetWindowText()?;
 					sel_tags
 						.iter_mut()

@@ -29,7 +29,7 @@ impl DlgEdit {
 			sel_tags[0]
 				.frames()
 				.iter()
-				.try_for_each(|frame| -> w::AnyResult<()> {
+				.try_for_each(|frame| -> w::AnyResult<_> {
 					let text = frame.body().to_string(); // textual representation of the frame data
 					self.lst_frames
 						.items()

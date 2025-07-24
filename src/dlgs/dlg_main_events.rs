@@ -17,10 +17,12 @@ impl DlgMain {
 			lv.context_menu()
 				.unwrap()
 				.SetMenuDefaultItem(w::IdPos::Id(ids::MNU_FILE_EDIT))?;
-			LIST_COLS.iter().try_for_each(|(title, cx, _)| {
-				lv.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
-				w::SysResult::Ok(())
-			})?;
+			LIST_COLS
+				.iter()
+				.try_for_each(|(title, cx, _)| -> w::SysResult<_> {
+					lv.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
+					Ok(())
+				})?;
 
 			// Set files listview columns justification.
 			let hcols = lv.header().unwrap().items();
@@ -133,7 +135,7 @@ impl DlgMain {
 						.items()
 						.iter_selected() // the items order should be the same
 						.zip(edited_tags.into_iter())
-						.try_for_each(|(sel_item, mut edited_tag)| -> w::AnyResult<()> {
+						.try_for_each(|(sel_item, mut edited_tag)| -> w::AnyResult<_> {
 							edited_tag.save_to_file(&sel_item.text(0))?;
 							*sel_item.data()?.try_borrow_mut()? = edited_tag; // replace the tag currently stored in the item
 							Self::render_tag(sel_item)?; // update the listview with the new values
@@ -170,7 +172,7 @@ impl DlgMain {
 					"&Rewrite",
 				)? {
 					self2.lst_files.items().iter_selected().try_for_each(
-						|sel_item| -> w::AnyResult<()> {
+						|sel_item| -> w::AnyResult<_> {
 							{
 								let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
 								let mut tag = rc_tag.try_borrow_mut()?;
@@ -193,7 +195,7 @@ impl DlgMain {
 					.items()
 					.iter_selected()
 					.enumerate()
-					.try_for_each(|(idx, sel_item)| -> w::AnyResult<()> {
+					.try_for_each(|(idx, sel_item)| -> w::AnyResult<_> {
 						{
 							let rc_tag = sel_item.data()?;
 							let mut tag = rc_tag.try_borrow_mut()?;
