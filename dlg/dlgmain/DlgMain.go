@@ -7,6 +7,7 @@ import (
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/win/co"
 )
 
 // Main application dialog.
@@ -17,6 +18,9 @@ type DlgMain struct {
 	sortCol    int
 	sortAsc    bool
 	dropTarget *win.IDropTarget
+
+	hCursorWait win.HCURSOR
+	isWaiting   bool // Set by setWaitState(), read at WM_SETCURSOR.
 }
 
 // Constructor; blocks until the window is closed.
@@ -35,7 +39,12 @@ func RunNew() int {
 	defer rel.Release()
 	dropTarget := win.NewIDropTargetImpl(rel)
 
-	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, dropTarget}
+	hCursorWait, _ := win.HINSTANCE(0).LoadCursor(win.CursorResIdc(co.IDC_WAIT))
+	isWaiting := false
+
+	me := &DlgMain{wnd, lstFiles,
+		sortCol, sortAsc, dropTarget,
+		hCursorWait, isWaiting}
 	me.events()
 	return me.wnd.RunAsMain()
 }

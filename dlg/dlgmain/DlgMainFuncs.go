@@ -15,69 +15,88 @@ import (
 	"github.com/rodrigocfd/windigo/win/wstr"
 )
 
-func (me *DlgMain) withWaitCursor(fun func()) {
-	me.wnd.Hwnd().SetWindowText("Loading...")
-	me.wnd.Hwnd().EnableWindow(false)
-	hCursorWait, _ := win.HINSTANCE(0).LoadCursor(win.CursorResIdc(co.IDC_WAIT))
-	hCursorOrig, _ := hCursorWait.SetCursor()
-
-	fun()
-
-	hCursorOrig.SetCursor()
-	me.wnd.Hwnd().EnableWindow(true)
-	me.updateTitlebarCount()
+func (me *DlgMain) setWaitState(set bool) {
+	if set {
+		me.wnd.Hwnd().SetWindowText("Loading...")
+		me.lstFiles.Hwnd().EnableWindow(false)
+		me.isWaiting = true
+	} else {
+		me.updateTitlebarCount()
+		me.lstFiles.Hwnd().EnableWindow(true)
+		me.isWaiting = false
+		cPos, _ := win.GetCursorPos()
+		win.SetCursorPos(int(cPos.X), int(cPos.Y)) // force cursor redraw
+	}
 }
 
-func (me *DlgMain) addMp3sToList(incomingPaths []string) {
-	allPaths := make([]string, 0, len(incomingPaths)) // grab all files within all subfolders
-	for _, incomingPath := range incomingPaths {
-		if win.PathIsFolder(incomingPath) {
-			nested, _ := win.EnumFilesDeep(incomingPath)
-			allPaths = append(allPaths, nested...)
-		} else {
-			allPaths = append(allPaths, incomingPath)
-		}
-	}
+func (me *DlgMain) updateTitlebarCount() {
+	nFiles := me.lstFiles.Items.Count()
+	nSel := me.lstFiles.Items.SelectedCount()
+	me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)", nSel, nFiles))
+}
 
-	nonMp3Count := 0 // count how many non-MP3 we have
-	for _, path := range allPaths {
-		if !win.PathHasExtension(path, "mp3") {
-			nonMp3Count++
-		}
-	}
-	if nonMp3Count == len(allPaths) { // zero MP3s found?
-		me.wnd.Hwnd().MessageBox(
-			fmt.Sprintf("No MP3 found amongst %d files.", len(allPaths)),
-			"No MP3 files", co.MB_ICONERROR)
-		return // nothing do to
-	}
-
-	tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // cache all the MP3 tags
-	for _, path := range allPaths {
-		if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
-			tag, err := id3v2.LoadTagFromFile(path)
-			if err != nil {
-				me.wnd.Hwnd().MessageBox(
-					fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
-					"Error", co.MB_ICONERROR)
-				return // on error, no tag is loaded
+func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
+	me.setWaitState(true)
+	go func() {
+		allPaths := make([]string, 0, len(incomingPaths)) // grab all files within all subfolders
+		for _, incomingPath := range incomingPaths {
+			if win.PathIsFolder(incomingPath) {
+				nested, _ := win.EnumFilesDeep(incomingPath)
+				allPaths = append(allPaths, nested...)
+			} else {
+				allPaths = append(allPaths, incomingPath)
 			}
-			tags = append(tags, tag)
 		}
-	}
 
-	for _, tag := range tags {
-		var item ui.ListViewItem
-		if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok { // file already loaded?
-			item = existingItem // current tag object will be replaced
-		} else {
-			item = me.lstFiles.Items.AddWithIcon(0, tag.Path()) // insert new item
+		nonMp3Count := 0 // count how many non-MP3 we have
+		for _, path := range allPaths {
+			if !win.PathHasExtension(path, "mp3") {
+				nonMp3Count++
+			}
 		}
-		item.SetData(tag) // store tag in item
-		me.renderMp3InList(item)
-	}
-	me.sortList()
-	me.lstFiles.Cols.Get(0).SetWidthToFill()
+		if nonMp3Count == len(allPaths) { // zero MP3s found?
+			me.wnd.UiThread(func() {
+				me.wnd.Hwnd().MessageBox(
+					fmt.Sprintf("No MP3 found amongst %d files.", len(allPaths)),
+					"No MP3 files", co.MB_ICONERROR)
+				me.setWaitState(false)
+			})
+			return // nothing do to
+		}
+
+		tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // load and cache all the MP3 tags
+		for _, path := range allPaths {
+			if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
+				tag, err := id3v2.LoadTagFromFile(path)
+				if err != nil {
+					me.wnd.UiThread(func() {
+						me.wnd.Hwnd().MessageBox(
+							fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
+							"Error", co.MB_ICONERROR)
+						me.setWaitState(false)
+					})
+					return // stop on first error, no tag is loaded
+				}
+				tags = append(tags, tag)
+			}
+		}
+
+		me.wnd.UiThread(func() { // finally fill the listview with the tags
+			for _, tag := range tags {
+				var item ui.ListViewItem
+				if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok { // file already loaded?
+					item = existingItem // current tag object will be replaced
+				} else {
+					item = me.lstFiles.Items.AddWithIcon(0, tag.Path()) // insert new item
+				}
+				item.SetData(tag) // store tag in item
+				me.renderMp3InList(item)
+			}
+			me.sortList()
+			me.lstFiles.Cols.Get(0).SetWidthToFill()
+			me.setWaitState(false)
+		})
+	}()
 }
 
 func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
@@ -122,12 +141,6 @@ func (me *DlgMain) renderMp3TextCell(item ui.ListViewItem, colIndex int, tag *id
 	} else {
 		item.SetText(colIndex, "") // clear
 	}
-}
-
-func (me *DlgMain) updateTitlebarCount() {
-	nFiles := me.lstFiles.Items.Count()
-	nSel := me.lstFiles.Items.SelectedCount()
-	me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)", nSel, nFiles))
 }
 
 func (me *DlgMain) sortList() {
@@ -199,31 +212,42 @@ func (me *DlgMain) editSelected() bool {
 	return false
 }
 
-func (me *DlgMain) saveSelected() {
-	type SaveFail struct {
+func (me *DlgMain) saveSelectedAsync() {
+	type SaveFail struct { // a register of one saving error
 		file string
 		err  error
 	}
 	saveFails := make([]SaveFail, 0)
+	selTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
+		return item.Data().(*id3v2.Tag)
+	})
+	me.setWaitState(true)
 
-	for _, item := range me.lstFiles.Items.Selected() {
-		pTag := item.Data().(*id3v2.Tag)
-		if err := pTag.SaveToFile(); err != nil {
-			saveFails = append(saveFails, SaveFail{pTag.Path(), err})
+	go func() {
+		for _, pTag := range selTags {
+			if err := pTag.SaveToFile(); err != nil {
+				saveFails = append(saveFails, SaveFail{pTag.Path(), err})
+			}
 		}
-		me.renderMp3InList(item)
-	}
-	me.sortList()
 
-	if len(saveFails) > 0 {
-		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(saveFails)))
-		for _, fail := range saveFails {
-			sb.WriteString("\n\n")
-			sb.WriteString(fail.file)
-			sb.WriteString("\n")
-			sb.WriteString(fail.err.Error())
-		}
-		ui.MsgError(me.wnd, "Error saving file(s)", "", sb.String())
-	}
+		me.wnd.UiThread(func() {
+			for _, item := range me.lstFiles.Items.Selected() {
+				me.renderMp3InList(item) // re-render, all paddings have been removed
+			}
+			me.sortList()
+
+			if len(saveFails) > 0 { // any errors?
+				var sb strings.Builder
+				sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(saveFails)))
+				for _, fail := range saveFails {
+					sb.WriteString("\n\n")
+					sb.WriteString(fail.file)
+					sb.WriteString("\n")
+					sb.WriteString(fail.err.Error())
+				}
+				ui.MsgError(me.wnd, "Error saving file(s)", "", sb.String())
+			}
+			me.setWaitState(false)
+		})
+	}()
 }

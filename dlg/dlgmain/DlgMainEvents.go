@@ -47,6 +47,14 @@ func (me *DlgMain) events() {
 		}
 	})
 
+	me.wnd.On().WmSetCursor(func(_ ui.WmSetCursor) bool {
+		if me.isWaiting {
+			me.hCursorWait.SetCursor()
+			return true
+		}
+		return false
+	})
+
 	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
 		if firstId == ids.MNU_FILE_OPEN {
@@ -85,18 +93,13 @@ func (me *DlgMain) events() {
 		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
 			arr, _ := fod.GetResults(rel)
 			paths, _ := arr.EnumDisplayNames(co.SIGDN_FILESYSPATH)
-
-			me.withWaitCursor(func() {
-				me.addMp3sToList(paths)
-			})
+			me.addMp3sToListAsync(paths)
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_EDIT, func() {
 		if me.editSelected() {
-			me.withWaitCursor(func() {
-				me.saveSelected()
-			})
+			me.saveSelectedAsync()
 		}
 	})
 
@@ -109,25 +112,19 @@ func (me *DlgMain) events() {
 		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
 			me.lstFiles.Items.SelectedCount())
 		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") == co.ID_OK {
-			me.withWaitCursor(func() {
-				me.saveSelected()
-			})
+			me.saveSelectedAsync()
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPIC, func() {
 		if me.removePicRg(false) {
-			me.withWaitCursor(func() {
-				me.saveSelected()
-			})
+			me.saveSelectedAsync()
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPICRG, func() {
 		if me.removePicRg(true) {
-			me.withWaitCursor(func() {
-				me.saveSelected()
-			})
+			me.saveSelectedAsync()
 		}
 	})
 
@@ -159,9 +156,7 @@ func (me *DlgMain) events() {
 
 	me.lstFiles.On().NmDblClk(func(_ *win.NMITEMACTIVATE) {
 		if me.editSelected() {
-			me.withWaitCursor(func() {
-				me.saveSelected()
-			})
+			me.saveSelectedAsync()
 		}
 	})
 
@@ -172,9 +167,7 @@ func (me *DlgMain) events() {
 			me.updateTitlebarCount()
 		case co.VK_RETURN: // Enter key
 			if me.editSelected() {
-				me.withWaitCursor(func() {
-					me.saveSelected()
-				})
+				me.saveSelectedAsync()
 			}
 		}
 	})
@@ -224,9 +217,7 @@ func (me *DlgMain) events() {
 
 				hDrop := win.HDROP(hMem) // DragFinish() crashes ReleaseStgMedium(), don't call
 				paths, _ := hDrop.DragQueryFile()
-				me.withWaitCursor(func() {
-					me.addMp3sToList(paths)
-				})
+				me.addMp3sToListAsync(paths)
 			}
 			return co.HRESULT_S_OK
 		},
