@@ -213,7 +213,8 @@ func (me *DlgMain) events() {
 
 			stg, err := dataObj.GetData(&fetc)
 			if err != nil {
-				panic(err)
+				ui.MsgError(me.wnd, "Drop error", "", err.Error())
+				return co.HRESULT_S_OK
 			}
 			defer win.ReleaseStgMedium(&stg)
 

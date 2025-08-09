@@ -40,6 +40,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	me.picNumBytes = uint(len(body.Bin))
 }
 
+// Returns the picture COM object and its size in bytes.
 func (me *WndPicture) PicOle() (*win.IPicture, uint) {
 	return me.picOle, me.picNumBytes
 }

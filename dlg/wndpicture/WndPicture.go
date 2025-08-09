@@ -11,9 +11,9 @@ import (
 type WndPicture struct {
 	wnd *ui.Control
 
-	rel         *win.OleReleaser
-	picOle      *win.IPicture
-	picNumBytes uint
+	rel         *win.OleReleaser // Owned by the parent window.
+	picOle      *win.IPicture    // Owned & managed by us.
+	picNumBytes uint             // Loaded picture size in bytes; parent displays this info.
 }
 
 // Constructor.

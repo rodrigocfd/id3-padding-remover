@@ -80,7 +80,7 @@ func (me *DlgEdit) fillPicInfo() {
 
 	hdcScreen, _ := win.HWND(0).GetDC()
 	defer win.HWND(0).ReleaseDC(hdcScreen)
-	szPic, _ := picOle.SizePixels(hdcScreen)
+	szPic, _ := picOle.SizePixels(hdcScreen) // picture resolution in pixels
 	me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%dx%d px, %s",
 		szPic.Cx, szPic.Cy, wstr.FmtBytes(picNumBytes)))
 }
