@@ -17,45 +17,42 @@ import (
 
 // Each MP3 file has a single ID3v2 tag.
 type Tag struct {
-	path      string
 	mp3Offset uint
 	padding   uint
 	frames    []*Frame
 }
 
-func (me *Tag) Path() string     { return me.path }
 func (me *Tag) Mp3Offset() uint  { return me.mp3Offset }
 func (me *Tag) Padding() uint    { return me.padding }
 func (me *Tag) Frames() []*Frame { return me.frames }
 
 // Constructor.
-func LoadTagFromFile(mp3Path string) (*Tag, error) {
+func TagFromFile(mp3Path string) (*Tag, error) {
 	fin, err := win.FileMapOpen(mp3Path, co.FOPEN_READ_EXISTING)
 	if err != nil {
 		return nil, err
 	}
 	defer fin.Close()
 
-	me, err := LoadTagFromBin(fin.HotSlice())
+	me, err := TagFromBin(fin.HotSlice())
 	if err != nil {
 		return nil, err
 	}
-	me.path = mp3Path
 	return me, nil
 }
 
 // Constructor.
-func LoadTagFromBin(src []byte) (*Tag, error) {
-	me := &Tag{} // note: path not set here
+func TagFromBin(src []byte) (*Tag, error) {
+	me := &Tag{}
 
-	declaredSize, err := me.tagParseHeader(src)
+	declaredSize, err := tagParseHeader(src)
 	if err != nil {
 		return nil, err
 	} else if declaredSize == 0 {
 		return me, nil // MP3 has no ID3v2 tag
 	}
 
-	me.mp3Offset, err = me.parseFrames(src[10:]) // skip 10-byte tag header
+	me.frames, me.mp3Offset, me.padding, err = tagParseFrames(src[10:]) // skip 10-byte tag header
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +60,9 @@ func LoadTagFromBin(src []byte) (*Tag, error) {
 	return me, nil
 }
 
-func (me *Tag) tagParseHeader(src []byte) (declaredSize uint, err error) {
+// If an ID3v2 tag is present, returns its declared size, including the 10-byte
+// header. Otherwise, returns zero.
+func tagParseHeader(src []byte) (declaredSize uint, err error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return 0, nil // MP3 file has no tag
@@ -89,41 +88,50 @@ func (me *Tag) tagParseHeader(src []byte) (declaredSize uint, err error) {
 	return uint(nDeclaredSize), nil
 }
 
-func (me *Tag) parseFrames(src []byte) (mp3Offset uint, err error) {
-	// How many bytes we forwarded since the beginning of file.
-	// Starts at 10 because we receive src already skipped 10-byte tag header.
-	fwdBytes := uint(10)
+// Returns the frames, MP3 offset and padding size.
+func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding uint, err error) {
+	frames = make([]*Frame, 0, 10) // arbitrary
+	mp3Offset = 10                 // start at 10 because src already skipped 10-byte header
 
-	MP3_START_BYTES := [...]byte{0xff, 0xfb} // https://stackoverflow.com/a/7302482/6923555
+	// Known magic byte sequences that identify the beginning of a MP3.
+	// https://stackoverflow.com/a/7302482/6923555
+	// https://en.wikipedia.org/wiki/List_of_file_signatures
+	// https://github.com/sindresorhus/file-type/issues/75#issuecomment-320650344
+	MP3_MAGIC := [][2]byte{{0xff, 0xfb}, {0xff, 0xfb}, {0xff, 0xf2}, {0xff, 0xfa}, {0xff, 0xf3}}
 
 	for {
-		if bytes.Equal(src[0:2], MP3_START_BYTES[:]) {
-			// We found the beginning of the MP3 data.
-			return fwdBytes, nil
-		} else if slices2.AllEqual(src[:4], 0x00) {
-			// The first 4 bytes should contain the 4-char frame name.
-			// If they're all zero, it means we entered a padding region after all frames.
-			idxMp3Offset := bytes.Index(src, MP3_START_BYTES[:])
-			if idxMp3Offset == -1 {
-				return 0, errors.New("MP3 offset not found")
+		for _, mp3Magic := range MP3_MAGIC {
+			if bytes.Equal(src[:2], mp3Magic[:]) {
+				// We found the beginning of the MP3 file, no padding.
+				return frames, mp3Offset, 0, nil
 			}
-			me.padding = uint(idxMp3Offset)
-			return fwdBytes + uint(idxMp3Offset), nil
+		}
+
+		if src[0] == 0x00 {
+			// We entered a padding region after all frames.
+			for i := 1; i < len(src)-1; i++ { // skip the 1st byte, which is 0x00; don't count last, we're checking 2
+				for _, mp3Magic := range MP3_MAGIC {
+					if bytes.Equal(src[i:i+2], mp3Magic[:]) {
+						return frames, mp3Offset + uint(i), uint(i), nil
+					}
+				}
+			}
+			return nil, 0, 0, errors.New("MP3 offset not found")
 		}
 
 		pFrame, err := _FrameParse(src)
 		if err != nil {
-			return 0, err
+			return nil, 0, 0, err
 		}
 
 		if pFrame.DeclaredSize() > uint(len(src)) { // means the size was serialized with error
-			return 0, fmt.Errorf("declared frame size greater than available size: %d vs %d",
+			return nil, 0, 0, fmt.Errorf("declared frame size greater than available size: %d vs %d",
 				pFrame.DeclaredSize(), len(src))
 		}
 
-		fwdBytes += pFrame.DeclaredSize()
+		mp3Offset += pFrame.DeclaredSize()
 		src = src[pFrame.DeclaredSize():]
-		me.frames = append(me.frames, pFrame)
+		frames = append(frames, pFrame)
 	}
 }
 
@@ -134,7 +142,7 @@ func (me *Tag) Clone() *Tag {
 		clonedFrames = append(clonedFrames, pFrame.Clone())
 	}
 
-	return &Tag{me.path, me.mp3Offset, me.padding, clonedFrames}
+	return &Tag{me.mp3Offset, me.padding, clonedFrames}
 }
 
 // Appends a new frame with a simple text as its contents.
@@ -202,12 +210,8 @@ func (me *Tag) ReplayGainStatus() string {
 }
 
 // Saves the tag to the file whose path is saved in the tag object.
-func (me *Tag) SaveToFile() error {
-	if me.path == "" {
-		return errors.New("Tag has no path")
-	}
-
-	fout, err := win.FileOpen(me.path, co.FOPEN_RW_EXISTING)
+func (me *Tag) SaveToFile(mp3Path string) error {
+	fout, err := win.FileOpen(mp3Path, co.FOPEN_RW_EXISTING)
 	if err != nil {
 		return err
 	}
@@ -219,7 +223,7 @@ func (me *Tag) SaveToFile() error {
 	}
 	defer currentContents.Free()
 
-	oldTag, err := LoadTagFromBin(currentContents.HotSlice()) // so we can have the MP3 offset
+	oldTag, err := TagFromBin(currentContents.HotSlice()) // so we can have the MP3 offset
 	if err != nil {
 		return err
 	}

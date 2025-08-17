@@ -64,10 +64,15 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 			return // nothing do to
 		}
 
-		tags := make([]*id3v2.Tag, 0, len(allPaths)-nonMp3Count) // load and cache all the MP3 tags
+		type TagAndPath struct { // a tag and its file path
+			pTag *id3v2.Tag
+			path string
+		}
+
+		tags := make([]TagAndPath, 0, len(allPaths)-nonMp3Count) // load and cache all the MP3 tags
 		for _, path := range allPaths {
 			if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
-				tag, err := id3v2.LoadTagFromFile(path)
+				pTag, err := id3v2.TagFromFile(path)
 				if err != nil {
 					me.wnd.UiThread(func() {
 						me.wnd.Hwnd().MessageBox(
@@ -77,19 +82,22 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 					})
 					return // stop on first error, no tag is loaded
 				}
-				tags = append(tags, tag)
+				tags = append(tags, TagAndPath{
+					pTag: pTag,
+					path: path,
+				})
 			}
 		}
 
 		me.wnd.UiThread(func() { // finally fill the listview with the tags
 			for _, tag := range tags {
 				var item ui.ListViewItem
-				if existingItem, ok := me.lstFiles.Items.Find(tag.Path()); ok { // file already loaded?
+				if existingItem, ok := me.lstFiles.Items.Find(tag.path); ok { // file already loaded?
 					item = existingItem // current tag object will be replaced
 				} else {
-					item = me.lstFiles.Items.AddWithIcon(0, tag.Path()) // insert new item
+					item = me.lstFiles.Items.AddWithIcon(0, tag.path) // insert new item
 				}
-				item.SetData(tag) // store tag in item
+				item.SetData(tag.pTag) // store tag in item
 				me.renderMp3InList(item)
 			}
 			me.sortList()
@@ -213,20 +221,30 @@ func (me *DlgMain) editSelected() bool {
 }
 
 func (me *DlgMain) saveSelectedAsync() {
-	type SaveFail struct { // a register of one saving error
-		file string
-		err  error
-	}
-	saveFails := make([]SaveFail, 0)
-	selTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
-		return item.Data().(*id3v2.Tag)
+	type (
+		Failure struct { // a register of one saving error
+			path string
+			err  error
+		}
+		TagAndPath struct { // a tag and its file path
+			pTag *id3v2.Tag
+			path string
+		}
+	)
+
+	failures := make([]Failure, 0)
+	selTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) TagAndPath {
+		return TagAndPath{
+			pTag: item.Data().(*id3v2.Tag),
+			path: item.Text(0),
+		}
 	})
 	me.setWaitState(true)
 
 	go func() {
-		for _, pTag := range selTags {
-			if err := pTag.SaveToFile(); err != nil {
-				saveFails = append(saveFails, SaveFail{pTag.Path(), err})
+		for _, selTag := range selTags {
+			if err := selTag.pTag.SaveToFile(selTag.path); err != nil {
+				failures = append(failures, Failure{selTag.path, err}) // store error, and keep going
 			}
 		}
 
@@ -236,12 +254,12 @@ func (me *DlgMain) saveSelectedAsync() {
 			}
 			me.sortList()
 
-			if len(saveFails) > 0 { // any errors?
+			if len(failures) > 0 { // any errors?
 				var sb strings.Builder
-				sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(saveFails)))
-				for _, fail := range saveFails {
+				sb.WriteString(fmt.Sprintf("%d file(s) failed to save:", len(failures)))
+				for _, fail := range failures {
 					sb.WriteString("\n\n")
-					sb.WriteString(fail.file)
+					sb.WriteString(fail.path)
 					sb.WriteString("\n")
 					sb.WriteString(fail.err.Error())
 				}
