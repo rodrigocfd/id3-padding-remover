@@ -17,13 +17,13 @@ import (
 
 func (me *DlgMain) setWaitState(set bool) {
 	if set {
-		me.wnd.Hwnd().SetWindowText("Loading...")
+		me.wnd.Hwnd().SetWindowText("Working...")
 		me.lstFiles.Hwnd().EnableWindow(false)
 		me.isWaiting = true
 	} else {
 		me.updateTitlebarCount()
 		me.lstFiles.Hwnd().EnableWindow(true)
-		me.isWaiting = false
+		me.isWaiting = false // read in WM_SETCURSOR
 		cPos, _ := win.GetCursorPos()
 		win.SetCursorPos(int(cPos.X), int(cPos.Y)) // force cursor redraw
 	}
@@ -69,8 +69,9 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 			path string
 		}
 
-		tags := make([]TagAndPath, 0, len(allPaths)-nonMp3Count) // load and cache all the MP3 tags
-		for _, path := range allPaths {
+		mp3ToReadCount := len(allPaths) - nonMp3Count
+		tags := make([]TagAndPath, 0, mp3ToReadCount) // load and cache all the MP3 tags
+		for idxMp3, path := range allPaths {
 			if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
 				pTag, err := id3v2.TagFromFile(path)
 				if err != nil {
@@ -85,6 +86,10 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 				tags = append(tags, TagAndPath{
 					pTag: pTag,
 					path: path,
+				})
+
+				me.wnd.UiThread(func() { // UI progress feedback
+					me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%d/%d files read...", idxMp3+1, mp3ToReadCount))
 				})
 			}
 		}
@@ -242,10 +247,14 @@ func (me *DlgMain) saveSelectedAsync() {
 	me.setWaitState(true)
 
 	go func() {
-		for _, selTag := range selTags {
+		for idxTag, selTag := range selTags {
 			if err := selTag.pTag.SaveToFile(selTag.path); err != nil {
 				failures = append(failures, Failure{selTag.path, err}) // store error, and keep going
 			}
+
+			me.wnd.UiThread(func() { // UI progress feedback
+				me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%d/%d files written...", idxTag+1, len(selTags)))
+			})
 		}
 
 		me.wnd.UiThread(func() {
