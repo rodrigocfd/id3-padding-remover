@@ -48,12 +48,9 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 			}
 		}
 
-		nonMp3Count := 0 // count how many non-MP3 we have
-		for _, path := range allPaths {
-			if !win.PathHasExtension(path, "mp3") {
-				nonMp3Count++
-			}
-		}
+		nonMp3Count := slices2.CountFunc(allPaths, func(path string) bool { // count how many non-MP3 we have
+			return !win.PathHasExtension(path, "mp3")
+		})
 		if nonMp3Count == len(allPaths) { // zero MP3s found?
 			me.wnd.UiThread(func() {
 				me.wnd.Hwnd().MessageBox(

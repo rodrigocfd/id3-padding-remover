@@ -32,6 +32,17 @@ func Clone[T any](src []T) []T {
 	return cloned
 }
 
+// Counts how many times the predicate returned true.
+func CountFunc[T any](src []T, pred func(elem T) bool) int {
+	count := 0
+	for _, elem := range src {
+		if pred(elem) {
+			count++
+		}
+	}
+	return count
+}
+
 // Returns the index of the last element to which the predicate returns true.
 //
 // # Example
