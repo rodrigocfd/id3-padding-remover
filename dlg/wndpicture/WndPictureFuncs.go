@@ -9,17 +9,17 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
+func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes uint) {
 	apic := id3v2.SameFrameAcrossAllTags("APIC", tags)
 	if apic == nil {
-		return // we don't have a picture to display
+		return win.SIZE{}, 0 // we don't have a picture to display
 	}
 
 	body, ok := apic.Body().(*id3v2.BodyPicture)
 	if !ok {
 		ui.MsgError(me.wnd.Parent(), "Picture parsing", "",
 			"APIC frame does not contain BodyPicture body type") // should never happen
-		return
+		return win.SIZE{}, 0
 	}
 
 	localRel := win.NewOleReleaser()
@@ -28,7 +28,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
 			"Failed to stream picture:\n"+err.Error())
-		return
+		return win.SIZE{}, 0
 	}
 
 	me.rel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
@@ -36,11 +36,12 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) {
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())
+		return win.SIZE{}, 0
 	}
-	me.picNumBytes = uint(len(body.Bin))
-}
 
-// Returns the picture COM object and its size in bytes.
-func (me *WndPicture) PicOle() (*win.IPicture, uint) {
-	return me.picOle, me.picNumBytes
+	hdcScreen, _ := win.HWND(0).GetDC()
+	defer win.HWND(0).ReleaseDC(hdcScreen)
+	szPic, _ := me.picOle.SizePixels(hdcScreen) // picture resolution in pixels
+
+	return szPic, uint(len(body.Bin))
 }

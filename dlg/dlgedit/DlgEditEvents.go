@@ -24,8 +24,8 @@ func (me *DlgEdit) events() {
 		me.fillComboGenres()
 		me.fillTextboxes()
 		me.fillFramesList()
-		me.wndPic.LoadPicOle(me.tags)
-		me.fillPicInfo()
+		pixels, nBytes := me.wndPic.LoadPicOle(me.tags)
+		me.fillPicInfo(pixels, nBytes)
 
 		return true
 	})

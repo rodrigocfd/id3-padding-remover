@@ -65,24 +65,18 @@ func (me *DlgEdit) fillFramesList() {
 	}
 }
 
-func (me *DlgEdit) fillPicInfo() {
-	picOle, picNumBytes := me.wndPic.PicOle()
-	if picOle == nil {
+func (me *DlgEdit) fillPicInfo(pixels win.SIZE, nBytes uint) {
+	if nBytes == 0 {
 		if len(me.tags) == 1 {
 			me.lblPic.Hwnd().SetWindowText("(no picture)")
 		} else {
 			me.lblPic.Hwnd().SetWindowText("(different pictures)")
 		}
-		return
+	} else {
+		me.chkPick.SetCheck(true)
+		me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%dx%d px, %s",
+			pixels.Cx, pixels.Cy, wstr.FmtBytes(nBytes)))
 	}
-
-	me.chkPick.SetCheck(true)
-
-	hdcScreen, _ := win.HWND(0).GetDC()
-	defer win.HWND(0).ReleaseDC(hdcScreen)
-	szPic, _ := picOle.SizePixels(hdcScreen) // picture resolution in pixels
-	me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%dx%d px, %s",
-		szPic.Cx, szPic.Cy, wstr.FmtBytes(picNumBytes)))
 }
 
 func (me *DlgEdit) writeTextsToTags() {
