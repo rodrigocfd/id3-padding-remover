@@ -7,12 +7,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"id3fit/slices2"
 	"slices"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
+	"github.com/rodrigocfd/xslices"
 )
 
 // Each MP3 file has a single ID3v2 tag.
@@ -283,7 +283,7 @@ func SameFrameAcrossAllTags(name4 string, tags []*Tag) *Frame {
 		return nil // first tag doesn't have the frame, stop right now
 	}
 
-	allSame := slices2.AllTrueFunc(tags[1:], func(pTag *Tag) bool { // skip first tag
+	allSame := xslices.EveryFunc(tags[1:], func(_ int, pTag *Tag) bool { // skip first tag
 		pFrame := pTag.FrameByName4(name4)
 		if pFrame == nil {
 			return false // frame doesn't exist in this posterior tag

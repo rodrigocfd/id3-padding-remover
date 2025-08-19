@@ -6,10 +6,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"id3fit/slices2"
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/xslices"
 )
 
 // Polymorphic data of a frame.
@@ -94,13 +94,13 @@ type BodyBinary struct {
 
 // Constructor.
 func _BodyBinaryParse(src []byte) *BodyBinary {
-	return &BodyBinary{slices2.Clone(src)} // simply copy all the data
+	return &BodyBinary{xslices.ShallowClone(src)} // simply copy all the data
 }
 
 func (*BodyBinary) implBody() {}
 
 func (me *BodyBinary) Clone() Body {
-	return &BodyBinary{slices2.Clone(me.Bin)}
+	return &BodyBinary{xslices.ShallowClone(me.Bin)}
 }
 
 func (me *BodyBinary) AsText() string {
@@ -237,7 +237,7 @@ func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 func (*BodyPicture) implBody() {}
 
 func (me *BodyPicture) Clone() Body {
-	return &BodyPicture{me.Mime, me.Type, me.Descr, slices2.Clone(me.Bin)}
+	return &BodyPicture{me.Mime, me.Type, me.Descr, xslices.ShallowClone(me.Bin)}
 }
 
 func (me *BodyPicture) AsText() string {

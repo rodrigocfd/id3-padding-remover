@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"id3fit/dlg/dlgedit"
 	"id3fit/id3v2"
-	"id3fit/slices2"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/co"
 	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/xslices"
 )
 
 func (me *DlgMain) setWaitState(set bool) {
@@ -48,7 +48,7 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 			}
 		}
 
-		nonMp3Count := slices2.CountFunc(allPaths, func(path string) bool { // count how many non-MP3 we have
+		nonMp3Count := xslices.CountFunc(allPaths, func(_ int, path string) bool { // count how many non-MP3 we have
 			return !win.PathHasExtension(path, "mp3")
 		})
 		if nonMp3Count == len(allPaths) { // zero MP3s found?
@@ -207,7 +207,7 @@ func (me *DlgMain) editSelected() bool {
 		return false // Enter key will hit here even without selected items
 	}
 
-	clonedTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
+	clonedTags := xslices.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
 		pTag := item.Data().(*id3v2.Tag)
 		return pTag.Clone()
 	})
@@ -235,7 +235,7 @@ func (me *DlgMain) saveSelectedAsync() {
 	)
 
 	failures := make([]Failure, 0)
-	selTags := slices2.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) TagAndPath {
+	selTags := xslices.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) TagAndPath {
 		return TagAndPath{
 			pTag: item.Data().(*id3v2.Tag),
 			path: item.Text(0),

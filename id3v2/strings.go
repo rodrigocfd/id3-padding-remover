@@ -4,7 +4,6 @@ package id3v2
 
 import (
 	"fmt"
-	"id3fit/slices2"
 	"math/bits"
 	"slices"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/xslices"
 )
 
 // String encoding.
@@ -39,12 +39,12 @@ func parseStrings(src []byte) ([]string, error) {
 
 // Parses one or more null-separated ISO-8859-1 strings.
 func parseIso88591Strings(src []byte) []string {
-	src = slices2.TrimRight(src, 0x00) // right-trim zeros to avoid an extra empty string
+	src = xslices.TrimRight(src, 0x00) // right-trim zeros to avoid an extra empty string
 	if len(src) == 0 {
 		return []string{} // no strings
 	}
 
-	blocks := slices.Collect(slices2.Split(src, 0x00))
+	blocks := slices.Collect(xslices.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
 
 	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
@@ -73,12 +73,12 @@ func parseUnicodeStrings(src []byte) []string {
 	}
 
 	wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
-	wsrc = slices2.TrimRight(wsrc, 0x0000) // right-trim zeros to avoid an extra empty string
+	wsrc = xslices.TrimRight(wsrc, 0x0000) // right-trim zeros to avoid an extra empty string
 	if len(wsrc) == 0 {
 		return []string{} // no strings
 	}
 
-	blocks := slices.Collect(slices2.Split(wsrc, 0x0000))
+	blocks := slices.Collect(xslices.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
 
 	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
