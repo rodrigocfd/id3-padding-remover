@@ -100,11 +100,11 @@ func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding uint, err e
 	MP3_MAGIC := [][2]byte{{0xff, 0xfb}, {0xff, 0xfb}, {0xff, 0xf2}, {0xff, 0xfa}, {0xff, 0xf3}}
 
 	for {
-		for _, mp3Magic := range MP3_MAGIC {
-			if bytes.Equal(src[:2], mp3Magic[:]) {
-				// We found the beginning of the MP3 file, no padding.
-				return frames, mp3Offset, 0, nil
-			}
+		if slices.ContainsFunc(MP3_MAGIC, func(mp3Magic [2]byte) bool {
+			return bytes.Equal(src[:2], mp3Magic[:])
+		}) {
+			// We found the beginning of the MP3 file, no padding.
+			return frames, mp3Offset, 0, nil
 		}
 
 		if src[0] == 0x00 {
