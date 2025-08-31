@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win/co"
 )
 
 func (me *DlgEdit) events() {

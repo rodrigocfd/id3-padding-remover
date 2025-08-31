@@ -11,7 +11,7 @@ import (
 
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/windigo/wstr"
 )
 
 //go:embed genres.txt

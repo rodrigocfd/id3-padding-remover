@@ -4,7 +4,6 @@ package id3v2
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"github.com/rodrigocfd/windigo/win"
 )
@@ -21,77 +20,46 @@ func (me *Frame) DeclaredSize() uint { return me.declaredSize }
 func (me *Frame) Body() Body         { return me.body }
 
 // Constructor.
-func _FrameNewWithText(name4, text string) *Frame {
-	me := &Frame{
-		name4: name4,
+func _FrameParse(src []byte) (*Frame, error) {
+	// Parse the 10-byte frame header.
+	name4 := string(src[0:4])
+	declaredSize := uint(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
+	flags := [2]byte{src[8], src[9]}
+
+	if declaredSize > uint(len(src)) {
+		declaredSize = uint(len(src)) // if serialized with error, be complacent
 	}
 
-	if name4 == "COMM" {
-		me.body = &BodyComment{
-			Lang3: "eng",
-			Text:  text,
-		}
-	} else {
-		me.body = &BodyText{ // assume simple text frame
-			Text: text,
-		}
+	src = src[10:declaredSize] // skip frame header, truncate to declared frame size
+
+	// Parse the data body.
+	body, err := _BodyParse(name4, src)
+	if err != nil {
+		return nil, err
 	}
-	return me
+
+	return &Frame{name4, declaredSize, flags, body}, nil
 }
 
 // Constructor.
-func _FrameParse(src []byte) (*Frame, error) {
-	// Parse the 10-byte frame header.
-	me := &Frame{
-		name4:        string(src[0:4]),
-		declaredSize: uint(binary.BigEndian.Uint32(src[4:8]) + 10), // also count 10-byte tag header
-		flags:        [2]byte{src[8], src[9]},
-	}
-	if me.declaredSize > uint(len(src)) {
-		me.declaredSize = uint(len(src)) // if serialized with error, be complacent
-	}
-
-	src = src[10:me.declaredSize] // skip frame header, truncate to declared frame size
-
-	if err := me.parseBody(src); err != nil {
-		return nil, err
-	}
-	return me, nil
-}
-
-func (me *Frame) parseBody(src []byte) error {
-	if me.name4 == "COMM" {
-		comm, err := _BodyCommentParse(src)
-		if err != nil {
-			return err
+func _FrameNewWithText(name4, text string) *Frame {
+	if name4 == "COMM" {
+		return &Frame{
+			name4: name4,
+			body: &BodyComment{
+				Lang3: "eng",
+				Descr: "",
+				Text:  text,
+			},
 		}
-		me.body = comm
-	} else if me.name4 == "APIC" {
-		apic, err := _BodyPictureParse(src)
-		if err != nil {
-			return err
+	} else { // otherwise assume simple text frame
+		return &Frame{
+			name4: name4,
+			body: &BodyText{
+				Text: text,
+			},
 		}
-		me.body = apic
-	} else if me.name4[0] == 'T' {
-		texts, err := parseStrings(src)
-		if err != nil {
-			return fmt.Errorf("frame %s with bad strings: %w", me.name4, err)
-		}
-
-		switch len(texts) {
-		case 0:
-			return fmt.Errorf("frame %s contains no texts", me.name4)
-		case 1:
-			me.body = &BodyText{Text: texts[0]}
-		case 2:
-			me.body = &BodyUserText{Descr: texts[0], Text: texts[1]}
-		default:
-			return fmt.Errorf("frame %s contains %d texts", me.name4, len(texts))
-		}
-	} else { // everything else is treated as raw binary
-		me.body = _BodyBinaryParse(src)
 	}
-	return nil
 }
 
 // Returns a newly allocated frame with a copy of all the data.

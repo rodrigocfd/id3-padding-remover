@@ -7,9 +7,9 @@ import (
 	"id3fit/dlg/wndpicture"
 	"id3fit/id3v2"
 
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
 )
 
 // Modal dialog to edit the fields of one or many tags.

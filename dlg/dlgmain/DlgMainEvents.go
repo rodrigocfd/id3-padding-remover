@@ -7,10 +7,10 @@ import (
 	"id3fit/dlg/ids"
 	"runtime"
 
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
-	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/windigo/wstr"
 )
 
 func (me *DlgMain) events() {

@@ -10,7 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/windigo/wstr"
 	"github.com/rodrigocfd/xslices"
 )
 

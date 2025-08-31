@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/windigo/wstr"
 	"github.com/rodrigocfd/xslices"
 )
 
@@ -19,6 +19,41 @@ type Body interface {
 	AsText() string
 	ForceText(text string)
 	Serialize(dest *win.Vec[byte]) uint
+}
+
+// Constructor.
+func _BodyParse(name4 string, src []byte) (Body, error) {
+	if name4 == "COMM" {
+		comm, err := _BodyCommentParse(src)
+		if err != nil {
+			return nil, err
+		}
+		return comm, nil
+	} else if name4 == "APIC" {
+		apic, err := _BodyPictureParse(src)
+		if err != nil {
+			return nil, err
+		}
+		return apic, nil
+	} else if name4[0] == 'T' {
+		texts, err := parseStrings(src)
+		if err != nil {
+			return nil, fmt.Errorf("frame %s with bad strings: %w", name4, err)
+		}
+
+		switch len(texts) {
+		case 0:
+			return nil, fmt.Errorf("frame %s contains no texts", name4)
+		case 1:
+			return &BodyText{Text: texts[0]}, nil
+		case 2:
+			return &BodyUserText{Descr: texts[0], Text: texts[1]}, nil
+		default:
+			return nil, fmt.Errorf("frame %s contains %d texts", name4, len(texts))
+		}
+	} else { // everything else is treated as raw binary
+		return _BodyBinaryParse(src), nil
+	}
 }
 
 // Concrete type.

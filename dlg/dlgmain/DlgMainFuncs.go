@@ -8,10 +8,10 @@ import (
 	"id3fit/id3v2"
 	"strings"
 
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/win/co"
-	"github.com/rodrigocfd/windigo/win/wstr"
+	"github.com/rodrigocfd/windigo/wstr"
 	"github.com/rodrigocfd/xslices"
 )
 
