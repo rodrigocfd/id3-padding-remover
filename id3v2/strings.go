@@ -47,14 +47,12 @@ func parseIso88591Strings(src []byte) []string {
 	blocks := slices.Collect(xslices.Split(src, 0x00))
 	texts := make([]string, 0, len(blocks))
 
-	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
-	defer recvBuf.Free()
-
+	var recvBuf wstr.BufDecoder // to convert bytes to Go strings
 	for _, block := range blocks {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			recvBuf.Resize(uint(len(block)))
+			recvBuf.AllocAndZero(uint(len(block)))
 			for i, ch := range block {
 				recvBuf.HotSlice()[i] = uint16(ch)
 			}
@@ -81,9 +79,7 @@ func parseUnicodeStrings(src []byte) []string {
 	blocks := slices.Collect(xslices.Split(wsrc, 0x0000))
 	texts := make([]string, 0, len(blocks))
 
-	recvBuf := wstr.NewBufDecoder(wstr.BUF_MAX) // to convert bytes to Go strings
-	defer recvBuf.Free()
-
+	var recvBuf wstr.BufDecoder
 	for _, block := range blocks {
 		isLE := true
 		if block[0] == _BOM_LE || block[0] == _BOM_BE { // we have a BOM
@@ -96,7 +92,7 @@ func parseUnicodeStrings(src []byte) []string {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			recvBuf.Resize(uint(len(block)))
+			recvBuf.AllocAndZero(uint(len(block)))
 			for i, ch := range block {
 				if isLE {
 					ch = bits.ReverseBytes16(ch)
@@ -129,9 +125,7 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 
 	buf := make([]byte, 0, estimatedLenBytes) // to be returned
 
-	wbuf := wstr.NewBufEncoder() // to serialize each Go string
-	defer wbuf.Free()
-
+	var encBuf wstr.BufEncoder // to serialize each Go string
 	for _, str := range strs {
 		if encoding == ENC_UNICODE {
 			// Insert BOM bytes for each string.
@@ -139,8 +133,8 @@ func serializeStrings(strs ...string) (ENC, []byte) {
 			buf = append(buf, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
 		}
 
-		slice := wbuf.SliceAllowEmpty(str) // contains terminating null
-		for _, ch := range slice {         // write each char of the string
+		slice := encBuf.Slice(str) // contains terminating null
+		for _, ch := range slice { // write each char of the string
 			if encoding == ENC_UNICODE {
 				buf = append(buf, win.LOBYTE(ch), win.HIBYTE(ch))
 			} else {
