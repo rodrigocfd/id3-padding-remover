@@ -9,7 +9,7 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes uint) {
+func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int) {
 	apic := id3v2.SameFrameAcrossAllTags("APIC", tags)
 	if apic == nil {
 		return win.SIZE{}, 0 // we don't have a picture to display
@@ -32,7 +32,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes uin
 	}
 
 	me.rel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
-	me.picOle, err = win.OleLoadPicture(me.rel, memStream, uint(len(body.Bin)), true)
+	me.picOle, err = win.OleLoadPicture(me.rel, memStream, len(body.Bin), true)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())
@@ -43,5 +43,5 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes uin
 	defer win.HWND(0).ReleaseDC(hdcScreen)
 	szPic, _ := me.picOle.SizePixels(hdcScreen) // picture resolution in pixels
 
-	return szPic, uint(len(body.Bin))
+	return szPic, len(body.Bin)
 }

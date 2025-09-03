@@ -52,7 +52,7 @@ func parseIso88591Strings(src []byte) []string {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			recvBuf.AllocAndZero(uint(len(block)))
+			recvBuf.AllocAndZero(len(block))
 			for i, ch := range block {
 				recvBuf.HotSlice()[i] = uint16(ch)
 			}
@@ -92,7 +92,7 @@ func parseUnicodeStrings(src []byte) []string {
 		if len(block) == 0 {
 			texts = append(texts, "") // empty strings are also added
 		} else {
-			recvBuf.AllocAndZero(uint(len(block)))
+			recvBuf.AllocAndZero(len(block))
 			for i, ch := range block {
 				if isLE {
 					ch = bits.ReverseBytes16(ch)

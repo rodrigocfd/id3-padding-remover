@@ -247,13 +247,13 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 
 // Serializes the tag into raw bytes.
 func (me *Tag) Serialize() win.Vec[byte] {
-	apicSz := uint(0)
+	apicSz := 0
 	if pApic := me.FrameByName4("APIC"); pApic != nil {
 		pApicBody, _ := pApic.Body().(*BodyPicture)
-		apicSz = uint(len(pApicBody.Bin))
+		apicSz = len(pApicBody.Bin)
 	}
 
-	buf := win.NewVecReserved[byte](10 + 10*uint(len(me.frames)) + apicSz) // arbitrary
+	buf := win.NewVecReserved[byte](10 + 10*len(me.frames) + apicSz) // arbitrary
 
 	buf.Append([]byte("ID3")...) // magic bytes
 	buf.Append(0x03, 0x00)       // tag version
@@ -261,7 +261,7 @@ func (me *Tag) Serialize() win.Vec[byte] {
 
 	buf.AppendN(4, 0x00) // placeholder for body size
 
-	framesSz := uint(0) // won't count 10-byte tag header
+	framesSz := 0 // won't count 10-byte tag header
 	for _, pFrame := range me.frames {
 		framesSz += pFrame.Serialize(&buf)
 	}

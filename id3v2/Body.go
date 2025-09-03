@@ -18,7 +18,7 @@ type Body interface {
 	Clone() Body
 	AsText() string
 	ForceText(text string)
-	Serialize(dest *win.Vec[byte]) uint
+	Serialize(dest *win.Vec[byte]) int
 }
 
 // Constructor.
@@ -75,9 +75,9 @@ func (me *BodyText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyText) Serialize(dest *win.Vec[byte]) uint {
+func (me *BodyText) Serialize(dest *win.Vec[byte]) int {
 	encByte, serializedText := serializeStrings(me.Text)
-	packLen := 1 + uint(len(serializedText))
+	packLen := 1 + len(serializedText)
 
 	dest.Reserve(dest.Len() + packLen)
 	dest.Append(byte(encByte))
@@ -111,9 +111,9 @@ func (me *BodyUserText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyUserText) Serialize(dest *win.Vec[byte]) uint {
+func (me *BodyUserText) Serialize(dest *win.Vec[byte]) int {
 	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
-	packLen := 1 + uint(len(serializedStrs))
+	packLen := 1 + len(serializedStrs)
 
 	dest.Reserve(dest.Len() + packLen)
 	dest.Append(byte(encByte))
@@ -139,16 +139,16 @@ func (me *BodyBinary) Clone() Body {
 }
 
 func (me *BodyBinary) AsText() string {
-	return wstr.FmtBytes(uint(len(me.Bin)))
+	return wstr.FmtBytes(len(me.Bin))
 }
 
 func (me *BodyBinary) ForceText(text string) {
 	panic("Cannot set text to a binary frame.")
 }
 
-func (me *BodyBinary) Serialize(dest *win.Vec[byte]) uint {
+func (me *BodyBinary) Serialize(dest *win.Vec[byte]) int {
 	dest.Append(me.Bin...)
-	return uint(len(me.Bin))
+	return len(me.Bin)
 }
 
 // Concrete type.
@@ -211,9 +211,9 @@ func (me *BodyComment) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyComment) Serialize(dest *win.Vec[byte]) uint {
+func (me *BodyComment) Serialize(dest *win.Vec[byte]) int {
 	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
-	packLen := 1 + 3 + uint(len(serializedStrs))
+	packLen := 1 + 3 + len(serializedStrs)
 
 	dest.Reserve(dest.Len() + packLen)
 	dest.Append(byte(encByte))
@@ -277,16 +277,16 @@ func (me *BodyPicture) Clone() Body {
 
 func (me *BodyPicture) AsText() string {
 	return fmt.Sprintf("%s %s %s",
-		PICNAMES[me.Type], me.Mime, wstr.FmtBytes(uint(len(me.Bin))))
+		PICNAMES[me.Type], me.Mime, wstr.FmtBytes(len(me.Bin)))
 }
 
 func (me *BodyPicture) ForceText(text string) {
 	panic("Cannot set text to a picture frame.")
 }
 
-func (me *BodyPicture) Serialize(pDest *win.Vec[byte]) uint {
+func (me *BodyPicture) Serialize(pDest *win.Vec[byte]) int {
 	encByte, serializedDescr := serializeStrings(me.Descr)
-	packLen := 1 + uint(len(me.Mime)) + 1 + 1 + uint(len(serializedDescr)) + uint(len(me.Bin))
+	packLen := 1 + len(me.Mime) + 1 + 1 + len(serializedDescr) + len(me.Bin)
 
 	pDest.Reserve(pDest.Len() + packLen)
 	pDest.Append(byte(encByte))

@@ -68,7 +68,7 @@ func (me *Frame) Clone() *Frame {
 }
 
 // Serializes the frame into bytes.
-func (me *Frame) Serialize(pDest *win.Vec[byte]) uint {
+func (me *Frame) Serialize(pDest *win.Vec[byte]) int {
 	pDest.Reserve(pDest.Len() + 10) // header size
 	pDest.Append([]byte(me.name4)...)
 

@@ -148,8 +148,8 @@ func (me *DlgMain) events() {
 				"Frees: %d",
 			nfo.LegalCopyright,
 			runtime.Version(),
-			stats.NumGC, wstr.FmtBytes(uint(stats.HeapAlloc)),
-			wstr.FmtBytes(uint(stats.NextGC)), stats.Frees)
+			stats.NumGC, wstr.FmtBytes(int(stats.HeapAlloc)),
+			wstr.FmtBytes(int(stats.NextGC)), stats.Frees)
 
 		ui.MsgOk(me.wnd, "About", caption, text)
 	})

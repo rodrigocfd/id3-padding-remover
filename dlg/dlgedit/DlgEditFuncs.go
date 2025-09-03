@@ -65,7 +65,7 @@ func (me *DlgEdit) fillFramesList() {
 	}
 }
 
-func (me *DlgEdit) fillPicInfo(pixels win.SIZE, nBytes uint) {
+func (me *DlgEdit) fillPicInfo(pixels win.SIZE, nBytes int) {
 	if nBytes == 0 {
 		if len(me.tags) == 1 {
 			me.lblPic.Hwnd().SetWindowText("(no picture)")
