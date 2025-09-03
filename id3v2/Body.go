@@ -35,7 +35,7 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 			return nil, err
 		}
 		return apic, nil
-	} else if name4[0] == 'T' {
+	} else if name4[0] == 'T' && name4 != "TDAT" {
 		texts, err := parseStrings(src)
 		if err != nil {
 			return nil, fmt.Errorf("frame %s with bad strings: %w", name4, err)
