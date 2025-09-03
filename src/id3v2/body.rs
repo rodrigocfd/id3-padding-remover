@@ -110,7 +110,7 @@ impl Body {
 			Self::parse_comm(src)
 		} else if name4 == "APIC" {
 			Self::parse_apic(src)
-		} else if name4.starts_with('T') {
+		} else if name4.starts_with('T') && name4 != "TDAT" {
 			let texts = str_engine::parse_any(src)?;
 			match texts.len() {
 				0 => Err(format!("Frame {} contains no texts.", name4).into()),
