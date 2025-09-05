@@ -43,7 +43,8 @@ func _FrameParse(src []byte) (*Frame, error) {
 
 // Constructor.
 func _FrameNewWithText(name4, text string) *Frame {
-	if name4 == "COMM" {
+	switch name4 {
+	case "COMM":
 		return &Frame{
 			name4: name4,
 			body: &BodyComment{
@@ -52,7 +53,7 @@ func _FrameNewWithText(name4, text string) *Frame {
 				Text:  text,
 			},
 		}
-	} else { // otherwise assume simple text frame
+	default: // otherwise assume simple text frame
 		return &Frame{
 			name4: name4,
 			body: &BodyText{
