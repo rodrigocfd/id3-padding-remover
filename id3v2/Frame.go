@@ -10,24 +10,24 @@ import (
 
 type Frame struct {
 	name4        string
-	declaredSize uint // Used only at parsing.
+	declaredSize int // Used only at parsing.
 	flags        [2]byte
 	body         Body // Polymorphic.
 }
 
-func (me *Frame) Name4() string      { return me.name4 }
-func (me *Frame) DeclaredSize() uint { return me.declaredSize }
-func (me *Frame) Body() Body         { return me.body }
+func (me *Frame) Name4() string     { return me.name4 }
+func (me *Frame) DeclaredSize() int { return me.declaredSize }
+func (me *Frame) Body() Body        { return me.body }
 
 // Constructor.
 func _FrameParse(src []byte) (*Frame, error) {
 	// Parse the 10-byte frame header.
 	name4 := string(src[0:4])
-	declaredSize := uint(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
+	declaredSize := int(binary.BigEndian.Uint32(src[4:8]) + 10) // also count 10-byte tag header
 	flags := [2]byte{src[8], src[9]}
 
-	if declaredSize > uint(len(src)) {
-		declaredSize = uint(len(src)) // if serialized with error, be complacent
+	if declaredSize > len(src) {
+		declaredSize = len(src) // if serialized with error, be complacent
 	}
 
 	src = src[10:declaredSize] // skip frame header, truncate to declared frame size

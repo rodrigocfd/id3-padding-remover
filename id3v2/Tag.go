@@ -17,13 +17,13 @@ import (
 
 // Each MP3 file has a single ID3v2 tag.
 type Tag struct {
-	mp3Offset uint
-	padding   uint
+	mp3Offset int
+	padding   int
 	frames    []*Frame
 }
 
-func (me *Tag) Mp3Offset() uint  { return me.mp3Offset }
-func (me *Tag) Padding() uint    { return me.padding }
+func (me *Tag) Mp3Offset() int   { return me.mp3Offset }
+func (me *Tag) Padding() int     { return me.padding }
 func (me *Tag) Frames() []*Frame { return me.frames }
 
 // Constructor.
@@ -62,7 +62,7 @@ func TagFromBin(src []byte) (*Tag, error) {
 
 // If an ID3v2 tag is present, returns its declared size, including the 10-byte
 // header. Otherwise, returns zero.
-func tagParseHeader(src []byte) (declaredSize uint, err error) {
+func tagParseHeader(src []byte) (declaredSize int, err error) {
 	// Check ID3 magic bytes.
 	if !bytes.Equal(src[:3], []byte("ID3")) {
 		return 0, nil // MP3 file has no tag
@@ -85,11 +85,11 @@ func tagParseHeader(src []byte) (declaredSize uint, err error) {
 		binary.BigEndian.Uint32(src[6:10]),
 	) + 10 // also count 10-byte tag header
 
-	return uint(nDeclaredSize), nil
+	return int(nDeclaredSize), nil
 }
 
 // Returns the frames, MP3 offset and padding size.
-func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding uint, err error) {
+func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding int, err error) {
 	frames = make([]*Frame, 0, 10) // arbitrary
 	mp3Offset = 10                 // start at 10 because src already skipped 10-byte header
 
@@ -112,7 +112,7 @@ func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding uint, err e
 			for i := 1; i < len(src)-1; i++ { // skip the 1st byte, which is 0x00; don't count last, we're checking 2
 				for _, mp3Magic := range MP3_MAGIC {
 					if bytes.Equal(src[i:i+2], mp3Magic[:]) {
-						return frames, mp3Offset + uint(i), uint(i), nil
+						return frames, mp3Offset + i, i, nil
 					}
 				}
 			}
@@ -124,7 +124,7 @@ func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding uint, err e
 			return nil, 0, 0, err
 		}
 
-		if pFrame.DeclaredSize() > uint(len(src)) { // means the size was serialized with error
+		if pFrame.DeclaredSize() > len(src) { // means the size was serialized with error
 			return nil, 0, 0, fmt.Errorf("declared frame size greater than available size: %d vs %d",
 				pFrame.DeclaredSize(), len(src))
 		}
