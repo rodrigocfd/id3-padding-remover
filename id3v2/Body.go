@@ -166,9 +166,7 @@ func _BodyCommentParse(src []byte) (*BodyComment, error) {
 	}
 	src = src[1:] // skip encoding byte
 
-	me := BodyComment{
-		Lang3: string(src[:3]),
-	}
+	lang3 := string(src[:3])
 	src = src[3:] // skip lang chars
 
 	texts, err := parseStrings(src)
@@ -176,19 +174,21 @@ func _BodyCommentParse(src []byte) (*BodyComment, error) {
 		return nil, err
 	}
 
+	var descr, text string
+
 	switch len(texts) {
 	case 0:
 		return nil, errors.New("comment frame has no texts")
 	case 1:
-		me.Text = texts[0] // in case of 1 text, be lenient and assume empty description
+		text = texts[0] // in case of 1 text, be lenient and assume empty description
 	case 2:
-		me.Descr = texts[0]
-		me.Text = texts[1]
+		descr = texts[0]
+		text = texts[1]
 	default:
 		return nil, fmt.Errorf("comment frame has %d texts", len(texts))
 	}
 
-	return &me, nil
+	return &BodyComment{lang3, descr, text}, nil
 }
 
 func (*BodyComment) implBody() {}
@@ -239,34 +239,34 @@ func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 	}
 	src = src[1:] // skip encoding byte
 
-	var me BodyPicture
-
 	mimeParts := bytes.SplitN(src, []byte{0x00}, 2)
-	me.Mime = string(mimeParts[0]) // assume ISO-8859-1 mime
+	mime := string(mimeParts[0]) // assume ISO-8859-1 mime
 	src = mimeParts[1]
 
-	me.Type = PICTYPE(src[0])
+	ty := PICTYPE(src[0])
 	src = src[1:] // skip picture type byte
+
+	var descr string
 
 	if encByte == ENC_ISO88591 {
 		descrParts := bytes.SplitN(src, []byte{0x00}, 2)
 		texts := parseIso88591Strings(descrParts[0])
 		if len(texts) > 0 { // description may be absent
-			me.Descr = texts[0]
+			descr = texts[0]
 		}
 		src = descrParts[1]
 	} else {
 		descrParts := bytes.SplitN(src, []byte{0x00, 0x00}, 2)
 		texts := parseUnicodeStrings(descrParts[0])
 		if len(texts) > 0 { // description may be absent
-			me.Descr = texts[0]
+			descr = texts[0]
 		}
 		src = descrParts[1]
 	}
 
-	me.Bin = make([]byte, len(src)) // simply copy all the data
-	copy(me.Bin, src)
-	return &me, nil
+	bin := xslices.ShallowClone(src) // simply copy all the data
+
+	return &BodyPicture{mime, ty, descr, bin}, nil
 }
 
 func (*BodyPicture) implBody() {}
