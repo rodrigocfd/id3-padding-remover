@@ -3,11 +3,8 @@
 package id3v2
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 
-	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/wstr"
 	"github.com/rodrigocfd/xslices"
 )
@@ -18,7 +15,7 @@ type Body interface {
 	Clone() Body
 	AsText() string
 	ForceText(text string)
-	Serialize(dest *win.Vec[byte]) int
+	Serialize() []byte
 }
 
 // Constructor.
@@ -35,22 +32,24 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 			return nil, err
 		}
 		return apic, nil
-	} else if name4[0] == 'T' && name4 != "TDAT" {
-		texts, err := parseStrings(src)
+	} else if name4 == "GEOB" {
+		geob, err := _BodyGeobParse(src)
 		if err != nil {
-			return nil, fmt.Errorf("frame %s with bad strings: %w", name4, err)
+			return nil, err
 		}
-
-		switch len(texts) {
-		case 0:
-			return nil, fmt.Errorf("frame %s contains no texts", name4)
-		case 1:
-			return &BodyText{Text: texts[0]}, nil
-		case 2:
-			return &BodyUserText{Descr: texts[0], Text: texts[1]}, nil
-		default:
-			return nil, fmt.Errorf("frame %s contains %d texts", name4, len(texts))
+		return geob, nil
+	} else if name4 == "TXXX" {
+		ut, err := _BodyUserTextParse(src)
+		if err != nil {
+			return nil, err
 		}
+		return ut, nil
+	} else if name4[0] == 'T' && name4 != "TDAT" {
+		txt, err := _BodyTextParse(src)
+		if err != nil {
+			return nil, err
+		}
+		return txt, nil
 	} else { // everything else is treated as raw binary
 		return _BodyBinaryParse(src), nil
 	}
@@ -59,6 +58,21 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 // Concrete type.
 type BodyText struct {
 	Text string
+}
+
+// Constructor.
+func _BodyTextParse(src []byte) (*BodyText, error) {
+	encByte, src, err := parseEnc(src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyText: %w", err)
+	}
+
+	info, _, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyText: %w", err)
+	}
+
+	return &BodyText{info}, nil
 }
 
 func (*BodyText) implBody() {}
@@ -75,21 +89,42 @@ func (me *BodyText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyText) Serialize(dest *win.Vec[byte]) int {
-	encByte, serializedText := serializeStrings(me.Text)
-	packLen := 1 + len(serializedText)
+func (me *BodyText) Serialize() []byte {
+	encByte := serializeEnc(me.Text)
+	text := serializeStr(encByte, me.Text)
 
-	dest.Reserve(dest.Len() + packLen)
-	dest.Append(byte(encByte))
-	dest.Append(serializedText...)
+	szBytes := 1 + len(text)
+	blob := make([]byte, 0, szBytes)
+	blob = append(blob, byte(encByte))
+	blob = append(blob, text...)
 
-	return packLen
+	return blob
 }
 
 // Concrete type.
 type BodyUserText struct {
 	Descr string
 	Text  string
+}
+
+// Constructor.
+func _BodyUserTextParse(src []byte) (*BodyUserText, error) {
+	encByte, src, err := parseEnc(src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyUserText: %w", err)
+	}
+
+	descr, src, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyUserText: %w", err)
+	}
+
+	value, _, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyUserText: %w", err)
+	}
+
+	return &BodyUserText{descr, value}, nil
 }
 
 func (*BodyUserText) implBody() {}
@@ -111,15 +146,18 @@ func (me *BodyUserText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyUserText) Serialize(dest *win.Vec[byte]) int {
-	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
-	packLen := 1 + len(serializedStrs)
+func (me *BodyUserText) Serialize() []byte {
+	encByte := serializeEnc(me.Descr, me.Text)
+	descr := serializeStr(encByte, me.Descr)
+	text := serializeStr(encByte, me.Text)
 
-	dest.Reserve(dest.Len() + packLen)
-	dest.Append(byte(encByte))
-	dest.Append(serializedStrs...)
+	szBytes := 1 + len(descr) + len(text)
+	blob := make([]byte, 0, szBytes)
+	blob = append(blob, byte(encByte))
+	blob = append(blob, descr...)
+	blob = append(blob, text...)
 
-	return packLen
+	return blob
 }
 
 // Concrete type.
@@ -146,9 +184,8 @@ func (me *BodyBinary) ForceText(text string) {
 	panic("Cannot set text to a binary frame.")
 }
 
-func (me *BodyBinary) Serialize(dest *win.Vec[byte]) int {
-	dest.Append(me.Bin...)
-	return len(me.Bin)
+func (me *BodyBinary) Serialize() []byte {
+	return xslices.ShallowClone(me.Bin)
 }
 
 // Concrete type.
@@ -169,23 +206,14 @@ func _BodyCommentParse(src []byte) (*BodyComment, error) {
 	lang3 := string(src[:3])
 	src = src[3:] // skip lang chars
 
-	texts, err := parseStrings(src)
+	descr, src, err := parseStr(encByte, src)
 	if err != nil {
 		return nil, err
 	}
 
-	var descr, text string
-
-	switch len(texts) {
-	case 0:
-		return nil, errors.New("comment frame has no texts")
-	case 1:
-		text = texts[0] // in case of 1 text, be lenient and assume empty description
-	case 2:
-		descr = texts[0]
-		text = texts[1]
-	default:
-		return nil, fmt.Errorf("comment frame has %d texts", len(texts))
+	text, _, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, err
 	}
 
 	return &BodyComment{lang3, descr, text}, nil
@@ -211,16 +239,19 @@ func (me *BodyComment) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyComment) Serialize(dest *win.Vec[byte]) int {
-	encByte, serializedStrs := serializeStrings(me.Descr, me.Text)
-	packLen := 1 + 3 + len(serializedStrs)
+func (me *BodyComment) Serialize() []byte {
+	encByte := serializeEnc(me.Descr, me.Text)
+	descr := serializeStr(encByte, me.Descr)
+	text := serializeStr(encByte, me.Text)
 
-	dest.Reserve(dest.Len() + packLen)
-	dest.Append(byte(encByte))
-	dest.Append([]byte(me.Lang3)...)
-	dest.Append(serializedStrs...)
+	szBytes := 1 + 3 + len(descr) + len(text)
+	blob := make([]byte, 0, szBytes)
+	blob = append(blob, byte(encByte))
+	blob = append(blob, []byte(me.Lang3)...)
+	blob = append(blob, descr...)
+	blob = append(blob, text...)
 
-	return packLen
+	return blob
 }
 
 // Concrete type.
@@ -239,29 +270,14 @@ func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 	}
 	src = src[1:] // skip encoding byte
 
-	mimeParts := bytes.SplitN(src, []byte{0x00}, 2)
-	mime := string(mimeParts[0]) // assume ISO-8859-1 mime
-	src = mimeParts[1]
+	mime, src, _ := parseStr(ENC_ISO88591, src)
 
 	ty := PICTYPE(src[0])
 	src = src[1:] // skip picture type byte
 
-	var descr string
-
-	if encByte == ENC_ISO88591 {
-		descrParts := bytes.SplitN(src, []byte{0x00}, 2)
-		texts := parseIso88591Strings(descrParts[0])
-		if len(texts) > 0 { // description may be absent
-			descr = texts[0]
-		}
-		src = descrParts[1]
-	} else {
-		descrParts := bytes.SplitN(src, []byte{0x00, 0x00}, 2)
-		texts := parseUnicodeStrings(descrParts[0])
-		if len(texts) > 0 { // description may be absent
-			descr = texts[0]
-		}
-		src = descrParts[1]
+	descr, src, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, err
 	}
 
 	bin := xslices.ShallowClone(src) // simply copy all the data
@@ -284,17 +300,83 @@ func (me *BodyPicture) ForceText(text string) {
 	panic("Cannot set text to a picture frame.")
 }
 
-func (me *BodyPicture) Serialize(pDest *win.Vec[byte]) int {
-	encByte, serializedDescr := serializeStrings(me.Descr)
-	packLen := 1 + len(me.Mime) + 1 + 1 + len(serializedDescr) + len(me.Bin)
+func (me *BodyPicture) Serialize() []byte {
+	encByte := serializeEnc(me.Descr)
+	mime := serializeStr(ENC_ISO88591, me.Mime)
+	descr := serializeStr(encByte, me.Descr)
 
-	pDest.Reserve(pDest.Len() + packLen)
-	pDest.Append(byte(encByte))
-	pDest.Append([]byte(me.Mime)...)
-	pDest.Append(0x00)
-	pDest.Append(byte(me.Type))
-	pDest.Append(serializedDescr...)
-	pDest.Append(me.Bin...)
+	szBytes := 1 + len(mime) + 1 + len(descr) + len(me.Bin)
+	blob := make([]byte, 0, szBytes)
+	blob = append(blob, byte(encByte))
+	blob = append(blob, mime...)
+	blob = append(blob, byte(me.Type))
+	blob = append(blob, descr...)
+	blob = append(blob, me.Bin...)
 
-	return packLen
+	return blob
+}
+
+// Concrete type.
+type BodyGeob struct {
+	Mime     string
+	FileName string
+	Descr    string
+	EncObj   []byte
+}
+
+// Constructor.
+func _BodyGeobParse(src []byte) (*BodyGeob, error) {
+	encByte := ENC(src[0])
+	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
+		return nil, fmt.Errorf("unknown general encapsulated object encoding: %d", encByte)
+	}
+	src = src[1:] // skip encoding byte
+
+	mime, src, _ := parseStr(ENC_ISO88591, src)
+
+	filename, src, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, err
+	}
+
+	descr, src, err := parseStr(encByte, src)
+	if err != nil {
+		return nil, err
+	}
+
+	encObj := xslices.ShallowClone(src)
+
+	return &BodyGeob{mime, filename, descr, encObj}, nil
+}
+
+func (*BodyGeob) implBody() {}
+
+func (me *BodyGeob) Clone() Body {
+	return &BodyGeob{me.Mime, me.FileName, me.Descr, xslices.ShallowClone(me.EncObj)}
+}
+
+func (me *BodyGeob) AsText() string {
+	return fmt.Sprintf("%s %s %s",
+		me.Mime, me.Descr, wstr.FmtBytes(len(me.EncObj)))
+}
+
+func (me *BodyGeob) ForceText(text string) {
+	panic("Cannot set text to a general encapsulated object frame.")
+}
+
+func (me *BodyGeob) Serialize() []byte {
+	encByte := serializeEnc(me.FileName, me.Descr)
+	mime := serializeStr(ENC_ISO88591, me.Mime)
+	filename := serializeStr(encByte, me.FileName)
+	descr := serializeStr(encByte, me.Descr)
+
+	szBlob := 1 + len(mime) + len(filename) + len(descr) + len(me.EncObj)
+	blob := make([]byte, 0, szBlob)
+	blob = append(blob, byte(encByte))
+	blob = append(blob, mime...)
+	blob = append(blob, filename...)
+	blob = append(blob, descr...)
+	blob = append(blob, me.EncObj...)
+
+	return blob
 }

@@ -234,8 +234,7 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 
 	if len(me.frames) > 0 {
 		tagBlob := me.Serialize()
-		defer tagBlob.Free()
-		if _, err := fout.Write(tagBlob.HotSlice()); err != nil {
+		if _, err := fout.Write(tagBlob); err != nil {
 			return err
 		}
 	}
@@ -246,28 +245,29 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 }
 
 // Serializes the tag into raw bytes.
-func (me *Tag) Serialize() win.Vec[byte] {
-	apicSz := 0
+func (me *Tag) Serialize() []byte {
+	szApic := 0
 	if pApic := me.FrameByName4("APIC"); pApic != nil {
 		pApicBody, _ := pApic.Body().(*BodyPicture)
-		apicSz = len(pApicBody.Bin)
+		szApic = len(pApicBody.Bin)
 	}
 
-	buf := win.NewVecReserved[byte](10 + 10*len(me.frames) + apicSz) // arbitrary
+	szBlob := szApic + len(me.frames)*20 // arbitrary
+	blob := make([]byte, 0, szBlob)
+	blob = append(blob, []byte("ID3")...) // magic bytes
+	blob = append(blob, 0x03, 0x00)       // tag version
+	blob = append(blob, 0x00)             // flags
+	blob = xslices.AppendN(blob, 4, 0x00) // tag size placement
 
-	buf.Append([]byte("ID3")...) // magic bytes
-	buf.Append(0x03, 0x00)       // tag version
-	buf.Append(0x00)             // flags
-
-	buf.AppendN(4, 0x00) // placeholder for body size
-
-	framesSz := 0 // won't count 10-byte tag header
+	szFrames := 0 // won't count 10-byte frame header
 	for _, pFrame := range me.frames {
-		framesSz += pFrame.Serialize(&buf)
+		frameBlob := pFrame.Serialize()
+		szFrames += len(frameBlob)
+		blob = append(blob, frameBlob...)
 	}
+	binary.BigEndian.PutUint32(blob[6:10], synchSafeEncode(uint32(szFrames)))
 
-	binary.BigEndian.PutUint32(buf.HotSlice()[6:], synchSafeEncode(uint32(framesSz)))
-	return buf
+	return blob
 }
 
 // If the frame is the same across all tags, returns it; otherwise returns nil.

@@ -5,7 +5,7 @@ package id3v2
 import (
 	"encoding/binary"
 
-	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/xslices"
 )
 
 type Frame struct {
@@ -69,15 +69,18 @@ func (me *Frame) Clone() *Frame {
 }
 
 // Serializes the frame into bytes.
-func (me *Frame) Serialize(pDest *win.Vec[byte]) int {
-	pDest.Reserve(pDest.Len() + 10) // header size
-	pDest.Append([]byte(me.name4)...)
+func (me *Frame) Serialize() []byte {
+	body := me.body.Serialize()
 
-	bodySizeOffset := pDest.Len()
-	pDest.AppendN(4, 0x00) // placeholder for body size
-	pDest.Append(me.flags[:]...)
+	szBlob := 10 + len(body) // 10-byte header + body
+	blob := make([]byte, 0, szBlob)
+	blob = append(blob, []byte(me.name4)...)
 
-	szBody := me.body.Serialize(pDest) // won't count 10-byte frame header
-	binary.BigEndian.PutUint32(pDest.HotSlice()[bodySizeOffset:], uint32(szBody))
-	return 10 + szBody // count 10-byte frame header
+	blob = xslices.AppendN(blob, 4, 0x00)
+	binary.BigEndian.PutUint32(blob[4:8], uint32(len(body))) // don't count 10-byte header size
+
+	blob = append(blob, me.flags[:]...)
+	blob = append(blob, body...)
+
+	return blob
 }

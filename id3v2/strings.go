@@ -11,7 +11,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/wstr"
-	"github.com/rodrigocfd/xslices"
 )
 
 // String encoding.
@@ -25,123 +24,117 @@ const (
 	_BOM_LE uint16 = 0xfffe
 )
 
-// Parses one or more null-separated strings, ISO-8859-1 or Unicode.
-func parseStrings(src []byte) ([]string, error) {
-	switch ENC(src[0]) {
+func minInt(a, b int) int { // https://stackoverflow.com/a/27516559/6923555
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// Returns the encoding byte, and the post-byte src.
+func parseEnc(src []byte) (ENC, []byte, error) {
+	encByte := ENC(src[0])
+	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
+		return encByte, nil, fmt.Errorf("unknown encoding: %d", encByte)
+	}
+	return encByte, src[1:], nil
+}
+
+// Parses the null-terminated string according to the encoding. Returns the
+// string, and the post-string src.
+func parseStr(enc ENC, src []byte) (string, []byte, error) {
+	idxZero := slices.Index(src, 0x00)
+	if idxZero == -1 {
+		idxZero = len(src) // if no zero, simply consider the whole slice
+	}
+
+	switch enc {
 	case ENC_ISO88591:
-		return parseIso88591Strings(src[1:]), nil
+		return parseStrIso88591(src[:idxZero]), src[minInt(len(src), idxZero+1):], nil
 	case ENC_UNICODE:
-		return parseUnicodeStrings(src[1:]), nil
-	default:
-		return nil, fmt.Errorf("unrecognized text encoding: %02x", src[0])
-	}
-}
-
-// Parses one or more null-separated ISO-8859-1 strings.
-func parseIso88591Strings(src []byte) []string {
-	src = xslices.TrimRight(src, 0x00) // right-trim zeros to avoid an extra empty string
-	if len(src) == 0 {
-		return []string{} // no strings
-	}
-
-	blocks := slices.Collect(xslices.Split(src, 0x00))
-	texts := make([]string, 0, len(blocks))
-
-	var recvBuf wstr.BufDecoder // to convert bytes to Go strings
-	for _, block := range blocks {
-		if len(block) == 0 {
-			texts = append(texts, "") // empty strings are also added
-		} else {
-			recvBuf.AllocAndZero(len(block))
-			for i, ch := range block {
-				recvBuf.HotSlice()[i] = uint16(ch)
-			}
-			texts = append(texts, recvBuf.String())
+		if idxZero%2 != 0 {
+			return "", nil, fmt.Errorf("odd number of bytes in Unicode string: %d", idxZero)
 		}
+		wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), idxZero/2)
+		return parseStrUnicode(wsrc), src[minInt(len(src), idxZero+2):], nil
+	default:
+		return "", nil, fmt.Errorf("unrecognized text encoding: %02x", src[0])
 	}
-	return texts
 }
 
-// Parses one or more null-separated Unicode strings.
-func parseUnicodeStrings(src []byte) []string {
-	if len(src)%2 != 0 {
-		// Length is not even, something is not quite right.
-		// Discard last byte and hope for the best.
-		src = src[0 : len(src)-1]
+func parseStrIso88591(src []byte) string {
+	if len(src) == 0 {
+		return ""
 	}
-
-	wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2)
-	wsrc = xslices.TrimRight(wsrc, 0x0000) // right-trim zeros to avoid an extra empty string
-	if len(wsrc) == 0 {
-		return []string{} // no strings
-	}
-
-	blocks := slices.Collect(xslices.Split(wsrc, 0x0000))
-	texts := make([]string, 0, len(blocks))
 
 	var recvBuf wstr.BufDecoder
-	for _, block := range blocks {
-		isLE := true
-		if block[0] == _BOM_LE || block[0] == _BOM_BE { // we have a BOM
-			if block[0] == _BOM_BE {
-				isLE = false
-			}
-			block = block[1:] // skip BOM
-		}
-
-		if len(block) == 0 {
-			texts = append(texts, "") // empty strings are also added
-		} else {
-			recvBuf.AllocAndZero(len(block))
-			for i, ch := range block {
-				if isLE {
-					ch = bits.ReverseBytes16(ch)
-				}
-				recvBuf.HotSlice()[i] = ch
-			}
-			texts = append(texts, recvBuf.String())
-		}
+	recvBuf.Alloc(len(src))
+	for i, ch := range src {
+		recvBuf.HotSlice()[i] = uint16(ch)
 	}
-	return texts
+	return recvBuf.String()
 }
 
-// Serializes the given strings as null-terminated, with the proper encoding.
-func serializeStrings(strs ...string) (ENC, []byte) {
-	encoding := ENC_ISO88591
-	estimatedLenBytes := 0
+func parseStrUnicode(src []uint16) string {
+	isLE := true
+	if src[0] == _BOM_LE || src[0] == _BOM_BE { // we have a BOM
+		if src[0] == _BOM_BE {
+			isLE = false
+		}
+		src = src[1:] // skip BOM
+	}
 
-	for _, str := range strs {
-		estimatedLenBytes += len(str) + 1
-		hasUnicodeCh := strings.ContainsFunc(str, func(ch rune) bool { return ch > 0xff })
-		if hasUnicodeCh {
-			encoding = ENC_UNICODE // at least 1 string is Unicode
+	if len(src) == 0 {
+		return ""
+	}
+
+	var recvBuf wstr.BufDecoder
+	recvBuf.Alloc(len(src))
+	for i, ch := range src {
+		if isLE {
+			ch = bits.ReverseBytes16(ch)
+		}
+		recvBuf.HotSlice()[i] = ch
+	}
+	return recvBuf.String()
+}
+
+// If at least one of the strings is Unicode, returns ENC_UNICODE, otherwise
+// ENC_ISO88591.
+func serializeEnc(strs ...string) ENC {
+	for _, s := range strs {
+		if strings.ContainsFunc(s, func(ch rune) bool { return ch > 0xff }) {
+			return ENC_UNICODE
+		}
+	}
+	return ENC_ISO88591
+}
+
+// Serializes the string as null-terminated, with the proper encoding.
+func serializeStr(encByte ENC, str string) []byte {
+	var szBlob int
+	if encByte == ENC_UNICODE {
+		szBlob = (wstr.CountUtf16Len(str) + 1 + 1) * 2 // plus BOM and terminating null
+	} else {
+		szBlob = len(str) + 1 // plus terminating null
+	}
+
+	blob := make([]byte, 0, szBlob) // to be returned
+
+	if encByte == ENC_UNICODE { // insert BOM bytes; we serialize as little-endian
+		blob = append(blob, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
+	}
+
+	var encBuf wstr.BufEncoder
+	wslice := encBuf.Slice(str) // with terminating null
+
+	for _, ch := range wslice { // write each char of the string to buf
+		if encByte == ENC_UNICODE {
+			blob = append(blob, win.LOBYTE(ch), win.HIBYTE(ch)) // 2 bytes, little-endian
+		} else {
+			blob = append(blob, win.LOBYTE(ch)) // 1 byte
 		}
 	}
 
-	if encoding == ENC_UNICODE { // chars will be serialized as WORD
-		estimatedLenBytes *= 2
-		estimatedLenBytes += 2 * len(strs) // one BOM to each string
-	}
-
-	buf := make([]byte, 0, estimatedLenBytes) // to be returned
-
-	var encBuf wstr.BufEncoder // to serialize each Go string
-	for _, str := range strs {
-		if encoding == ENC_UNICODE {
-			// Insert BOM bytes for each string.
-			// Strings will be encoded as little-endian.
-			buf = append(buf, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
-		}
-
-		slice := encBuf.Slice(str) // contains terminating null
-		for _, ch := range slice { // write each char of the string
-			if encoding == ENC_UNICODE {
-				buf = append(buf, win.LOBYTE(ch), win.HIBYTE(ch))
-			} else {
-				buf = append(buf, win.LOBYTE(ch))
-			}
-		}
-	}
-
-	return encoding, buf
+	return blob
 }

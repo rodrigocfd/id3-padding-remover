@@ -234,7 +234,8 @@ func (me *DlgMain) saveSelectedAsync() {
 		}
 	)
 
-	failures := make([]Failure, 0)
+	failures := make([]Failure, 0) // to store all failures we get
+
 	selTags := xslices.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) TagAndPath {
 		return TagAndPath{
 			pTag: item.Data().(*id3v2.Tag),
@@ -244,7 +245,7 @@ func (me *DlgMain) saveSelectedAsync() {
 	me.setWaitState(true)
 
 	go func() {
-		for idxTag, selTag := range selTags {
+		for idxTag, selTag := range selTags { // process each tag sequentially
 			if err := selTag.pTag.SaveToFile(selTag.path); err != nil {
 				failures = append(failures, Failure{selTag.path, err}) // store error, and keep going
 			}
@@ -254,7 +255,7 @@ func (me *DlgMain) saveSelectedAsync() {
 			})
 		}
 
-		me.wnd.UiThread(func() {
+		me.wnd.UiThread(func() { // UI final feedback
 			for _, item := range me.lstFiles.Items.Selected() {
 				me.renderMp3InList(item) // re-render, all paddings have been removed
 			}
@@ -272,6 +273,7 @@ func (me *DlgMain) saveSelectedAsync() {
 				ui.MsgError(me.wnd, "Error saving file(s)", "", sb.String())
 			}
 			me.setWaitState(false)
+			me.lstFiles.Focus()
 		})
 	}()
 }
