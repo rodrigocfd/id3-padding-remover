@@ -55,6 +55,8 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Concrete type.
 type BodyText struct {
 	Text string
@@ -100,6 +102,8 @@ func (me *BodyText) Serialize() []byte {
 
 	return blob
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // Concrete type.
 type BodyUserText struct {
@@ -160,6 +164,8 @@ func (me *BodyUserText) Serialize() []byte {
 	return blob
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Concrete type.
 type BodyBinary struct {
 	Bin []byte
@@ -188,6 +194,8 @@ func (me *BodyBinary) Serialize() []byte {
 	return xslices.ShallowClone(me.Bin)
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Concrete type.
 type BodyComment struct {
 	Lang3 string
@@ -197,11 +205,10 @@ type BodyComment struct {
 
 // Constructor.
 func _BodyCommentParse(src []byte) (*BodyComment, error) {
-	encByte := ENC(src[0])
-	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
-		return nil, fmt.Errorf("unknown comment encoding: %d", encByte)
+	encByte, src, err := parseEnc(src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyComment: %w", err)
 	}
-	src = src[1:] // skip encoding byte
 
 	lang3 := string(src[:3])
 	src = src[3:] // skip lang chars
@@ -254,6 +261,8 @@ func (me *BodyComment) Serialize() []byte {
 	return blob
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Concrete type.
 type BodyPicture struct {
 	Mime  string
@@ -264,11 +273,10 @@ type BodyPicture struct {
 
 // Constructor.
 func _BodyPictureParse(src []byte) (*BodyPicture, error) {
-	encByte := ENC(src[0])
-	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
-		return nil, fmt.Errorf("unknown picture encoding: %d", encByte)
+	encByte, src, err := parseEnc(src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyPicture: %w", err)
 	}
-	src = src[1:] // skip encoding byte
 
 	mime, src, _ := parseStr(ENC_ISO88591, src)
 
@@ -316,6 +324,8 @@ func (me *BodyPicture) Serialize() []byte {
 	return blob
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 // Concrete type.
 type BodyGeob struct {
 	Mime     string
@@ -326,11 +336,10 @@ type BodyGeob struct {
 
 // Constructor.
 func _BodyGeobParse(src []byte) (*BodyGeob, error) {
-	encByte := ENC(src[0])
-	if encByte != ENC_ISO88591 && encByte != ENC_UNICODE {
-		return nil, fmt.Errorf("unknown general encapsulated object encoding: %d", encByte)
+	encByte, src, err := parseEnc(src)
+	if err != nil {
+		return nil, fmt.Errorf("parse BodyGeob: %w", err)
 	}
-	src = src[1:] // skip encoding byte
 
 	mime, src, _ := parseStr(ENC_ISO88591, src)
 
