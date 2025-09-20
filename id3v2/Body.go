@@ -15,7 +15,8 @@ type Body interface {
 	Clone() Body
 	AsText() string
 	ForceText(text string)
-	Serialize() []byte
+	SerializeSize() int
+	Serialize(dest []byte) []byte
 }
 
 // Constructor.
@@ -91,16 +92,17 @@ func (me *BodyText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyText) Serialize() []byte {
+func (me *BodyText) SerializeSize() int {
 	encByte := serializeEnc(me.Text)
-	text := serializeStr(encByte, me.Text)
+	szText, _ := serializeStrSize(encByte, me.Text)
+	return 1 + szText
+}
 
-	szBytes := 1 + len(text)
-	blob := make([]byte, 0, szBytes)
-	blob = append(blob, byte(encByte))
-	blob = append(blob, text...)
-
-	return blob
+func (me *BodyText) Serialize(dest []byte) []byte {
+	encByte := serializeEnc(me.Text)
+	dest = append(dest, byte(encByte))
+	dest = serializeStr(encByte, dest, me.Text)
+	return dest
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,18 +152,19 @@ func (me *BodyUserText) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyUserText) Serialize() []byte {
+func (me *BodyUserText) SerializeSize() int {
 	encByte := serializeEnc(me.Descr, me.Text)
-	descr := serializeStr(encByte, me.Descr)
-	text := serializeStr(encByte, me.Text)
+	szDescr, _ := serializeStrSize(encByte, me.Descr)
+	szText, _ := serializeStrSize(encByte, me.Text)
+	return 1 + szDescr + szText
+}
 
-	szBytes := 1 + len(descr) + len(text)
-	blob := make([]byte, 0, szBytes)
-	blob = append(blob, byte(encByte))
-	blob = append(blob, descr...)
-	blob = append(blob, text...)
-
-	return blob
+func (me *BodyUserText) Serialize(dest []byte) []byte {
+	encByte := serializeEnc(me.Descr, me.Text)
+	dest = append(dest, byte(encByte))
+	dest = serializeStr(encByte, dest, me.Descr)
+	dest = serializeStr(encByte, dest, me.Text)
+	return dest
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,8 +193,13 @@ func (me *BodyBinary) ForceText(text string) {
 	panic("Cannot set text to a binary frame.")
 }
 
-func (me *BodyBinary) Serialize() []byte {
-	return xslices.ShallowClone(me.Bin)
+func (me *BodyBinary) SerializeSize() int {
+	return len(me.Bin)
+}
+
+func (me *BodyBinary) Serialize(dest []byte) []byte {
+	dest = append(dest, me.Bin...)
+	return dest
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,19 +254,20 @@ func (me *BodyComment) ForceText(text string) {
 	me.Text = text
 }
 
-func (me *BodyComment) Serialize() []byte {
+func (me *BodyComment) SerializeSize() int {
 	encByte := serializeEnc(me.Descr, me.Text)
-	descr := serializeStr(encByte, me.Descr)
-	text := serializeStr(encByte, me.Text)
+	szDescr, _ := serializeStrSize(encByte, me.Descr)
+	szText, _ := serializeStrSize(encByte, me.Text)
+	return 1 + 3 + szDescr + szText
+}
 
-	szBytes := 1 + 3 + len(descr) + len(text)
-	blob := make([]byte, 0, szBytes)
-	blob = append(blob, byte(encByte))
-	blob = append(blob, []byte(me.Lang3)...)
-	blob = append(blob, descr...)
-	blob = append(blob, text...)
-
-	return blob
+func (me *BodyComment) Serialize(dest []byte) []byte {
+	encByte := serializeEnc(me.Descr, me.Text)
+	dest = append(dest, byte(encByte))
+	dest = append(dest, []byte(me.Lang3)...)
+	dest = serializeStr(encByte, dest, me.Descr)
+	dest = serializeStr(encByte, dest, me.Text)
+	return dest
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,20 +317,21 @@ func (me *BodyPicture) ForceText(text string) {
 	panic("Cannot set text to a picture frame.")
 }
 
-func (me *BodyPicture) Serialize() []byte {
+func (me *BodyPicture) SerializeSize() int {
 	encByte := serializeEnc(me.Descr)
-	mime := serializeStr(ENC_ISO88591, me.Mime)
-	descr := serializeStr(encByte, me.Descr)
+	szMime, _ := serializeStrSize(ENC_ISO88591, me.Mime)
+	szDescr, _ := serializeStrSize(encByte, me.Descr)
+	return 1 + szMime + 1 + szDescr + len(me.Bin)
+}
 
-	szBytes := 1 + len(mime) + 1 + len(descr) + len(me.Bin)
-	blob := make([]byte, 0, szBytes)
-	blob = append(blob, byte(encByte))
-	blob = append(blob, mime...)
-	blob = append(blob, byte(me.Type))
-	blob = append(blob, descr...)
-	blob = append(blob, me.Bin...)
-
-	return blob
+func (me *BodyPicture) Serialize(dest []byte) []byte {
+	encByte := serializeEnc(me.Descr)
+	dest = append(dest, byte(encByte))
+	dest = serializeStr(ENC_ISO88591, dest, me.Mime)
+	dest = append(dest, byte(me.Type))
+	dest = serializeStr(encByte, dest, me.Descr)
+	dest = append(dest, me.Bin...)
+	return dest
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,19 +383,20 @@ func (me *BodyGeob) ForceText(text string) {
 	panic("Cannot set text to a general encapsulated object frame.")
 }
 
-func (me *BodyGeob) Serialize() []byte {
+func (me *BodyGeob) SerializeSize() int {
 	encByte := serializeEnc(me.FileName, me.Descr)
-	mime := serializeStr(ENC_ISO88591, me.Mime)
-	filename := serializeStr(encByte, me.FileName)
-	descr := serializeStr(encByte, me.Descr)
+	szMime, _ := serializeStrSize(ENC_ISO88591, me.Mime)
+	szFileName, _ := serializeStrSize(encByte, me.FileName)
+	szDescr, _ := serializeStrSize(encByte, me.Descr)
+	return 1 + szMime + szFileName + szDescr + len(me.EncObj)
+}
 
-	szBlob := 1 + len(mime) + len(filename) + len(descr) + len(me.EncObj)
-	blob := make([]byte, 0, szBlob)
-	blob = append(blob, byte(encByte))
-	blob = append(blob, mime...)
-	blob = append(blob, filename...)
-	blob = append(blob, descr...)
-	blob = append(blob, me.EncObj...)
-
-	return blob
+func (me *BodyGeob) Serialize(dest []byte) []byte {
+	encByte := serializeEnc(me.FileName, me.Descr)
+	dest = append(dest, byte(encByte))
+	dest = serializeStr(ENC_ISO88591, dest, me.Mime)
+	dest = serializeStr(encByte, dest, me.FileName)
+	dest = serializeStr(encByte, dest, me.Descr)
+	dest = append(dest, me.EncObj...)
+	return dest
 }

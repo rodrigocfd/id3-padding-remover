@@ -3,6 +3,7 @@
 package id3v2
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/bits"
 	"slices"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/wstr"
+	"github.com/rodrigocfd/xslices"
 )
 
 // String encoding.
@@ -42,13 +44,13 @@ func parseEnc(src []byte) (ENC, []byte, error) {
 
 // Parses the null-terminated string according to the encoding. Returns the
 // string, and the post-string src.
-func parseStr(enc ENC, src []byte) (string, []byte, error) {
+func parseStr(encByte ENC, src []byte) (string, []byte, error) {
 	idxZero := slices.Index(src, 0x00)
 	if idxZero == -1 {
 		idxZero = len(src) // if no zero, simply consider the whole slice
 	}
 
-	switch enc {
+	switch encByte {
 	case ENC_ISO88591:
 		return parseStrIso88591(src[:idxZero]), src[minInt(len(src), idxZero+1):], nil
 	case ENC_UNICODE:
@@ -110,31 +112,49 @@ func serializeEnc(strs ...string) ENC {
 	return ENC_ISO88591
 }
 
-// Serializes the string as null-terminated, with the proper encoding.
-func serializeStr(encByte ENC, str string) []byte {
-	var szBlob int
+// Returns the number of bytes of the serialized string, including terminating
+// null, according to the encoding.
+func serializeStrSize(encByte ENC, str string) (int, error) {
+	switch encByte {
+	case ENC_ISO88591:
+		return wstr.CountRunes(str) + 1, nil // plus terminating null
+	case ENC_UNICODE:
+		return (wstr.CountRunes(str) + 1 + 1) * 2, nil // plus BOM and terminating null
+	default:
+		return 0, fmt.Errorf("unrecognized text encoding: %02x", encByte)
+	}
+}
+
+// Serializes the string as null-terminated, according to the encoding. The dest
+// buffer will be appended.
+func serializeStr(encByte ENC, dest []byte, str string) []byte {
 	if encByte == ENC_UNICODE {
-		szBlob = (wstr.CountUtf16Len(str) + 1 + 1) * 2 // plus BOM and terminating null
-	} else {
-		szBlob = len(str) + 1 // plus terminating null
+		dest = append(dest, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE)) // BOM bytes; we serialize as little-endian
 	}
 
-	blob := make([]byte, 0, szBlob) // to be returned
-
-	if encByte == ENC_UNICODE { // insert BOM bytes; we serialize as little-endian
-		blob = append(blob, win.LOBYTE(_BOM_LE), win.HIBYTE(_BOM_LE))
-	}
-
-	var encBuf wstr.BufEncoder
-	wslice := encBuf.Slice(str) // with terminating null
-
-	for _, ch := range wslice { // write each char of the string to buf
-		if encByte == ENC_UNICODE {
-			blob = append(blob, win.LOBYTE(ch), win.HIBYTE(ch)) // 2 bytes, little-endian
-		} else {
-			blob = append(blob, win.LOBYTE(ch)) // 1 byte
+	for _, ch := range str {
+		switch encByte {
+		case ENC_ISO88591:
+			dest = append(dest, byte(ch))
+		case ENC_UNICODE:
+			wch := uint16(ch)
+			dest = append(dest, win.LOBYTE(wch), win.HIBYTE(wch)) // 2 bytes, little-endian
 		}
 	}
 
-	return blob
+	switch encByte { // terminating null
+	case ENC_ISO88591:
+		dest = append(dest, 0x00)
+	case ENC_UNICODE:
+		dest = append(dest, 0x00, 0x00)
+	}
+
+	return dest
+}
+
+// Appends an uint32 into dest.
+func appendUint32(dest []byte, byteOrder binary.ByteOrder, n uint32) []byte {
+	dest = xslices.AppendN(dest, 4, 0x00)
+	byteOrder.PutUint32(dest[len(dest)-4:], n)
+	return dest
 }

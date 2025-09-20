@@ -4,8 +4,6 @@ package id3v2
 
 import (
 	"encoding/binary"
-
-	"github.com/rodrigocfd/xslices"
 )
 
 type Frame struct {
@@ -68,19 +66,19 @@ func (me *Frame) Clone() *Frame {
 	return &Frame{me.name4, me.declaredSize, me.flags, me.body.Clone()}
 }
 
-// Serializes the frame into bytes.
-func (me *Frame) Serialize() []byte {
-	body := me.body.Serialize()
+// The size in bytes required to serialize the frame.
+func (me *Frame) SerializeSize() int {
+	return 10 + me.body.SerializeSize() // start with 10-byte frame header
+}
 
-	szBlob := 10 + len(body) // 10-byte header + body
-	blob := make([]byte, 0, szBlob)
-	blob = append(blob, []byte(me.name4)...)
+// Serializes the frame into bytes. The dest buffer will be appended.
+func (me *Frame) Serialize(dest []byte) []byte {
+	dest = append(dest, []byte(me.name4)...)
 
-	blob = xslices.AppendN(blob, 4, 0x00)
-	binary.BigEndian.PutUint32(blob[4:8], uint32(len(body))) // don't count 10-byte header size
+	szBody := me.body.SerializeSize() // don't count 10-byte header size
+	dest = appendUint32(dest, binary.BigEndian, uint32(szBody))
 
-	blob = append(blob, me.flags[:]...)
-	blob = append(blob, body...)
-
-	return blob
+	dest = append(dest, me.flags[:]...)
+	dest = me.body.Serialize(dest)
+	return dest
 }

@@ -209,6 +209,27 @@ func (me *Tag) ReplayGainStatus() string {
 	}
 }
 
+// Serializes the tag into bytes.
+func (me *Tag) Serialize() []byte {
+	szTag := 10 // start with 10-byte tag header
+	for _, pFrame := range me.frames {
+		szTag += pFrame.SerializeSize()
+	}
+
+	blob := make([]byte, 0, szTag)        // prealloc buffer
+	blob = append(blob, []byte("ID3")...) // magic bytes
+	blob = append(blob, 0x03, 0x00)       // tag version
+	blob = append(blob, 0x00)             // flags
+
+	blob = appendUint32(blob, binary.BigEndian,
+		synchSafeEncode(uint32(szTag-10))) // don't count 10-byte header size
+
+	for _, pFrame := range me.frames {
+		blob = pFrame.Serialize(blob)
+	}
+	return blob
+}
+
 // Saves the tag to the file whose path is saved in the tag object.
 func (me *Tag) SaveToFile(mp3Path string) error {
 	fout, err := win.FileOpen(mp3Path, co.FOPEN_RW_EXISTING)
@@ -242,32 +263,6 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 	fout.Write(currentContents.HotSlice()[oldTag.Mp3Offset():]) // MP3 data
 	me.padding = 0
 	return nil
-}
-
-// Serializes the tag into raw bytes.
-func (me *Tag) Serialize() []byte {
-	szApic := 0
-	if pApic := me.FrameByName4("APIC"); pApic != nil {
-		pApicBody, _ := pApic.Body().(*BodyPicture)
-		szApic = len(pApicBody.Bin)
-	}
-
-	szBlob := szApic + len(me.frames)*20 // arbitrary
-	blob := make([]byte, 0, szBlob)
-	blob = append(blob, []byte("ID3")...) // magic bytes
-	blob = append(blob, 0x03, 0x00)       // tag version
-	blob = append(blob, 0x00)             // flags
-	blob = xslices.AppendN(blob, 4, 0x00) // tag size placement
-
-	szFrames := 0 // won't count 10-byte frame header
-	for _, pFrame := range me.frames {
-		frameBlob := pFrame.Serialize()
-		szFrames += len(frameBlob)
-		blob = append(blob, frameBlob...)
-	}
-	binary.BigEndian.PutUint32(blob[6:10], synchSafeEncode(uint32(szFrames)))
-
-	return blob
 }
 
 // If the frame is the same across all tags, returns it; otherwise returns nil.
