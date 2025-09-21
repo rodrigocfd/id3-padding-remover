@@ -1,49 +1,7 @@
-/// Encoding byte.
+/// APIC picture type.
 #[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-pub enum Enc {
-	Iso88591 = 0x00,
-	Unicode = 0x01,
-}
-
-impl std::fmt::Display for Enc {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		write!(
-			f,
-			"{}",
-			match self {
-				Enc::Iso88591 => "ISO-8859-1",
-				Enc::Unicode => "Unicode",
-			}
-		)
-	}
-}
-
-impl TryFrom<u8> for Enc {
-	type Error = String;
-
-	fn try_from(n: u8) -> Result<Self, Self::Error> {
-		match n {
-			0 => Ok(Self::Iso88591),
-			1 => Ok(Self::Unicode),
-			n => Err(format!("Invalid encoding byte: {n}.")),
-		}
-	}
-}
-
-impl From<Enc> for u8 {
-	fn from(enc: Enc) -> Self {
-		match enc {
-			Enc::Iso88591 => 0x00,
-			Enc::Unicode => 0x01,
-		}
-	}
-}
-
-/// APIC picture types.
-#[derive(Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
 #[allow(unused)]
+#[repr(u8)]
 pub enum PicType {
 	Other = 0x00,
 	FileIconPng32 = 0x01,
@@ -69,7 +27,7 @@ pub enum PicType {
 }
 
 impl std::fmt::Display for PicType {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		use PicType::*;
 		write!(
 			f,
@@ -110,11 +68,5 @@ impl TryFrom<u8> for PicType {
 		} else {
 			Err(format!("Invalid pic type byte: {n}."))
 		}
-	}
-}
-
-impl From<PicType> for u8 {
-	fn from(t: PicType) -> Self {
-		t as _
 	}
 }

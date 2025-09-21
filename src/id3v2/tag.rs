@@ -1,9 +1,6 @@
 use winsafe::{self as w};
 
-use super::body::Body;
-use super::frame::Frame;
-use super::str_engine;
-use super::synch_safe;
+use crate::id3v2::*;
 
 /// Metadata of a single MP3 file.
 #[derive(Default, Clone)]
@@ -14,7 +11,7 @@ pub struct Tag {
 }
 
 impl std::fmt::Display for Tag {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(
 			f,
 			"Off: {}, pad: {}\n{}",
@@ -30,6 +27,19 @@ impl std::fmt::Display for Tag {
 }
 
 impl Tag {
+	#[must_use]
+	pub const fn padding(&self) -> usize {
+		self.padding
+	}
+	#[must_use]
+	pub const fn frames(&self) -> &Vec<Frame> {
+		&self.frames
+	}
+	#[must_use]
+	pub const fn frames_mut(&mut self) -> &mut Vec<Frame> {
+		&mut self.frames
+	}
+
 	/// Reads the tag from an MP3 file.
 	#[must_use]
 	pub fn read_from_file(mp3_path: &str) -> w::AnyResult<Self> {
@@ -42,6 +52,7 @@ impl Tag {
 	pub fn parse(src: &[u8]) -> w::AnyResult<Self> {
 		match Self::parse_header(src)? {
 			Some(_declared_size) => {
+				// MP3 file has an ID3v2 tag.
 				let (frames, mp3_offset, padding) = Self::parse_frames(&src[10..])?;
 				Ok(Self { mp3_offset, padding, frames })
 			},
@@ -54,13 +65,14 @@ impl Tag {
 	#[must_use]
 	fn parse_header(src: &[u8]) -> w::AnyResult<Option<u32>> {
 		// Check ID3 magic bytes.
-		if &src[..3] != &str_engine::to_ascii("ID3") {
+		let (magic_bytes, _) = util::parse_ascii(src, 3);
+		if magic_bytes != "ID3" {
 			return Ok(None); // MP3 file has no tag
 		}
 
 		// Validate tag version 2.3.0.
 		// The first "2" is not stored in the tag.
-		if &src[3..5] != &[3, 0] {
+		if src[3..5] != [3, 0] {
 			return Err(format!(
 				"Tag version 2.{}.{} is not supported, only 2.3.0.",
 				src[3], src[4],
@@ -76,7 +88,7 @@ impl Tag {
 		}
 
 		// Read declared tag size; also count 10-byte tag header.
-		let declared_size = synch_safe::decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10;
+		let declared_size = util::synchsafe_decode(u32::from_be_bytes(src[6..10].try_into()?)) + 10;
 		Ok(Some(declared_size))
 	}
 
@@ -104,6 +116,7 @@ impl Tag {
 					.position(|by| MP3_MAGIC.iter().any(|magic| magic == by))
 				{
 					Some(idx_mp3_start) => {
+						// We found the beginning of the MP3 file, after some padding.
 						return Ok((frames, offset + idx_mp3_start, idx_mp3_start));
 					},
 					None => return Err("MP3 offset not found.".into()),
@@ -122,28 +135,30 @@ impl Tag {
 			}
 
 			offset += declared_size;
-			src = &src[declared_size..];
+			src = &src[declared_size..]; // move past the frame
 			frames.push(new_frame); // add the frame to our collection
 		}
 	}
 
-	/// Serializes the tag into a `Vec<u8>`.
+	/// Serializes the tag into bytes.
 	#[must_use]
 	pub fn serialize(&self) -> Vec<u8> {
-		let serialized_frames: Vec<u8> = self
+		let sz_tag = self
 			.frames
 			.iter()
-			.flat_map(|frame| frame.serialize())
-			.collect();
-		let synch_safe_data_size = synch_safe::encode(serialized_frames.len() as _); // won't count 10-byte header
+			.fold(10, |acc, frame| acc + frame.serialize_size()); // count 10-byte tag header
 
-		str_engine::to_ascii("ID3") // ID3v2 magic bytes
-			.into_iter()
-			.chain([0x03, 0x00].into_iter()) // tag version 2.3.0
-			.chain([0x00].into_iter()) // flags
-			.chain(synch_safe_data_size.to_be_bytes()) // data size is the last part of the 10-byte header
-			.chain(serialized_frames.into_iter()) // then all the serialized frames
-			.collect()
+		let mut blob = Vec::with_capacity(sz_tag);
+		util::serialize_ascii(&mut blob, "ID3"); // magic bytes
+		blob.extend([0x03, 0x00]); // tag version 2.3.0
+		blob.push(0x00); // flags
+		blob.extend((util::synchsafe_encode(sz_tag as u32 - 10)).to_be_bytes()); // won't count 10-byte header
+
+		self.frames
+			.iter()
+			.for_each(|frame| frame.serialize(&mut blob));
+
+		blob
 	}
 
 	/// Saves the tag to an MP3 file. If there are no frames, the tag will be
@@ -173,21 +188,6 @@ impl Tag {
 	}
 
 	#[must_use]
-	pub const fn padding(&self) -> usize {
-		self.padding
-	}
-
-	#[must_use]
-	pub const fn frames(&self) -> &Vec<Frame> {
-		&self.frames
-	}
-
-	#[must_use]
-	pub const fn frames_mut(&mut self) -> &mut Vec<Frame> {
-		&mut self.frames
-	}
-
-	#[must_use]
 	pub fn frame_by_name4(&self, name4: &str) -> Option<&Frame> {
 		self.frames.iter().find(|frame| frame.name4() == name4)
 	}
@@ -204,9 +204,9 @@ impl Tag {
 			self.frames.retain(|frame| frame.name4() != name4); // remove empty new values
 		} else {
 			match self.frames.iter_mut().find(|frame| frame.name4() == name4) {
-				Some(frame) => frame.set_editable_string(val)?, // frame already exists, set new value
+				Some(frame) => frame.set_editable_str(val)?, // frame already exists, set new value
 				None => {
-					let new_frame = Frame::new_from_editable_string(name4, val)?;
+					let new_frame = Frame::new_from_editable_str(name4, val)?;
 					self.frames.push(new_frame); // frame doesn't exist, push new
 				},
 			}
@@ -228,23 +228,4 @@ impl Tag {
 			}
 		})
 	}
-}
-
-/// Returns true if the given frame is equal across all given tags.
-pub fn equal_frame_across_all_tags(name4: &str, tags: &[Tag]) -> bool {
-	if tags.is_empty() {
-		return false; // nothing to do
-	}
-
-	let frame0 = match tags[0].frame_by_name4(name4) {
-		Some(f) => f,
-		None => return false, // the 1st tag doesn't have this frame
-	};
-
-	tags.iter().skip(1).all(|tag| {
-		match tag.frame_by_name4(name4) {
-			Some(f) => f == frame0, // frame present, check equality
-			None => false,          // this tag doesn't have this frame
-		}
-	})
 }

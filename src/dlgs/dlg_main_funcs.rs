@@ -142,21 +142,21 @@ impl DlgMain {
 					if has_track_no {
 						match tag.frame_by_name4("TRCK") {
 							Some(track) => {
-								new_name.push_str(&format!("{:0>2} ", track.as_editable_string()?));
+								new_name.push_str(&format!("{:0>2} ", track.as_editable_str()?));
 							},
 							None => return Err("Missing track field.".into()),
 						}
 					}
 					match tag.frame_by_name4("TPE1") {
 						Some(artist) => {
-							new_name.push_str(&artist.as_editable_string()?);
+							new_name.push_str(&artist.as_editable_str()?);
 						},
 						None => return Err("Missing artist field.".into()),
 					}
 					match tag.frame_by_name4("TIT2") {
 						Some(title) => {
 							new_name.push_str(" - ");
-							new_name.push_str(&title.as_editable_string()?);
+							new_name.push_str(&title.as_editable_str()?);
 						},
 						None => return Err("Missing title field.".into()),
 					}

@@ -34,7 +34,7 @@ impl Input {
 			let user_text = sel_tags[0]
 				.frame_by_name4(&self.name4)
 				.unwrap()
-				.as_editable_string()?;
+				.as_editable_str()?;
 			self.txt.hwnd().SetWindowText(&user_text)?;
 			self.chk.set_check_and_trigger(true)?;
 		}
