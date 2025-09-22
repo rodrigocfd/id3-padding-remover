@@ -87,8 +87,7 @@ impl DlgMain {
 		let item = match self.lst_files.items().find(file_path) {
 			Some(existing_item) => {
 				// MP3 already present in the list?
-				let rc_tag = existing_item.data()?;
-				*rc_tag.try_borrow_mut()? = tag; // replace the tag currently stored in the item
+				existing_item.data().replace(tag); // replace the tag currently stored in the item
 				existing_item
 			},
 			None => {
@@ -103,7 +102,7 @@ impl DlgMain {
 	}
 
 	pub(super) fn render_tag(item: gui::ListViewItem<'_, id3v2::Tag>) -> w::AnyResult<()> {
-		let rc_tag = item.data()?; // retrieve tag saved in the listview item
+		let rc_tag = item.data(); // retrieve tag saved in the listview item
 		let tag = rc_tag.try_borrow()?;
 		item.set_text(1, &tag.padding().to_string())?;
 		item.set_text(2, if tag.frame_by_name4("APIC").is_some() { "✓" } else { "" })?;
@@ -135,7 +134,7 @@ impl DlgMain {
 			.iter_selected()
 			.try_for_each(|sel_item| -> w::AnyResult<_> {
 				let new_name = {
-					let rc_tag = sel_item.data()?; // retrieve data saved in the listview item
+					let rc_tag = sel_item.data(); // retrieve data saved in the listview item
 					let tag = rc_tag.try_borrow()?;
 
 					let mut new_name = String::with_capacity(30);
@@ -197,7 +196,7 @@ impl DlgMain {
 				.iter_selected()
 				.try_for_each(|sel_item| -> w::AnyResult<_> {
 					{
-						let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
+						let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
 						let mut tag = rc_tag.try_borrow_mut()?;
 						tag.frames_mut().retain(|frame| !frame.is_replay_gain());
 						if del_art {

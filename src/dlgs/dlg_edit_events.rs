@@ -229,7 +229,7 @@ impl DlgEdit {
 					.items()
 					.iter()
 					.try_for_each(|item| -> w::AnyResult<_> {
-						let rc_frame = item.data()?;
+						let rc_frame = item.data();
 						let cloned_frame = rc_frame.try_borrow()?.clone();
 						sel_tags[0].frames_mut().push(cloned_frame); // add the frame from the listview
 						Ok(())

@@ -119,7 +119,7 @@ impl DlgMain {
 					.items()
 					.iter_selected()
 					.map(|sel_item| {
-						let rc_tag = sel_item.data()?;
+						let rc_tag = sel_item.data();
 						let cloned_tag = rc_tag.try_borrow()?.clone();
 						Ok(cloned_tag)
 					})
@@ -137,7 +137,7 @@ impl DlgMain {
 						.zip(edited_tags.into_iter())
 						.try_for_each(|(sel_item, mut edited_tag)| -> w::AnyResult<_> {
 							edited_tag.save_to_file(&sel_item.text(0))?;
-							*sel_item.data()?.try_borrow_mut()? = edited_tag; // replace the tag currently stored in the item
+							sel_item.data().replace(edited_tag); // replace the tag currently stored in the item
 							Self::render_tag(sel_item)?; // update the listview with the new values
 							Ok(())
 						})?;
@@ -174,7 +174,7 @@ impl DlgMain {
 					self2.lst_files.items().iter_selected().try_for_each(
 						|sel_item| -> w::AnyResult<_> {
 							{
-								let rc_tag = sel_item.data()?; // retrieve tag saved in the listview item
+								let rc_tag = sel_item.data(); // retrieve tag saved in the listview item
 								let mut tag = rc_tag.try_borrow_mut()?;
 								tag.save_to_file(&sel_item.text(0))?; // save to MP3 file
 							}
@@ -197,7 +197,7 @@ impl DlgMain {
 					.enumerate()
 					.try_for_each(|(idx, sel_item)| -> w::AnyResult<_> {
 						{
-							let rc_tag = sel_item.data()?;
+							let rc_tag = sel_item.data();
 							let mut tag = rc_tag.try_borrow_mut()?;
 							tag.set_editable_string("TRCK", &(idx + 1).to_string())?;
 							tag.save_to_file(&sel_item.text(0))?;
