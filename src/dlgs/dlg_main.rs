@@ -34,20 +34,25 @@ impl DlgMain {
 	}
 }
 
-pub const LIST_COLS: &[(&str, i32, &str)] = &[
-	("File", 1, ""), // to fill the remaining space
-	("Pad", 50, ""),
-	("Art", 30, ""),
-	("RG", 30, ""),
-	("Artist", 90, "TPE1"),
-	("T#", 30, "TRCK"),
-	("Title", 100, "TIT2"),
-	("Album", 100, "TALB"),
-	("Year", 40, "TYER"),
-	("Genre", 90, "TCON"),
-	("Performer", 70, "TPE3"),
-	("Composer", 70, "TCOM"),
-	("Lyricist", 70, "TEXT"),
-	("Orig. artist", 70, "TOPE"),
-	("Comment", 70, "COMM"),
+/// Columns of the main MP3 list:
+/// * title;
+/// * width;
+/// * text justification;
+/// * ID3v2 frame ID
+pub const LIST_COLS: &[(&str, i32, Option<gui::HeaderJustify>, &str)] = &[
+	("File", 1, None, ""), // this column will fill the empty space
+	("Pad", 50, Some(gui::HeaderJustify::Right), ""),
+	("Art", 30, Some(gui::HeaderJustify::Center), ""),
+	("RG", 30, Some(gui::HeaderJustify::Center), ""),
+	("Artist", 90, None, "TPE1"),
+	("T#", 30, Some(gui::HeaderJustify::Right), "TRCK"),
+	("Title", 100, None, "TIT2"),
+	("Album", 100, None, "TALB"),
+	("Year", 40, Some(gui::HeaderJustify::Right), "TYER"),
+	("Genre", 90, None, "TCON"),
+	("Performer", 70, None, "TPE3"),
+	("Composer", 70, None, "TCOM"),
+	("Lyricist", 70, None, "TEXT"),
+	("Orig. artist", 70, None, "TOPE"),
+	("Comment", 70, None, "COMM"),
 ];

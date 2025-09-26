@@ -10,35 +10,27 @@ impl DlgMain {
 			let lv = &self2.lst_files;
 			self2.update_num_files_in_titlebar(lv.items().count())?;
 
-			// Setup the files listview.
 			lv.image_list(co::LVSIL::SMALL)?
 				.add_icons_from_shell(&["mp3"])?;
 			lv.set_extended_style(true, co::LVS_EX::FULLROWSELECT);
 			lv.context_menu()
 				.unwrap()
 				.SetMenuDefaultItem(w::IdPos::Id(ids::MNU_FILE_EDIT))?;
+
+			let header_cols = lv.header().unwrap().items();
 			LIST_COLS
 				.iter()
-				.try_for_each(|(title, cx, _)| -> w::SysResult<_> {
-					lv.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
+				.try_for_each(|(title, cx, txt_just, _)| -> w::SysResult<_> {
+					let col = lv.cols().add(*title, gui::dpi_x(*cx))?; // add the columns
+					txt_just.map(|just| {
+						header_cols.get(col.index()).set_justify(just); // text justification if specified
+					});
 					Ok(())
 				})?;
 
-			// Set files listview columns justification.
-			let hcols = lv.header().unwrap().items();
-			[1, 5, 8]
-				.into_iter() // padding, track #, year
-				.for_each(|i| {
-					hcols.get(i).set_justify(gui::HeaderJustify::Right);
-				});
-			[2, 3]
-				.into_iter() // art, RG
-				.for_each(|i| {
-					hcols.get(i).set_justify(gui::HeaderJustify::Center);
-				});
-
-			hcols.get(0).set_arrow(gui::HeaderArrow::Asc); // initially 1st col, ascending
+			header_cols.get(0).set_arrow(gui::HeaderArrow::Asc); // initially 1st col, ascending
 			lv.cols().get(0).set_width_to_fill()?;
+
 			self2.wnd.hwnd().RegisterDragDrop(&self2.drop_target)?;
 			Ok(true)
 		});

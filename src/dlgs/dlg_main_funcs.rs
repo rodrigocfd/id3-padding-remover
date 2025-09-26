@@ -15,7 +15,7 @@ impl DlgMain {
 	pub(super) fn sort_list(&self) -> w::AnyResult<()> {
 		let (cur_col, cur_is_asc) = self.cur_sort.get(); // read current sort state
 		if [1, 5, 8].contains(&cur_col) {
-			// Chosen column is padding, track no., or year
+			// Chosen column is padding, track #, or year
 			self.lst_files.items().sort(|a, b| {
 				let text1 = a.text(cur_col);
 				let text2 = b.text(cur_col);
@@ -112,7 +112,7 @@ impl DlgMain {
 			.iter()
 			.enumerate()
 			.skip(4) // columns 0-3 don't render actual tag frames
-			.map(|(idx, (_, _, name4))| {
+			.map(|(idx, (_, _, _, name4))| {
 				let text = match tag.frame_by_name4(*name4) {
 					Some(frame) => frame.body().to_string(), // tag has the frame rendered by this column
 					None => "".to_owned(),                   // tag doesn't have this frame, render an empty string
