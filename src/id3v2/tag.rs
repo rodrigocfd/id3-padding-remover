@@ -152,7 +152,7 @@ impl Tag {
 		util::serialize_ascii(&mut blob, "ID3"); // magic bytes
 		blob.extend([0x03, 0x00]); // tag version 2.3.0
 		blob.push(0x00); // flags
-		blob.extend((util::synchsafe_encode(sz_tag as u32 - 10)).to_be_bytes()); // won't count 10-byte header
+		blob.extend(util::synchsafe_encode(sz_tag as u32 - 10).to_be_bytes()); // won't count 10-byte header
 
 		self.frames
 			.iter()
