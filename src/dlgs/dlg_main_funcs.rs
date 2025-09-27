@@ -110,9 +110,10 @@ impl DlgMain {
 
 		LIST_COLS
 			.iter()
+			.map(|(_, _, _, name4)| name4)
 			.enumerate()
-			.skip(4) // columns 0-3 don't render actual tag frames
-			.map(|(idx, (_, _, _, name4))| {
+			.skip_while(|(_, name4)| name4.is_empty()) // first colums won't render frames
+			.map(|(idx, name4)| {
 				let text = match tag.frame_by_name4(*name4) {
 					Some(frame) => frame.body().to_string(), // tag has the frame rendered by this column
 					None => "".to_owned(),                   // tag doesn't have this frame, render an empty string
