@@ -51,24 +51,27 @@ impl Enc {
 	/// string, and the post-string src.
 	#[must_use]
 	pub fn parse_str<'a>(&self, src: &'a [u8]) -> w::AnyResult<(String, &'a [u8])> {
-		let idx_zero = src.iter().position(|by| *by == 0x00).unwrap_or(src.len());
 		match self {
 			Enc::Iso88591 => {
+				let idx_zero = src.iter().position(|by| *by == 0x00).unwrap_or(src.len());
 				let s = Self::parse_iso88591(&src[..idx_zero]);
 				let src_past = &src[std::cmp::min(src.len(), idx_zero + 1)..];
 				Ok((s, src_past))
 			},
 			Enc::Unicode => {
-				if !idx_zero.is_multiple_of(2) {
-					Err(format!("Odd number of bytes in Unicode string: {idx_zero}.").into())
-				} else {
-					let wsrc = unsafe {
-						std::slice::from_raw_parts(src.as_ptr() as *const u16, idx_zero / 2)
-					};
-					let s = Self::parse_unicode(wsrc);
-					let src_past = &src[std::cmp::min(src.len(), idx_zero + 2)..];
-					Ok((s, src_past))
-				}
+				// New Vec<u16> because slice::from_raw_parts may weirdly complain of pointer alignment.
+				let wsrc = src
+					.chunks_exact(2) // if an odd number of bytes, discard last
+					.map(|by2| w::MAKEWORD(by2[0], by2[1]))
+					.collect::<Vec<_>>();
+				let idx_zero = wsrc
+					.iter()
+					.position(|wo| *wo == 0x0000)
+					.unwrap_or(wsrc.len());
+				let wsrc = &wsrc[..idx_zero];
+				let s = Self::parse_unicode(wsrc);
+				let src_past = &src[std::cmp::min(src.len(), (idx_zero + 1) * 2)..];
+				Ok((s, src_past))
 			},
 		}
 	}
