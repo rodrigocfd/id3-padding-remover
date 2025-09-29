@@ -45,20 +45,22 @@ func parseEnc(src []byte) (ENC, []byte, error) {
 // Parses the null-terminated string according to the encoding. Returns the
 // string, and the post-string src.
 func parseStr(encByte ENC, src []byte) (string, []byte, error) {
-	idxZero := slices.Index(src, 0x00)
-	if idxZero == -1 {
-		idxZero = len(src) // if no zero, simply consider the whole slice
-	}
-
 	switch encByte {
 	case ENC_ISO88591:
-		return parseStrIso88591(src[:idxZero]), src[minInt(len(src), idxZero+1):], nil
-	case ENC_UNICODE:
-		if idxZero%2 != 0 {
-			return "", nil, fmt.Errorf("odd number of bytes in Unicode string: %d", idxZero)
+		idxZero := slices.Index(src, 0x00)
+		if idxZero == -1 {
+			idxZero = len(src) // if no zero byte, simply consider the whole slice
 		}
-		wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), idxZero/2)
-		return parseStrUnicode(wsrc), src[minInt(len(src), idxZero+2):], nil
+		return parseStrIso88591(src[:idxZero]), src[minInt(len(src), idxZero+1):], nil
+
+	case ENC_UNICODE:
+		wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2) // will discard an odd byte
+		idxZero := slices.Index(wsrc, 0x0000)
+		if idxZero == -1 {
+			idxZero = len(src) // if no zero word, simply consider the whole slice
+		}
+		return parseStrUnicode(wsrc), src[minInt(len(src), (idxZero+1)*2):], nil
+
 	default:
 		return "", nil, fmt.Errorf("unrecognized text encoding: %02x", src[0])
 	}
