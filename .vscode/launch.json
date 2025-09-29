@@ -8,6 +8,12 @@
 			"mode": "auto",
 			"program": "${workspaceFolder}",
 			// "preLaunchTask": "Build syso",
+			"env": {
+				"GODEBUG": "gctrace=1",
+				// "GOGC": "100",
+				// "GOMAXPROCS": "6",
+				// "GOMEMLIMIT": "12MiB"
+			}
 		},
 	],
 }
