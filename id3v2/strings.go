@@ -26,13 +26,6 @@ const (
 	_BOM_LE uint16 = 0xfffe
 )
 
-func minInt(a, b int) int { // https://stackoverflow.com/a/27516559/6923555
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // Returns the encoding byte, and the post-byte src.
 func parseEnc(src []byte) (ENC, []byte, error) {
 	encByte := ENC(src[0])
@@ -51,7 +44,7 @@ func parseStr(encByte ENC, src []byte) (string, []byte, error) {
 		if idxZero == -1 {
 			idxZero = len(src) // if no zero byte, simply consider the whole slice
 		}
-		return parseStrIso88591(src[:idxZero]), src[minInt(len(src), idxZero+1):], nil
+		return parseStrIso88591(src[:idxZero]), src[min(len(src), idxZero+1):], nil
 
 	case ENC_UNICODE:
 		wsrc := unsafe.Slice((*uint16)(unsafe.Pointer(&src[0])), len(src)/2) // will discard an odd byte
@@ -59,7 +52,7 @@ func parseStr(encByte ENC, src []byte) (string, []byte, error) {
 		if idxZero == -1 {
 			idxZero = len(src) // if no zero word, simply consider the whole slice
 		}
-		return parseStrUnicode(wsrc), src[minInt(len(src), (idxZero+1)*2):], nil
+		return parseStrUnicode(wsrc), src[min(len(src), (idxZero+1)*2):], nil
 
 	default:
 		return "", nil, fmt.Errorf("unrecognized text encoding: %02x", src[0])
