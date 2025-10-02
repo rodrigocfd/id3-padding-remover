@@ -24,7 +24,7 @@ type DlgMain struct {
 }
 
 // Constructor; blocks until the window is closed.
-func RunNew() int {
+func RunMain() int {
 	wnd := ui.NewMainDlg(
 		ui.OptsMainDlg().
 			DlgId(ids.DLG_MAIN).

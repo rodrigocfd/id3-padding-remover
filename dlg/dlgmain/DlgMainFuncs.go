@@ -212,7 +212,7 @@ func (me *DlgMain) editSelected() bool {
 		return pTag.Clone()
 	})
 
-	if dlgedit.ShowNew(me.wnd, clonedTags) == co.ID_OK {
+	if dlgedit.ShowModal(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.Items.Selected() {
 			item.SetData(clonedTags[i]) // replace the selected tags with the edited ones
 		}

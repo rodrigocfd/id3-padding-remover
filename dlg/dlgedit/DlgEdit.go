@@ -34,7 +34,7 @@ type CheckInput struct {
 }
 
 // Constructor; blocks until the modal is closed.
-func ShowNew(parent ui.Parent, tags []*id3v2.Tag) co.ID {
+func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	rel := win.NewOleReleaser()
 	defer rel.Release()
 

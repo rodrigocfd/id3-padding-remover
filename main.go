@@ -17,7 +17,7 @@ func main() {
 	win.OleInitialize()
 	defer win.OleUninitialize()
 
-	dlgmain.RunNew()
+	dlgmain.RunMain()
 }
 
 // func dbgMem() {
