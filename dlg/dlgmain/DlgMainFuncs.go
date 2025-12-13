@@ -41,21 +41,16 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 		allPaths := make([]string, 0, len(incomingPaths)) // grab all files within all subfolders
 		for _, incomingPath := range incomingPaths {
 			if win.PathIsFolder(incomingPath) {
-				nested, _ := win.EnumFilesDeep(incomingPath)
+				nested, _ := win.PathEnumDeep(incomingPath, "mp3")
 				allPaths = append(allPaths, nested...)
-			} else {
+			} else if win.PathHasExtension(incomingPath, "mp3") {
 				allPaths = append(allPaths, incomingPath)
 			}
 		}
-
-		nonMp3Count := xslices.CountFunc(allPaths, func(_ int, path string) bool { // count how many non-MP3 we have
-			return !win.PathHasExtension(path, "mp3")
-		})
-		if nonMp3Count == len(allPaths) { // zero MP3s found?
+		if len(allPaths) == 0 {
 			me.wnd.UiThread(func() {
-				me.wnd.Hwnd().MessageBox(
-					fmt.Sprintf("No MP3 found amongst %d files.", len(allPaths)),
-					"No MP3 files", co.MB_ICONERROR)
+				ui.MsgWarn(me.wnd, "No MP3s", "",
+					fmt.Sprintf("No MP3s found in %d item(s).", len(incomingPaths)))
 				me.setWaitState(false)
 			})
 			return // nothing do to
@@ -66,29 +61,26 @@ func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
 			path string
 		}
 
-		mp3ToReadCount := len(allPaths) - nonMp3Count
-		tags := make([]TagAndPath, 0, mp3ToReadCount) // load and cache all the MP3 tags
+		tags := make([]TagAndPath, 0, len(allPaths)) // load and cache all the MP3 tags
 		for idxMp3, path := range allPaths {
-			if win.PathHasExtension(path, "mp3") { // ignore non-MP3 files
-				pTag, err := id3v2.TagFromFile(path)
-				if err != nil {
-					me.wnd.UiThread(func() {
-						me.wnd.Hwnd().MessageBox(
-							fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
-							"Error", co.MB_ICONERROR)
-						me.setWaitState(false)
-					})
-					return // stop on first error, no tag is loaded
-				}
-				tags = append(tags, TagAndPath{
-					pTag: pTag,
-					path: path,
+			pTag, err := id3v2.TagFromFile(path)
+			if err != nil {
+				me.wnd.UiThread(func() {
+					me.wnd.Hwnd().MessageBox(
+						fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
+						"Error", co.MB_ICONERROR)
+					me.setWaitState(false)
 				})
-
-				me.wnd.UiThread(func() { // UI progress feedback
-					me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%d/%d files read...", idxMp3+1, mp3ToReadCount))
-				})
+				return // stop on first error, no tag is loaded
 			}
+			tags = append(tags, TagAndPath{
+				pTag: pTag,
+				path: path,
+			})
+
+			me.wnd.UiThread(func() { // UI progress feedback
+				me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%d/%d files read...", idxMp3+1, len(allPaths)))
+			})
 		}
 
 		me.wnd.UiThread(func() { // finally fill the listview with the tags
