@@ -88,21 +88,27 @@ func tagParseHeader(src []byte) (declaredSize int, err error) {
 	return int(nDeclaredSize), nil
 }
 
-// Returns the frames, MP3 offset and padding size.
-func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding int, err error) {
-	frames = make([]*Frame, 0, 10) // arbitrary
-	mp3Offset = 10                 // start at 10 because src already skipped 10-byte header
-
+func tagIsMp3Magic(src []byte) bool {
 	// Known magic byte sequences that identify the beginning of a MP3.
 	// https://stackoverflow.com/a/7302482/6923555
 	// https://en.wikipedia.org/wiki/List_of_file_signatures
 	// https://github.com/sindresorhus/file-type/issues/75#issuecomment-320650344
 	MP3_MAGIC := [][2]byte{{0xff, 0xfb}, {0xff, 0xfb}, {0xff, 0xf2}, {0xff, 0xfa}, {0xff, 0xf3}}
+	for _, magic := range MP3_MAGIC {
+		if bytes.Equal(src[:2], magic[:]) {
+			return true
+		}
+	}
+	return false
+}
+
+// Returns the frames, MP3 offset and padding size.
+func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding int, err error) {
+	frames = make([]*Frame, 0, 10) // arbitrary
+	mp3Offset = 10                 // start at 10 because src already skipped 10-byte header
 
 	for {
-		if slices.ContainsFunc(MP3_MAGIC, func(mp3Magic [2]byte) bool {
-			return bytes.Equal(src[:2], mp3Magic[:])
-		}) {
+		if tagIsMp3Magic(src[:2]) {
 			// We found the beginning of the MP3 file, no padding.
 			return frames, mp3Offset, 0, nil
 		}
@@ -110,10 +116,8 @@ func tagParseFrames(src []byte) (frames []*Frame, mp3Offset, padding int, err er
 		if src[0] == 0x00 {
 			// We entered a padding region after all frames.
 			for i := 1; i < len(src)-1; i++ { // skip the 1st byte, which is 0x00; don't count last, we're checking 2
-				for _, mp3Magic := range MP3_MAGIC {
-					if bytes.Equal(src[i:i+2], mp3Magic[:]) {
-						return frames, mp3Offset + i, i, nil
-					}
+				if tagIsMp3Magic(src[i : i+2]) {
+					return frames, mp3Offset + i, i, nil
 				}
 			}
 			return nil, 0, 0, errors.New("MP3 offset not found")
