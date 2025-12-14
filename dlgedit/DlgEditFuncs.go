@@ -5,8 +5,8 @@ package dlgedit
 import (
 	_ "embed"
 	"fmt"
-	"id3fit/dlg/ids"
 	"id3fit/id3v2"
+	"id3fit/ids"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"

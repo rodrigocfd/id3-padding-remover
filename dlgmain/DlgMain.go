@@ -3,7 +3,7 @@
 package dlgmain
 
 import (
-	"id3fit/dlg/ids"
+	"id3fit/ids"
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"

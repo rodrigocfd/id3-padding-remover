@@ -1,4 +1,5 @@
 # Compiles .res into .syso
+# Run inside res/ directory.
 
 PROJ=id3-fit
 

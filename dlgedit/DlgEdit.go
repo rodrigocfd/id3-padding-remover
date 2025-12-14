@@ -3,9 +3,9 @@
 package dlgedit
 
 import (
-	"id3fit/dlg/ids"
-	"id3fit/dlg/wndpicture"
 	"id3fit/id3v2"
+	"id3fit/ids"
+	"id3fit/wndpicture"
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
