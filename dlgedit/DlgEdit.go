@@ -42,23 +42,23 @@ func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 
 	inputs := make([]CheckInput, 0, (ids.TXT_COMMENT-ids.CHK_ARTIST+1)/2)
 	for id := ids.CHK_ARTIST; id <= ids.TXT_COMMENT; id += 2 {
-		chk := ui.NewCheckBoxDlg(wnd, id, ui.LAY_NONE_NONE)
+		chk := ui.NewCheckBoxDlg(wnd, id, ui.LAY_HOLD_HOLD)
 		var inp ui.ChildControl
 		if id == ids.CHK_GENRE {
-			inp = ui.NewComboBoxDlg(wnd, ids.CMB_GENRE, ui.LAY_NONE_NONE)
+			inp = ui.NewComboBoxDlg(wnd, ids.CMB_GENRE, ui.LAY_HOLD_HOLD)
 		} else {
-			inp = ui.NewEditDlg(wnd, id+1, ui.LAY_NONE_NONE)
+			inp = ui.NewEditDlg(wnd, id+1, ui.LAY_HOLD_HOLD)
 		}
 		inputs = append(inputs, CheckInput{chk, inp})
 	}
 
-	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_NONE_NONE)
+	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_HOLD_HOLD)
 	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200), rel)
-	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_NONE_NONE)
+	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_HOLD_HOLD)
 
-	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_NONE_NONE)
-	btnUncheckAll := ui.NewButtonDlg(wnd, ids.BTN_UNCHECK_ALL, ui.LAY_NONE_NONE)
-	btnCheckFilled := ui.NewButtonDlg(wnd, ids.BTN_CHECK_FILLED, ui.LAY_NONE_NONE)
+	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_HOLD_HOLD)
+	btnUncheckAll := ui.NewButtonDlg(wnd, ids.BTN_UNCHECK_ALL, ui.LAY_HOLD_HOLD)
+	btnCheckFilled := ui.NewButtonDlg(wnd, ids.BTN_CHECK_FILLED, ui.LAY_HOLD_HOLD)
 
 	me := &DlgEdit{wnd, inputs,
 		chkPic, wndPic, lblPic,

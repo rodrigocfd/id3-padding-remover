@@ -23,7 +23,7 @@ type DlgProgressSave struct {
 // Constructor; blocks until the modal is closed.
 func ShowModalSave(parent ui.Parent, outgoingTags []TagAndPath) {
 	wnd := ui.NewModalDlg(parent, ids.DLG_PROGRESS)
-	prog := ui.NewProgressBarDlg(wnd, ids.PRO_PRO, ui.LAY_NONE_NONE)
+	prog := ui.NewProgressBarDlg(wnd, ids.PRO_PRO, ui.LAY_HOLD_HOLD)
 
 	me := &DlgProgressSave{wnd, prog, outgoingTags}
 	me.events()

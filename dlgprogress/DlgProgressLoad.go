@@ -31,7 +31,7 @@ type TagAndPath struct {
 // Constructor; blocks until the modal is closed.
 func ShowModalLoad(parent ui.Parent, incomingPaths []string) []TagAndPath {
 	wnd := ui.NewModalDlg(parent, ids.DLG_PROGRESS)
-	prog := ui.NewProgressBarDlg(wnd, ids.PRO_PRO, ui.LAY_NONE_NONE)
+	prog := ui.NewProgressBarDlg(wnd, ids.PRO_PRO, ui.LAY_HOLD_HOLD)
 
 	me := &DlgProgressLoad{wnd, prog, incomingPaths, []TagAndPath{}}
 	me.events()
