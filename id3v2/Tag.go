@@ -164,7 +164,7 @@ func (me *Tag) FrameByName4(name4 string) *Frame {
 	return nil
 }
 
-// Returns false if the tag has no frames.
+// Returns true if the tag has no frames.
 func (me *Tag) IsEmpty() bool {
 	return len(me.frames) == 0
 }
@@ -256,15 +256,14 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 	if err := fout.Resize(0); err != nil { // truncate file
 		return err
 	}
-
 	if len(me.frames) > 0 {
 		tagBlob := me.Serialize()
-		if _, err := fout.Write(tagBlob); err != nil {
+		if _, err := fout.Write(tagBlob); err != nil { // write the new tag
 			return err
 		}
 	}
 
-	fout.Write(currentContents.HotSlice()[oldTag.Mp3Offset():]) // MP3 data
+	fout.Write(currentContents.HotSlice()[oldTag.Mp3Offset():]) // write the MP3 data
 	me.padding = 0
 	return nil
 }

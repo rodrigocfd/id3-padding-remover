@@ -71,11 +71,11 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_OPEN, func() {
-		rel := win.NewOleReleaser()
-		defer rel.Release()
+		oleRel := win.NewOleReleaser()
+		defer oleRel.Release()
 
 		var fod *win.IFileOpenDialog
-		win.CoCreateInstance(rel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
+		win.CoCreateInstance(oleRel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
@@ -91,7 +91,7 @@ func (me *DlgMain) events() {
 		fod.SetFileTypeIndex(1)
 
 		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
-			arr, _ := fod.GetResults(rel)
+			arr, _ := fod.GetResults(oleRel)
 			paths, _ := arr.EnumDisplayNames(co.SIGDN_FILESYSPATH)
 			me.addMp3sToList(paths)
 		}

@@ -35,8 +35,8 @@ type CheckInput struct {
 
 // Constructor; blocks until the modal is closed.
 func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
-	rel := win.NewOleReleaser()
-	defer rel.Release()
+	oleRel := win.NewOleReleaser()
+	defer oleRel.Release()
 
 	wnd := ui.NewModalDlg(parent, ids.DLG_EDIT)
 
@@ -53,7 +53,7 @@ func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	}
 
 	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_HOLD_HOLD)
-	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200), rel)
+	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200), oleRel)
 	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_HOLD_HOLD)
 
 	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_HOLD_HOLD)

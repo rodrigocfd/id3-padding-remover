@@ -22,17 +22,17 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int
 		return win.SIZE{}, 0
 	}
 
-	localRel := win.NewOleReleaser()
-	defer localRel.Release()
-	memStream, err := win.SHCreateMemStream(localRel, body.Bin)
+	localOleRel := win.NewOleReleaser()
+	defer localOleRel.Release()
+	memStream, err := win.SHCreateMemStream(localOleRel, body.Bin)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
 			"Failed to stream picture:\n"+err.Error())
 		return win.SIZE{}, 0
 	}
 
-	me.rel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
-	me.picOle, err = win.OleLoadPicture(me.rel, memStream, len(body.Bin), true)
+	me.oleRel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
+	me.picOle, err = win.OleLoadPicture(me.oleRel, memStream, len(body.Bin), true)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())

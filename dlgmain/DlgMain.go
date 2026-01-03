@@ -35,9 +35,9 @@ func RunMain() int {
 	sortCol := 0
 	sortAsc := true
 
-	rel := win.NewOleReleaser()
-	defer rel.Release()
-	dropTarget := win.NewIDropTargetImpl(rel)
+	oleRel := win.NewOleReleaser()
+	defer oleRel.Release()
+	dropTarget := win.NewIDropTargetImpl(oleRel)
 
 	hCursorWait, _ := win.HINSTANCE(0).LoadCursor(win.CursorResIdc(co.IDC_WAIT))
 	isWaiting := false

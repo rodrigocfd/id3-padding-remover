@@ -56,7 +56,7 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyText struct {
@@ -105,7 +105,7 @@ func (me *BodyText) Serialize(dest []byte) []byte {
 	return dest
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyUserText struct {
@@ -167,7 +167,7 @@ func (me *BodyUserText) Serialize(dest []byte) []byte {
 	return dest
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyBinary struct {
@@ -202,7 +202,7 @@ func (me *BodyBinary) Serialize(dest []byte) []byte {
 	return dest
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyComment struct {
@@ -270,7 +270,7 @@ func (me *BodyComment) Serialize(dest []byte) []byte {
 	return dest
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyPicture struct {
@@ -334,7 +334,7 @@ func (me *BodyPicture) Serialize(dest []byte) []byte {
 	return dest
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 // Concrete type.
 type BodyGeob struct {

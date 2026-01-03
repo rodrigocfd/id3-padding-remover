@@ -59,7 +59,7 @@ func (me *DlgProgressLoad) loadAsync() {
 		}
 	}
 	if len(allPaths) == 0 {
-		me.wnd.UiThread(func() {
+		me.wnd.UiThread(func() { // UI progress abort
 			ui.MsgWarn(me.wnd, "No MP3s", "",
 				fmt.Sprintf("No MP3s found in %d item(s).", len(me.paths)))
 			me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
@@ -67,7 +67,7 @@ func (me *DlgProgressLoad) loadAsync() {
 		return // nothing do to
 	}
 
-	me.wnd.UiThread(func() {
+	me.wnd.UiThread(func() { // UI progress setup
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("0/%d file(s) read...", len(allPaths)))
 		me.prog.SetRange(0, len(allPaths))
 		me.prog.SetPos(0)
@@ -77,7 +77,7 @@ func (me *DlgProgressLoad) loadAsync() {
 	for idxMp3, path := range allPaths {
 		pTag, err := id3v2.TagFromFile(path)
 		if err != nil {
-			me.wnd.UiThread(func() {
+			me.wnd.UiThread(func() { // UI progress error
 				me.wnd.Hwnd().MessageBox(
 					fmt.Sprintf("Error loading tag:\n%s\n\n%s", path, err.Error()),
 					"Error", co.MB_ICONERROR)
