@@ -47,14 +47,6 @@ func (me *DlgMain) events() {
 		}
 	})
 
-	me.wnd.On().WmSetCursor(func(_ ui.WmSetCursor) bool {
-		if me.isWaiting {
-			me.hCursorWait.SetCursor()
-			return true
-		}
-		return false
-	})
-
 	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
 		if firstId == ids.MNU_FILE_OPEN {

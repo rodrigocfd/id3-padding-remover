@@ -5,7 +5,6 @@ package dlgmain
 import (
 	"id3fit/ids"
 
-	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 )
@@ -18,9 +17,6 @@ type DlgMain struct {
 	sortCol    int
 	sortAsc    bool
 	dropTarget *win.IDropTarget
-
-	hCursorWait win.HCURSOR
-	isWaiting   bool // Set by setWaitState(), read at WM_SETCURSOR.
 }
 
 // Constructor; blocks until the window is closed.
@@ -39,12 +35,7 @@ func RunMain() int {
 	defer oleRel.Release()
 	dropTarget := win.NewIDropTargetImpl(oleRel)
 
-	hCursorWait, _ := win.HINSTANCE(0).LoadCursor(win.CursorResIdc(co.IDC_WAIT))
-	isWaiting := false
-
-	me := &DlgMain{wnd, lstFiles,
-		sortCol, sortAsc, dropTarget,
-		hCursorWait, isWaiting}
+	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, dropTarget}
 	me.events()
 	return me.wnd.RunAsMain()
 }
