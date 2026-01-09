@@ -9,7 +9,8 @@ import (
 	"github.com/rodrigocfd/windigo/win"
 )
 
-func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int) {
+// Loads the cover art, if due, into the IPicture COM object.
+func (me *WndPicture) LoadPicture(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int) {
 	apic := id3v2.SameFrameAcrossAllTags("APIC", tags)
 	if apic == nil {
 		return win.SIZE{}, 0 // we don't have a picture to display
@@ -24,15 +25,17 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int
 
 	localOleRel := win.NewOleReleaser()
 	defer localOleRel.Release()
-	memStream, err := win.SHCreateMemStream(localOleRel, body.Bin)
+
+	iStream, err := win.SHCreateMemStream(localOleRel, body.Bin) // create IStream over pic data
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
 			"Failed to stream picture:\n"+err.Error())
 		return win.SIZE{}, 0
 	}
 
-	me.oleRel.ReleaseNow(me.picOle) // free right away, before setting new IPicture
-	me.picOle, err = win.OleLoadPicture(me.oleRel, memStream, len(body.Bin), true)
+	me.oleRel.ReleaseNow(me.iPic) // free IPicture right away, before loading new
+
+	me.iPic, err = win.OleLoadPicture(me.oleRel, iStream, len(body.Bin), true)
 	if err != nil {
 		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
 			"Failed to load picture:\n"+err.Error())
@@ -41,7 +44,7 @@ func (me *WndPicture) LoadPicOle(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int
 
 	hdcScreen, _ := win.HWND(0).GetDC()
 	defer win.HWND(0).ReleaseDC(hdcScreen)
-	szPic, _ := me.picOle.SizePixels(hdcScreen) // picture resolution in pixels
+	szPic, _ := me.iPic.SizePixels(hdcScreen) // picture resolution in pixels
 
 	return szPic, len(body.Bin)
 }

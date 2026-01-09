@@ -24,7 +24,7 @@ func (me *DlgEdit) events() {
 		me.fillComboGenres()
 		me.fillTextboxes()
 		me.fillFramesList()
-		pixels, nBytes := me.wndPic.LoadPicOle(me.tags)
+		pixels, nBytes := me.wndPic.LoadPicture(me.tags)
 		me.fillPicInfo(pixels, nBytes)
 
 		return true
@@ -125,7 +125,7 @@ func (me *DlgEdit) events() {
 		selItems := me.lstFrames.Items.Selected()
 		text := fmt.Sprintf("Do you want to remove %d frame(s)?", len(selItems))
 
-		if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") == co.ID_OK {
+		if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") {
 			for _, selItem := range slices.Backward(selItems) {
 				me.tags[0].RemoveFrame(selItem.Index())
 			}

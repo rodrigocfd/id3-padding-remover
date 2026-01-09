@@ -16,7 +16,7 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
-		me.wnd.Hwnd().RegisterDragDrop(me.dropTarget)
+		me.wnd.Hwnd().RegisterDragDrop(me.dropTarget) // RevokeDragDrop() called in WM_DESTROY
 
 		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
@@ -39,6 +39,10 @@ func (me *DlgMain) events() {
 
 		me.lstFiles.Cols.Get(0).SetWidthToFill()
 		return true
+	})
+
+	me.wnd.On().WmDestroy(func() {
+		me.wnd.Hwnd().RevokeDragDrop()
 	})
 
 	me.wnd.On().WmSize(func(p ui.WmSize) {
@@ -103,7 +107,7 @@ func (me *DlgMain) events() {
 	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_RESAVE, func() {
 		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
 			me.lstFiles.Items.SelectedCount())
-		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") == co.ID_OK {
+		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") {
 			me.saveSelected()
 		}
 	})

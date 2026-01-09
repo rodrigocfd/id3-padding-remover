@@ -12,7 +12,7 @@ type WndPicture struct {
 	wnd *ui.Control
 
 	oleRel *win.OleReleaser // Owned by the parent window.
-	picOle *win.IPicture    // Owned & managed by us.
+	iPic   *win.IPicture    // Owned & managed by us.
 }
 
 // Constructor.
@@ -24,7 +24,7 @@ func New(parent ui.Parent, x, y, cx, cy int, rel *win.OleReleaser) *WndPicture {
 				Size(cx, cy),
 		),
 		oleRel: rel,
-		picOle: nil,
+		iPic:   nil,
 	}
 	me.events()
 	return me

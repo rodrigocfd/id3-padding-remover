@@ -39,6 +39,8 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 	}
 }
 
+// Retrieves the tag from the list view item, and puts its values in the
+// columns.
 func (me *DlgMain) renderMp3InList(item ui.ListViewItem) {
 	pTag := item.Data().(*id3v2.Tag) // retrieve tag stored in item
 	if pTag.IsEmpty() {
@@ -83,13 +85,15 @@ func (me *DlgMain) renderMp3TextCell(item ui.ListViewItem, colIndex int, tag *id
 	}
 }
 
+// Sorts the files in the list view according to the current sortCol and sortAsc
+// values.
 func (me *DlgMain) sortList() {
 	me.lstFiles.Items.Sort(func(itemA, itemB ui.ListViewItem) int {
 		cmp := 0
 		if me.sortCol == 1 { // by padding size
 			tagA := itemA.Data().(*id3v2.Tag)
 			tagB := itemB.Data().(*id3v2.Tag)
-			cmp = int(tagA.Padding()) - int(tagB.Padding())
+			cmp = tagA.Padding() - tagB.Padding()
 		} else { // by column text
 			cmp = wstr.CmpI(itemA.Text(me.sortCol), itemB.Text(me.sortCol))
 		}
@@ -102,13 +106,16 @@ func (me *DlgMain) sortList() {
 	})
 }
 
+// Asks user confirmation to delete APIC and ReplayGain frames. If yes, deletes
+// the frames from all selected tags, without saving them to the MP3 files, and
+// returns true.
 func (me *DlgMain) removePicRg(delRg bool) bool {
 	nFiles := me.lstFiles.Items.SelectedCount()
 	text := fmt.Sprintf("Remove picture frame from %d file(s)?", nFiles)
 	if delRg {
 		text = fmt.Sprintf("Remove picture and ReplayGain frames from %d file(s)?", nFiles)
 	}
-	if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") != co.ID_OK {
+	if !ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") {
 		return false
 	}
 
@@ -132,6 +139,8 @@ func (me *DlgMain) removePicRg(delRg bool) bool {
 	return true
 }
 
+// Displays the edit modal dialog with the selected tags, and returns true of
+// the user clicks OK.
 func (me *DlgMain) editSelected() bool {
 	if me.lstFiles.Items.SelectedCount() == 0 {
 		return false // Enter key will hit here even without selected items
@@ -152,13 +161,17 @@ func (me *DlgMain) editSelected() bool {
 	return false
 }
 
+// Displays the save modal dialog, and saves the selected tags to the MP3 files.
 func (me *DlgMain) saveSelected() {
-	selTags := xslices.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) dlgprogress.TagAndPath {
-		return dlgprogress.TagAndPath{
-			Tag:  item.Data().(*id3v2.Tag),
-			Path: item.Text(0),
-		}
-	})
+	selTags := xslices.Map(
+		me.lstFiles.Items.Selected(),
+		func(_ int, item ui.ListViewItem) dlgprogress.TagAndPath {
+			return dlgprogress.TagAndPath{
+				Tag:  item.Data().(*id3v2.Tag),
+				Path: item.Text(0),
+			}
+		},
+	)
 	dlgprogress.ShowModalSave(me.wnd, selTags)
 
 	for _, item := range me.lstFiles.Items.Selected() {

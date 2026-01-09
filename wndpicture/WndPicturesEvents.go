@@ -13,9 +13,9 @@ func (me *WndPicture) events() {
 		hdc, _ := me.wnd.Hwnd().BeginPaint(&ps)
 		defer me.wnd.Hwnd().EndPaint(&ps)
 
-		if me.picOle != nil {
-			sz, _ := me.picOle.Size()
-			me.picOle.Render(hdc,
+		if me.iPic != nil {
+			sz, _ := me.iPic.Size()
+			me.iPic.Render(hdc,
 				win.POINT{},
 				win.SIZE{Cx: ps.RcPaint.Right, Cy: ps.RcPaint.Bottom},
 				win.POINT{X: 0, Y: sz.Cy},

@@ -52,6 +52,7 @@ func (me *DlgEdit) fillTextboxes() {
 	}
 }
 
+// Fills the right-placed list view with all existing frames, if editing 1 tag.
 func (me *DlgEdit) fillFramesList() {
 	if len(me.tags) == 1 { // editing 1 tag
 		me.lstFrames.Items.DeleteAll() // first clean, then render
@@ -65,6 +66,7 @@ func (me *DlgEdit) fillFramesList() {
 	}
 }
 
+// Displays resolution and size of the cover art in the label.
 func (me *DlgEdit) fillPicInfo(pixels win.SIZE, nBytes int) {
 	if nBytes == 0 {
 		if len(me.tags) == 1 {

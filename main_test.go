@@ -11,8 +11,7 @@ import (
 func BenchmarkSyscall(b *testing.B) {
 	// m := make(map[int]int)
 	for range b.N {
-		win.GetCurrentProcessId()
-		// win.GetCurrentThreadId()
+		win.GetCurrentThreadId()
 	}
 }
 func BenchmarkSyscall2(b *testing.B) {
