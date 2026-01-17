@@ -9,7 +9,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win"
 )
 
 // Modal dialog to edit the fields of one or many tags.
@@ -35,9 +34,6 @@ type CheckInput struct {
 
 // Constructor; blocks until the modal is closed.
 func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
-	oleRel := win.NewOleReleaser()
-	defer oleRel.Release()
-
 	wnd := ui.NewModalDlg(parent, ids.DLG_EDIT)
 
 	inputs := make([]CheckInput, 0, (ids.TXT_COMMENT-ids.CHK_ARTIST+1)/2)
@@ -53,7 +49,7 @@ func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	}
 
 	chkPic := ui.NewCheckBoxDlg(wnd, ids.CHK_PICTURE, ui.LAY_HOLD_HOLD)
-	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200), oleRel)
+	wndPic := wndpicture.New(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200))
 	lblPic := ui.NewStaticDlg(wnd, ids.LBL_IMAGE_DESCR, ui.LAY_HOLD_HOLD)
 
 	lstFrames := ui.NewListViewDlg(wnd, ids.LST_FRAMES, ids.MNU_FRAMES, ui.LAY_HOLD_HOLD)
@@ -64,6 +60,7 @@ func ShowModal(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 		chkPic, wndPic, lblPic,
 		lstFrames, btnUncheckAll, btnCheckFilled,
 		tags, co.ID_CANCEL}
+	defer me.wndPic.HBmp.DeleteObject()
 
 	me.events()
 	me.wnd.ShowModal() // blocks until the modal is closed

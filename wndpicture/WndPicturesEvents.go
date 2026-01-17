@@ -3,6 +3,7 @@
 package wndpicture
 
 import (
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/win"
 )
 
@@ -13,15 +14,27 @@ func (me *WndPicture) events() {
 		hdc, _ := me.wnd.Hwnd().BeginPaint(&ps)
 		defer me.wnd.Hwnd().EndPaint(&ps)
 
-		if me.iPic != nil {
-			sz, _ := me.iPic.Size()
-			me.iPic.Render(hdc,
-				win.POINT{},
-				win.SIZE{Cx: ps.RcPaint.Right, Cy: ps.RcPaint.Bottom},
-				win.POINT{X: 0, Y: sz.Cy},
-				win.SIZE{Cx: sz.Cx, Cy: -sz.Cy},
-			)
+		if me.HBmp == win.HBITMAP(0) {
+			return // no picture to paint
 		}
+
+		hdcMem, _ := hdc.CreateCompatibleDC()
+		defer hdcMem.DeleteDC()
+
+		hBmpOld, _ := hdcMem.SelectObjectBmp(me.HBmp)
+		defer hdcMem.SelectObjectBmp(hBmpOld)
+
+		_, _ = hdc.SetStretchBltMode(co.STRETCH_HALFTONE)
+		_, _ = hdc.SetBrushOrgEx(win.POINT{})
+
+		_ = hdc.StretchBlt(
+			win.POINT{},
+			win.SIZE{Cx: ps.RcPaint.Right, Cy: ps.RcPaint.Bottom},
+			hdcMem,
+			win.POINT{},
+			me.szPixels,
+			co.ROP_SRCCOPY,
+		)
 	})
 
 	// me.wnd.On().WmRButtonUp(func(p ui.WmMouse) {

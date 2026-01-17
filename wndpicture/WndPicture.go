@@ -9,22 +9,21 @@ import (
 
 // Child window to render pictures.
 type WndPicture struct {
-	wnd *ui.Control
-
-	oleRel *win.OleReleaser // Owned by the parent window.
-	iPic   *win.IPicture    // Owned & managed by us.
+	wnd      *ui.Control
+	HBmp     win.HBITMAP // deleted by parent window
+	szPixels win.SIZE
 }
 
 // Constructor.
-func New(parent ui.Parent, x, y, cx, cy int, rel *win.OleReleaser) *WndPicture {
+func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
 	me := &WndPicture{
 		wnd: ui.NewControl(parent,
 			ui.OptsControl().
 				Position(x, y).
 				Size(cx, cy),
 		),
-		oleRel: rel,
-		iPic:   nil,
+		HBmp:     win.HBITMAP(0),
+		szPixels: win.SIZE{},
 	}
 	me.events()
 	return me

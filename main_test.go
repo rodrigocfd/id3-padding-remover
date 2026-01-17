@@ -8,13 +8,13 @@ import (
 
 // go test -bench=.
 
-func BenchmarkSyscall(b *testing.B) {
+func BenchmarkThreadId(b *testing.B) {
 	// m := make(map[int]int)
 	for range b.N {
 		win.GetCurrentThreadId()
 	}
 }
-func BenchmarkSyscall2(b *testing.B) {
+func BenchmarkProcId(b *testing.B) {
 	for range b.N {
 		win.GetCurrentProcessId()
 	}

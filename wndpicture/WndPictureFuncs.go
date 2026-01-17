@@ -3,48 +3,123 @@
 package wndpicture
 
 import (
+	"fmt"
 	"id3fit/id3v2"
 
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 )
 
 // Loads the cover art, if due, into the IPicture COM object.
 func (me *WndPicture) LoadPicture(tags []*id3v2.Tag) (pixels win.SIZE, nBytes int) {
+	picBin, err := me.extractPicBinFromTag(tags)
+	if err != nil {
+		ui.MsgError(me.wnd.Parent(), "Picture parsing", "", err.Error())
+	}
+
+	if picBin == nil {
+		return win.SIZE{}, 0 // we don't have a picture to display
+	}
+
+	if pixels, err = me.loadBitmap(picBin); err != nil {
+		ui.MsgError(me.wnd.Parent(), "Picture parsing", "", err.Error())
+	}
+
+	return pixels, len(picBin)
+}
+
+func (me *WndPicture) extractPicBinFromTag(tags []*id3v2.Tag) ([]byte, error) {
 	apic := id3v2.SameFrameAcrossAllTags("APIC", tags)
 	if apic == nil {
-		return win.SIZE{}, 0 // we don't have a picture to display
+		return nil, nil // we don't have a picture to display
 	}
 
 	body, ok := apic.Body().(*id3v2.BodyPicture)
 	if !ok {
-		ui.MsgError(me.wnd.Parent(), "Picture parsing", "",
-			"APIC frame does not contain BodyPicture body type") // should never happen
-		return win.SIZE{}, 0
+		return nil, fmt.Errorf("APIC frame does not contain BodyPicture body type") // should never happen
 	}
 
+	return body.Bin, nil
+}
+
+func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 	localOleRel := win.NewOleReleaser()
 	defer localOleRel.Release()
 
-	iStream, err := win.SHCreateMemStream(localOleRel, body.Bin) // create IStream over pic data
+	var iFactory *win.IWICImagingFactory
+	_ = win.CoCreateInstance(
+		localOleRel,
+		co.CLSID_WICImagingFactory,
+		nil,
+		co.CLSCTX_INPROC_SERVER,
+		&iFactory,
+	)
+	iWicStream, _ := iFactory.CreateStream(localOleRel)
+	_ = iWicStream.InitializeFromMemory(picBin)
+
+	iBmpDecoder, err := iFactory.CreateDecoderFromStream(
+		localOleRel,
+		&iWicStream.IStream,
+		co.GUID_NULL,
+		co.WICDEC_METADATACACHE_OnLoad,
+	)
 	if err != nil {
-		ui.MsgError(me.wnd.Parent(), "Picture stream", "",
-			"Failed to stream picture:\n"+err.Error())
-		return win.SIZE{}, 0
+		return win.SIZE{}, fmt.Errorf("failed to create BMP decoder: %w", err)
 	}
 
-	me.oleRel.ReleaseNow(me.iPic) // free IPicture right away, before loading new
-
-	me.iPic, err = win.OleLoadPicture(me.oleRel, iStream, len(body.Bin), true)
+	iFrameDecode, err := iBmpDecoder.GetFrame(localOleRel, 0)
 	if err != nil {
-		ui.MsgError(me.wnd.Parent(), "Picture loading", "",
-			"Failed to load picture:\n"+err.Error())
-		return win.SIZE{}, 0
+		return win.SIZE{}, fmt.Errorf("failed to get frame 0: %w", err)
 	}
 
-	hdcScreen, _ := win.HWND(0).GetDC()
-	defer win.HWND(0).ReleaseDC(hdcScreen)
-	szPic, _ := me.iPic.SizePixels(hdcScreen) // picture resolution in pixels
+	iFmtConverter, err := iFactory.CreateFormatConverter(localOleRel)
+	if err != nil {
+		return win.SIZE{}, fmt.Errorf("failed to create format converter: %w", err)
+	}
 
-	return szPic, len(body.Bin)
+	err = iFmtConverter.Initialize(
+		&iFrameDecode.IWICBitmapSource,
+		co.WIC_PIXELFORMAT_32bppPBGRA,
+		co.WICBMP_DITHER_None,
+		nil,
+		0,
+		co.WICBMP_PAL_Custom,
+	)
+	if err != nil {
+		return win.SIZE{}, fmt.Errorf("failed to init format converter: %w", err)
+	}
+
+	szPixels, err := iFmtConverter.GetSize()
+	if err != nil {
+		return win.SIZE{}, fmt.Errorf("failed to get sz pixels: %w", err)
+	}
+
+	var bmi win.BITMAPINFO
+	bmi.BmiHeader.SetSize()
+	bmi.BmiHeader.Width = szPixels.Cx
+	bmi.BmiHeader.Height = -szPixels.Cy // top-down
+	bmi.BmiHeader.Planes = 1
+	bmi.BmiHeader.BitCount = 32
+	bmi.BmiHeader.Compression = co.BI_RGB
+
+	hBmp, pImageBits, err := win.HDC(0).
+		CreateDIBSection(&bmi, co.DIB_COLORS_RGB, win.HFILEMAP(0), 0)
+	if err != nil {
+		return win.SIZE{}, fmt.Errorf("failed to create DIB section: %w", err)
+	}
+
+	me.HBmp.DeleteObject()
+	me.HBmp = hBmp         // cache the bitmap
+	me.szPixels = szPixels // cache the size
+
+	stride := int(szPixels.Cx) * 4
+	bufSize := stride * int(szPixels.Cy)
+
+	err = iFmtConverter.CopyPixels(nil, stride, bufSize, pImageBits)
+	if err != nil {
+		return win.SIZE{}, fmt.Errorf("failed to copy pixels %w", err)
+	}
+
+	return szPixels, nil
 }
