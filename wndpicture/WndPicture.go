@@ -28,7 +28,3 @@ func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
 	me.events()
 	return me
 }
-
-func (me *WndPicture) Repaint() error {
-	return me.wnd.Hwnd().InvalidateRect(nil, true)
-}
