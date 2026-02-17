@@ -4,7 +4,6 @@ package dlg
 
 import (
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win"
 )
 
 // Main application dialog.
@@ -12,9 +11,8 @@ type DlgMain struct {
 	wnd      *ui.Main
 	lstFiles *ui.ListView
 
-	sortCol    int
-	sortAsc    bool
-	dropTarget *win.IDropTarget
+	sortCol int
+	sortAsc bool
 }
 
 // Constructor; blocks until the window is closed.
@@ -23,17 +21,14 @@ func RunMain() int {
 		ui.OptsMainDlg().
 			DlgId(DLG_MAIN).
 			IconId(ICO_MAIN).
-			AccelTableId(ACC_MAIN),
+			AccelTableId(ACC_MAIN).
+			DropFiles(true),
 	)
 	lstFiles := ui.NewListViewDlg(wnd, LST_FILES, MNU_FILE, ui.LAY_RESIZE_RESIZE)
 	sortCol := 0
 	sortAsc := true
 
-	oleRel := win.NewOleReleaser()
-	defer oleRel.Release()
-	dropTarget := win.NewIDropTargetImpl(oleRel)
-
-	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc, dropTarget}
+	me := &DlgMain{wnd, lstFiles, sortCol, sortAsc}
 	me.events()
 	return me.wnd.RunAsMain()
 }

@@ -15,8 +15,6 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
-		me.wnd.Hwnd().RegisterDragDrop(me.dropTarget) // RevokeDragDrop() called in WM_DESTROY
-
 		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
 
@@ -40,10 +38,6 @@ func (me *DlgMain) events() {
 		return true
 	})
 
-	me.wnd.On().WmDestroy(func() {
-		me.wnd.Hwnd().RevokeDragDrop() // RegisterDragDrop() called in WM_INITDIALOG
-	})
-
 	me.wnd.On().WmSize(func(p ui.WmSize) {
 		if p.Request() != co.SIZE_REQ_MINIMIZED {
 			me.lstFiles.Cols.Get(0).SetWidthToFill()
@@ -63,6 +57,11 @@ func (me *DlgMain) events() {
 				MNU_FILE_DELPIC,
 				MNU_FILE_DELPICRG)
 		}
+	})
+
+	me.wnd.On().WmDropFiles(func(p ui.WmDropFiles) {
+		paths, _ := p.HDrop().DragQueryFile()
+		me.addMp3sToList(paths)
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_OPEN, func() {
@@ -189,33 +188,5 @@ func (me *DlgMain) events() {
 		me.sortCol = lvCol.Index()
 		me.sortList()
 	})
-
-	me.dropTarget.Drop(
-		func(dataObj *win.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
-			fetc := win.FORMATETC{
-				CfFormat: co.CF_HDROP,
-				Aspect:   co.DVASPECT_CONTENT,
-				Lindex:   -1,
-				Tymed:    co.TYMED_HGLOBAL,
-			}
-
-			stg, err := dataObj.GetData(&fetc)
-			if err != nil {
-				ui.MsgError(me.wnd, "Drop error", "", err.Error())
-				return co.HRESULT_S_OK
-			}
-			defer win.ReleaseStgMedium(&stg)
-
-			if hGlobal, ok := stg.HGlobal(); ok {
-				hMem, _ := hGlobal.GlobalLock()
-				defer hGlobal.GlobalUnlock()
-
-				hDrop := win.HDROP(hMem) // DragFinish() crashes ReleaseStgMedium(), don't call
-				paths, _ := hDrop.DragQueryFile()
-				me.addMp3sToList(paths)
-			}
-			return co.HRESULT_S_OK
-		},
-	)
 
 }
