@@ -1,10 +1,9 @@
 //go:build windows
 
-package dlgmain
+package dlg
 
 import (
 	"fmt"
-	"id3fit/ids"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/co"
@@ -42,7 +41,7 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmDestroy(func() {
-		me.wnd.Hwnd().RevokeDragDrop()
+		me.wnd.Hwnd().RevokeDragDrop() // RegisterDragDrop() called in WM_INITDIALOG
 	})
 
 	me.wnd.On().WmSize(func(p ui.WmSize) {
@@ -53,20 +52,20 @@ func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
-		if firstId == ids.MNU_FILE_OPEN {
-			p.HMenu().SetMenuDefaultItemByCmd(ids.MNU_FILE_EDIT)
+		if firstId == MNU_FILE_OPEN {
+			p.HMenu().SetMenuDefaultItemByCmd(MNU_FILE_EDIT)
 
 			enable := me.lstFiles.Items.SelectedCount() > 0
 			p.HMenu().EnableMenuItemByCmd(enable,
-				ids.MNU_FILE_EDIT,
-				ids.MNU_FILE_RESAVE,
-				ids.MNU_FILE_REMOVE,
-				ids.MNU_FILE_DELPIC,
-				ids.MNU_FILE_DELPICRG)
+				MNU_FILE_EDIT,
+				MNU_FILE_RESAVE,
+				MNU_FILE_REMOVE,
+				MNU_FILE_DELPIC,
+				MNU_FILE_DELPICRG)
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_OPEN, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_OPEN, func() {
 		oleRel := win.NewOleReleaser()
 		defer oleRel.Release()
 
@@ -93,18 +92,18 @@ func (me *DlgMain) events() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_EDIT, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_EDIT, func() {
 		if me.editSelected() {
 			me.saveSelected()
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_REMOVE, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_REMOVE, func() {
 		me.lstFiles.Items.DeleteSelected()
 		me.updateTitlebarCount()
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_RESAVE, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_RESAVE, func() {
 		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
 			me.lstFiles.Items.SelectedCount())
 		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") {
@@ -112,19 +111,19 @@ func (me *DlgMain) events() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPIC, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_DELPIC, func() {
 		if me.removePicRg(false) {
 			me.saveSelected()
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_DELPICRG, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_DELPICRG, func() {
 		if me.removePicRg(true) {
 			me.saveSelected()
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FILE_ABOUT, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_ABOUT, func() {
 		hInst, _ := win.GetModuleHandle("")
 		exeName, _ := hInst.GetModuleFileName()
 		nfo, _ := win.VersionLoad(exeName)

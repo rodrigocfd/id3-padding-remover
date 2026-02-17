@@ -1,11 +1,9 @@
 //go:build windows
 
-package dlgmain
+package dlg
 
 import (
 	"fmt"
-	"id3fit/dlgedit"
-	"id3fit/dlgprogress"
 	"id3fit/id3v2"
 	"strings"
 
@@ -22,7 +20,7 @@ func (me *DlgMain) updateTitlebarCount() {
 }
 
 func (me *DlgMain) addMp3sToList(incomingPaths []string) {
-	tagsAndPaths := dlgprogress.ShowModalLoad(me.wnd, incomingPaths)
+	tagsAndPaths := ShowDlgProgressLoad(me.wnd, incomingPaths)
 	if len(tagsAndPaths) > 0 {
 		for _, tag := range tagsAndPaths {
 			var item ui.ListViewItem
@@ -151,7 +149,7 @@ func (me *DlgMain) editSelected() bool {
 		return pTag.Clone()
 	})
 
-	if dlgedit.ShowModal(me.wnd, clonedTags) == co.ID_OK {
+	if ShowDlgEdit(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.Items.Selected() {
 			item.SetData(clonedTags[i]) // replace the selected tags with the cloned, edited ones
 		}
@@ -165,14 +163,14 @@ func (me *DlgMain) editSelected() bool {
 func (me *DlgMain) saveSelected() {
 	selTags := xslices.Map(
 		me.lstFiles.Items.Selected(),
-		func(_ int, item ui.ListViewItem) dlgprogress.TagAndPath {
-			return dlgprogress.TagAndPath{
+		func(_ int, item ui.ListViewItem) TagAndPath {
+			return TagAndPath{
 				Tag:  item.Data().(*id3v2.Tag),
 				Path: item.Text(0),
 			}
 		},
 	)
-	dlgprogress.ShowModalSave(me.wnd, selTags)
+	ShowDlgProgressSave(me.wnd, selTags)
 
 	for _, item := range me.lstFiles.Items.Selected() {
 		me.renderMp3InList(item) // re-render, all paddings have been removed

@@ -1,6 +1,6 @@
 //go:build windows
 
-package ids
+package dlg
 
 const (
 	ICO_MAIN uint16 = iota + 101

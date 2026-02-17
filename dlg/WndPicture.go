@@ -1,6 +1,6 @@
 //go:build windows
 
-package wndpicture
+package dlg
 
 import (
 	"github.com/rodrigocfd/windigo/ui"
@@ -15,7 +15,7 @@ type WndPicture struct {
 }
 
 // Constructor.
-func New(parent ui.Parent, x, y, cx, cy int) *WndPicture {
+func NewWndPicture(parent ui.Parent, x, y, cx, cy int) *WndPicture {
 	me := &WndPicture{
 		wnd: ui.NewControl(parent,
 			ui.OptsControl().

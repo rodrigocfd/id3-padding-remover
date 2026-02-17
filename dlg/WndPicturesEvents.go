@@ -1,6 +1,6 @@
 //go:build windows
 
-package wndpicture
+package dlg
 
 import (
 	"github.com/rodrigocfd/windigo/co"

@@ -1,16 +1,13 @@
 //go:build windows
 
-package dlgprogress
+package dlg
 
 import (
 	"fmt"
-	"id3fit/ids"
 	"strings"
-	"time"
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
-	"github.com/rodrigocfd/windigo/win"
 )
 
 // Modal dialog to load ID3v2 tags from MP3 files.
@@ -21,9 +18,9 @@ type DlgProgressSave struct {
 }
 
 // Constructor; blocks until the modal is closed.
-func ShowModalSave(parent ui.Parent, outgoingTags []TagAndPath) {
-	wnd := ui.NewModalDlg(parent, ids.DLG_PROGRESS)
-	prog := ui.NewProgressBarDlg(wnd, ids.PRO_PRO, ui.LAY_HOLD_HOLD)
+func ShowDlgProgressSave(parent ui.Parent, outgoingTags []TagAndPath) {
+	wnd := ui.NewModalDlg(parent, DLG_PROGRESS)
+	prog := ui.NewProgressBarDlg(wnd, PRO_PRO, ui.LAY_HOLD_HOLD)
 
 	me := &DlgProgressSave{wnd, prog, outgoingTags}
 	me.events()
@@ -55,7 +52,6 @@ func (me *DlgProgressSave) saveAsync() {
 			me.wnd.Hwnd().SetWindowText(fmt.Sprintf("%d/%d file(s) written...", idxTag+1, len(me.tagsToSave)))
 			me.prog.SetPos(idxTag + 1)
 		})
-		win.Sleep(_STEP_MS * time.Millisecond)
 	}
 
 	me.wnd.UiThread(func() { // UI final feedback

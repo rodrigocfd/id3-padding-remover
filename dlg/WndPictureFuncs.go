@@ -1,6 +1,6 @@
 //go:build windows
 
-package wndpicture
+package dlg
 
 import (
 	"fmt"
@@ -95,15 +95,18 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 		return win.SIZE{}, fmt.Errorf("failed to get sz pixels: %w", err)
 	}
 
-	var bmi win.BITMAPINFO
+	bmi := win.BITMAPINFO{
+		BmiHeader: win.BITMAPINFOHEADER{
+			Width:       szPixels.Cx,
+			Height:      -szPixels.Cy, // top-down
+			Planes:      1,
+			BitCount:    32,
+			Compression: co.BI_RGB,
+		},
+	}
 	bmi.BmiHeader.SetSize()
-	bmi.BmiHeader.Width = szPixels.Cx
-	bmi.BmiHeader.Height = -szPixels.Cy // top-down
-	bmi.BmiHeader.Planes = 1
-	bmi.BmiHeader.BitCount = 32
-	bmi.BmiHeader.Compression = co.BI_RGB
 
-	hBmp, pImageBits, err := win.HDC(0).
+	hBmp, pImgBits, err := win.HDC(0).
 		CreateDIBSection(&bmi, co.DIB_COLORS_RGB, win.HFILEMAP(0), 0)
 	if err != nil {
 		return win.SIZE{}, fmt.Errorf("failed to create DIB section: %w", err)
@@ -116,7 +119,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 	stride := int(szPixels.Cx) * 4
 	bufSize := stride * int(szPixels.Cy)
 
-	err = iFmtConverter.CopyPixels(nil, stride, bufSize, pImageBits)
+	err = iFmtConverter.CopyPixels(nil, stride, bufSize, pImgBits)
 	if err != nil {
 		return win.SIZE{}, fmt.Errorf("failed to copy pixels %w", err)
 	}

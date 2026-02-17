@@ -3,7 +3,7 @@
 package main
 
 import (
-	"id3fit/dlgmain"
+	"id3fit/dlg"
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/co"
@@ -18,7 +18,7 @@ func main() {
 	win.OleInitialize()
 	defer win.OleUninitialize()
 
-	dlgmain.RunMain()
+	dlg.RunMain()
 	// ayy()
 }
 

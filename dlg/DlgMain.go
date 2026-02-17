@@ -1,10 +1,8 @@
 //go:build windows
 
-package dlgmain
+package dlg
 
 import (
-	"id3fit/ids"
-
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 )
@@ -23,11 +21,11 @@ type DlgMain struct {
 func RunMain() int {
 	wnd := ui.NewMainDlg(
 		ui.OptsMainDlg().
-			DlgId(ids.DLG_MAIN).
-			IconId(ids.ICO_MAIN).
-			AccelTableId(ids.ACC_MAIN),
+			DlgId(DLG_MAIN).
+			IconId(ICO_MAIN).
+			AccelTableId(ACC_MAIN),
 	)
-	lstFiles := ui.NewListViewDlg(wnd, ids.LST_FILES, ids.MNU_FILE, ui.LAY_RESIZE_RESIZE)
+	lstFiles := ui.NewListViewDlg(wnd, LST_FILES, MNU_FILE, ui.LAY_RESIZE_RESIZE)
 	sortCol := 0
 	sortAsc := true
 

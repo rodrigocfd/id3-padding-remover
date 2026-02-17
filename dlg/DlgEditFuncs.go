@@ -1,12 +1,11 @@
 //go:build windows
 
-package dlgedit
+package dlg
 
 import (
 	_ "embed"
 	"fmt"
 	"id3fit/id3v2"
-	"id3fit/ids"
 	"strings"
 
 	"github.com/rodrigocfd/windigo/ui"
@@ -19,7 +18,7 @@ var genres string
 
 func (me *DlgEdit) fillComboGenres() {
 	for _, input := range me.inputs {
-		if input.txt.CtrlId() == ids.CMB_GENRE {
+		if input.txt.CtrlId() == CMB_GENRE {
 			cmb, _ := input.txt.(*ui.ComboBox)
 			for _, genre := range wstr.SplitLines(genres) {
 				if genre != "" {

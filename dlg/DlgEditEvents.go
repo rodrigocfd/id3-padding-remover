@@ -1,10 +1,9 @@
 //go:build windows
 
-package dlgedit
+package dlg
 
 import (
 	"fmt"
-	"id3fit/ids"
 	"slices"
 	"strings"
 
@@ -32,15 +31,15 @@ func (me *DlgEdit) events() {
 
 	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
-		if firstId == ids.MNU_FRAMES_MOVEUP {
+		if firstId == MNU_FRAMES_MOVEUP {
 			oneTag := len(me.tags) == 1
 			hasSel := me.lstFrames.Items.SelectedCount() > 0
 			firstItem := me.lstFrames.Items.Get(0)
 			lastItem := me.lstFrames.Items.Last()
 
-			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !firstItem.IsSelected(), ids.MNU_FRAMES_MOVEUP)
-			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !lastItem.IsSelected(), ids.MNU_FRAMES_MOVEDOWN)
-			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel, ids.MNU_FRAMES_DELETE)
+			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !firstItem.IsSelected(), MNU_FRAMES_MOVEUP)
+			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !lastItem.IsSelected(), MNU_FRAMES_MOVEDOWN)
+			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel, MNU_FRAMES_DELETE)
 		}
 	})
 
@@ -81,7 +80,7 @@ func (me *DlgEdit) events() {
 		me.wnd.Hwnd().SendMessage(co.WM_CLOSE, 0, 0)
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEUP, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_MOVEUP, func() {
 		focusedItem, hasFocused := me.lstFrames.Items.Focused()
 
 		selItems := me.lstFrames.Items.Selected()
@@ -101,7 +100,7 @@ func (me *DlgEdit) events() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_MOVEDOWN, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_MOVEDOWN, func() {
 		focusedItem, hasFocused := me.lstFrames.Items.Focused()
 
 		selItems := me.lstFrames.Items.Selected()
@@ -121,7 +120,7 @@ func (me *DlgEdit) events() {
 		}
 	})
 
-	me.wnd.On().WmCommandAccelMenu(ids.MNU_FRAMES_DELETE, func() {
+	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_DELETE, func() {
 		selItems := me.lstFrames.Items.Selected()
 		text := fmt.Sprintf("Do you want to remove %d frame(s)?", len(selItems))
 
