@@ -3,7 +3,7 @@
 
 echo "Building application..."
 cd ..
-go build -ldflags "-s -w -H=windowsgui"
+go build -trimpath -ldflags "-s -w -H=windowsgui"
 
 EXE=id3-fit_GO.exe
 echo "Deploying to apps folder..."
