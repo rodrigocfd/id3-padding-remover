@@ -5,7 +5,7 @@ mod id3v2;
 mod ids;
 mod msgbox;
 
-use winsafe::{self as w, co, prelude::*};
+use winsafe as w;
 
 use dlgs::DlgMain;
 
