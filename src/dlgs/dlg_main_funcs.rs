@@ -61,7 +61,7 @@ impl DlgMain {
 			.try_for_each(|file_path| -> w::AnyResult<_> {
 				if w::path::is_directory(file_path) {
 					let inner_files =
-						w::path::dir_walk(file_path).collect::<w::SysResult<Vec<_>>>()?;
+						w::path::dir_list_recursive(file_path).collect::<w::SysResult<Vec<_>>>()?;
 					all_files.extend_from_slice(&inner_files); // add all files within the directory
 				} else {
 					all_files.push(file_path.to_owned());

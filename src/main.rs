@@ -10,12 +10,6 @@ use winsafe::{self as w, co, prelude::*};
 use dlgs::DlgMain;
 
 fn main() {
-	if let Err(e) = (|| {
-		let _ole_guard = w::OleInitialize()?;
-		DlgMain::run_main()
-	})() {
-		w::HWND::NULL
-			.MessageBox(&e.to_string(), "Uncaught error", co::MB::ICONERROR)
-			.unwrap();
-	}
+	let _ole_guard = w::OleInitialize().unwrap();
+	DlgMain::run_main().unwrap();
 }
