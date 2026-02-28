@@ -2,7 +2,6 @@
 
 mod dlgs;
 mod id3v2;
-mod ids;
 mod msgbox;
 
 use winsafe as w;

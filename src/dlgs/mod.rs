@@ -5,6 +5,7 @@ mod dlg_edit_input;
 mod dlg_main;
 mod dlg_main_events;
 mod dlg_main_funcs;
+mod ids;
 mod wnd_picture;
 mod wnd_picture_events;
 mod wnd_picture_funcs;

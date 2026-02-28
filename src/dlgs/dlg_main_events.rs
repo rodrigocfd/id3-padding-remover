@@ -1,7 +1,7 @@
 use winsafe::{self as w, co, gui, prelude::*};
 
-use super::{DlgEdit, DlgMain, LIST_COLS};
-use crate::{ids, msgbox};
+use super::{DlgEdit, DlgMain, LIST_COLS, ids};
+use crate::msgbox;
 
 impl DlgMain {
 	pub(super) fn events(&self) {

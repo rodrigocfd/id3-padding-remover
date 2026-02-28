@@ -2,7 +2,8 @@ use std::cell::Cell;
 use std::rc::Rc;
 use winsafe::{self as w, gui};
 
-use crate::{id3v2, ids};
+use super::ids;
+use crate::id3v2;
 
 #[derive(Clone)]
 pub struct DlgMain {

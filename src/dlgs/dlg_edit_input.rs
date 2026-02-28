@@ -1,7 +1,8 @@
 use std::sync::Arc;
 use winsafe::{self as w, gui, prelude::*};
 
-use crate::{id3v2, ids};
+use super::ids;
+use crate::id3v2;
 
 /// Encapsulates a CheckBox and an Edit for a field.
 ///

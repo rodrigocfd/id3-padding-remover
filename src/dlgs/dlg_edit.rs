@@ -2,8 +2,8 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use winsafe::{self as w, gui, prelude::*};
 
-use super::{Input, WndPicture};
-use crate::{id3v2, ids};
+use super::{Input, WndPicture, ids};
+use crate::id3v2;
 
 #[derive(Clone)]
 pub struct DlgEdit {

@@ -1,7 +1,7 @@
 use winsafe::{self as w, gui, prelude::*};
 
-use super::DlgEdit;
-use crate::{id3v2, ids};
+use super::{DlgEdit, ids};
+use crate::id3v2;
 
 impl DlgEdit {
 	pub(super) fn load_combo_genres(&self) -> w::AnyResult<()> {
