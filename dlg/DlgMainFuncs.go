@@ -14,8 +14,8 @@ import (
 )
 
 func (me *DlgMain) updateTitlebarCount() {
-	nFiles := me.lstFiles.Items.Count()
-	nSel := me.lstFiles.Items.SelectedCount()
+	nFiles := me.lstFiles.ItemCount()
+	nSel := me.lstFiles.SelectedItemCount()
 	me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)", nSel, nFiles))
 }
 
@@ -24,16 +24,16 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 	if len(tagsAndPaths) > 0 {
 		for _, tag := range tagsAndPaths {
 			var item ui.ListViewItem
-			if existingItem, ok := me.lstFiles.Items.Find(tag.Path); ok { // file already loaded?
+			if existingItem, ok := me.lstFiles.FindItem(tag.Path); ok { // file already loaded?
 				item = existingItem // current tag object will be replaced
 			} else {
-				item = me.lstFiles.Items.AddWithIcon(0, tag.Path) // insert new item
+				item = me.lstFiles.AddItemWithIcon16(ui.IcoExt("mp3"), tag.Path) // insert new item
 			}
 			item.SetData(tag.Tag) // store tag in item
 			me.renderMp3InList(item)
 		}
 		me.sortList()
-		me.lstFiles.Cols.Get(0).SetWidthToFill()
+		me.lstFiles.Col(0).SetWidthToFill()
 	}
 }
 
@@ -86,7 +86,7 @@ func (me *DlgMain) renderMp3TextCell(item ui.ListViewItem, colIndex int, tag *id
 // Sorts the files in the list view according to the current sortCol and sortAsc
 // values.
 func (me *DlgMain) sortList() {
-	me.lstFiles.Items.Sort(func(itemA, itemB ui.ListViewItem) int {
+	me.lstFiles.SortItems(func(itemA, itemB ui.ListViewItem) int {
 		cmp := 0
 		if me.sortCol == 1 { // by padding size
 			tagA := itemA.Data().(*id3v2.Tag)
@@ -108,7 +108,7 @@ func (me *DlgMain) sortList() {
 // the frames from all selected tags, without saving them to the MP3 files, and
 // returns true.
 func (me *DlgMain) removePicRg(delRg bool) bool {
-	nFiles := me.lstFiles.Items.SelectedCount()
+	nFiles := me.lstFiles.SelectedItemCount()
 	text := fmt.Sprintf("Remove picture frame from %d file(s)?", nFiles)
 	if delRg {
 		text = fmt.Sprintf("Remove picture and ReplayGain frames from %d file(s)?", nFiles)
@@ -117,7 +117,7 @@ func (me *DlgMain) removePicRg(delRg bool) bool {
 		return false
 	}
 
-	for _, item := range me.lstFiles.Items.Selected() {
+	for _, item := range me.lstFiles.SelectedItems() {
 		pTag := item.Data().(*id3v2.Tag)
 		pTag.RemoveFrameIf(func(pFrame *id3v2.Frame) bool {
 			if pFrame.Name4() == "APIC" {
@@ -140,17 +140,17 @@ func (me *DlgMain) removePicRg(delRg bool) bool {
 // Displays the edit modal dialog with the selected tags, and returns true of
 // the user clicks OK.
 func (me *DlgMain) editSelected() bool {
-	if me.lstFiles.Items.SelectedCount() == 0 {
+	if me.lstFiles.SelectedItemCount() == 0 {
 		return false // Enter key will hit here even without selected items
 	}
 
-	clonedTags := xslices.Map(me.lstFiles.Items.Selected(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
+	clonedTags := xslices.Map(me.lstFiles.SelectedItems(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
 		pTag := item.Data().(*id3v2.Tag)
 		return pTag.Clone()
 	})
 
 	if ShowDlgEdit(me.wnd, clonedTags) == co.ID_OK {
-		for i, item := range me.lstFiles.Items.Selected() {
+		for i, item := range me.lstFiles.SelectedItems() {
 			item.SetData(clonedTags[i]) // replace the selected tags with the cloned, edited ones
 		}
 		return true
@@ -162,7 +162,7 @@ func (me *DlgMain) editSelected() bool {
 // Displays the save modal dialog, and saves the selected tags to the MP3 files.
 func (me *DlgMain) saveSelected() {
 	selTags := xslices.Map(
-		me.lstFiles.Items.Selected(),
+		me.lstFiles.SelectedItems(),
 		func(_ int, item ui.ListViewItem) TagAndPath {
 			return TagAndPath{
 				Tag:  item.Data().(*id3v2.Tag),
@@ -172,7 +172,7 @@ func (me *DlgMain) saveSelected() {
 	)
 	ShowDlgProgressSave(me.wnd, selTags)
 
-	for _, item := range me.lstFiles.Items.Selected() {
+	for _, item := range me.lstFiles.SelectedItems() {
 		me.renderMp3InList(item) // re-render, all paddings have been removed
 	}
 	me.sortList()

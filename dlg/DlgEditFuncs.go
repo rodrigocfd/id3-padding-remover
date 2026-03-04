@@ -22,7 +22,7 @@ func (me *DlgEdit) fillComboGenres() {
 			cmb, _ := input.txt.(*ui.ComboBox)
 			for _, genre := range wstr.SplitLines(genres) {
 				if genre != "" {
-					cmb.Items.Add(genre)
+					cmb.AddItem(genre)
 				}
 			}
 			break
@@ -54,14 +54,14 @@ func (me *DlgEdit) fillTextboxes() {
 // Fills the right-placed list view with all existing frames, if editing 1 tag.
 func (me *DlgEdit) fillFramesList() {
 	if len(me.tags) == 1 { // editing 1 tag
-		me.lstFrames.Items.DeleteAll() // first clean, then render
+		me.lstFrames.DeleteAllItems() // first clean, then render
 		for _, pFrame := range me.tags[0].Frames() {
-			me.lstFrames.Items.Add(pFrame.Name4(), pFrame.Body().AsText())
+			me.lstFrames.AddItem(pFrame.Name4(), pFrame.Body().AsText())
 		}
-		me.lstFrames.Cols.Get(1).SetWidthToFill()
+		me.lstFrames.Col(1).SetWidthToFill()
 	} else { // editing multiple tags
 		me.lstFrames.Hwnd().EnableWindow(false)
-		me.lstFrames.Items.Add("", fmt.Sprintf("%d files...", len(me.tags)))
+		me.lstFrames.AddItem("", fmt.Sprintf("%d files...", len(me.tags)))
 	}
 }
 

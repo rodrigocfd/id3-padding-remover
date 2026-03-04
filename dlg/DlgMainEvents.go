@@ -15,32 +15,31 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
-		me.lstFiles.ImageList(co.LVSIL_SMALL).AddIconFromShell("mp3")
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
 
-		me.lstFiles.Cols.Add("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)
-		me.lstFiles.Cols.Add("Pad", ui.DpiX(50)).SetJustification(co.HDF_RIGHT)
-		me.lstFiles.Cols.Add("Pic", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
-		me.lstFiles.Cols.Add("RG", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
-		me.lstFiles.Cols.Add("Artist", ui.DpiX(90))
-		me.lstFiles.Cols.Add("Year", ui.DpiX(40)).SetJustification(co.HDF_CENTER)
-		me.lstFiles.Cols.Add("Album", ui.DpiX(100))
-		me.lstFiles.Cols.Add("T#", ui.DpiX(30)).SetJustification(co.HDF_RIGHT)
-		me.lstFiles.Cols.Add("Title", ui.DpiX(100))
-		me.lstFiles.Cols.Add("Genre", ui.DpiX(90))
-		me.lstFiles.Cols.Add("Performer", ui.DpiX(70))
-		me.lstFiles.Cols.Add("Composer", ui.DpiX(70))
-		me.lstFiles.Cols.Add("Lyricist", ui.DpiX(70))
-		me.lstFiles.Cols.Add("Orig. artist", ui.DpiX(70))
-		me.lstFiles.Cols.Add("Comment", ui.DpiX(70))
+		me.lstFiles.AddCol("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)
+		me.lstFiles.AddCol("Pad", ui.DpiX(50)).SetJustification(co.HDF_RIGHT)
+		me.lstFiles.AddCol("Pic", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("RG", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("Artist", ui.DpiX(90))
+		me.lstFiles.AddCol("Year", ui.DpiX(40)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("Album", ui.DpiX(100))
+		me.lstFiles.AddCol("T#", ui.DpiX(30)).SetJustification(co.HDF_RIGHT)
+		me.lstFiles.AddCol("Title", ui.DpiX(100))
+		me.lstFiles.AddCol("Genre", ui.DpiX(90))
+		me.lstFiles.AddCol("Performer", ui.DpiX(70))
+		me.lstFiles.AddCol("Composer", ui.DpiX(70))
+		me.lstFiles.AddCol("Lyricist", ui.DpiX(70))
+		me.lstFiles.AddCol("Orig. artist", ui.DpiX(70))
+		me.lstFiles.AddCol("Comment", ui.DpiX(70))
 
-		me.lstFiles.Cols.Get(0).SetWidthToFill()
+		me.lstFiles.Col(0).SetWidthToFill()
 		return true
 	})
 
 	me.wnd.On().WmSize(func(p ui.WmSize) {
 		if p.Request() != co.SIZE_REQ_MINIMIZED {
-			me.lstFiles.Cols.Get(0).SetWidthToFill()
+			me.lstFiles.Col(0).SetWidthToFill()
 		}
 	})
 
@@ -49,7 +48,7 @@ func (me *DlgMain) events() {
 		if firstId == MNU_FILE_OPEN {
 			p.HMenu().SetMenuDefaultItemByCmd(MNU_FILE_EDIT)
 
-			enable := me.lstFiles.Items.SelectedCount() > 0
+			enable := me.lstFiles.SelectedItemCount() > 0
 			p.HMenu().EnableMenuItemByCmd(enable,
 				MNU_FILE_EDIT,
 				MNU_FILE_RESAVE,
@@ -69,7 +68,7 @@ func (me *DlgMain) events() {
 		defer oleRel.Release()
 
 		var fod *win.IFileOpenDialog
-		win.CoCreateInstance(oleRel, co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
+		win.CoCreateInstance(oleRel, &co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
@@ -98,13 +97,13 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_REMOVE, func() {
-		me.lstFiles.Items.DeleteSelected()
+		me.lstFiles.DeleteSelectedItems()
 		me.updateTitlebarCount()
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_RESAVE, func() {
 		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
-			me.lstFiles.Items.SelectedCount())
+			me.lstFiles.SelectedItemCount())
 		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") {
 			me.saveSelected()
 		}
@@ -157,7 +156,7 @@ func (me *DlgMain) events() {
 	me.lstFiles.On().LvnKeyDown(func(p *win.NMLVKEYDOWN) {
 		switch p.WVKey {
 		case co.VK_DELETE:
-			me.lstFiles.Items.DeleteSelected()
+			me.lstFiles.DeleteSelectedItems()
 			me.updateTitlebarCount()
 		case co.VK_RETURN: // Enter key
 			if me.editSelected() {
@@ -171,7 +170,7 @@ func (me *DlgMain) events() {
 	})
 
 	me.lstFiles.Header().On().HdnItemClick(func(p *win.NMHEADER) {
-		lvCol := me.lstFiles.Cols.Get(int(p.IItem))
+		lvCol := me.lstFiles.Col(int(p.IItem))
 		if lvCol.Index() != me.sortCol { // user changed the column
 			lvCol.SetSortArrow(co.HDF_SORTUP)
 			me.sortAsc = true

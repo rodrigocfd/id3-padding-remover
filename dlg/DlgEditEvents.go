@@ -17,8 +17,8 @@ func (me *DlgEdit) events() {
 		me.wnd.Hwnd().SetWindowText(fmt.Sprintf("Editing %d ID3v2 tag(s)", len(me.tags)))
 
 		me.lstFrames.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT|co.LVS_EX_GRIDLINES)
-		me.lstFrames.Cols.Add("Frame", ui.DpiX(56))
-		me.lstFrames.Cols.Add("Value", ui.DpiX(100))
+		me.lstFrames.AddCol("Frame", ui.DpiX(56))
+		me.lstFrames.AddCol("Value", ui.DpiX(100))
 
 		me.fillComboGenres()
 		me.fillTextboxes()
@@ -33,9 +33,9 @@ func (me *DlgEdit) events() {
 		firstId, _ := p.HMenu().GetMenuItemID(0)
 		if firstId == MNU_FRAMES_MOVEUP {
 			oneTag := len(me.tags) == 1
-			hasSel := me.lstFrames.Items.SelectedCount() > 0
-			firstItem := me.lstFrames.Items.Get(0)
-			lastItem := me.lstFrames.Items.Last()
+			hasSel := me.lstFrames.SelectedItemCount() > 0
+			firstItem := me.lstFrames.Item(0)
+			lastItem := me.lstFrames.LastItem()
 
 			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !firstItem.IsSelected(), MNU_FRAMES_MOVEUP)
 			p.HMenu().EnableMenuItemByCmd(oneTag && hasSel && !lastItem.IsSelected(), MNU_FRAMES_MOVEDOWN)
@@ -81,9 +81,9 @@ func (me *DlgEdit) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_MOVEUP, func() {
-		focusedItem, hasFocused := me.lstFrames.Items.Focused()
+		focusedItem, hasFocused := me.lstFrames.FocusedItem()
 
-		selItems := me.lstFrames.Items.Selected()
+		selItems := me.lstFrames.SelectedItems()
 		for _, sel := range selItems {
 			idx := sel.Index()
 			me.tags[0].Frames()[idx], me.tags[0].Frames()[idx-1] =
@@ -96,14 +96,14 @@ func (me *DlgEdit) events() {
 		}
 
 		if hasFocused {
-			me.lstFrames.Items.Get(focusedItem.Index() - 1).Focus()
+			me.lstFrames.Item(focusedItem.Index() - 1).Focus()
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_MOVEDOWN, func() {
-		focusedItem, hasFocused := me.lstFrames.Items.Focused()
+		focusedItem, hasFocused := me.lstFrames.FocusedItem()
 
-		selItems := me.lstFrames.Items.Selected()
+		selItems := me.lstFrames.SelectedItems()
 		for _, selItem := range slices.Backward(selItems) {
 			idx := selItem.Index()
 			me.tags[0].Frames()[idx], me.tags[0].Frames()[idx+1] =
@@ -116,12 +116,12 @@ func (me *DlgEdit) events() {
 		}
 
 		if hasFocused {
-			me.lstFrames.Items.Get(focusedItem.Index() + 1).Focus()
+			me.lstFrames.Item(focusedItem.Index() + 1).Focus()
 		}
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FRAMES_DELETE, func() {
-		selItems := me.lstFrames.Items.Selected()
+		selItems := me.lstFrames.SelectedItems()
 		text := fmt.Sprintf("Do you want to remove %d frame(s)?", len(selItems))
 
 		if ui.MsgOkCancel(me.wnd, "Remove frames", "", text, "&Remove") {

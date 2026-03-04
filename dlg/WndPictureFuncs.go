@@ -50,7 +50,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 	var iFactory *win.IWICImagingFactory
 	_ = win.CoCreateInstance(
 		localOleRel,
-		co.CLSID_WICImagingFactory,
+		&co.CLSID_WICImagingFactory,
 		nil,
 		co.CLSCTX_INPROC_SERVER,
 		&iFactory,
@@ -61,7 +61,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 	iBmpDecoder, err := iFactory.CreateDecoderFromStream(
 		localOleRel,
 		&iWicStream.IStream,
-		co.GUID_NULL,
+		nil,
 		co.WICDEC_METADATACACHE_OnLoad,
 	)
 	if err != nil {
@@ -80,7 +80,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 
 	err = iFmtConverter.Initialize(
 		&iFrameDecode.IWICBitmapSource,
-		co.WIC_PIXELFORMAT_32bppPBGRA,
+		&co.WIC_PIXELFORMAT_32bppBGRA,
 		co.WICBMP_DITHER_None,
 		nil,
 		0,
@@ -104,7 +104,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 			Compression: co.BI_RGB,
 		},
 	}
-	bmi.BmiHeader.SetSize()
+	bmi.BmiHeader.SetBiSize()
 
 	hBmp, pImgBits, err := win.HDC(0).
 		CreateDIBSection(&bmi, co.DIB_COLORS_RGB, win.HFILEMAP(0), 0)
