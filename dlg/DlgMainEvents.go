@@ -122,10 +122,7 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_ABOUT, func() {
-		hInst, _ := win.GetModuleHandle("")
-		exeName, _ := hInst.GetModuleFileName()
-		nfo, _ := win.VersionLoad(exeName)
-
+		nfo, _ := win.VersionLoad("")
 		var stats runtime.MemStats
 		runtime.ReadMemStats(&stats)
 
