@@ -25,6 +25,8 @@ type TagAndPath struct {
 }
 
 // Constructor; blocks until the modal is closed.
+//
+// Validates incomingPaths and loads the ID3v2 tags from the MP3 files.
 func ShowDlgProgressLoad(parent ui.Parent, incomingPaths []string) []TagAndPath {
 	wnd := ui.NewModalDlg(parent, DLG_PROGRESS)
 	prog := ui.NewProgressBarDlg(wnd, PRO_PRO, ui.LAY_HOLD_HOLD)

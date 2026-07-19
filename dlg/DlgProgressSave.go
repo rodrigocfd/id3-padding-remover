@@ -18,6 +18,8 @@ type DlgProgressSave struct {
 }
 
 // Constructor; blocks until the modal is closed.
+//
+// Validates paths of outgoingTags and saves the ID3v2 tags into the MP3 files.
 func ShowDlgProgressSave(parent ui.Parent, outgoingTags []TagAndPath) {
 	wnd := ui.NewModalDlg(parent, DLG_PROGRESS)
 	prog := ui.NewProgressBarDlg(wnd, PRO_PRO, ui.LAY_HOLD_HOLD)

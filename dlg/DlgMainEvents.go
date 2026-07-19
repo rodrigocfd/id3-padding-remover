@@ -15,6 +15,7 @@ import (
 func (me *DlgMain) events() {
 
 	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
+		me.lstFiles.Hwnd().RegisterDragDrop(me.dropTarget) // revoked in WM_DESTROY
 		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
 
 		me.lstFiles.AddCol("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)
@@ -37,6 +38,10 @@ func (me *DlgMain) events() {
 		return true
 	})
 
+	me.wnd.On().WmDestroy(func() {
+		me.lstFiles.Hwnd().RevokeDragDrop() // registered in WM_INITDIALOG
+	})
+
 	me.wnd.On().WmSize(func(p ui.WmSize) {
 		if p.Request() != co.SIZE_REQ_MINIMIZED {
 			me.lstFiles.Col(0).SetWidthToFill()
@@ -56,11 +61,6 @@ func (me *DlgMain) events() {
 				MNU_FILE_DELPIC,
 				MNU_FILE_DELPICRG)
 		}
-	})
-
-	me.wnd.On().WmDropFiles(func(p ui.WmDropFiles) {
-		paths, _ := p.HDrop().DragQueryFile()
-		me.addMp3sToList(paths)
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_OPEN, func() {
@@ -183,6 +183,17 @@ func (me *DlgMain) events() {
 		}
 		me.sortCol = lvCol.Index()
 		me.sortList()
+	})
+
+	me.dropTarget.Drop(func(dataObj *win.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
+		paths, err := dataObj.GetDataHDrop()
+		if err != nil {
+			ui.MsgError(me.wnd, "Drag error", "", "Error retrieving files:\n"+err.Error())
+			return co.HRESULT_S_OK
+		}
+
+		me.addMp3sToList(paths)
+		return co.HRESULT_S_OK
 	})
 
 }
