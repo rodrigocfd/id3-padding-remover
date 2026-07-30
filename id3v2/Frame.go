@@ -6,11 +6,14 @@ import (
 	"encoding/binary"
 )
 
+// An [ID3v2 frame].
+//
+// [ID3v2 frame]: https://id3.org/id3v2.3.0#Declared_ID3v2_frames
 type Frame struct {
-	name4        string
-	declaredSize int // Used only at parsing.
-	flags        [2]byte
-	body         Body // Polymorphic.
+	name4        string  // Frame ID.
+	declaredSize int     // Used only at parsing.
+	flags        [2]byte // Frame flags.
+	body         Body    // Polymorphic.
 }
 
 func (me *Frame) Name4() string     { return me.name4 }

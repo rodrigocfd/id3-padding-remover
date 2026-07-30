@@ -15,7 +15,9 @@ import (
 	"github.com/rodrigocfd/xslices"
 )
 
-// Each MP3 file has a single ID3v2 tag.
+// Each MP3 file has a single [ID3v2 tag].
+//
+// [ID3v2 tag]: https://id3.org/id3v2.3.0
 type Tag struct {
 	mp3Offset int
 	padding   int

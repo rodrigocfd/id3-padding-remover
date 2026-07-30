@@ -58,7 +58,9 @@ func _BodyParse(name4 string, src []byte) (Body, error) {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Concrete type.
+// Concrete type for [text information] data.
+//
+// [text information]: https://id3.org/id3v2.3.0#Text_information_frames
 type BodyText struct {
 	Text string
 }
@@ -107,7 +109,9 @@ func (me *BodyText) Serialize(dest []byte) []byte {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Concrete type.
+// Concrete type for [user-defined text] data.
+//
+// [user-defined text]: https://id3.org/id3v2.3.0#User_defined_text_information_frame
 type BodyUserText struct {
 	Descr string
 	Text  string
@@ -204,7 +208,9 @@ func (me *BodyBinary) Serialize(dest []byte) []byte {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Concrete type.
+// Concrete type for [comment] data.
+//
+// [comment]: https://id3.org/id3v2.3.0#Comments
 type BodyComment struct {
 	Lang3 string
 	Descr string
@@ -272,7 +278,9 @@ func (me *BodyComment) Serialize(dest []byte) []byte {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Concrete type.
+// Concrete type for [picture] frame.
+//
+// [picture]: https://id3.org/id3v2.3.0#Attached_picture
 type BodyPicture struct {
 	Mime  string
 	Type  PICTYPE
@@ -336,7 +344,9 @@ func (me *BodyPicture) Serialize(dest []byte) []byte {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Concrete type.
+// Concrete type for [general encapsulated object] data.
+//
+// [general encapsulated object]: https://id3.org/id3v2.3.0#General_encapsulated_object
 type BodyGeob struct {
 	Mime     string
 	FileName string
