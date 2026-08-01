@@ -35,6 +35,7 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 		me.sortList()
 		me.lstFiles.Col(0).SetWidthToFill()
 	}
+	me.updateTitlebarCount()
 }
 
 // Retrieves the tag from the list view item, and puts its values in the

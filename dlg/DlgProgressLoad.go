@@ -50,8 +50,12 @@ func (me *DlgProgressLoad) loadAsync() {
 	allPaths := make([]string, 0, len(me.paths)) // grab all files within all subfolders
 	for _, incomingPath := range me.paths {
 		if win.PathIsFolder(incomingPath) {
-			nested, _ := win.PathEnumDeep(incomingPath, "mp3")
-			allPaths = append(allPaths, nested...)
+			win.PathEnumDeepFunc(incomingPath, func(fileInfo *win.PathEnumInfo) bool {
+				if win.PathHasExtension(fileInfo.Path, "mp3") {
+					allPaths = append(allPaths, fileInfo.Path)
+				}
+				return true
+			})
 		} else if win.PathHasExtension(incomingPath, "mp3") {
 			allPaths = append(allPaths, incomingPath)
 		}
