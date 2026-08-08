@@ -9,6 +9,8 @@ import (
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/x/cowic"
+	"github.com/rodrigocfd/windigo/x/winwic"
 )
 
 // Loads the cover art, if due, into the IPicture COM object.
@@ -47,10 +49,10 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 	localOleRel := win.NewOleReleaser()
 	defer localOleRel.Release()
 
-	var iFactory *win.IWICImagingFactory
+	var iFactory *winwic.IWICImagingFactory
 	_ = win.CoCreateInstance(
 		localOleRel,
-		&co.CLSID_WICImagingFactory,
+		&cowic.CLSID_WICImagingFactory,
 		nil,
 		co.CLSCTX_INPROC_SERVER,
 		&iFactory,
@@ -62,7 +64,7 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 		localOleRel,
 		&iWicStream.IStream,
 		nil,
-		co.WICDEC_METADATACACHE_OnLoad,
+		cowic.WICDEC_METADATACACHE_OnLoad,
 	)
 	if err != nil {
 		return win.SIZE{}, fmt.Errorf("failed to create BMP decoder: %w", err)
@@ -80,11 +82,11 @@ func (me *WndPicture) loadBitmap(picBin []byte) (win.SIZE, error) {
 
 	err = iFmtConverter.Initialize(
 		&iFrameDecode.IWICBitmapSource,
-		&co.WIC_PIXELFORMAT_32bppBGRA,
-		co.WICBMP_DITHER_None,
+		&cowic.WIC_PIXELFORMAT_32bppBGRA,
+		cowic.WICBMP_DITHER_None,
 		nil,
 		0,
-		co.WICBMP_PAL_Custom,
+		cowic.WICBMP_PAL_Custom,
 	)
 	if err != nil {
 		return win.SIZE{}, fmt.Errorf("failed to init format converter: %w", err)

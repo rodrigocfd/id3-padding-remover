@@ -10,6 +10,8 @@ import (
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/wstr"
+	"github.com/rodrigocfd/windigo/x/cosh"
+	"github.com/rodrigocfd/windigo/x/winsh"
 )
 
 func (me *DlgMain) events() {
@@ -67,17 +69,17 @@ func (me *DlgMain) events() {
 		oleRel := win.NewOleReleaser()
 		defer oleRel.Release()
 
-		var fod *win.IFileOpenDialog
-		win.CoCreateInstance(oleRel, &co.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
+		var fod *winsh.IFileOpenDialog
+		win.CoCreateInstance(oleRel, &cosh.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
 
 		defOpts, _ := fod.GetOptions()
 		fod.SetOptions(defOpts |
-			co.FOS_FORCEFILESYSTEM |
-			co.FOS_FILEMUSTEXIST |
-			co.FOS_ALLOWMULTISELECT,
+			cosh.FOS_FORCEFILESYSTEM |
+			cosh.FOS_FILEMUSTEXIST |
+			cosh.FOS_ALLOWMULTISELECT,
 		)
 
-		fod.SetFileTypes([]win.COMDLG_FILTERSPEC{
+		fod.SetFileTypes([]winsh.COMDLG_FILTERSPEC{
 			{Name: "MP3 files", Spec: "*.mp3"},
 			{Name: "All files", Spec: "*.*"},
 		})
@@ -85,7 +87,7 @@ func (me *DlgMain) events() {
 
 		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
 			arr, _ := fod.GetResults(oleRel)
-			paths, _ := arr.EnumDisplayNames(co.SIGDN_FILESYSPATH)
+			paths, _ := arr.EnumDisplayNames(cosh.SIGDN_FILESYSPATH)
 			me.addMp3sToList(paths)
 		}
 	})

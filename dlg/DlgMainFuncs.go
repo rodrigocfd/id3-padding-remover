@@ -27,7 +27,8 @@ func (me *DlgMain) addMp3sToList(incomingPaths []string) {
 			if existingItem, ok := me.lstFiles.FindItem(tag.Path); ok { // file already loaded?
 				item = existingItem // current tag object will be replaced
 			} else {
-				item = me.lstFiles.AddItemWithIcon16(ui.IcoExt("mp3"), tag.Path) // insert new item
+				item = me.lstFiles.AddItem(tag.Path).
+					SetIcon16(ui.IcoExt("mp3")) // insert new item
 			}
 			item.SetData(tag.Tag) // store tag in item
 			me.renderMp3InList(item)
