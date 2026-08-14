@@ -4,12 +4,10 @@ package dlg
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/windigo/wstr"
 	"github.com/rodrigocfd/windigo/x/cosh"
 	"github.com/rodrigocfd/windigo/x/winsh"
 )
@@ -124,26 +122,7 @@ func (me *DlgMain) events() {
 	})
 
 	me.wnd.On().WmCommandAccelMenu(MNU_FILE_ABOUT, func() {
-		nfo, _ := win.VersionLoad("")
-		var stats runtime.MemStats
-		runtime.ReadMemStats(&stats)
-
-		caption := fmt.Sprintf("%s %d.%d.%d",
-			nfo.ProductName, nfo.Version[0], nfo.Version[1], nfo.Version[2])
-
-		text := fmt.Sprintf(
-			"%s\n\n"+
-				"Compiler: %s\n"+
-				"GC cycles: %d\n"+
-				"Alloc: %s\n"+
-				"Next GC: %s\n"+
-				"Frees: %d",
-			nfo.LegalCopyright,
-			runtime.Version(),
-			stats.NumGC, wstr.FmtBytes(int(stats.HeapAlloc)),
-			wstr.FmtBytes(int(stats.NextGC)), stats.Frees)
-
-		ui.MsgOk(me.wnd, "About", caption, text)
+		ui.MsgAbout(me.wnd, ICO_MAIN)
 	})
 
 	me.lstFiles.On().NmDblClk(func(_ *win.NMITEMACTIVATE) {
