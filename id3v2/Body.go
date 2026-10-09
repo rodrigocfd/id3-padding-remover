@@ -190,7 +190,7 @@ func (me *BodyBinary) Clone() Body {
 }
 
 func (me *BodyBinary) AsText() string {
-	return wstr.FmtBytes(len(me.Bin))
+	return wstr.FmtBytes(uint64(len(me.Bin)))
 }
 
 func (me *BodyBinary) ForceText(text string) {
@@ -318,7 +318,7 @@ func (me *BodyPicture) Clone() Body {
 
 func (me *BodyPicture) AsText() string {
 	return fmt.Sprintf("%s %s %s",
-		PICNAMES[me.Type], me.Mime, wstr.FmtBytes(len(me.Bin)))
+		PICNAMES[me.Type], me.Mime, wstr.FmtBytes(uint64(len(me.Bin))))
 }
 
 func (me *BodyPicture) ForceText(text string) {
@@ -386,7 +386,7 @@ func (me *BodyGeob) Clone() Body {
 
 func (me *BodyGeob) AsText() string {
 	return fmt.Sprintf("%s %s %s",
-		me.Mime, me.Descr, wstr.FmtBytes(len(me.EncObj)))
+		me.Mime, me.Descr, wstr.FmtBytes(uint64(len(me.EncObj))))
 }
 
 func (me *BodyGeob) ForceText(text string) {

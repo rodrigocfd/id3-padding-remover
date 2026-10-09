@@ -76,7 +76,7 @@ func (me *DlgEdit) fillPicInfo(pixels win.SIZE, nBytes int) {
 	} else {
 		me.chkPick.SetCheck(true)
 		me.lblPic.Hwnd().SetWindowText(fmt.Sprintf("%dx%d px, %s",
-			pixels.Cx, pixels.Cy, wstr.FmtBytes(nBytes)))
+			pixels.Cx, pixels.Cy, wstr.FmtBytes(uint64(nBytes))))
 	}
 }
 
