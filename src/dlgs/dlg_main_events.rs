@@ -1,4 +1,4 @@
-use winsafe::{self as w, cmd, co, evp, gui, prelude::*};
+use winsafe::{self as w, cmd, co, evp, evt, gui, prelude::*};
 
 use super::{DlgEdit, DlgMain, LIST_COLS, ids};
 use crate::msgbox;
@@ -6,6 +6,7 @@ use crate::msgbox;
 impl DlgMain {
 	pub(super) fn events(&self) {
 		evp!(self, wm_init_dialog, on_init_dialog);
+		evt!(self, wm_destroy, on_destroy);
 		evp!(self, wm_size, on_size);
 		evp!(self, wm_init_menu_popup, on_init_menu_popup);
 		cmd!(self, ids::MNU_FILE_OPEN, on_menu_file_open);
@@ -67,8 +68,14 @@ impl DlgMain {
 		header_cols.get(0).set_arrow(gui::HeaderArrow::Asc); // initially 1st col, ascending
 		lv.cols().get(0).set_width_to_fill()?;
 
-		self.wnd.hwnd().RegisterDragDrop(&self.drop_target)?;
+		self.drop_target_revoke
+			.set(Some(self.lst_files.hwnd().RegisterDragDrop(&self.drop_target)?));
 		Ok(true)
+	}
+
+	fn on_destroy(&self) -> w::AnyResult<()> {
+		self.drop_target_revoke.set(None);
+		Ok(())
 	}
 
 	fn on_size(&self, p: w::msg::WmSize) -> w::AnyResult<()> {

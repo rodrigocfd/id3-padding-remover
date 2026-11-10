@@ -11,6 +11,7 @@ pub struct DlgMain {
 	pub(super) lst_files: gui::ListView<id3v2::Tag>,
 	pub(super) cur_sort: Rc<Cell<(u32, bool)>>, // index, ascending
 	pub(super) drop_target: w::IDropTarget,
+	pub(super) drop_target_revoke: Rc<Cell<Option<w::RevokeDragDropGuard>>>,
 }
 
 impl DlgMain {
@@ -28,8 +29,15 @@ impl DlgMain {
 		);
 		let cur_sort = Rc::new(Cell::new((0, true))); // 1st col, ascending
 		let drop_target = w::IDropTarget::new_impl();
+		let drop_target_revoke = Rc::new(Cell::new(None));
 
-		let new_self = Self { wnd, lst_files, cur_sort, drop_target };
+		let new_self = Self {
+			wnd,
+			lst_files,
+			cur_sort,
+			drop_target,
+			drop_target_revoke,
+		};
 		new_self.events();
 		new_self.wnd.run_main(None)
 	}
