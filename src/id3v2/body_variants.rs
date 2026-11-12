@@ -15,14 +15,12 @@ impl std::fmt::Display for Text {
 
 impl BodyVariant for Text {
 	fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let text = (|| {
+		{
 			let (enc, src) = Enc::from_byte(src)?;
-			let (info, _) = enc.parse_str(src)?;
-			w::AnyResult::Ok(info)
-		})()
-		.map_err(|e| format!("Parse Text: {}", e.to_string()))?;
-
-		Ok(Self { text })
+			let (text, _) = enc.parse_str(src)?;
+			w::AnyResult::Ok(Self { text })
+		}
+		.map_err(|e| format!("Parse Text: {}", e.to_string()).into())
 	}
 
 	fn serialize_size(&self) -> usize {
@@ -67,15 +65,13 @@ impl std::fmt::Display for UserText {
 
 impl BodyVariant for UserText {
 	fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (descr, text) = (|| {
+		{
 			let (enc, src) = Enc::from_byte(src)?;
 			let (descr, src) = enc.parse_str(src)?;
 			let (text, _) = enc.parse_str(src)?;
-			w::AnyResult::Ok((descr, text))
-		})()
-		.map_err(|e| format!("Parse UserText: {}", e.to_string()))?;
-
-		Ok(Self { descr, text })
+			w::AnyResult::Ok(Self { descr, text })
+		}
+		.map_err(|e| format!("Parse UserText: {}", e.to_string()).into())
 	}
 
 	fn serialize_size(&self) -> usize {
@@ -159,16 +155,14 @@ impl std::fmt::Display for Comment {
 
 impl BodyVariant for Comment {
 	fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (lang3, descr, text) = (|| {
+		{
 			let (enc, src) = Enc::from_byte(src)?;
 			let (lang3, src) = util::parse_ascii(src, 3);
 			let (descr, src) = enc.parse_str(src)?;
 			let (text, _) = enc.parse_str(src)?;
-			w::AnyResult::Ok((lang3, descr, text))
-		})()
-		.map_err(|e| format!("Parse Comment: {}", e.to_string()))?;
-
-		Ok(Self { lang3, descr, text })
+			w::AnyResult::Ok(Self { lang3, descr, text })
+		}
+		.map_err(|e| format!("Parse Comment: {}", e.to_string()).into())
 	}
 
 	fn serialize_size(&self) -> usize {
@@ -215,7 +209,7 @@ impl std::fmt::Display for Picture {
 
 impl BodyVariant for Picture {
 	fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (mime, pic_type, descr, data) = (|| {
+		{
 			let (enc, src) = Enc::from_byte(src)?;
 			let (mime, src) = Enc::Iso88591.parse_str(src)?;
 
@@ -224,11 +218,9 @@ impl BodyVariant for Picture {
 
 			let (descr, src) = enc.parse_str(src)?;
 			let data = src.to_vec();
-			w::AnyResult::Ok((mime, pic_type, descr, data))
-		})()
-		.map_err(|e| format!("Parse Picture: {}", e.to_string()))?;
-
-		Ok(Self { mime, pic_type, descr, data })
+			w::AnyResult::Ok(Self { mime, pic_type, descr, data })
+		}
+		.map_err(|e| format!("Parse Picture: {}", e.to_string()).into())
 	}
 
 	fn serialize_size(&self) -> usize {
@@ -274,17 +266,15 @@ impl std::fmt::Display for Geob {
 
 impl BodyVariant for Geob {
 	fn parse(src: &[u8]) -> w::AnyResult<Self> {
-		let (mime, filename, descr, enc_obj) = (|| {
+		{
 			let (enc, src) = Enc::from_byte(src)?;
 			let (mime, src) = Enc::Iso88591.parse_str(src)?;
 			let (filename, src) = enc.parse_str(src)?;
 			let (descr, src) = enc.parse_str(src)?;
 			let enc_obj = src.to_vec();
-			w::AnyResult::Ok((mime, filename, descr, enc_obj))
-		})()
-		.map_err(|e| format!("Parse Geob: {}", e.to_string()))?;
-
-		Ok(Self { mime, filename, descr, enc_obj })
+			w::AnyResult::Ok(Self { mime, filename, descr, enc_obj })
+		}
+		.map_err(|e| format!("Parse Geob: {}", e.to_string()).into())
 	}
 
 	fn serialize_size(&self) -> usize {

@@ -32,11 +32,13 @@ impl DlgMain {
 			fmt.dwAspect = co::DVASPECT::CONTENT;
 			fmt.tymed = co::TYMED::HGLOBAL;
 
-			let medium = unsafe { d.GetData(&fmt)? };
-			let hglobal = unsafe { medium.ptr_hglobal().unwrap() };
-			let ptr_lock = hglobal.GlobalLock()?;
-			let hdrop = unsafe { w::HDROP::from_ptr(ptr_lock.as_ptr() as _) };
-			let dropped_paths = hdrop.DragQueryFile()?.collect::<w::SysResult<Vec<_>>>()?;
+			let dropped_paths = unsafe {
+				let medium = d.GetData(&fmt)?;
+				let hglobal = medium.ptr_hglobal().unwrap();
+				let ptr_lock = hglobal.GlobalLock()?;
+				let hdrop = w::HDROP::from_ptr(ptr_lock.as_ptr() as _);
+				hdrop.DragQueryFile()?.collect::<w::SysResult<Vec<_>>>()?
+			};
 
 			self2.add_files_to_list(&dropped_paths)?;
 			Ok(())

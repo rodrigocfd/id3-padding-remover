@@ -76,6 +76,7 @@ impl Enc {
 		}
 	}
 
+	/// Parses an ISO-8859-1 string. Be sure it's not Unicode.
 	#[must_use]
 	fn parse_iso88591(src: &[u8]) -> String {
 		if src.is_empty() {
@@ -85,10 +86,11 @@ impl Enc {
 		let mut wbuf = w::WString::new_alloc_buf(src.len()); // no need for terminating null
 		src.iter()
 			.zip(wbuf.as_mut_slice().iter_mut())
-			.for_each(|(by, ch)| *ch = *by as _);
+			.for_each(|(src_byte, dest_ch)| *dest_ch = *src_byte as _);
 		wbuf.to_string()
 	}
 
+	/// Parses an Unicode string. Be sure it's not ISO-8859-1.
 	#[must_use]
 	fn parse_unicode(src: &[u16]) -> String {
 		let (src, is_le) = match src[0] {
@@ -104,8 +106,8 @@ impl Enc {
 		let mut wbuf = w::WString::new_alloc_buf(src.len()); // no need for terminating null
 		src.iter()
 			.zip(wbuf.as_mut_slice().iter_mut())
-			.for_each(|(wo, ch)| {
-				*ch = if is_le { wo.swap_bytes() } else { *wo };
+			.for_each(|(src_word, dest_ch)| {
+				*dest_ch = if is_le { src_word.swap_bytes() } else { *src_word };
 			});
 		wbuf.to_string()
 	}
