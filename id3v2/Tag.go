@@ -226,7 +226,7 @@ func (me *Tag) Serialize() []byte {
 	blob = append(blob, 0x03, 0x00)       // tag version
 	blob = append(blob, 0x00)             // flags
 
-	blob = appendUint32(blob, binary.BigEndian,
+	blob = binary.BigEndian.AppendUint32(blob,
 		synchSafeEncode(uint32(szTag-10))) // don't count 10-byte header size
 
 	for _, pFrame := range me.frames {

@@ -79,7 +79,7 @@ func (me *Frame) Serialize(dest []byte) []byte {
 	dest = append(dest, []byte(me.name4)...)
 
 	szBody := me.body.SerializeSize() // don't count 10-byte header size
-	dest = appendUint32(dest, binary.BigEndian, uint32(szBody))
+	dest = binary.BigEndian.AppendUint32(dest, uint32(szBody))
 
 	dest = append(dest, me.flags[:]...)
 	dest = me.body.Serialize(dest)

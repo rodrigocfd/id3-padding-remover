@@ -3,10 +3,10 @@
 package id3v2
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/rodrigocfd/windigo/wstr"
-	"github.com/rodrigocfd/xslices"
 )
 
 // Polymorphic data of a frame.
@@ -180,13 +180,13 @@ type BodyBinary struct {
 
 // Constructor.
 func _BodyBinaryParse(src []byte) *BodyBinary {
-	return &BodyBinary{xslices.ShallowClone(src)} // simply copy all the data
+	return &BodyBinary{bytes.Clone(src)} // simply copy all the data
 }
 
 func (*BodyBinary) implBody() {}
 
 func (me *BodyBinary) Clone() Body {
-	return &BodyBinary{xslices.ShallowClone(me.Bin)}
+	return &BodyBinary{bytes.Clone(me.Bin)}
 }
 
 func (me *BodyBinary) AsText() string {
@@ -305,7 +305,7 @@ func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 		return nil, err
 	}
 
-	bin := xslices.ShallowClone(src) // simply copy all the data
+	bin := bytes.Clone(src) // simply copy all the data
 
 	return &BodyPicture{mime, ty, descr, bin}, nil
 }
@@ -313,7 +313,7 @@ func _BodyPictureParse(src []byte) (*BodyPicture, error) {
 func (*BodyPicture) implBody() {}
 
 func (me *BodyPicture) Clone() Body {
-	return &BodyPicture{me.Mime, me.Type, me.Descr, xslices.ShallowClone(me.Bin)}
+	return &BodyPicture{me.Mime, me.Type, me.Descr, bytes.Clone(me.Bin)}
 }
 
 func (me *BodyPicture) AsText() string {
@@ -373,7 +373,7 @@ func _BodyGeobParse(src []byte) (*BodyGeob, error) {
 		return nil, err
 	}
 
-	encObj := xslices.ShallowClone(src)
+	encObj := bytes.Clone(src)
 
 	return &BodyGeob{mime, filename, descr, encObj}, nil
 }
@@ -381,7 +381,7 @@ func _BodyGeobParse(src []byte) (*BodyGeob, error) {
 func (*BodyGeob) implBody() {}
 
 func (me *BodyGeob) Clone() Body {
-	return &BodyGeob{me.Mime, me.FileName, me.Descr, xslices.ShallowClone(me.EncObj)}
+	return &BodyGeob{me.Mime, me.FileName, me.Descr, bytes.Clone(me.EncObj)}
 }
 
 func (me *BodyGeob) AsText() string {

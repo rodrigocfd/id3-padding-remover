@@ -10,7 +10,6 @@ import (
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/wstr"
-	"github.com/rodrigocfd/xslices"
 )
 
 func (me *DlgMain) updateTitlebarCount() {
@@ -156,12 +155,10 @@ func (me *DlgMain) editSelected() bool {
 		return false // Enter key will hit here even without selected items
 	}
 
-	clonedTags := xslices.Map(
-		me.lstFiles.SelectedItems(),
-		func(_ int, item ui.ListViewItem) *id3v2.Tag {
-			pTag := item.Data().(*id3v2.Tag)
-			return pTag.Clone()
-		})
+	clonedTags := make([]*id3v2.Tag, 0, me.lstFiles.SelectedItemCount())
+	for _, selItem := range me.lstFiles.SelectedItems() {
+		clonedTags = append(clonedTags, selItem.Data().(*id3v2.Tag))
+	}
 
 	if ShowDlgEdit(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.SelectedItems() {
@@ -175,15 +172,13 @@ func (me *DlgMain) editSelected() bool {
 
 // Saves the selected tags to the MP3 files, asynchronously.
 func (me *DlgMain) saveSelectedAsync() {
-	selTags := xslices.Map(
-		me.lstFiles.SelectedItems(),
-		func(_ int, item ui.ListViewItem) id3v2.TagAndPath {
-			return id3v2.TagAndPath{
-				Tag:  item.Data().(*id3v2.Tag),
-				Path: item.Text(0),
-			}
-		},
-	)
+	selTags := make([]id3v2.TagAndPath, 0, me.lstFiles.SelectedItemCount())
+	for _, selItem := range me.lstFiles.SelectedItems() {
+		selTags = append(selTags, id3v2.TagAndPath{
+			Tag:  selItem.Data().(*id3v2.Tag),
+			Path: selItem.Text(0),
+		})
+	}
 
 	me.wnd.SetWaitCursor(true)
 	id3v2.SaveMultipleTagsAsync(selTags, func(errors []error) {

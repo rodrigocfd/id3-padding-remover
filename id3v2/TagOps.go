@@ -7,7 +7,6 @@ import (
 	"runtime"
 
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/xslices"
 )
 
 type TagAndPath struct {
@@ -89,15 +88,17 @@ func SameFrameAcrossAllTags(name4 string, tags []*Tag) *Frame {
 		return nil // first tag doesn't have the frame, stop right now
 	}
 
-	allSame := xslices.EveryFunc(tags[1:], func(_ int, pTag *Tag) bool { // skip first tag
-		pFrame := pTag.FrameByName4(name4)
-		if pFrame == nil {
-			return false // frame doesn't exist in this posterior tag
-		} else {
-			// Compare the textual rendering of this frame with the first frame.
-			return pFrame.Body().AsText() == pFrame0.Body().AsText()
+	allSame := func() bool {
+		for i := 1; i < len(tags); i++ { // skip first tag
+			pFrame := tags[i].FrameByName4(name4)
+			if pFrame == nil {
+				return false // frame doesn't exist in this posterior tag
+			} else if pFrame.Body().AsText() != pFrame0.Body().AsText() {
+				return false // compare the textual rendering of this frame with the first frame
+			}
 		}
-	})
+		return true
+	}()
 
 	if allSame {
 		return pFrame0

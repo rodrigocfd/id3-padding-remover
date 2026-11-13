@@ -3,7 +3,6 @@
 package id3v2
 
 import (
-	"encoding/binary"
 	"fmt"
 	"math/bits"
 	"slices"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/win"
 	"github.com/rodrigocfd/windigo/wstr"
-	"github.com/rodrigocfd/xslices"
 )
 
 // String encoding.
@@ -144,12 +142,5 @@ func serializeStr(encByte ENC, dest []byte, str string) []byte {
 		dest = append(dest, 0x00, 0x00)
 	}
 
-	return dest
-}
-
-// Appends an uint32 into dest.
-func appendUint32(dest []byte, byteOrder binary.ByteOrder, n uint32) []byte {
-	dest = xslices.AppendN(dest, 4, 0x00)
-	byteOrder.PutUint32(dest[len(dest)-4:], n)
 	return dest
 }
