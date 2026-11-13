@@ -19,24 +19,34 @@ func (me *DlgMain) updateTitlebarCount() {
 	me.wnd.Hwnd().SetWindowText(fmt.Sprintf("ID3 Fit (%d/%d)", nSel, nFiles))
 }
 
-func (me *DlgMain) addMp3sToList(incomingPaths []string) {
-	tagsAndPaths := ShowDlgProgressLoad(me.wnd, incomingPaths)
-	if len(tagsAndPaths) > 0 {
-		for _, tag := range tagsAndPaths {
-			var item ui.ListViewItem
-			if existingItem, ok := me.lstFiles.FindItem(tag.Path); ok { // file already loaded?
-				item = existingItem // current tag object will be replaced
+// Loads the tags from the paths, searching MP3 recursively, then renders the
+// tag into the list view. This method is asynchronous.
+func (me *DlgMain) addMp3sToListAsync(incomingPaths []string) {
+	me.wnd.SetWaitCursor(true)
+	id3v2.LoadMultipleTagsAsync(incomingPaths, func(tagsAndPaths []id3v2.TagAndPath, err error) {
+		me.wnd.UiThread(func() {
+			me.wnd.SetWaitCursor(false)
+			if err != nil {
+				ui.MsgError(me.wnd, "Error loading tag", "", err.Error())
 			} else {
-				item = me.lstFiles.AddItem(tag.Path).
-					SetIcon16(ui.IcoExt("mp3")) // insert new item
+				for _, tagAndPath := range tagsAndPaths {
+					var item ui.ListViewItem
+					if existingItem, ok := me.lstFiles.FindItem(tagAndPath.Path); ok { // file already loaded?
+						item = existingItem
+					} else {
+						item = me.lstFiles.AddItem(tagAndPath.Path).
+							SetIcon16(ui.IcoExt("mp3")) // insert new item
+					}
+					item.SetData(tagAndPath.Tag) // store tag in item
+					me.renderMp3InList(item)
+				}
+				me.sortList()
+				me.lstFiles.Col(0).SetWidthToFill()
+				me.updateTitlebarCount()
 			}
-			item.SetData(tag.Tag) // store tag in item
-			me.renderMp3InList(item)
-		}
-		me.sortList()
-		me.lstFiles.Col(0).SetWidthToFill()
-	}
-	me.updateTitlebarCount()
+		})
+	})
+
 }
 
 // Retrieves the tag from the list view item, and puts its values in the
@@ -146,10 +156,12 @@ func (me *DlgMain) editSelected() bool {
 		return false // Enter key will hit here even without selected items
 	}
 
-	clonedTags := xslices.Map(me.lstFiles.SelectedItems(), func(_ int, item ui.ListViewItem) *id3v2.Tag {
-		pTag := item.Data().(*id3v2.Tag)
-		return pTag.Clone()
-	})
+	clonedTags := xslices.Map(
+		me.lstFiles.SelectedItems(),
+		func(_ int, item ui.ListViewItem) *id3v2.Tag {
+			pTag := item.Data().(*id3v2.Tag)
+			return pTag.Clone()
+		})
 
 	if ShowDlgEdit(me.wnd, clonedTags) == co.ID_OK {
 		for i, item := range me.lstFiles.SelectedItems() {
@@ -161,21 +173,35 @@ func (me *DlgMain) editSelected() bool {
 	return false
 }
 
-// Displays the save modal dialog, and saves the selected tags to the MP3 files.
-func (me *DlgMain) saveSelected() {
+// Saves the selected tags to the MP3 files, asynchronously.
+func (me *DlgMain) saveSelectedAsync() {
 	selTags := xslices.Map(
 		me.lstFiles.SelectedItems(),
-		func(_ int, item ui.ListViewItem) TagAndPath {
-			return TagAndPath{
+		func(_ int, item ui.ListViewItem) id3v2.TagAndPath {
+			return id3v2.TagAndPath{
 				Tag:  item.Data().(*id3v2.Tag),
 				Path: item.Text(0),
 			}
 		},
 	)
-	ShowDlgProgressSave(me.wnd, selTags)
 
-	for _, item := range me.lstFiles.SelectedItems() {
-		me.renderMp3InList(item) // re-render, all paddings have been removed
-	}
-	me.sortList()
+	me.wnd.SetWaitCursor(true)
+	id3v2.SaveMultipleTagsAsync(selTags, func(errors []error) {
+		me.wnd.UiThread(func() {
+			me.wnd.SetWaitCursor(false)
+			if len(errors) > 0 {
+				var sb strings.Builder
+				sb.WriteString("Some MP3s failed to save:\n\n")
+				for _, err := range errors {
+					sb.WriteString(err.Error())
+					sb.WriteString("\n")
+				}
+				ui.MsgError(me.wnd, "Save error", "", sb.String())
+			}
+			for _, item := range me.lstFiles.SelectedItems() {
+				me.renderMp3InList(item) // re-render, all paddings have been removed
+			}
+			me.sortList()
+		})
+	})
 }

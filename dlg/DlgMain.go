@@ -3,8 +3,13 @@
 package dlg
 
 import (
+	"fmt"
+
+	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/ui"
 	"github.com/rodrigocfd/windigo/win"
+	"github.com/rodrigocfd/windigo/x/cosh"
+	"github.com/rodrigocfd/windigo/x/winsh"
 )
 
 // Main application dialog.
@@ -28,12 +33,181 @@ func RunMain() int {
 			IconId(ICO_MAIN).
 			AccelTableId(ACC_MAIN),
 	)
-	lstFiles := ui.NewListViewDlg(wnd, LST_FILES, MNU_FILE, ui.LAY_RESIZE_RESIZE)
-	dropTarget := win.NewIDropTargetImpl(rel)
-	sortCol := 0
-	sortAsc := true
 
-	me := &DlgMain{wnd, lstFiles, dropTarget, sortCol, sortAsc}
+	me := &DlgMain{
+		wnd:        wnd,
+		lstFiles:   ui.NewListViewDlg(wnd, LST_FILES, MNU_FILE, ui.LAY_RESIZE_RESIZE),
+		dropTarget: win.NewIDropTargetImpl(rel),
+		sortCol:    0,
+		sortAsc:    true,
+	}
 	me.events()
 	return me.wnd.RunAsMain()
+}
+
+func (me *DlgMain) events() {
+
+	me.wnd.On().WmInitDialog(func(_ ui.WmInitDialog) bool {
+		me.lstFiles.Hwnd().RegisterDragDrop(me.dropTarget) // revoked in WM_DESTROY
+		me.lstFiles.SetExtendedStyle(true, co.LVS_EX_FULLROWSELECT)
+
+		me.lstFiles.AddCol("File", ui.DpiX(400)).SetSortArrow(co.HDF_SORTUP)
+		me.lstFiles.AddCol("Pad", ui.DpiX(50)).SetJustification(co.HDF_RIGHT)
+		me.lstFiles.AddCol("Pic", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("RG", ui.DpiX(30)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("Artist", ui.DpiX(90))
+		me.lstFiles.AddCol("Year", ui.DpiX(40)).SetJustification(co.HDF_CENTER)
+		me.lstFiles.AddCol("Album", ui.DpiX(100))
+		me.lstFiles.AddCol("T#", ui.DpiX(30)).SetJustification(co.HDF_RIGHT)
+		me.lstFiles.AddCol("Title", ui.DpiX(100))
+		me.lstFiles.AddCol("Genre", ui.DpiX(90))
+		me.lstFiles.AddCol("Performer", ui.DpiX(70))
+		me.lstFiles.AddCol("Composer", ui.DpiX(70))
+		me.lstFiles.AddCol("Lyricist", ui.DpiX(70))
+		me.lstFiles.AddCol("Orig. artist", ui.DpiX(70))
+		me.lstFiles.AddCol("Comment", ui.DpiX(70))
+
+		me.lstFiles.Col(0).SetWidthToFill()
+		return true
+	})
+
+	me.wnd.On().WmDestroy(func() {
+		me.lstFiles.Hwnd().RevokeDragDrop() // registered in WM_INITDIALOG
+	})
+
+	me.wnd.On().WmSize(func(p ui.WmSize) {
+		if p.Request() != co.SIZE_REQ_MINIMIZED {
+			me.lstFiles.Col(0).SetWidthToFill()
+		}
+	})
+
+	me.wnd.On().WmInitMenuPopup(func(p ui.WmInitMenuPopup) {
+		firstId, _ := p.HMenu().GetMenuItemID(0)
+		if firstId == MNU_FILE_OPEN {
+			p.HMenu().SetMenuDefaultItemByCmd(MNU_FILE_EDIT)
+
+			enable := me.lstFiles.SelectedItemCount() > 0
+			p.HMenu().EnableMenuItemByCmd(enable,
+				MNU_FILE_EDIT,
+				MNU_FILE_RESAVE,
+				MNU_FILE_REMOVE,
+				MNU_FILE_DELPIC,
+				MNU_FILE_DELPICRG)
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_OPEN, func() {
+		oleRel := win.NewOleReleaser()
+		defer oleRel.Release()
+
+		var fod *winsh.IFileOpenDialog
+		win.CoCreateInstance(oleRel, &cosh.CLSID_FileOpenDialog, nil, co.CLSCTX_INPROC_SERVER, &fod)
+
+		defOpts, _ := fod.GetOptions()
+		fod.SetOptions(defOpts |
+			cosh.FOS_FORCEFILESYSTEM |
+			cosh.FOS_FILEMUSTEXIST |
+			cosh.FOS_ALLOWMULTISELECT,
+		)
+
+		fod.SetFileTypes([]winsh.COMDLG_FILTERSPEC{
+			{Name: "MP3 files", Spec: "*.mp3"},
+			{Name: "All files", Spec: "*.*"},
+		})
+		fod.SetFileTypeIndex(1)
+
+		if ok, _ := fod.Show(me.wnd.Hwnd()); ok {
+			arr, _ := fod.GetResults(oleRel)
+			paths, _ := arr.EnumDisplayNames(cosh.SIGDN_FILESYSPATH)
+			me.addMp3sToListAsync(paths)
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_EDIT, func() {
+		if me.editSelected() {
+			me.saveSelectedAsync()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_REMOVE, func() {
+		me.lstFiles.DeleteSelectedItems()
+		me.updateTitlebarCount()
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_RESAVE, func() {
+		text := fmt.Sprintf("Do you want to rewrite the tags of %d file(s)?",
+			me.lstFiles.SelectedItemCount())
+		if ui.MsgOkCancel(me.wnd, "Save files", "", text, "&Save") {
+			me.saveSelectedAsync()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_DELPIC, func() {
+		if me.removePicRg(false) {
+			me.saveSelectedAsync()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_DELPICRG, func() {
+		if me.removePicRg(true) {
+			me.saveSelectedAsync()
+		}
+	})
+
+	me.wnd.On().WmCommandAccelMenu(MNU_FILE_ABOUT, func() {
+		ui.MsgAbout(me.wnd, ICO_MAIN)
+	})
+
+	me.lstFiles.On().NmDblClk(func(_ *win.NMITEMACTIVATE) {
+		if me.editSelected() {
+			me.saveSelectedAsync()
+		}
+	})
+
+	me.lstFiles.On().LvnKeyDown(func(p *win.NMLVKEYDOWN) {
+		switch p.WVKey {
+		case co.VK_DELETE:
+			me.lstFiles.DeleteSelectedItems()
+			me.updateTitlebarCount()
+		case co.VK_RETURN: // Enter key
+			if me.editSelected() {
+				me.saveSelectedAsync()
+			}
+		}
+	})
+
+	me.lstFiles.On().LvnItemChanged(func(_ *win.NMLISTVIEW) {
+		me.updateTitlebarCount()
+	})
+
+	me.lstFiles.Header().On().HdnItemClick(func(p *win.NMHEADER) {
+		lvCol := me.lstFiles.Col(int(p.IItem))
+		if lvCol.Index() != me.sortCol { // user changed the column
+			lvCol.SetSortArrow(co.HDF_SORTUP)
+			me.sortAsc = true
+		} else { // user is reversing the same column
+			curArrow := lvCol.SortArrow()
+			if curArrow == co.HDF_SORTUP {
+				lvCol.SetSortArrow(co.HDF_SORTDOWN)
+				me.sortAsc = false
+			} else {
+				lvCol.SetSortArrow(co.HDF_SORTUP)
+				me.sortAsc = true
+			}
+		}
+		me.sortCol = lvCol.Index()
+		me.sortList()
+	})
+
+	me.dropTarget.Drop(func(dataObj *win.IDataObject, _ co.MK, _ win.POINT, _ *co.DROPEFFECT) co.HRESULT {
+		paths, err := dataObj.GetDataHDrop()
+		if err != nil {
+			ui.MsgError(me.wnd, "Drag error", "", "Error retrieving files:\n"+err.Error())
+			return co.HRESULT_S_OK
+		}
+
+		me.addMp3sToListAsync(paths)
+		return co.HRESULT_S_OK
+	})
+
 }

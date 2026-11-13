@@ -13,7 +13,7 @@ import (
 type DlgEdit struct {
 	wnd            *ui.Modal
 	inputs         []CheckInput // checkbox + input fields
-	chkPick        *ui.CheckBox
+	chkPic         *ui.CheckBox
 	wndPic         *WndPicture
 	lblPic         *ui.Static
 	lstFrames      *ui.ListView
@@ -37,27 +37,28 @@ func ShowDlgEdit(parent ui.Parent, tags []*id3v2.Tag) co.ID {
 	inputs := make([]CheckInput, 0, (TXT_COMMENT-CHK_ARTIST+1)/2)
 	for id := CHK_ARTIST; id <= TXT_COMMENT; id += 2 {
 		chk := ui.NewCheckBoxDlg(wnd, id, ui.LAY_HOLD_HOLD)
-		var inp ui.ChildControl
-		if id == CHK_GENRE {
-			inp = ui.NewComboBoxDlg(wnd, CMB_GENRE, ui.LAY_HOLD_HOLD)
-		} else {
-			inp = ui.NewEditDlg(wnd, id+1, ui.LAY_HOLD_HOLD)
-		}
-		inputs = append(inputs, CheckInput{chk, inp})
+		textField := func() ui.ChildControl {
+			if id == CHK_GENRE {
+				return ui.NewComboBoxDlg(wnd, CMB_GENRE, ui.LAY_HOLD_HOLD)
+			} else {
+				return ui.NewEditDlg(wnd, id+1, ui.LAY_HOLD_HOLD)
+			}
+		}()
+		inputs = append(inputs, CheckInput{chk, textField})
 	}
 
-	chkPic := ui.NewCheckBoxDlg(wnd, CHK_PICTURE, ui.LAY_HOLD_HOLD)
-	wndPic := NewWndPicture(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200))
-	lblPic := ui.NewStaticDlg(wnd, LBL_IMAGE_DESCR, ui.LAY_HOLD_HOLD)
-
-	lstFrames := ui.NewListViewDlg(wnd, LST_FRAMES, MNU_FRAMES, ui.LAY_HOLD_HOLD)
-	btnUncheckAll := ui.NewButtonDlg(wnd, BTN_UNCHECK_ALL, ui.LAY_HOLD_HOLD)
-	btnCheckFilled := ui.NewButtonDlg(wnd, BTN_CHECK_FILLED, ui.LAY_HOLD_HOLD)
-
-	me := &DlgEdit{wnd, inputs,
-		chkPic, wndPic, lblPic,
-		lstFrames, btnUncheckAll, btnCheckFilled,
-		tags, co.ID_CANCEL}
+	me := &DlgEdit{
+		wnd:            wnd,
+		inputs:         inputs,
+		chkPic:         ui.NewCheckBoxDlg(wnd, CHK_PICTURE, ui.LAY_HOLD_HOLD),
+		wndPic:         NewWndPicture(wnd, ui.DpiX(420), ui.DpiY(60), ui.DpiX(200), ui.DpiY(200)),
+		lblPic:         ui.NewStaticDlg(wnd, LBL_IMAGE_DESCR, ui.LAY_HOLD_HOLD),
+		lstFrames:      ui.NewListViewDlg(wnd, LST_FRAMES, MNU_FRAMES, ui.LAY_HOLD_HOLD),
+		btnUncheckAll:  ui.NewButtonDlg(wnd, BTN_UNCHECK_ALL, ui.LAY_HOLD_HOLD),
+		btnCheckFilled: ui.NewButtonDlg(wnd, BTN_CHECK_FILLED, ui.LAY_HOLD_HOLD),
+		tags:           tags,
+		result:         co.ID_CANCEL,
+	}
 	defer me.wndPic.HBmp.DeleteObject()
 
 	me.events()

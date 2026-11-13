@@ -75,8 +75,3 @@ const (
 	BTN_CHECK_FILLED
 	LST_FRAMES
 )
-
-const (
-	DLG_PROGRESS uint16 = iota + 3000
-	PRO_PRO
-)

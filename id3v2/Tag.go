@@ -12,7 +12,6 @@ import (
 
 	"github.com/rodrigocfd/windigo/co"
 	"github.com/rodrigocfd/windigo/win"
-	"github.com/rodrigocfd/xslices"
 )
 
 // Each MP3 file has a single [ID3v2 tag].
@@ -267,34 +266,5 @@ func (me *Tag) SaveToFile(mp3Path string) error {
 
 	fout.Write(currentContents.HotSlice()[oldTag.Mp3Offset():]) // write the MP3 data
 	me.padding = 0
-	return nil
-}
-
-// If the frame is the same across all tags, returns it; otherwise returns nil.
-func SameFrameAcrossAllTags(name4 string, tags []*Tag) *Frame {
-	if len(tags) == 0 {
-		return nil // no tags, no frame
-	} else if len(tags) == 1 {
-		return tags[0].FrameByName4(name4) // only 1 tag, direct query
-	}
-
-	pFrame0 := tags[0].FrameByName4(name4) // query the first tag right away
-	if pFrame0 == nil {
-		return nil // first tag doesn't have the frame, stop right now
-	}
-
-	allSame := xslices.EveryFunc(tags[1:], func(_ int, pTag *Tag) bool { // skip first tag
-		pFrame := pTag.FrameByName4(name4)
-		if pFrame == nil {
-			return false // frame doesn't exist in this posterior tag
-		} else {
-			// Compare the textual rendering of this frame with the first frame.
-			return pFrame.Body().AsText() == pFrame0.Body().AsText()
-		}
-	})
-
-	if allSame {
-		return pFrame0
-	}
 	return nil
 }
