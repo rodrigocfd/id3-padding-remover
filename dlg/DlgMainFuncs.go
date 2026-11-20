@@ -186,6 +186,7 @@ func (me *DlgMain) saveSelectedAsync() {
 			me.wnd.SetWaitCursor(false)
 			if len(errors) > 0 {
 				var sb strings.Builder
+				sb.Grow(30 + len(errors)*30) // arbitrary
 				sb.WriteString("Some MP3s failed to save:\n\n")
 				for _, err := range errors {
 					sb.WriteString(err.Error())
